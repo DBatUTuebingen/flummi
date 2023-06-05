@@ -33,6 +33,8 @@ def enrich(graph: CFG.Graph[E, T], dummy_input: E):
     graph = prune_unreachable(graph)
     # print("<PRUNE_UNREACHABLE>", prettyCFG(graph), "", sep="\n")
 
+    heads &= graph.blocks.keys()
+
     graph = set_block_parameters(graph, heads)
     # print("<SET_BLOCK_PARAMETERS>", prettyCFG(graph), "", sep="\n")
 
@@ -173,6 +175,8 @@ def rewrite_back_edges(graph: CFG.Graph[E, T]) -> tuple[CFG.Graph[E, T], set[CFG
     while stack:
         label = stack.pop()
         seen.add(label)
+        if len(successors[label]) > 1:
+            heads.add(label)
         for successor in successors[label]:
             if successor in dom[label]:
                 heads.add(successor)
