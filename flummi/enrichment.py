@@ -1,4 +1,4 @@
-from collections import deque, defaultdict
+from collections import defaultdict
 from dataclasses import replace
 from functools import reduce
 from typing import TypeVar
@@ -7,45 +7,17 @@ from .grammars import CFG, common
 
 
 __all__ = (
-    "enrich",
+    "inline_control_only_blocks",
+    "prune_unreachable",
+    "rewrite_back_edges",
+    "minimize_segements",
+    "set_block_parameters",
+    "generate_pdg_annotations",
+    "fill_dummy_inputs",
 )
 
 E = TypeVar("E", bound=common.SupportsFormat)
 T = TypeVar("T", bound=common.SupportsStr)
-
-
-from .pretty.CFG import pretty as prettyCFG
-
-def enrich(graph: CFG.Graph[E, T], dummy_input: E):
-    from pprint import pformat
-
-    from .pretty.CFG import pretty as prettyCFG
-
-    graph, heads = rewrite_back_edges(graph)
-    # print("<REWRITE_BACK_EDGES>", prettyCFG(graph), "", sep="\n")
-
-    graph = minimize_segements(graph, heads)
-    # print("<MINIMIZE_SEGEMENTS>", prettyCFG(graph), "", sep="\n")
-
-    graph = inline_control_only_blocks(graph)
-    # print("<INLINE_CONTROL_ONLY_BLOCKS>", prettyCFG(graph), "", sep="\n")
-
-    graph = prune_unreachable(graph)
-    # print("<PRUNE_UNREACHABLE>", prettyCFG(graph), "", sep="\n")
-
-    heads &= graph.blocks.keys()
-
-    graph = set_block_parameters(graph, heads)
-    # print("<SET_BLOCK_PARAMETERS>", prettyCFG(graph), "", sep="\n")
-
-    graph = generate_pdg_annotations(graph, heads)
-    # print("<GENERATE_PDG_ANNOTATIONS>", prettyCFG(graph), "", sep="\n")
-
-    graph = fill_dummy_inputs(graph, dummy_input)
-    # print("<FILL_DUMMY_INPUTS>")
-
-    return graph
-
 
 LabelGraph = dict[CFG.BlockLabel, set[CFG.BlockLabel]]
 
