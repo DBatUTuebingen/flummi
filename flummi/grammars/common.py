@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generic, TypeVar, Protocol, runtime_checkable
+from typing import Generic, TypeVar, Protocol
 
 __all__ = (
     "SupportsStr",
@@ -10,12 +10,10 @@ __all__ = (
 )
 
 
-@runtime_checkable
 class SupportsStr(Protocol):
     def __str__(self) -> str:
         ...
 
-@runtime_checkable
 class SupportsFormat(Protocol):
     def format(self, *args: str) -> str:
         ...
