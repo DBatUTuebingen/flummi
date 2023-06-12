@@ -3,7 +3,7 @@ from .generate_pdg_annotations import *
 from .inline_control_blocks import *
 from .minimize_segments import *
 from .prune_unreachable import *
-from .rewrite_jumps import *
+from .mark_loops import *
 from .set_block_parameters import *
 
 
@@ -13,6 +13,6 @@ __all__ = (
     "inline_control_blocks",
     "minimize_segments",
     "prune_unreachable",
-    "rewrite_jumps",
+    "mark_loops",
     "set_block_parameters",
 )

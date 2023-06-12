@@ -6,7 +6,7 @@ from ..algorithms import compute_successors, compute_dominator_tree
 
 
 __all__ = (
-    "rewrite_jumps",
+    "mark_loops",
 )
 
 
@@ -14,7 +14,7 @@ E = TypeVar("E", bound=common.SupportsFormat)
 T = TypeVar("T", bound=common.SupportsStr)
 
 
-def rewrite_jumps(graph: CFG.Graph[E, T]) -> tuple[CFG.Graph[E, T], set[CFG.BlockLabel]]:
+def mark_loops(graph: CFG.Graph[E, T]) -> tuple[CFG.Graph[E, T], set[CFG.BlockLabel]]:
     successors = compute_successors(graph)
     dom = compute_dominator_tree(graph)
 
@@ -25,8 +25,6 @@ def rewrite_jumps(graph: CFG.Graph[E, T]) -> tuple[CFG.Graph[E, T], set[CFG.Bloc
     while stack:
         label = stack.pop()
         seen.add(label)
-        if len(successors[label]) > 1:
-            heads.add(label)
         for successor in successors[label]:
             if successor in dom[label]:
                 heads.add(successor)

@@ -37,8 +37,8 @@ def main():
     verbose(2, pretty(graph))
     print_graph(graph, "0_lowering.gv")
 
-    graph, heads = rewrite_jumps(graph)
     verbose(1, "\033[1;2m[1]\033[0;36m rewriting back edges\033[0m")
+    graph, heads = mark_loops(graph)
     verbose(2, pretty(graph))
     print_graph(graph, "1_mark_loops.gv")
 
