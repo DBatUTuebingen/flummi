@@ -36,6 +36,25 @@ def compute_successors(graph: CFG.Graph[E, T]) -> LabelGraph:
     }
 
 
+def get_jumps(graph: CFG.Graph[E, T]) -> set[tuple[CFG.BlockLabel,CFG.BlockLabel]]:
+    def extract_jumps(terminal: CFG.Terminal) -> set[CFG.BlockLabel]:
+        match terminal:
+          case CFG.GoTo(label, _):
+              return set()
+          case CFG.Jump(label, _):
+              return {label}
+          case CFG.If(_, truthy, falsey):
+              return extract_jumps(truthy) | extract_jumps(falsey)
+          case _:
+              return set()
+
+    return {
+        (label, target)
+        for label, block in graph.blocks.items()
+        for target in extract_jumps(block.terminal)
+    }
+
+
 def compute_predecessors(graph: CFG.Graph[E, T]) -> LabelGraph:
     inverted = {
         label: set()

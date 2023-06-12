@@ -261,11 +261,6 @@ class CodeGen(Generic[E, T]):
         }
 
         output_columns = [
-            # f'({self.gen_variable(variable)}) AS "new%{variable.identifier}"'
-            # if variable not in assignments else
-            # f'(SELECT ({expression}) WHERE EXISTS (SELECT * FROM "%sources%")) AS "new%{variable.identifier}"'
-            # if "FROM" in (expression := assignments[variable]) else
-            # f'({expression}) AS "new%{variable.identifier}"'
             f'({assignments.get(variable, self.gen_variable(variable))}) AS "new%{variable.identifier}"'
             for variable in actual_output_variables
         ]
