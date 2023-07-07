@@ -1,0 +1,67 @@
+digraph "%pdg%" {
+  rankdir="TB";
+  node [
+    shape=rectangle,
+    nojustify=true,
+    penwidth=2,
+    style="rounded,filled",
+    fontcolor="#5C6166",
+    fontname = "PragmataPro",
+  ];
+  graph [
+    fontname = "PragmataPro",
+    splines=ortho
+  ];
+  edge [
+    fontname = "PragmataPro",
+    penwidth=2,
+    color="#FA8D3E"
+  ];
+  subgraph "%cfg%" {
+    rankdir="LR";
+    cluster=true;
+    style="rounded,dotted";
+    color="#5C6166";
+    node [
+      fillcolor="#DDF0F6",
+      color="#55B4D4"
+    ];
+    edge [
+      color="#FA8D3E"
+    ];
+    "entry" [label="BLOCK entry ()\l[]\l{\l  c <- §0§[];\l  GOTO inter0 ()\l}\l"];
+    "inter0" [label="BLOCK inter0 ()\l[]\l{\l  JUMP loop0_head ()\l}\l"];
+    "loop0_head" [label="BLOCK loop0_head ()\l[]\l{\l  c <- §{0} + {1}§[a, c];\l  b <- §{0} - 1§[b];\l  GOTO inter1 ()\l}\l"];
+    "loop0_exit" [label="BLOCK loop0_exit ()\l[]\l{\l  STOP\l}\l"];
+    "inter1" [label="BLOCK inter1 ()\l[]\l{\l  EMIT §{0}§[c];\l  condition%0 <- §0 = {0}§[b];\l  GOTO inter2 ()\l}\l"];
+    "inter2" [label="BLOCK inter2 ()\l[]\l{\l  GOTO inter3 ()\l}\l"];
+    "inter3" [label="BLOCK inter3 ()\l[]\l{\l  GOTO inter4 ()\l}\l"];
+    "truthy0" [label="BLOCK truthy0 ()\l[]\l{\l  STOP\l}\l"];
+    "falsey0" [label="BLOCK falsey0 ()\l[]\l{\l  JUMP loop0_head ()\l}\l"];
+    "merge0" [label="BLOCK merge0 ()\l[]\l{\l  JUMP loop0_head ()\l}\l"];
+    "inter4" [label="BLOCK inter4 ()\l[]\l{\l  IF condition%0 THEN GOTO truthy0 () ELSE GOTO falsey0 ()\l}\l"];
+    "unreachable0" [label="BLOCK unreachable0 ()\l[]\l{\l  GOTO merge0 ()\l}\l"];
+    "entry" -> "inter0" [style="solid"];
+    "inter0" -> "loop0_head" [style="dashed"];
+    "loop0_head" -> "inter1" [style="solid"];
+    "inter1" -> "inter2" [style="solid"];
+    "inter2" -> "inter3" [style="solid"];
+    "inter3" -> "inter4" [style="solid"];
+    "falsey0" -> "loop0_head" [style="dashed"];
+    "merge0" -> "loop0_head" [style="dashed"];
+    "inter4" -> "falsey0" [style="solid"];
+    "inter4" -> "truthy0" [style="solid"];
+    "unreachable0" -> "merge0" [style="solid"];
+  }
+  subgraph "%inputs%" {
+    node [
+      fillcolor="#F6F2F9",
+      color="#A37ACC";
+    ];
+    edge [
+      color="#A37ACC"
+    ];
+    "%inputs%" [label="a <- §4§[]\lb <- §5§[]"];
+    "%inputs%" -> "entry";
+  }
+}
