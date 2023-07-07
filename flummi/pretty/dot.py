@@ -26,18 +26,18 @@ digraph {{
     penwidth=2,
     color="#FA8D3E"
   ];
-{nodes}
-{edges}
+  {nodes}
+  {edges}
 }}
 """
 
-NODE_TEMPLATE = '  "{label}" [label="{body}\l"];'
+NODE_TEMPLATE = '"{label}" [label="{body}\l"];'
 
 
 def dot(graph: CFG.Graph[str, str], font: str = "PragmataPro") -> str:
     STYLE.off()
     jumps = get_jumps(graph)
-    nodes = "\n".join(
+    nodes = "\n  ".join(
         NODE_TEMPLATE.format(
             label=label.label,
             body=pretty(block).replace("\n", "\\l"),
@@ -45,9 +45,9 @@ def dot(graph: CFG.Graph[str, str], font: str = "PragmataPro") -> str:
         for label, block in graph.blocks.items()
     )
     STYLE.on()
-    edges = "\n".join(chain.from_iterable(
+    edges = "\n  ".join(chain.from_iterable(
         (
-          f'  "{label.label}" -> "{successor.label}" [style="{["solid", "dashed"][(label,successor) in jumps]}"];'
+          f'"{label.label}" -> "{successor.label}" [style="{["solid", "dashed"][(label,successor) in jumps]}"];'
           for successor in successors
         )
         for label, successors in compute_successors(graph).items()

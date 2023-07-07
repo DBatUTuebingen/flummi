@@ -1,4 +1,6 @@
 import argparse
+from os import makedirs
+from pathlib import Path
 from sys import stderr
 
 from .grammars import CFG
@@ -16,8 +18,11 @@ def main():
     parser.add_argument('infile', type=argparse.FileType('r'))
     parser.add_argument('-o', '--output', type=argparse.FileType('w'), default="out.sql", help="The file to write the compilation result to.")
     parser.add_argument('-v', '--verbose', default=0, action="count", help="Control the level of verbosity.")
-    parser.add_argument('-g', '--graph', action="store_true", help="Write a graphviz file for each transformation.")
+    parser.add_argument('-g', '--graph', default=None, type=Path, help="Directory to write graphviz files for each transformation too.")
     arguments = parser.parse_args()
+
+    if arguments.graph is not None:
+        arguments.graph.mkdir()
 
     def verbose(n: int, text: str):
         if arguments.verbose >= n:
@@ -25,7 +30,7 @@ def main():
 
     def print_graph(graph: CFG.Graph[str, str], path: str):
         if arguments.graph:
-            with open(path, "w") as f:
+            with open(arguments.graph / path, "w+") as f:
                 f.write(dot(graph))
 
     source = arguments.infile.read()
