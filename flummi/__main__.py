@@ -13,6 +13,17 @@ from .pretty.print import pretty
 from .pretty.dot import dot
 
 
+class Printer:
+    def __init__(self, verbostiy: int):
+        self.verbosity = verbostiy
+
+    def __getitem__(self, verbosity: int):
+        if verbosity <= self.verbosity:
+            return print
+        else:
+            return lambda *args, **kwargs: ...
+
+
 def main():
     parser = argparse.ArgumentParser("flummi", description="CTE-focussed compilation of imperative programs to recursive SQL.")
     parser.add_argument('infile', type=argparse.FileType('r'))
@@ -21,69 +32,70 @@ def main():
     parser.add_argument('-g', '--graph', default=None, type=Path, help="Directory to write graphviz files for each transformation too.")
     arguments = parser.parse_args()
 
-    if arguments.graph is not None:
+    if arguments.graph and not arguments.graph.exists():
         arguments.graph.mkdir()
 
-    def verbose(n: int, text: str):
-        if arguments.verbose >= n:
-            print(text, file=stderr)
+    printer = Printer(arguments.verbose)
 
     def print_graph(graph: CFG.Graph[str, str], path: str):
         if arguments.graph:
             with open(arguments.graph / path, "w+") as f:
                 f.write(dot(graph))
+            printer[1](f"\033[{40}G\033[1;2m>> \033[0;2;4m{arguments.graph / path}\033[0m")
+        else:
+            printer[1]("")
 
     source = arguments.infile.read()
 
     program = parse(source)
 
-    verbose(1, "\033[1;2m[0]\033[0;36m lowering to CFG\033[0m")
+    printer[1]("\033[1;2m[0]\033[0;36m lowering to CFG\033[0m", end="")
     graph = lower(program, "bool")
-    verbose(2, pretty(graph))
     print_graph(graph, "0_lowering.gv")
+    printer[2](pretty(graph))
 
-    verbose(1, "\033[1;2m[1]\033[0;36m rewriting back edges\033[0m")
+    printer[1]("\033[1;2m[1]\033[0;36m rewriting back edges\033[0m", end="")
     graph, heads = mark_loops(graph)
-    verbose(2, pretty(graph))
     print_graph(graph, "1_mark_loops.gv")
+    printer[2](pretty(graph))
 
     graph = minimize_segments(graph, heads)
-    verbose(1, "\033[1;2m[2]\033[0;36m minimizing linear segments\033[0m")
-    verbose(2, pretty(graph))
+    printer[1]("\033[1;2m[2]\033[0;36m minimizing linear segments\033[0m", end="")
     print_graph(graph, "2_schedule_segments.gv")
+    printer[2](pretty(graph))
 
-    verbose(1, "\033[1;2m[3]\033[0;36m inlining control only blocks\033[0m")
+    printer[1]("\033[1;2m[3]\033[0;36m inlining control only blocks\033[0m", end="")
     graph = inline_control_blocks(graph)
-    verbose(2, pretty(graph))
     print_graph(graph, "3_inline_control_blocks.gv")
+    printer[2](pretty(graph))
 
-    verbose(1, "\033[1;2m[4]\033[0;36m pruning unreachable blocks\033[0m")
+    printer[1]("\033[1;2m[4]\033[0;36m pruning unreachable blocks\033[0m", end="")
     graph = prune_unreachable(graph)
-    verbose(2, pretty(graph))
     print_graph(graph, "4_prune_unreachable_blocks.gv")
+    printer[2](pretty(graph))
 
     heads &= graph.blocks.keys()
 
-    verbose(1, "\033[1;2m[5]\033[0;36m setting block parameters\033[0m")
+    printer[1]("\033[1;2m[5]\033[0;36m setting block parameters\033[0m", end="")
     graph = set_block_parameters(graph, heads)
-    verbose(2, pretty(graph))
     print_graph(graph, "5_set_block_parameters.gv")
+    printer[2](pretty(graph))
 
-    verbose(1, "\033[1;2m[6]\033[0;36m generating PDG annotations\033[0m")
-    graph = generate_pdg_annotations(graph, heads)
-    verbose(2, pretty(graph))
-    print_graph(graph, "6_generate_pdg_annotations.gv")
-
-    verbose(1, "\033[1;2m[7]\033[0;36m filling dummy inputs\033[0m")
+    printer[1]("\033[1;2m[6]\033[0;36m filling dummy inputs\033[0m", end="")
     graph = fill_dummy_inputs(graph, "NULL")
-    verbose(1, pretty(graph))
-    print_graph(graph, "7_fill_dummy_inputs.gv")
+    print_graph(graph, "6_fill_dummy_inputs.gv")
+    printer[2](pretty(graph))
 
-    verbose(1, "\033[1;2m[8]\033[0;36m generating SQL code\033[0m")
+    printer[1]("\033[1;2m[7]\033[0;36m generating PDG annotations\033[0m", end="")
+    graph = generate_pdg_annotations(graph, heads)
+    print_graph(graph, "7_generate_pdg_annotations.gv")
+    printer[2](pretty(graph))
+
+    printer[1]("\033[1;2m[8]\033[0;36m generating SQL code\033[0m")
     result = codegen(graph)
 
     if arguments.output:
-        verbose(1, f"\033[1;2m*\033[0;36m writing output to \033[4m'{arguments.output.name}'\033[0m")
+        printer[1](f"\033[1;2m*\033[0;36m writing output to \033[4m'{arguments.output.name}'\033[0m")
         arguments.output.write(result+ "\n")
 
 
