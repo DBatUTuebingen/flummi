@@ -59,8 +59,8 @@ def main():
     print_graph(graph, "1_mark_loops.gv")
     printer[2](pretty(graph))
 
-    graph = minimize_segments(graph, heads)
     printer[1]("\033[1;2m[2]\033[0;36m minimizing linear segments\033[0m", end="")
+    graph = schedule_segments(graph, heads)
     print_graph(graph, "2_schedule_segments.gv")
     printer[2](pretty(graph))
 
