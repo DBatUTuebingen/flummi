@@ -32,10 +32,10 @@ class CodeGen(Generic[E, T]):
         return str(type.source)
 
     def gen_expression(self, expression: common.Expression[E]) -> str:
-        return expression.source.format(*(
+        return f"""(SELECT ({expression.source.format(*(
             self.gen_variable(variable)
             for variable in expression.free_variables
-        ))
+        ))}))"""
 
     def gen_variable(self, variable: common.Variable) -> str:
         return f'"{variable.identifier}"'
@@ -261,7 +261,7 @@ class CodeGen(Generic[E, T]):
         }
 
         output_columns = [
-            f'({assignments.get(variable, self.gen_variable(variable))}) AS "new%{variable.identifier}"'
+            f'{assignments.get(variable, self.gen_variable(variable))} AS "new%{variable.identifier}"'
             for variable in actual_output_variables
         ]
 
