@@ -48,14 +48,12 @@ class Lowering(Generic[E, T]):
             predecessor_references=[],
         )
 
-    def _chain_statements(self, label: CFG.BlockLabel, *statements: CFG.Statement[E]):
-        for statement in statements:
-            self._blocks[label].statements.append(statement)
-            next_label = self._new_block_label("inter")
-            self._terminate_block(label, CFG.GoTo(next_label, []))
-            self._create_empty_block(next_label)
-            label = next_label
-        return label
+    def _add_statement(self, label: CFG.BlockLabel, statement: CFG.Statement[E]):
+        self._blocks[label].statements.append(statement)
+        next_label = self._new_block_label("inter")
+        self._terminate_block(label, CFG.GoTo(next_label, []))
+        self._create_empty_block(next_label)
+        return next_label
 
     def _terminate_block(self, label: CFG.BlockLabel, terminal: CFG.Terminal):
         if label not in self._terminated_blocks:
@@ -118,25 +116,25 @@ class Lowering(Generic[E, T]):
         match statement:
             case proc.Loop(body):
                 with self._new_loop() as (head_label, exit_label):
-                  self._terminate_block(
-                      label,
-                      CFG.GoTo(
-                          label=head_label,
-                          arguments=[]
-                      )
-                  )
+                    self._terminate_block(
+                        label,
+                        CFG.GoTo(
+                            label=head_label,
+                            arguments=[]
+                        )
+                    )
 
-                  final_body_label = self.lower_statement(head_label, body)
+                    final_body_label = self.lower_statement(head_label, body)
 
-                  self._terminate_block(
-                      final_body_label,
-                      CFG.GoTo(
-                          label=head_label,
-                          arguments=[]
-                      )
-                  )
+                    self._terminate_block(
+                        final_body_label,
+                        CFG.GoTo(
+                            label=head_label,
+                            arguments=[]
+                        )
+                    )
 
-                  return exit_label
+                    return exit_label
 
             case proc.Continue():
                 head_label, _ = self._latest_loop_labels()
@@ -170,7 +168,7 @@ class Lowering(Generic[E, T]):
                 merge_label = self._new_block_label("merge")
                 self._create_empty_block(merge_label)
 
-                label = self._chain_statements(
+                label = self._add_statement(
                     label,
                     CFG.Assignment(
                         variable=condition_variable,
@@ -214,7 +212,7 @@ class Lowering(Generic[E, T]):
                 return merge_label
 
             case proc.Emit(to_emit):
-                return self._chain_statements(
+                return self._add_statement(
                     label,
                     CFG.Emit(to_emit=to_emit)
                 )
@@ -230,7 +228,7 @@ class Lowering(Generic[E, T]):
                 return label
 
             case proc.Assignment(variable, expression):
-                return self._chain_statements(
+                return self._add_statement(
                     label,
                     CFG.Assignment(
                         variable=variable,
