@@ -1,0 +1,109 @@
+ENTRYPOINT entry
+INPUTS (
+  here <- §(x,0)§[], 
+  there <- §(x,10)§[], 
+  gridx <- §10§[], 
+  gridy <- §10§[], 
+  resolution <- §16§[], 
+  angle <- §NULL§[], 
+  loc <- §NULL§[], 
+  hhere <- §NULL§[], 
+  max_angle <- §NULL§[], 
+  step <- §NULL§[], 
+  i <- §NULL§[]
+)
+EMITS §bool§
+VARS (
+  here : §point§, 
+  there : §point§, 
+  gridx : §int§, 
+  gridy : §int§, 
+  resolution : §int§, 
+  i : §int§, 
+  step : §point§, 
+  loc : §point§, 
+  hhere : §float§, 
+  hloc : §float§, 
+  angle : §float§, 
+  max_angle : §float§, 
+  condition%0 : §bool§, 
+  condition%1 : §bool§
+)
+BLOCKS {
+  BLOCK entry (angle, loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  []
+  {
+    gridx <- §{0} - 1§[gridx];
+    gridy <- §{0} - 1§[gridy];
+    step <- §(({0}.x - {1}.x) / {2}, ({0}.y - {1}.y) / {2}) :: point§[there, here, resolution];
+    loc <- §{0}§[here];
+    max_angle <- §NULL :: float§[];
+    i <- §1§[];
+    GOTO inter0 (angle, loc, there, resolution, gridx, max_angle, step, gridy, here, i)
+  }
+
+  BLOCK inter0 (angle, loc, there, resolution, gridx, max_angle, step, gridy, here, i)
+  []
+  {
+    hhere <- §SELECT SUM(({0}! / ((c.x!) * (({0} - c.x)!))) * (u ** c.x) * ((1 - u) ** ({0} - c.x)) *
+                         ({1}! / ((c.y!) * (({1} - c.y)!))) * (v ** c.y) * ((1 - v) ** ({1} - c.y))) AS h
+              FROM   controlp AS c, LATERAL (SELECT {2}.x / {0}, {2}.y / {1}) AS _(u,v)§[gridx, gridy, here];
+    JUMP loop0_head (angle, loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  }
+
+  BLOCK loop0_head (angle, loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  []
+  {
+    condition%0 <- §{0} > {1}§[i, resolution];
+    IF condition%0
+    THEN GOTO truthy0 (angle, max_angle)
+    ELSE GOTO falsey0 (loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  }
+
+  BLOCK truthy0 (angle, max_angle)
+  []
+  {
+    EMIT §{0} = {1}§[angle, max_angle];
+    STOP
+  }
+
+  BLOCK falsey0 (loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  []
+  {
+    loc <- §({0}.x + {1}.x, {0}.y + {1}.y) :: point§[loc, step];
+    GOTO inter8 (loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  }
+
+  BLOCK inter8 (loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  []
+  {
+    hloc <- §SELECT SUM(({0}! / ((c.x!) * (({0} - c.x)!))) * (u ** c.x) * ((1 - u) ** ({0} - c.x)) *
+                        ({1}! / ((c.y!) * (({1} - c.y)!))) * (v ** c.y) * ((1 - v) ** ({1} - c.y))) AS h
+             FROM   controlp AS c, LATERAL (SELECT {2}.x / {0}, {2}.y / {1}) AS _(u,v)§[gridx, gridy, loc];
+    GOTO inter9 (hhere, loc, there, resolution, gridx, max_angle, step, gridy, here, i, hloc)
+  }
+
+  BLOCK inter9 (hhere, loc, there, resolution, gridx, max_angle, step, gridy, here, i, hloc)
+  []
+  {
+    angle <- §degrees(atan(({0} - {1}) / sqrt(({2}.x - {1}.x)** 2 + ({2}.y - {1}.y)** 2)))§[hloc, hhere, loc];
+    GOTO inter10 (angle, loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  }
+
+  BLOCK inter10 (angle, loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  []
+  {
+    condition%1 <- §{0} IS NULL OR {1} > {2}§[max_angle, angle, max_angle];
+    IF condition%1
+    THEN GOTO truthy1 (angle, loc, hhere, there, resolution, gridx, step, gridy, here, i)
+    ELSE JUMP loop0_head (angle, loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  }
+
+  BLOCK truthy1 (angle, loc, hhere, there, resolution, gridx, step, gridy, here, i)
+  []
+  {
+    max_angle <- §{0}§[angle];
+    JUMP loop0_head (angle, loc, hhere, there, resolution, gridx, max_angle, step, gridy, here, i)
+  }
+}
+JUMPS []

@@ -1,0 +1,47 @@
+CALL (§(x,0)§[], §(x,10)§[], §10§[], §10§[], §16§[]) IN
+FUN (here: §point§, there: §point§, gridx: §int§, gridy: §int§, resolution: §int§) → §bool§: {
+  i          : §int§;
+  step       : §point§;
+  loc        : §point§;
+  hhere      : §float§;
+  hloc       : §float§;
+  angle      : §float§;
+  max_angle  : §float§;
+
+  gridx <- §{0} - 1§[gridx];
+  gridy <- §{0} - 1§[gridy];
+
+  hhere <- §
+    SELECT SUM(({0}! / ((c.x!) * (({0} - c.x)!))) * (u ** c.x) * ((1 - u) ** ({0} - c.x)) *
+               ({1}! / ((c.y!) * (({1} - c.y)!))) * (v ** c.y) * ((1 - v) ** ({1} - c.y))) AS h
+    FROM   controlp AS c, LATERAL (SELECT {2}.x / {0}, {2}.y / {1}) AS _(u,v)
+  §[gridx,gridy,here];
+
+  step <- §(({0}.x - {1}.x) / {2}, ({0}.y - {1}.y) / {2}) :: point§[there, here, resolution];
+  loc <- §{0}§[here];
+
+  max_angle <- §NULL :: float§[];
+
+  i <- §1§[];
+  LOOP {
+    IF §{0} > {1}§[i,resolution]
+    THEN BREAK
+    ELSE {
+      i <- §{0} + 1§[i];
+      loc <- §({0}.x + {1}.x, {0}.y + {1}.y) :: point§[loc,step];
+      hloc <- §
+        SELECT SUM(({0}! / ((c.x!) * (({0} - c.x)!))) * (u ** c.x) * ((1 - u) ** ({0} - c.x)) *
+                   ({1}! / ((c.y!) * (({1} - c.y)!))) * (v ** c.y) * ((1 - v) ** ({1} - c.y))) AS h
+        FROM   controlp AS c, LATERAL (SELECT {2}.x / {0}, {2}.y / {1}) AS _(u,v)
+      §[gridx,gridy,loc];
+      angle <- §degrees(atan(({0} - {1}) / sqrt(({2}.x - {3}.x)** 2 + ({2}.y - {3}.y)** 2)))§[hloc,hhere,loc,here];
+
+      IF §{0} IS NULL OR {1} > {2}§[max_angle,angle,max_angle]
+      THEN max_angle <- §{0}§[angle]
+      ELSE {} -- noop!
+    }
+  };
+
+  EMIT §{0} = {1}§[angle,max_angle];
+  STOP
+}

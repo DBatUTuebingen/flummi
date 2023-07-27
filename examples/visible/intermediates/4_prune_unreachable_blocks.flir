@@ -1,0 +1,103 @@
+ENTRYPOINT entry
+INPUTS (
+  here <- §(x,0)§[], 
+  there <- §(x,10)§[], 
+  gridx <- §10§[], 
+  gridy <- §10§[], 
+  resolution <- §16§[]
+)
+EMITS §bool§
+VARS (
+  here : §point§, 
+  there : §point§, 
+  gridx : §int§, 
+  gridy : §int§, 
+  resolution : §int§, 
+  i : §int§, 
+  step : §point§, 
+  loc : §point§, 
+  hhere : §float§, 
+  hloc : §float§, 
+  angle : §float§, 
+  max_angle : §float§, 
+  condition%0 : §bool§, 
+  condition%1 : §bool§
+)
+BLOCKS {
+  BLOCK entry ()
+  []
+  {
+    gridx <- §{0} - 1§[gridx];
+    gridy <- §{0} - 1§[gridy];
+    step <- §(({0}.x - {1}.x) / {2}, ({0}.y - {1}.y) / {2}) :: point§[there, here, resolution];
+    loc <- §{0}§[here];
+    max_angle <- §NULL :: float§[];
+    i <- §1§[];
+    GOTO inter0 ()
+  }
+
+  BLOCK inter0 ()
+  []
+  {
+    hhere <- §SELECT SUM(({0}! / ((c.x!) * (({0} - c.x)!))) * (u ** c.x) * ((1 - u) ** ({0} - c.x)) *
+                         ({1}! / ((c.y!) * (({1} - c.y)!))) * (v ** c.y) * ((1 - v) ** ({1} - c.y))) AS h
+              FROM   controlp AS c, LATERAL (SELECT {2}.x / {0}, {2}.y / {1}) AS _(u,v)§[gridx, gridy, here];
+    JUMP loop0_head ()
+  }
+
+  BLOCK loop0_head ()
+  []
+  {
+    condition%0 <- §{0} > {1}§[i, resolution];
+    IF condition%0
+    THEN GOTO truthy0 ()
+    ELSE GOTO falsey0 ()
+  }
+
+  BLOCK truthy0 ()
+  []
+  {
+    EMIT §{0} = {1}§[angle, max_angle];
+    STOP
+  }
+
+  BLOCK falsey0 ()
+  []
+  {
+    loc <- §({0}.x + {1}.x, {0}.y + {1}.y) :: point§[loc, step];
+    GOTO inter8 ()
+  }
+
+  BLOCK inter8 ()
+  []
+  {
+    hloc <- §SELECT SUM(({0}! / ((c.x!) * (({0} - c.x)!))) * (u ** c.x) * ((1 - u) ** ({0} - c.x)) *
+                        ({1}! / ((c.y!) * (({1} - c.y)!))) * (v ** c.y) * ((1 - v) ** ({1} - c.y))) AS h
+             FROM   controlp AS c, LATERAL (SELECT {2}.x / {0}, {2}.y / {1}) AS _(u,v)§[gridx, gridy, loc];
+    GOTO inter9 ()
+  }
+
+  BLOCK inter9 ()
+  []
+  {
+    angle <- §degrees(atan(({0} - {1}) / sqrt(({2}.x - {1}.x)** 2 + ({2}.y - {1}.y)** 2)))§[hloc, hhere, loc];
+    GOTO inter10 ()
+  }
+
+  BLOCK inter10 ()
+  []
+  {
+    condition%1 <- §{0} IS NULL OR {1} > {2}§[max_angle, angle, max_angle];
+    IF condition%1
+    THEN GOTO truthy1 ()
+    ELSE JUMP loop0_head ()
+  }
+
+  BLOCK truthy1 ()
+  []
+  {
+    max_angle <- §{0}§[angle];
+    JUMP loop0_head ()
+  }
+}
+JUMPS []
