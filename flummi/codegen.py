@@ -14,6 +14,16 @@ E = TypeVar("E", bound=common.SupportsFormat)
 T = TypeVar("T", bound=common.SupportsStr)
 
 
+def _indent(lines: str, prefix: str):
+    out = ""
+    for i, line in enumerate(lines.splitlines(keepends=True)):
+        if i > 0:
+            out += prefix + line
+        else:
+            out += line
+    return out
+
+
 def codegen(graph: CFG.Graph) -> str:
     return CodeGen().gen_program(graph)
 
@@ -32,10 +42,10 @@ class CodeGen(Generic[E, T]):
         return str(type.source)
 
     def gen_expression(self, expression: common.Expression[E]) -> str:
-        return f"""(SELECT ({expression.source.format(*(
+        return f"""({_indent(expression.source.format(*(
             self.gen_variable(variable)
             for variable in expression.free_variables
-        ))}))"""
+        )), ' ')})"""
 
     def gen_variable(self, variable: common.Variable) -> str:
         return f'"{variable.identifier}"'
@@ -62,11 +72,14 @@ class CodeGen(Generic[E, T]):
 
         input_bindings = (
             (',\n' + ' '*19) * (0 < len(graph.inputs)) +
-            (',\n' + ' '*19).join(
-                self.gen_expression(graph.inputs[variable]) +
-                " :: " + self.gen_type(graph.variables[variable]) +
-                " AS " + self.gen_variable(variable)
-                for variable in graph.blocks[graph.entry_label].parameters
+            ',\n'.join(
+                indent(
+                    self.gen_expression(graph.inputs[variable]) +
+                    " :: " + self.gen_type(graph.variables[variable]) +
+                    " AS " + self.gen_variable(variable),
+                    ' ' * 19 * (i > 0)
+                )
+                for i, variable in enumerate(graph.blocks[graph.entry_label].parameters)
             )
         )
 
@@ -112,11 +125,14 @@ class CodeGen(Generic[E, T]):
 
         input_bindings = (
             (',\n' + ' '*21) * (0 < len(graph.inputs)) +
-            (',\n' + ' '*21).join(
-                self.gen_expression(graph.inputs[variable]) +
-                " :: " + self.gen_type(graph.variables[variable]) +
-                " AS " + self.gen_variable(variable)
-                for variable in graph.blocks[graph.entry_label].parameters
+            ',\n'.join(
+                indent(
+                    self.gen_expression(graph.inputs[variable]) +
+                    " :: " + self.gen_type(graph.variables[variable]) +
+                    " AS " + self.gen_variable(variable),
+                    ' ' * 21 * (i > 0)
+                )
+                for i, variable in enumerate(graph.blocks[graph.entry_label].parameters)
             )
         )
 
@@ -267,8 +283,12 @@ class CodeGen(Generic[E, T]):
 
         output_columns = (
             (',\n' + ' '*19) * (0 < len(output_columns)) +
-            (',\n' + ' '*19).join(output_columns)
+            ',\n'.join(
+                indent(output_column, ' ' * 19 * (i > 0))
+                for i, output_column in enumerate(output_columns)
+            )
         )
+
         emits = [
             statement
             for statement in block.statements

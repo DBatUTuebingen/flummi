@@ -1,7 +1,7 @@
 from itertools import chain
 
 from ..grammars import CFG
-from ..algorithms import compute_successors, get_jumps
+from ..algorithms import compute_successors, get_jumps, compute_depth_information
 from .print import pretty, STYLE
 
 
@@ -44,9 +44,10 @@ digraph "%pdg%" {{
       color="#A37ACC";
     ];
     edge [
-      color="#A37ACC"
+      color="#A37ACC",
+      style="dashed"
     ];
-    "%inputs%" [label="{inputs}"];
+    "%inputs%" [label="{inputs}\l"];
     "%inputs%" -> "{root}";
   }}
 }}
@@ -76,6 +77,12 @@ def dot(graph: CFG.Graph[str, str], font: str = "PragmataPro") -> str:
         f"{variable} <- {input!s}"
         for variable, input in graph.inputs.items()
     )
+    # jumps = "\\l".join(
+    #     pretty(jump).replace("\n", "\\l")
+    #     for jump in graph.jumps
+    # )
+    # depths = compute_depth_information(graph)
+    # jump_placement = f'{max(depths, key=depths.__getitem__).label} -> "%jumps%";'
     STYLE.on()
     return TEMPLATE.format(
         font=font,
@@ -83,4 +90,6 @@ def dot(graph: CFG.Graph[str, str], font: str = "PragmataPro") -> str:
         edges=edges,
         inputs=inputs,
         root=graph.entry_label.label,
+        # jumps=jumps,
+        # jump_placement=jump_placement
     )

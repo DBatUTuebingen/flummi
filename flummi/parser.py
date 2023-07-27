@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum, unique
 import re
+from textwrap import dedent
 from typing import Callable, Iterator, TypeVar
 
 from .grammars import proc, common
@@ -167,7 +168,7 @@ class Parser:
             free_variables = list(self.sequence(TokenType.COMMA, self.parse_variable))
             self.expect(TokenType.RIGHT_BRACKET)
         return common.Expression(
-            source=value,
+            source=dedent(value).strip(),
             free_variables=free_variables
         )
 

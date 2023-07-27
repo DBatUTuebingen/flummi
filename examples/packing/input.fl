@@ -1,12 +1,12 @@
 CALL (§281990§[], §60§[]) IN
-FUN (orderkey: §int§, capacity: §int§) → §bit§: {
+FUN (orderkey: §int§, capacity: §int§) → §text§: {
   n          : §int§;
   items      : §int§;
   size       : §int§;
   subset     : §int§;
   max_size   : §int§;
   max_subset : §int§;
-  pack       : §bit§;
+  pack       : §text§;
   linenumber : §int§;
 
   -- # of lineitems in order
@@ -48,7 +48,7 @@ FUN (orderkey: §int§, capacity: §int§) → §bit§: {
         };
 
         -- convert bit set max_subset into set of linenumbers
-        pack <- §bitstring('0', {0})§[n];
+        pack <- §''§[];
         linenumber <- §0§[];
         LOOP {
           linenumber <- §{0} + 1§[linenumber];
@@ -56,8 +56,8 @@ FUN (orderkey: §int§, capacity: §int§) → §bit§: {
           THEN BREAK
           ELSE
             IF §{0} & (1 << {1} - 1) <> 0§[max_subset, linenumber]
-            THEN pack <- §set_bit({0}, {1} - 1, 1)§[pack, linenumber]
-            ELSE {} -- nop!
+            THEN pack <- §{0} || '#'§[pack]
+            ELSE pack <- §{0} || '.'§[pack]
         };
 
         -- emit pack
@@ -65,7 +65,9 @@ FUN (orderkey: §int§, capacity: §int§) → §bit§: {
 
         -- we've selected lineitems in set max_subset,
         -- update items to remove these lineitems
-        items <- §{0} & ~{1}§[items, max_subset]
+        items <- §{0} & (-{1} - 1)§[items, max_subset]
+        -- ⚠️ if pointwise inversion is supported as an operator use it instead ;)
+        -- items <- §{0} & ~{1}§[items, max_subset]
       }
     }
   }

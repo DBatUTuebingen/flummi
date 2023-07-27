@@ -1,0 +1,354 @@
+ENTRYPOINT entry
+INPUTS (
+  orderkey <- §281990§[], 
+  capacity <- §60§[]
+)
+EMITS §text§
+VARS (
+  orderkey : §int§, 
+  capacity : §int§, 
+  n : §int§, 
+  items : §int§, 
+  size : §int§, 
+  subset : §int§, 
+  max_size : §int§, 
+  max_subset : §int§, 
+  pack : §text§, 
+  linenumber : §int§, 
+  condition%0 : §bool§, 
+  condition%1 : §bool§, 
+  condition%2 : §bool§, 
+  condition%3 : §bool§, 
+  condition%4 : §bool§, 
+  condition%5 : §bool§
+)
+BLOCKS {
+  BLOCK entry ()
+  []
+  {
+    n <- §SELECT COUNT(*) :: int FROM lineitem AS l WHERE l.l_orderkey = {0}§[orderkey];
+    GOTO inter0 ()
+  }
+
+  BLOCK inter0 ()
+  []
+  {
+    condition%0 <- §{0} = 0 OR capacity < (SELECT MAX(p.p_size) FROM lineitem AS l, part AS p WHERE l.l_orderkey = {1} AND l.l_partkey = p.p_partkey)§[n, orderkey];
+    GOTO inter1 ()
+  }
+
+  BLOCK truthy0 ()
+  []
+  {
+    STOP
+  }
+
+  BLOCK falsey0 ()
+  []
+  {
+    items <- §(1 << {0}) - 1§[n];
+    GOTO inter2 ()
+  }
+
+  BLOCK merge0 ()
+  []
+  {
+    STOP
+  }
+
+  BLOCK inter1 ()
+  []
+  {
+    IF condition%0
+    THEN GOTO truthy0 ()
+    ELSE GOTO falsey0 ()
+  }
+
+  BLOCK unreachable0 ()
+  []
+  {
+    GOTO merge0 ()
+  }
+
+  BLOCK inter2 ()
+  []
+  {
+    JUMP loop0_head ()
+  }
+
+  BLOCK loop0_head ()
+  []
+  {
+    condition%1 <- §{0} = 0§[items];
+    GOTO inter3 ()
+  }
+
+  BLOCK loop0_exit ()
+  []
+  {
+    GOTO merge0 ()
+  }
+
+  BLOCK truthy1 ()
+  []
+  {
+    STOP
+  }
+
+  BLOCK falsey1 ()
+  []
+  {
+    max_size <- §0§[];
+    GOTO inter4 ()
+  }
+
+  BLOCK merge1 ()
+  []
+  {
+    JUMP loop0_head ()
+  }
+
+  BLOCK inter3 ()
+  []
+  {
+    IF condition%1
+    THEN GOTO truthy1 ()
+    ELSE GOTO falsey1 ()
+  }
+
+  BLOCK unreachable1 ()
+  []
+  {
+    GOTO merge1 ()
+  }
+
+  BLOCK inter4 ()
+  []
+  {
+    max_subset <- §0§[];
+    GOTO inter5 ()
+  }
+
+  BLOCK inter5 ()
+  []
+  {
+    subset <- §{0} & -{0}§[items];
+    GOTO inter6 ()
+  }
+
+  BLOCK inter6 ()
+  []
+  {
+    JUMP loop1_head ()
+  }
+
+  BLOCK loop1_head ()
+  []
+  {
+    size <- §SELECT SUM(p.p_size) FROM lineitem AS l, part AS p WHERE l.l_orderkey = {0} AND {1} & (1 << l.l_linenumber - 1) <> 0 AND l.l_partkey = p.p_partkey§[orderkey, subset];
+    GOTO inter7 ()
+  }
+
+  BLOCK loop1_exit ()
+  []
+  {
+    pack <- §''§[];
+    GOTO inter13 ()
+  }
+
+  BLOCK inter7 ()
+  []
+  {
+    condition%2 <- §{0} <= {1} AND {0} > {2}§[size, capacity, max_size];
+    GOTO inter8 ()
+  }
+
+  BLOCK truthy2 ()
+  []
+  {
+    max_size <- §{0}§[size];
+    GOTO inter9 ()
+  }
+
+  BLOCK falsey2 ()
+  []
+  {
+    GOTO merge2 ()
+  }
+
+  BLOCK merge2 ()
+  []
+  {
+    condition%3 <- §{0} = {1}§[subset, items];
+    GOTO inter11 ()
+  }
+
+  BLOCK inter8 ()
+  []
+  {
+    IF condition%2
+    THEN GOTO truthy2 ()
+    ELSE GOTO falsey2 ()
+  }
+
+  BLOCK inter9 ()
+  []
+  {
+    max_subset <- §{0}§[subset];
+    GOTO inter10 ()
+  }
+
+  BLOCK inter10 ()
+  []
+  {
+    GOTO merge2 ()
+  }
+
+  BLOCK truthy3 ()
+  []
+  {
+    GOTO loop1_exit ()
+  }
+
+  BLOCK falsey3 ()
+  []
+  {
+    subset <- §{0} & ({1} - {0})§[items, subset];
+    GOTO inter12 ()
+  }
+
+  BLOCK merge3 ()
+  []
+  {
+    JUMP loop1_head ()
+  }
+
+  BLOCK inter11 ()
+  []
+  {
+    IF condition%3
+    THEN GOTO truthy3 ()
+    ELSE GOTO falsey3 ()
+  }
+
+  BLOCK inter12 ()
+  []
+  {
+    GOTO merge3 ()
+  }
+
+  BLOCK inter13 ()
+  []
+  {
+    linenumber <- §0§[];
+    GOTO inter14 ()
+  }
+
+  BLOCK inter14 ()
+  []
+  {
+    JUMP loop2_head ()
+  }
+
+  BLOCK loop2_head ()
+  []
+  {
+    linenumber <- §{0} + 1§[linenumber];
+    GOTO inter15 ()
+  }
+
+  BLOCK loop2_exit ()
+  []
+  {
+    EMIT §{0}§[pack];
+    GOTO inter20 ()
+  }
+
+  BLOCK inter15 ()
+  []
+  {
+    condition%4 <- §{0} > {1}§[linenumber, n];
+    GOTO inter16 ()
+  }
+
+  BLOCK truthy4 ()
+  []
+  {
+    GOTO loop2_exit ()
+  }
+
+  BLOCK falsey4 ()
+  []
+  {
+    condition%5 <- §{0} & (1 << {1} - 1) <> 0§[max_subset, linenumber];
+    GOTO inter17 ()
+  }
+
+  BLOCK merge4 ()
+  []
+  {
+    JUMP loop2_head ()
+  }
+
+  BLOCK inter16 ()
+  []
+  {
+    IF condition%4
+    THEN GOTO truthy4 ()
+    ELSE GOTO falsey4 ()
+  }
+
+  BLOCK truthy5 ()
+  []
+  {
+    pack <- §{0} || '#'§[pack];
+    GOTO inter18 ()
+  }
+
+  BLOCK falsey5 ()
+  []
+  {
+    pack <- §{0} || '.'§[pack];
+    GOTO inter19 ()
+  }
+
+  BLOCK merge5 ()
+  []
+  {
+    GOTO merge4 ()
+  }
+
+  BLOCK inter17 ()
+  []
+  {
+    IF condition%5
+    THEN GOTO truthy5 ()
+    ELSE GOTO falsey5 ()
+  }
+
+  BLOCK inter18 ()
+  []
+  {
+    GOTO merge5 ()
+  }
+
+  BLOCK inter19 ()
+  []
+  {
+    GOTO merge5 ()
+  }
+
+  BLOCK inter20 ()
+  []
+  {
+    items <- §{0} & (-{1} - 1)§[items, max_subset];
+    GOTO inter21 ()
+  }
+
+  BLOCK inter21 ()
+  []
+  {
+    GOTO merge1 ()
+  }
+}
+JUMPS []

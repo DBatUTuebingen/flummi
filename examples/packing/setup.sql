@@ -1,2 +1,4 @@
+PRAGMA threads=1;
+
 LOAD tpch;
-CALL dbgen(sf=0.05);
+CALL dbgen(sf=1);

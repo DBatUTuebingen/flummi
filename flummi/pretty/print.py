@@ -4,6 +4,16 @@ from textwrap import indent, dedent
 from ..grammars import CFG
 
 
+def _indent(lines: str, prefix: str):
+    out = ""
+    for i, line in enumerate(lines.splitlines(keepends=True)):
+        if i > 0:
+            out += prefix + line
+        else:
+            out += line
+    return out
+
+
 class Color:
     def __init__(self):
         self.active = True
@@ -175,7 +185,7 @@ def pretty(node: CFG.Node[str, str]) -> str:
             )
             jumps = (
                 '\n' * (0 < len(jumps)) +
-                indent('\n'.join(map(pretty, jumps)), ' '*18) +
+                indent(',\n'.join(map(pretty, jumps)), ' '*18) +
                 ('\n' + ' '*16) * (0 < len(jumps))
             )
 
@@ -192,7 +202,7 @@ def pretty(node: CFG.Node[str, str]) -> str:
             parameters = STYLE.COMMA.join(map(str, parameters))
             predecessor_references = (
                 '\n' * (0 < len(predecessor_references)) +
-                indent('\n'.join(map(pretty, predecessor_references)), ' '*18) +
+                indent(',\n'.join(map(pretty, predecessor_references)), ' '*18) +
                 ('\n' + ' '*16) * (0 < len(predecessor_references))
             )
             statements = (
@@ -200,7 +210,7 @@ def pretty(node: CFG.Node[str, str]) -> str:
                 indent(f'{STYLE.SEMI}\n'.join(map(pretty, statements)), ' '*18) +
                 STYLE.SEMI * (0 < len(statements))
             )
-            terminal = pretty(terminal)
+            terminal = _indent(pretty(terminal), ' '*18)
 
             return dedent(f"""
                 {STYLE.BLOCK} {STYLE.label(block_label)} {STYLE.LPAREN}{parameters}{STYLE.RPAREN}
@@ -214,7 +224,8 @@ def pretty(node: CFG.Node[str, str]) -> str:
             return f"{STYLE.EMIT} {to_emit!s}"
 
         case CFG.Assignment(variable, expression):
-            return f"{variable} {STYLE.LARROW} {expression!s}"
+            indent_len = len(variable.identifier) + 5
+            return f"{variable} {STYLE.LARROW} {_indent(str(expression), ' '*indent_len)}"
 
         case CFG.Jump(target, arguments):
             return f"{STYLE.JUMP} {STYLE.label(target)} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, arguments))}{STYLE.RPAREN}"
@@ -226,10 +237,10 @@ def pretty(node: CFG.Node[str, str]) -> str:
             return f"{STYLE.STOP}"
 
         case CFG.If(condition, truthy, falsey):
-            return f"{STYLE.IF} {condition} {STYLE.THEN} {pretty(truthy)} {STYLE.ELSE} {pretty(falsey)}"
+            return f"{STYLE.IF} {condition}\n{STYLE.THEN} {_indent(pretty(truthy), ' '*5)}\n{STYLE.ELSE} {_indent(pretty(falsey), ' '*5)}"
 
         case CFG.JumpDirective(origin, destination, parameters, predicate):
-            return f"{STYLE.FROM} {STYLE.label(origin)} {STYLE.TO} {STYLE.label(destination)} {STYLE.WITH} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, parameters))}{STYLE.RPAREN} {STYLE.WHERE} {pretty(predicate)}"
+            return f"{STYLE.FROM} {STYLE.label(origin)} {STYLE.TO} {STYLE.label(destination)}\n{STYLE.WITH} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, parameters))}{STYLE.RPAREN}\n{STYLE.WHERE} {pretty(predicate)}"
 
         case CFG.Variable(variable):
             return str(variable)
@@ -247,7 +258,7 @@ def pretty(node: CFG.Node[str, str]) -> str:
             return f"{STYLE.FROM} {STYLE.LOOP} {STYLE.AS} {expected_label.label}"
 
         case CFG.FromBlock(target_label, arguments, predicate):
-            return f"{STYLE.FROM} {STYLE.label(target_label)} {STYLE.WITH} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, arguments))}{STYLE.RPAREN} {STYLE.WHERE} {pretty(predicate)}"
+            return f"{STYLE.FROM} {STYLE.label(target_label)}\n{STYLE.WITH} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, arguments))}{STYLE.RPAREN}\n{STYLE.WHERE} {pretty(predicate)}"
 
         case _:
             raise TypeError("Unknown CFG form.")

@@ -59,14 +59,13 @@ def set_block_parameters(graph: CFG.Graph[E, T], heads: set[CFG.BlockLabel]) -> 
 
     def bubble_parameters(label: CFG.BlockLabel):
         nonlocal seen, changed
-        if label in seen:
-            return
-        seen.add(label)
 
         n_parameters = len(parameters[label])
         successor_parameters = set()
         for successor in successors[label]:
-            bubble_parameters(successor)
+            if successor not in seen:
+                seen.add(successor)
+                bubble_parameters(successor)
             successor_parameters |= parameters[successor]
 
         parameters[label].update(successor_parameters - bound_variables[label])

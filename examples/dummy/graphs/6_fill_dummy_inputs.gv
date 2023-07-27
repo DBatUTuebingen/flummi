@@ -1,5 +1,4 @@
 digraph "%pdg%" {
-  rankdir="TB";
   node [
     shape=rectangle,
     nojustify=true,
@@ -18,7 +17,6 @@ digraph "%pdg%" {
     color="#FA8D3E"
   ];
   subgraph "%cfg%" {
-    rankdir="LR";
     cluster=true;
     style="rounded,dotted";
     color="#5C6166";
@@ -29,9 +27,9 @@ digraph "%pdg%" {
     edge [
       color="#FA8D3E"
     ];
-    "entry" [label="BLOCK entry (c, a, b)\l[]\l{\l  c <- §0§[];\l  JUMP loop0_head (c, a, b)\l}\l"];
-    "loop0_head" [label="BLOCK loop0_head (c, a, b)\l[]\l{\l  c <- §{0} + {1}§[a, c];\l  b <- §{0} - 1§[b];\l  GOTO inter1 (c, b, a)\l}\l"];
-    "inter1" [label="BLOCK inter1 (c, b, a)\l[]\l{\l  EMIT §{0}§[c];\l  condition%0 <- §0 = {0}§[b];\l  IF condition%0 THEN STOP ELSE JUMP loop0_head (c, a, b)\l}\l"];
+    "entry" [label="BLOCK entry (a, c, b)\l[]\l{\l  c <- §0§[];\l  JUMP loop0_head (a, c, b)\l}\l"];
+    "loop0_head" [label="BLOCK loop0_head (a, c, b)\l[]\l{\l  c <- §{0} + {1}§[a, c];\l  b <- §{0} - 1§[b];\l  GOTO inter1 (b, a, c)\l}\l"];
+    "inter1" [label="BLOCK inter1 (b, a, c)\l[]\l{\l  EMIT §{0}§[c];\l  condition%0 <- §0 = {0}§[b];\l  IF condition%0\l  THEN STOP\l  ELSE JUMP loop0_head (a, c, b)\l}\l"];
     "entry" -> "loop0_head" [style="dashed"];
     "loop0_head" -> "inter1" [style="solid"];
     "inter1" -> "loop0_head" [style="dashed"];
@@ -42,9 +40,10 @@ digraph "%pdg%" {
       color="#A37ACC";
     ];
     edge [
-      color="#A37ACC"
+      color="#A37ACC",
+      style="dashed"
     ];
-    "%inputs%" [label="a <- §4§[]\lb <- §5§[]\lc <- §NULL§[]"];
+    "%inputs%" [label="a <- §4§[]\lb <- §5§[]\lc <- §NULL§[]\l"];
     "%inputs%" -> "entry";
   }
 }

@@ -1,0 +1,44 @@
+ENTRYPOINT entry
+INPUTS (
+  poh0 <- §NULL§[], 
+  poh <- §NULL§[]
+)
+EMITS §text§
+VARS (
+  poh : §struct(label text, loc point)§, 
+  poh0 : §struct(label text, loc point)§, 
+  condition%0 : §bool§
+)
+BLOCKS {
+  BLOCK entry (poh0, poh)
+  []
+  {
+    poh0 <- §SELECT p FROM points AS p ORDER BY p.loc.x LIMIT 1§[];
+    GOTO inter0 (poh0)
+  }
+
+  BLOCK inter0 (poh0)
+  []
+  {
+    poh <- §{0}§[poh0];
+    JUMP loop0_head (poh0, poh)
+  }
+
+  BLOCK loop0_head (poh0, poh)
+  []
+  {
+    EMIT §{0}.label§[poh];
+    poh <- §SELECT p1 FROM points AS p1 WHERE p1 <> {0} AND NOT EXISTS (SELECT 1 FROM points AS p2 WHERE left_of(p2.loc, {0}.loc, p1.loc))§[poh];
+    GOTO inter2 (poh0, poh)
+  }
+
+  BLOCK inter2 (poh0, poh)
+  []
+  {
+    condition%0 <- §{0} = {1}§[poh, poh0];
+    IF condition%0
+    THEN STOP
+    ELSE JUMP loop0_head (poh0, poh)
+  }
+}
+JUMPS []

@@ -1,0 +1,85 @@
+digraph "%pdg%" {
+  node [
+    shape=rectangle,
+    nojustify=true,
+    penwidth=2,
+    style="rounded,filled",
+    fontcolor="#5C6166",
+    fontname = "PragmataPro",
+  ];
+  graph [
+    fontname = "PragmataPro",
+    splines=ortho
+  ];
+  edge [
+    fontname = "PragmataPro",
+    penwidth=2,
+    color="#FA8D3E"
+  ];
+  subgraph "%cfg%" {
+    cluster=true;
+    style="rounded,dotted";
+    color="#5C6166";
+    node [
+      fillcolor="#DDF0F6",
+      color="#55B4D4"
+    ];
+    edge [
+      color="#FA8D3E"
+    ];
+    "entry" [label="BLOCK entry ()\l[]\l{\l  n <- §SELECT COUNT(*) :: int FROM lineitem AS l WHERE l.l_orderkey = {0}§[orderkey];\l  GOTO inter0 ()\l}\l"];
+    "inter0" [label="BLOCK inter0 ()\l[]\l{\l  condition%0 <- §{0} = 0 OR capacity < (SELECT MAX(p.p_size) FROM lineitem AS l, part AS p WHERE l.l_orderkey = {1} AND l.l_partkey = p.p_partkey)§[n, orderkey];\l  IF condition%0\l  THEN STOP\l  ELSE GOTO falsey0 ()\l}\l"];
+    "falsey0" [label="BLOCK falsey0 ()\l[]\l{\l  items <- §(1 << {0}) - 1§[n];\l  JUMP loop0_head ()\l}\l"];
+    "loop0_head" [label="BLOCK loop0_head ()\l[]\l{\l  condition%1 <- §{0} = 0§[items];\l  IF condition%1\l  THEN STOP\l  ELSE GOTO falsey1 ()\l}\l"];
+    "falsey1" [label="BLOCK falsey1 ()\l[]\l{\l  max_size <- §0§[];\l  max_subset <- §0§[];\l  subset <- §{0} & -{0}§[items];\l  JUMP loop1_head ()\l}\l"];
+    "loop1_head" [label="BLOCK loop1_head ()\l[]\l{\l  size <- §SELECT SUM(p.p_size) FROM lineitem AS l, part AS p WHERE l.l_orderkey = {0} AND {1} & (1 << l.l_linenumber - 1) <> 0 AND l.l_partkey = p.p_partkey§[orderkey, subset];\l  GOTO inter7 ()\l}\l"];
+    "loop1_exit" [label="BLOCK loop1_exit ()\l[]\l{\l  pack <- §''§[];\l  GOTO inter13 ()\l}\l"];
+    "inter7" [label="BLOCK inter7 ()\l[]\l{\l  condition%2 <- §{0} <= {1} AND {0} > {2}§[size, capacity, max_size];\l  IF condition%2\l  THEN GOTO truthy2 ()\l  ELSE GOTO merge2 ()\l}\l"];
+    "truthy2" [label="BLOCK truthy2 ()\l[]\l{\l  max_size <- §{0}§[size];\l  max_subset <- §{0}§[subset];\l  GOTO merge2 ()\l}\l"];
+    "merge2" [label="BLOCK merge2 ()\l[]\l{\l  condition%3 <- §{0} = {1}§[subset, items];\l  IF condition%3\l  THEN GOTO loop1_exit ()\l  ELSE GOTO falsey3 ()\l}\l"];
+    "falsey3" [label="BLOCK falsey3 ()\l[]\l{\l  subset <- §{0} & ({1} - {0})§[items, subset];\l  JUMP loop1_head ()\l}\l"];
+    "inter13" [label="BLOCK inter13 ()\l[]\l{\l  linenumber <- §0§[];\l  JUMP loop2_head ()\l}\l"];
+    "loop2_head" [label="BLOCK loop2_head ()\l[]\l{\l  linenumber <- §{0} + 1§[linenumber];\l  GOTO inter15 ()\l}\l"];
+    "inter15" [label="BLOCK inter15 ()\l[]\l{\l  condition%4 <- §{0} > {1}§[linenumber, n];\l  IF condition%4\l  THEN GOTO truthy4 ()\l  ELSE GOTO falsey4 ()\l}\l"];
+    "truthy4" [label="BLOCK truthy4 ()\l[]\l{\l  EMIT §{0}§[pack];\l  items <- §{0} & (-{1} - 1)§[items, max_subset];\l  JUMP loop0_head ()\l}\l"];
+    "falsey4" [label="BLOCK falsey4 ()\l[]\l{\l  condition%5 <- §{0} & (1 << {1} - 1) <> 0§[max_subset, linenumber];\l  IF condition%5\l  THEN GOTO truthy5 ()\l  ELSE GOTO falsey5 ()\l}\l"];
+    "truthy5" [label="BLOCK truthy5 ()\l[]\l{\l  pack <- §{0} || '#'§[pack];\l  GOTO merge5 ()\l}\l"];
+    "falsey5" [label="BLOCK falsey5 ()\l[]\l{\l  pack <- §{0} || '.'§[pack];\l  GOTO merge5 ()\l}\l"];
+    "merge5" [label="BLOCK merge5 ()\l[]\l{\l  JUMP loop2_head ()\l}\l"];
+    "entry" -> "inter0" [style="solid"];
+    "inter0" -> "falsey0" [style="solid"];
+    "falsey0" -> "loop0_head" [style="dashed"];
+    "loop0_head" -> "falsey1" [style="solid"];
+    "falsey1" -> "loop1_head" [style="dashed"];
+    "loop1_head" -> "inter7" [style="solid"];
+    "loop1_exit" -> "inter13" [style="solid"];
+    "inter7" -> "merge2" [style="solid"];
+    "inter7" -> "truthy2" [style="solid"];
+    "truthy2" -> "merge2" [style="solid"];
+    "merge2" -> "falsey3" [style="solid"];
+    "merge2" -> "loop1_exit" [style="solid"];
+    "falsey3" -> "loop1_head" [style="dashed"];
+    "inter13" -> "loop2_head" [style="dashed"];
+    "loop2_head" -> "inter15" [style="solid"];
+    "inter15" -> "falsey4" [style="solid"];
+    "inter15" -> "truthy4" [style="solid"];
+    "truthy4" -> "loop0_head" [style="dashed"];
+    "falsey4" -> "truthy5" [style="solid"];
+    "falsey4" -> "falsey5" [style="solid"];
+    "truthy5" -> "merge5" [style="solid"];
+    "falsey5" -> "merge5" [style="solid"];
+    "merge5" -> "loop2_head" [style="dashed"];
+  }
+  subgraph "%inputs%" {
+    node [
+      fillcolor="#F6F2F9",
+      color="#A37ACC";
+    ];
+    edge [
+      color="#A37ACC",
+      style="dashed"
+    ];
+    "%inputs%" [label="orderkey <- §281990§[]\lcapacity <- §60§[]\l"];
+    "%inputs%" -> "entry";
+  }
+}

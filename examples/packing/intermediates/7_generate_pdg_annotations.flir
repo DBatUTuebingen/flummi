@@ -1,0 +1,274 @@
+ENTRYPOINT entry
+INPUTS (
+  orderkey <- §281990§[], 
+  capacity <- §60§[], 
+  n <- §NULL§[], 
+  pack <- §NULL§[], 
+  linenumber <- §NULL§[], 
+  max_subset <- §NULL§[], 
+  subset <- §NULL§[], 
+  items <- §NULL§[], 
+  max_size <- §NULL§[]
+)
+EMITS §text§
+VARS (
+  orderkey : §int§, 
+  capacity : §int§, 
+  n : §int§, 
+  items : §int§, 
+  size : §int§, 
+  subset : §int§, 
+  max_size : §int§, 
+  max_subset : §int§, 
+  pack : §text§, 
+  linenumber : §int§, 
+  condition%0 : §bool§, 
+  condition%1 : §bool§, 
+  condition%2 : §bool§, 
+  condition%3 : §bool§, 
+  condition%4 : §bool§, 
+  condition%5 : §bool§
+)
+BLOCKS {
+  BLOCK entry (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM LOOP AS entry
+  ]
+  {
+    n <- §SELECT COUNT(*) :: int FROM lineitem AS l WHERE l.l_orderkey = {0}§[orderkey];
+    GOTO inter0 (n, orderkey, pack, linenumber, max_subset, subset, capacity, max_size)
+  }
+
+  BLOCK inter0 (n, orderkey, pack, linenumber, max_subset, subset, capacity, max_size)
+  [
+    FROM entry
+    WITH (n, orderkey, pack, linenumber, max_subset, subset, capacity, max_size)
+    WHERE TRUE
+  ]
+  {
+    condition%0 <- §{0} = 0 OR capacity < (SELECT MAX(p.p_size) FROM lineitem AS l, part AS p WHERE l.l_orderkey = {1} AND l.l_partkey = p.p_partkey)§[n, orderkey];
+    IF condition%0
+    THEN STOP
+    ELSE GOTO falsey0 (n, orderkey, pack, linenumber, max_subset, subset, capacity, max_size)
+  }
+
+  BLOCK falsey0 (n, orderkey, pack, linenumber, max_subset, subset, capacity, max_size)
+  [
+    FROM inter0
+    WITH (n, orderkey, pack, linenumber, max_subset, subset, capacity, max_size)
+    WHERE (TRUE) AND (NOT (condition%0))
+  ]
+  {
+    items <- §(1 << {0}) - 1§[n];
+    JUMP loop0_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK loop0_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM LOOP AS loop0_head
+  ]
+  {
+    condition%1 <- §{0} = 0§[items];
+    IF condition%1
+    THEN STOP
+    ELSE GOTO falsey1 (orderkey, n, pack, linenumber, capacity, items)
+  }
+
+  BLOCK falsey1 (orderkey, n, pack, linenumber, capacity, items)
+  [
+    FROM loop0_head
+    WITH (orderkey, n, pack, linenumber, capacity, items)
+    WHERE (TRUE) AND (NOT (condition%1))
+  ]
+  {
+    max_size <- §0§[];
+    max_subset <- §0§[];
+    subset <- §{0} & -{0}§[items];
+    JUMP loop1_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK loop1_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM LOOP AS loop1_head
+  ]
+  {
+    size <- §SELECT SUM(p.p_size) FROM lineitem AS l, part AS p WHERE l.l_orderkey = {0} AND {1} & (1 << l.l_linenumber - 1) <> 0 AND l.l_partkey = p.p_partkey§[orderkey, subset];
+    GOTO inter7 (pack, max_subset, items, orderkey, n, linenumber, subset, capacity, max_size, size)
+  }
+
+  BLOCK loop1_exit (orderkey, n, max_subset, subset, capacity, items, max_size)
+  [
+    FROM merge2
+    WITH (orderkey, n, max_subset, subset, capacity, items, max_size)
+    WHERE (TRUE) AND (condition%3)
+  ]
+  {
+    pack <- §''§[];
+    GOTO inter13 (orderkey, n, pack, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK inter7 (pack, max_subset, items, orderkey, n, linenumber, subset, capacity, max_size, size)
+  [
+    FROM loop1_head
+    WITH (pack, max_subset, items, orderkey, n, linenumber, subset, capacity, max_size, size)
+    WHERE TRUE
+  ]
+  {
+    condition%2 <- §{0} <= {1} AND {0} > {2}§[size, capacity, max_size];
+    IF condition%2
+    THEN GOTO truthy2 (orderkey, n, pack, linenumber, subset, capacity, items, size)
+    ELSE GOTO merge2 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK truthy2 (orderkey, n, pack, linenumber, subset, capacity, items, size)
+  [
+    FROM inter7
+    WITH (orderkey, n, pack, linenumber, subset, capacity, items, size)
+    WHERE (TRUE) AND (condition%2)
+  ]
+  {
+    max_size <- §{0}§[size];
+    max_subset <- §{0}§[subset];
+    GOTO merge2 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK merge2 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM inter7
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE (TRUE) AND (NOT (condition%2)),
+    FROM truthy2
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE TRUE
+  ]
+  {
+    condition%3 <- §{0} = {1}§[subset, items];
+    IF condition%3
+    THEN GOTO loop1_exit (orderkey, n, max_subset, subset, capacity, items, max_size)
+    ELSE GOTO falsey3 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK falsey3 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM merge2
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE (TRUE) AND (NOT (condition%3))
+  ]
+  {
+    subset <- §{0} & ({1} - {0})§[items, subset];
+    JUMP loop1_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK inter13 (orderkey, n, pack, max_subset, subset, capacity, items, max_size)
+  [
+    FROM loop1_exit
+    WITH (orderkey, n, pack, max_subset, subset, capacity, items, max_size)
+    WHERE TRUE
+  ]
+  {
+    linenumber <- §0§[];
+    JUMP loop2_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK loop2_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM LOOP AS loop2_head
+  ]
+  {
+    linenumber <- §{0} + 1§[linenumber];
+    GOTO inter15 (n, orderkey, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK inter15 (n, orderkey, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM loop2_head
+    WITH (n, orderkey, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE TRUE
+  ]
+  {
+    condition%4 <- §{0} > {1}§[linenumber, n];
+    IF condition%4
+    THEN GOTO truthy4 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    ELSE GOTO falsey4 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK truthy4 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM inter15
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE (TRUE) AND (condition%4)
+  ]
+  {
+    EMIT §{0}§[pack];
+    items <- §{0} & (-{1} - 1)§[items, max_subset];
+    JUMP loop0_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK falsey4 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM inter15
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE (TRUE) AND (NOT (condition%4))
+  ]
+  {
+    condition%5 <- §{0} & (1 << {1} - 1) <> 0§[max_subset, linenumber];
+    IF condition%5
+    THEN GOTO truthy5 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    ELSE GOTO falsey5 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK truthy5 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM falsey4
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE (TRUE) AND (condition%5)
+  ]
+  {
+    pack <- §{0} || '#'§[pack];
+    GOTO merge5 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK falsey5 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM falsey4
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE (TRUE) AND (NOT (condition%5))
+  ]
+  {
+    pack <- §{0} || '.'§[pack];
+    GOTO merge5 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+
+  BLOCK merge5 (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  [
+    FROM truthy5
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE TRUE,
+    FROM falsey5
+    WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+    WHERE TRUE
+  ]
+  {
+    JUMP loop2_head (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  }
+}
+JUMPS [
+  FROM falsey0 TO loop0_head
+  WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  WHERE TRUE,
+  FROM falsey1 TO loop1_head
+  WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  WHERE TRUE,
+  FROM falsey3 TO loop1_head
+  WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  WHERE TRUE,
+  FROM inter13 TO loop2_head
+  WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  WHERE TRUE,
+  FROM truthy4 TO loop0_head
+  WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  WHERE TRUE,
+  FROM merge5 TO loop2_head
+  WITH (orderkey, n, pack, linenumber, max_subset, subset, capacity, items, max_size)
+  WHERE TRUE
+]

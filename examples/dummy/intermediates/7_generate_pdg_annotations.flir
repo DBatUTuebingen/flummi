@@ -1,0 +1,55 @@
+ENTRYPOINT entry
+INPUTS (
+  a <- §4§[], 
+  b <- §5§[], 
+  c <- §NULL§[]
+)
+EMITS §int§
+VARS (
+  a : §int§, 
+  b : §int§, 
+  c : §int§, 
+  condition%0 : §bool§
+)
+BLOCKS {
+  BLOCK entry (a, c, b)
+  [
+    FROM LOOP AS entry
+  ]
+  {
+    c <- §0§[];
+    JUMP loop0_head (a, c, b)
+  }
+
+  BLOCK loop0_head (a, c, b)
+  [
+    FROM LOOP AS loop0_head
+  ]
+  {
+    c <- §{0} + {1}§[a, c];
+    b <- §{0} - 1§[b];
+    GOTO inter1 (b, a, c)
+  }
+
+  BLOCK inter1 (b, a, c)
+  [
+    FROM loop0_head
+    WITH (b, a, c)
+    WHERE TRUE
+  ]
+  {
+    EMIT §{0}§[c];
+    condition%0 <- §0 = {0}§[b];
+    IF condition%0
+    THEN STOP
+    ELSE JUMP loop0_head (a, c, b)
+  }
+}
+JUMPS [
+  FROM entry TO loop0_head
+  WITH (a, c, b)
+  WHERE TRUE,
+  FROM inter1 TO loop0_head
+  WITH (a, c, b)
+  WHERE (TRUE) AND (NOT (condition%0))
+]

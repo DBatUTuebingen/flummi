@@ -1,5 +1,5 @@
 CALL (§4§[], §5§[]) IN
-FUN (a: §int§, b: §int§) → §int§: {
+FUN (a: §int§, b: §int§) -> §int§: {
   c: §int§;
 
   c <- §0§[];
@@ -12,7 +12,9 @@ FUN (a: §int§, b: §int§) → §int§: {
     b <- §{0} - 1§[b];
 
     IF §0 = {0}§[b]
-      THEN STOP
+      THEN BREAK
       ELSE CONTINUE
-  }
+  };
+
+  STOP
 }

@@ -1,0 +1,93 @@
+ENTRYPOINT entry
+INPUTS (
+  a <- §4§[], 
+  b <- §5§[]
+)
+EMITS §int§
+VARS (
+  a : §int§, 
+  b : §int§, 
+  c : §int§, 
+  condition%0 : §bool§
+)
+BLOCKS {
+  BLOCK entry ()
+  []
+  {
+    c <- §0§[];
+    GOTO inter0 ()
+  }
+
+  BLOCK inter0 ()
+  []
+  {
+    JUMP loop0_head ()
+  }
+
+  BLOCK loop0_head ()
+  []
+  {
+    c <- §{0} + {1}§[a, c];
+    b <- §{0} - 1§[b];
+    GOTO inter1 ()
+  }
+
+  BLOCK loop0_exit ()
+  []
+  {
+    STOP
+  }
+
+  BLOCK inter1 ()
+  []
+  {
+    EMIT §{0}§[c];
+    condition%0 <- §0 = {0}§[b];
+    GOTO inter2 ()
+  }
+
+  BLOCK inter2 ()
+  []
+  {
+    GOTO inter3 ()
+  }
+
+  BLOCK inter3 ()
+  []
+  {
+    GOTO inter4 ()
+  }
+
+  BLOCK truthy0 ()
+  []
+  {
+    GOTO loop0_exit ()
+  }
+
+  BLOCK falsey0 ()
+  []
+  {
+    JUMP loop0_head ()
+  }
+
+  BLOCK merge0 ()
+  []
+  {
+    JUMP loop0_head ()
+  }
+
+  BLOCK inter4 ()
+  []
+  {
+    IF condition%0
+    THEN GOTO truthy0 ()
+    ELSE GOTO falsey0 ()
+  }
+
+  BLOCK unreachable0 ()
+  []
+  {
+    STOP
+  }
+}
+JUMPS []

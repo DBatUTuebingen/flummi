@@ -55,6 +55,25 @@ def get_jumps(graph: CFG.Graph[E, T]) -> set[tuple[CFG.BlockLabel,CFG.BlockLabel
     }
 
 
+def compute_depth_information(graph: CFG.Graph[E, T]) -> dict[CFG.BlockLabel, int]:
+    successors = compute_successors(graph)
+    stack: list[tuple[int, CFG.BlockLabel, set[CFG.BlockLabel]]] = [(0, graph.entry_label, set())]
+    max_depth = {}
+
+    while stack:
+        depth, label, seen = stack.pop()
+        depth += 1
+        max_depth[label] = depth
+        if not seen:
+            seen.add(label)
+            stack.extend(
+                (depth, child, seen)
+                for child in successors[label]
+            )
+
+    return max_depth
+
+
 def compute_predecessors(graph: CFG.Graph[E, T]) -> LabelGraph:
     inverted = {
         label: set()
