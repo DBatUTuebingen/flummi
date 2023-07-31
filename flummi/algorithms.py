@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import TypeVar
+from typing import TypeVar, Iterator
 
 from .grammars import CFG, common
 
@@ -105,3 +105,25 @@ def compute_dominator_tree(graph: CFG.Graph[E, T]) -> LabelGraph:
             stack.extend(sucessors[label] - {graph.entry_label, *stack})
 
     return dom
+
+
+def depth_first_order(graph: LabelGraph, start: CFG.BlockLabel) -> Iterator[CFG.BlockLabel]:
+    stack = [start]
+    seen = set()
+    while stack:
+        current = stack.pop()
+        if current not in seen:
+            yield current
+            stack.extend(graph[current])
+            seen.add(current)
+
+
+def breadth_first_order(graph: LabelGraph, start: CFG.BlockLabel) -> Iterator[CFG.BlockLabel]:
+    stack = [start]
+    seen = set()
+    while stack:
+        current = stack.pop(0)
+        if current not in seen:
+            yield current
+            stack.extend(graph[current])
+            seen.add(current)

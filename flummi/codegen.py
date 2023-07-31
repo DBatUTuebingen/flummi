@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from textwrap import dedent, indent
 from typing import Generic, TypeVar, Iterator
 
+from .algorithms import compute_successors, depth_first_order
 from .grammars import common, CFG
 
 
@@ -88,8 +89,8 @@ class CodeGen(Generic[E, T]):
         self.scope_columns = [variable.identifier for variable in graph.blocks[graph.entry_label].parameters]
 
         blocks = indent(',\n'.join(
-            self.gen_block(block)
-            for block in graph.blocks.values()
+            self.gen_block(graph.blocks[label])
+            for label in depth_first_order(compute_successors(graph), graph.entry_label)
         ), ' ' * 10)[10:]
 
         emits = indent('\n  UNION ALL\n'.join(
@@ -143,8 +144,8 @@ class CodeGen(Generic[E, T]):
         self.scope_columns = [variable.identifier for variable in graph.blocks[graph.entry_label].parameters]
 
         blocks = indent(',\n'.join(
-            self.gen_block(block)
-            for block in graph.blocks.values()
+            self.gen_block(graph.blocks[label])
+            for label in depth_first_order(compute_successors(graph), graph.entry_label)
         ), ' ' * 16)[16:]
 
         jumps = indent('\n  UNION ALL\n'.join(
@@ -284,7 +285,7 @@ class CodeGen(Generic[E, T]):
         output_columns = (
             (',\n' + ' '*19) * (0 < len(output_columns)) +
             ',\n'.join(
-                indent(output_column, ' ' * 19 * (i > 0))
+                [indent,_indent][i == 0](output_column, ' ' * 19)
                 for i, output_column in enumerate(output_columns)
             )
         )
@@ -316,15 +317,18 @@ class CodeGen(Generic[E, T]):
             for reference in block.predecessor_references
         ), ' ' * 14)[14:]
 
-        emit_scope = (
-            ', ' * (0 < len(actual_output_variables)) +
-            ', '.join(["NULL"] * len(actual_output_variables))
+        emit_scope = _indent(
+            ',\n' * (0 < len(actual_output_variables)) +
+            ',\n'.join(["NULL"] * len(actual_output_variables)),
+            ' '*23
         )
         emits = (
-            ('\n'+' '*12+'UNION ALL\n') * (0 < len(emits)) * (0 < len(output_columns)) +
+            ('\n'+' '*12+'UNION ALL\n\n') * (0 < len(emits)) * (0 < len(output_columns)) +
             indent('\n  UNION ALL\n'.join(
                 dedent(f'''
-                SELECT 'data', {self.gen_expression(statement.to_emit)}, NULL{emit_scope}
+                SELECT 'data',
+                       {_indent(self.gen_expression(statement.to_emit), ' '*23)},
+                       NULL{emit_scope}
                 FROM   "%sources%"
                 ''')[1:-1]
                 for statement in emits
