@@ -36,6 +36,13 @@ def compute_successors(graph: CFG.Graph[E, T]) -> LabelGraph:
     }
 
 
+def compute_loopless_successors(graph: CFG.Graph[E, T]) -> LabelGraph:
+    successors = compute_successors(graph)
+    for (source, sink) in get_jumps(graph):
+        successors[source].remove(sink)
+    return successors
+
+
 def get_jumps(graph: CFG.Graph[E, T]) -> set[tuple[CFG.BlockLabel,CFG.BlockLabel]]:
     def extract_jumps(terminal: CFG.Terminal) -> set[CFG.BlockLabel]:
         match terminal:
@@ -74,15 +81,26 @@ def compute_depth_information(graph: CFG.Graph[E, T]) -> dict[CFG.BlockLabel, in
     return max_depth
 
 
-def compute_predecessors(graph: CFG.Graph[E, T]) -> LabelGraph:
+def invert_graph(graph: LabelGraph) -> LabelGraph:
     inverted = {
         label: set()
-        for label in graph.blocks
+        for label in graph
     }
-    for label, successors in compute_successors(graph).items():
+    for label, successors in graph.items():
         for successor in successors:
             inverted[successor].add(label)
     return inverted
+
+
+def compute_predecessors(graph: CFG.Graph[E, T]) -> LabelGraph:
+    return invert_graph(compute_successors(graph))
+
+
+def compute_loopless_predecessors(graph: CFG.Graph[E, T]) -> LabelGraph:
+    predecessors = compute_predecessors(graph)
+    for (source, sink) in get_jumps(graph):
+        predecessors[sink].remove(source)
+    return predecessors
 
 
 def compute_dominator_tree(graph: CFG.Graph[E, T]) -> LabelGraph:
@@ -127,3 +145,20 @@ def breadth_first_order(graph: LabelGraph, start: CFG.BlockLabel) -> Iterator[CF
             yield current
             stack.extend(graph[current])
             seen.add(current)
+
+
+def dependent_ordering(graph: LabelGraph, start: CFG.BlockLabel) -> Iterator[CFG.BlockLabel]:
+    predecessors = invert_graph(graph)
+    stack = [
+        label
+        for label, preds in predecessors.items()
+        if not preds
+    ]
+    seen = set()
+    while stack:
+        current = stack.pop(0)
+        yield current
+        seen.add(current)
+        for child in graph[current]:
+            if seen.issuperset(predecessors[child]):
+                stack.append(child)

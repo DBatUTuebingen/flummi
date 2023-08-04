@@ -2,7 +2,7 @@ from dataclasses import replace
 from typing import TypeVar
 
 from ..grammars import CFG, common
-from ..algorithms import compute_dominator_tree
+from ..algorithms import compute_predecessors
 
 
 __all__ = (
@@ -17,11 +17,11 @@ T = TypeVar("T", bound=common.SupportsStr)
 def inline_control_blocks(graph: CFG.Graph[E, T]) -> CFG.Graph[E, T]:
     changed = True
     while changed:
-        dom = compute_dominator_tree(graph)
+        pred = compute_predecessors(graph)
         changed = False
         for label, inlinee_block in graph.blocks.items():
             if not inlinee_block.statements:
-                for inlineable in dom[label] - {label}:
+                for inlineable in pred[label]:
                     block = graph.blocks[inlineable]
                     block.terminal, _changed = inline_terminal(block.terminal, label, inlinee_block.terminal)
                     changed |= _changed

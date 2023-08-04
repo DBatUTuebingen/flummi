@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from textwrap import dedent, indent
 from typing import Generic, TypeVar, Iterator
 
-from .algorithms import compute_successors, depth_first_order
+from .algorithms import compute_loopless_successors, dependent_ordering
 from .grammars import common, CFG
 
 
@@ -90,7 +90,7 @@ class CodeGen(Generic[E, T]):
 
         blocks = indent(',\n'.join(
             self.gen_block(graph.blocks[label])
-            for label in depth_first_order(compute_successors(graph), graph.entry_label)
+            for label in dependent_ordering(compute_loopless_successors(graph), graph.entry_label)
         ), ' ' * 10)[10:]
 
         emits = indent('\n  UNION ALL\n'.join(
@@ -145,7 +145,7 @@ class CodeGen(Generic[E, T]):
 
         blocks = indent(',\n'.join(
             self.gen_block(graph.blocks[label])
-            for label in depth_first_order(compute_successors(graph), graph.entry_label)
+            for label in dependent_ordering(compute_loopless_successors(graph), graph.entry_label)
         ), ' ' * 16)[16:]
 
         jumps = indent('\n  UNION ALL\n'.join(

@@ -67,12 +67,12 @@ def tokenize(code: str) -> Iterator[Token]:
         token_type = TokenType[match.lastgroup]  # type: ignore
         value = match.group()
         column = match.start() - line_start
-        if token_type in {TokenType.NEWLINE, TokenType.COMMENT}:
+        if token_type in {TokenType.NEWLINE}:
             line_start = match.end()
             line += 1
             continue
 
-        elif token_type in {TokenType.WHITESPACE}:
+        elif token_type in {TokenType.WHITESPACE, TokenType.COMMENT}:
             continue
 
         yield Token(token_type, value, line, column)
