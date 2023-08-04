@@ -44,8 +44,6 @@ def main():
             with open(arguments.graphs / path, "w+") as f:
                 f.write(dot(graph))
             printer[1](f"\033[1;2m>> \033[0;2;4m{arguments.graphs / path}\033[0m")
-        else:
-            printer[1]("")
 
     def print_intermediate(graph: CFG.Graph[str, str], path: str):
         if arguments.intermediates:
@@ -54,8 +52,6 @@ def main():
                 f.write(pretty(graph))
                 STYLE.on()
             printer[1](f"\033[1;2m>> \033[0;2;4m{arguments.intermediates / path}\033[0m")
-        else:
-            printer[1]("")
 
     source = arguments.infile.read()
 

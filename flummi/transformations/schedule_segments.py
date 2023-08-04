@@ -28,6 +28,7 @@ def find_segments(graph: CFG.Graph[E,T], heads: set[CFG.BlockLabel]) -> dict[CFG
     predecessors = compute_predecessors(graph)
 
     segments = defaultdict(list)
+    roots = {*heads}
 
     stack = [
         (root, root)
@@ -41,11 +42,15 @@ def find_segments(graph: CFG.Graph[E,T], heads: set[CFG.BlockLabel]) -> dict[CFG
                 [child] = children
                 if len(predecessors[child]) == 1:
                     stack.append((child, segment_root))
+                elif child not in roots:
+                    stack.append((child, child))
+                    roots.add(child)
             else:
                 stack.extend(
                     (new_root, new_root)
                     for new_root in children - heads
                 )
+                roots.update(children)
 
     return segments
 

@@ -44,7 +44,7 @@ class CodeGen(Generic[E, T]):
 
     def gen_expression(self, expression: common.Expression[E]) -> str:
         return f"""({_indent(expression.source.format(*(
-            self.gen_variable(variable)
+            '"%sources%".' + self.gen_variable(variable)
             for variable in expression.free_variables
         )), ' ')})"""
 
@@ -213,7 +213,7 @@ class CodeGen(Generic[E, T]):
     def gen_predicate(self, predicate: CFG.Predicate) -> str:
         match predicate:
             case CFG.Variable(variable):
-                return f"NOT {self.gen_variable(variable)} IS DISTINCT FROM TRUE"
+                return f"{self.gen_variable(variable)} IS NOT DISTINCT FROM TRUE"
             case CFG.Not(operand):
                 return f"NOT ({self.gen_predicate(operand)})"
             case CFG.And(left_operand, right_operand):
