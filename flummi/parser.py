@@ -48,7 +48,7 @@ class TokenType(Enum):
     STOP = r"STOP|𝗦𝗧𝗢𝗣"
     IDENTIFIER = r"[a-zA-Z_][a-zA-Z_0-9]*"
     COMMENT = r"--[^\n]*"
-    NEWLINE = r"\n+"
+    NEWLINE = r"\n"
     WHITESPACE = r"\s+"
 
 
@@ -222,40 +222,44 @@ class Parser:
         )
 
     def parse_statement(self) -> proc.Statement[str, str]:
-        if self.match(TokenType.LOOP):
+        if self.lookahead(TokenType.LOOP):
             return self.parse_loop()
-        elif self.match(TokenType.CONTINUE):
+        elif self.lookahead(TokenType.CONTINUE):
             return self.parse_continue()
-        elif self.match(TokenType.BREAK):
+        elif self.lookahead(TokenType.BREAK):
             return self.parse_break()
-        elif self.match(TokenType.IF):
+        elif self.lookahead(TokenType.IF):
             return self.parse_if()
-        elif self.match(TokenType.EMIT):
+        elif self.lookahead(TokenType.EMIT):
             return self.parse_emit()
         elif self.lookahead(TokenType.IDENTIFIER, TokenType.COLON):
             return self.parse_declaration()
         elif self.lookahead(TokenType.IDENTIFIER, TokenType.LEFT_ARROW):
             return self.parse_assignment()
-        elif self.match(TokenType.LEFT_BRACE):
+        elif self.lookahead(TokenType.LEFT_BRACE):
             return self.parse_block()
-        elif self.match(TokenType.STOP):
+        elif self.lookahead(TokenType.STOP):
             return self.parse_stop()
         else:
             raise self.error("Expected statement")
 
     def parse_loop(self) -> proc.Loop[str, str]:
+        self.expect(TokenType.LOOP)
         body = self.parse_statement()
         return proc.Loop(
             body=body
         )
 
     def parse_continue(self) -> proc.Continue[str, str]:
+        self.expect(TokenType.CONTINUE)
         return proc.Continue()
 
     def parse_break(self) -> proc.Break[str, str]:
+        self.expect(TokenType.BREAK)
         return proc.Break()
 
     def parse_if(self) -> proc.If[str, str]:
+        self.expect(TokenType.IF)
         condition = self.parse_expression()
         self.expect(TokenType.THEN)
         truthy_branch = self.parse_statement()
@@ -268,6 +272,7 @@ class Parser:
         )
 
     def parse_emit(self) -> proc.Emit[str, str]:
+        self.expect(TokenType.EMIT)
         to_emit = self.parse_expression()
         return proc.Emit(
             to_emit=to_emit
@@ -292,6 +297,7 @@ class Parser:
         )
 
     def parse_block(self) -> proc.Block[str, str]:
+        self.expect(TokenType.LEFT_BRACE)
         if self.match(TokenType.RIGHT_BRACE):
             statements = []
         else:
@@ -302,4 +308,5 @@ class Parser:
         )
 
     def parse_stop(self) -> proc.Stop[str, str]:
+        self.expect(TokenType.STOP)
         return proc.Stop()

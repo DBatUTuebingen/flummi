@@ -112,7 +112,7 @@ class Color:
             return op
 
     @property
-    def COMMA(self): return self.operator(', ')
+    def COMMA(self): return self.operator(',')
 
     @property
     def SEMI(self): return self.operator(';')
