@@ -298,7 +298,7 @@ class CodeGen(Generic[E, T]):
 
         control = (
             indent(dedent(f"""
-            SELECT 'control', NULL, NULL{output_columns}
+            SELECT 'control', {', '.join(['NULL']*(len(self.control_columns)-1))}{output_columns}
             FROM   "%sources%"
             """)[1:[-1, None][0 < len(emits)]], ' ' * 10)[10:]
             if output_columns else ""
@@ -318,8 +318,8 @@ class CodeGen(Generic[E, T]):
         ), ' ' * 14)[14:]
 
         emit_scope = _indent(
-            ',\n' * (0 < len(actual_output_variables)) +
-            ',\n'.join(["NULL"] * len(actual_output_variables)),
+            ',\n' * (0 < len(actual_output_variables) + len(self.control_columns) - 2) +
+            ',\n'.join(["NULL"] * (len(actual_output_variables) + len(self.control_columns) - 2)),
             ' '*23
         )
         emits = (
@@ -327,8 +327,7 @@ class CodeGen(Generic[E, T]):
             indent('\n  UNION ALL\n'.join(
                 dedent(f'''
                 SELECT 'data',
-                       {_indent(self.gen_expression(statement.to_emit), ' '*23)},
-                       NULL{emit_scope}
+                       {_indent(self.gen_expression(statement.to_emit), ' '*23)}{emit_scope}
                 FROM   "%sources%"
                 ''')[1:-1]
                 for statement in emits
