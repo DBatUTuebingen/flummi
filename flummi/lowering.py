@@ -168,11 +168,11 @@ class Lowering(Generic[E, T]):
                 merge_label = self._new_block_label("merge")
                 self._create_empty_block(merge_label)
 
-                label = self._add_statement(
+                label = self.lower_statement(
                     label,
-                    CFG.Assignment(
+                    proc.Assignment(
                         variable=condition_variable,
-                        expression=condition,
+                        expression=condition
                     )
                 )
 
@@ -228,6 +228,12 @@ class Lowering(Generic[E, T]):
                 return label
 
             case proc.Assignment(variable, expression):
+                if variable not in self._variables:
+                    raise LoweringError(f"Tried to assign to undeclared variable: {variable}")
+                for free_variable in expression.free_variables:
+                    if free_variable not in self._variables:
+                        raise LoweringError(f"Tried to use an undeclared variable: {free_variable}")
+
                 return self._add_statement(
                     label,
                     CFG.Assignment(
