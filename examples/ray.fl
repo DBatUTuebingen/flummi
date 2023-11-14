@@ -90,7 +90,7 @@ FUN (
   light_z <- §{0}.center_z§[light];
 
   step <- §0§[];
-  LOOP {
+  LOOP ray_loop {
     length <- §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[direction_x, direction_y, direction_z];  -- } length = |direction|
     direction_x <- §{0} / {1}§[direction_x, length];  -- ⎫
     direction_y <- §{0} / {1}§[direction_y, length];  -- ⎬ direction = direction / length
@@ -104,7 +104,7 @@ FUN (
     normal_z <- §0§[];  -- ⎭          ⎝0⎠
 
     id <- §SELECT MAX(t.id) FROM triangles AS t§[];
-    LOOP {
+    LOOP triangle_loop {
       triangle <- §SELECT t FROM triangles AS t WHERE t.id = {0}§[id];
 
       e1_x <- §{0}.p2_x - {0}.p1_x§[triangle];  -- ⎫
@@ -174,12 +174,12 @@ FUN (
       };
 
       IF §{0} = 0§[id]
-      THEN BREAK
+      THEN BREAK triangle_loop
       ELSE id <- §{0} - 1§[id]
     };
 
     id <- §SELECT MAX(s.id) FROM spheres AS s§[];
-    LOOP {
+    LOOP sphere_loop {
       sphere <- §SELECT t FROM spheres AS t WHERE t.id = {0}§[id];
 
       L_x <- §{0}.center_x - {1}§[sphere, origin_x];  -- ⎫
@@ -227,7 +227,7 @@ FUN (
       };
 
       IF §{0} = 0§[id]
-      THEN BREAK
+      THEN BREAK sphere_loop
       ELSE id <- §{0} - 1§[id]
     };
 
@@ -239,7 +239,7 @@ FUN (
         pixel_g <- §0§[];        -- ⎪ Black out the color and be done with it.
         pixel_b <- §0§[]         -- ⎪
       } ELSE {};                 -- ⎪
-      BREAK                      -- ⎭
+      BREAK ray_loop             -- ⎭
     } ELSE {
       IF §{0} = 'l'§[material]
       THEN {
@@ -282,8 +282,8 @@ FUN (
         IF §{0}§[shadows]          -- ⎫
         THEN {                     -- ⎪ If shadows are enabled...
           shadow_ray <- §true§[];  -- ⎬   ...fire off a shadow ray
-          CONTINUE                 -- ⎪   ...otherwise we are done here.
-        } ELSE BREAK               -- ⎭
+          CONTINUE ray_loop        -- ⎪   ...otherwise we are done here.
+        } ELSE BREAK ray_loop      -- ⎭
       } ELSE
       IF §{0} = 'r'§[material]
       THEN {
@@ -316,11 +316,11 @@ FUN (
         IF §{0} < {1}§[step, max_rec_depth]  -- ⎫
         THEN {                               -- ⎪ If there are still some reflection passes...
           step <- §{0} + 1§[step];           -- ⎬   ...go in for another round
-          CONTINUE                           -- ⎪   ...otherwise we are done here.
-        } ELSE BREAK                         -- ⎭
+          CONTINUE ray_loop                  -- ⎪   ...otherwise we are done here.
+        } ELSE BREAK ray_loop                -- ⎭
       } ELSE {}
     };
-    BREAK
+    BREAK ray_loop
   };
 
   EMIT §{{x: {0}, y: {1}, r: {2}, g: {3}, b: {4}}}§[x, y, pixel_r, pixel_g, pixel_b];

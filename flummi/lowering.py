@@ -34,7 +34,7 @@ class Lowering(Generic[E, T]):
     _emit_type: common.Type[T] = field(init=False)
     _blocks: dict[CFG.BlockLabel, CFG.Block[E]] = field(init=False, default_factory=dict)
     _terminated_blocks: set[CFG.BlockLabel] = field(init=False, default_factory=set)
-    _loop_labels: list[tuple[CFG.BlockLabel, CFG.BlockLabel]] = field(init=False, default_factory=list)
+    _loop_labels: dict[str, tuple[CFG.BlockLabel, CFG.BlockLabel]] = field(init=False, default_factory=dict)
     _variable_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
     _label_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
     _variables: dict[common.Variable, common.Type[T]] = field(init=False, default_factory=dict)
@@ -80,18 +80,18 @@ class Lowering(Generic[E, T]):
         self._variables[variable] = type
 
     @contextmanager
-    def _new_loop(self) -> Generator[tuple[CFG.BlockLabel, CFG.BlockLabel], None, None]:
-        loop_label = self._new_block_label("loop")
-        head_label = replace(loop_label, label=loop_label.label + "_head")
+    def _new_loop(self, name: str) -> Generator[tuple[CFG.BlockLabel, CFG.BlockLabel], None, None]:
+        if name in self._loop_labels:
+            raise LoweringError("Tried to reuse loop name.")
+        head_label = CFG.BlockLabel(name + "_head")
         self._create_empty_block(head_label)
-        exit_label = replace(loop_label, label=loop_label.label + "_exit")
+        exit_label = CFG.BlockLabel(name + "_exit")
         self._create_empty_block(exit_label)
-        self._loop_labels.append((head_label, exit_label))
+        self._loop_labels[name] = (head_label, exit_label)
         yield head_label, exit_label
-        self._loop_labels.pop()
 
-    def _latest_loop_labels(self) -> tuple[CFG.BlockLabel, CFG.BlockLabel]:
-        return self._loop_labels[-1]
+    def _get_loop_labels(self, name: str) -> tuple[CFG.BlockLabel, CFG.BlockLabel]:
+        return self._loop_labels[name]
 
     def lower_program(self, program: proc.Program[E, T]) -> CFG.Graph[E, T]:
         entry_label = CFG.BlockLabel("entry")
@@ -114,8 +114,8 @@ class Lowering(Generic[E, T]):
 
     def lower_statement(self, label: CFG.BlockLabel, statement: proc.Statement[E, T]) -> CFG.BlockLabel:
         match statement:
-            case proc.Loop(body):
-                with self._new_loop() as (head_label, exit_label):
+            case proc.Loop(name, body):
+                with self._new_loop(name) as (head_label, exit_label):
                     self._terminate_block(
                         label,
                         CFG.GoTo(
@@ -136,8 +136,8 @@ class Lowering(Generic[E, T]):
 
                     return exit_label
 
-            case proc.Continue():
-                head_label, _ = self._latest_loop_labels()
+            case proc.Continue(name):
+                head_label, _ = self._get_loop_labels(name)
                 self._terminate_block(
                     label,
                     CFG.GoTo(
@@ -147,8 +147,8 @@ class Lowering(Generic[E, T]):
                 )
                 return label
 
-            case proc.Break():
-                _, exit_label = self._latest_loop_labels()
+            case proc.Break(name):
+                _, exit_label = self._get_loop_labels(name)
                 self._terminate_block(
                     label,
                     CFG.GoTo(

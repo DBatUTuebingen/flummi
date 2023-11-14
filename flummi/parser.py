@@ -245,18 +245,22 @@ class Parser:
 
     def parse_loop(self) -> proc.Loop[str, str]:
         self.expect(TokenType.LOOP)
+        name = self.expectv(TokenType.IDENTIFIER)
         body = self.parse_statement()
         return proc.Loop(
+            name=name,
             body=body
         )
 
     def parse_continue(self) -> proc.Continue[str, str]:
         self.expect(TokenType.CONTINUE)
-        return proc.Continue()
+        name = self.expectv(TokenType.IDENTIFIER)
+        return proc.Continue(name)
 
     def parse_break(self) -> proc.Break[str, str]:
         self.expect(TokenType.BREAK)
-        return proc.Break()
+        name = self.expectv(TokenType.IDENTIFIER)
+        return proc.Break(name)
 
     def parse_if(self) -> proc.If[str, str]:
         self.expect(TokenType.IF)

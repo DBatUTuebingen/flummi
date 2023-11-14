@@ -46,17 +46,18 @@ class Statement(Generic[E, T], ABC):
 
 @dataclass
 class Loop(Statement[E, T]):
+    name: str
     body: Statement[E, T]
 
 
 @dataclass
 class Continue(Statement[E, T]):
-    ...
+    name: str
 
 
 @dataclass
 class Break(Statement[E, T]):
-    ...
+    name: str
 
 
 @dataclass
