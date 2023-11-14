@@ -91,6 +91,8 @@ class Lowering(Generic[E, T]):
         yield head_label, exit_label
 
     def _get_loop_labels(self, name: str) -> tuple[CFG.BlockLabel, CFG.BlockLabel]:
+        if name not in self._loop_labels:
+            raise LoweringError("Tried to find unknown loop label.")
         return self._loop_labels[name]
 
     def lower_program(self, program: proc.Program[E, T]) -> CFG.Graph[E, T]:
