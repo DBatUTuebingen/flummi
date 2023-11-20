@@ -4,8 +4,6 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar
 
 from . import common
-from ..interpreter.visitorclasses import Visitor
-
 
 __all__ = (
     "Program",
@@ -88,9 +86,6 @@ class Declaration(Statement[E, T]):
 class Assignment(Statement[E, T]):
     variable: common.Variable
     expression: common.Expression[E]
-
-    def accept(self, visitor: Visitor):
-        visitor.visit(self)
 
 
 @dataclass
