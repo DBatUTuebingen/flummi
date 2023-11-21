@@ -264,7 +264,7 @@ class Parser:
 
     def parse_if(self) -> proc.If[str, str]:
         self.expect(TokenType.IF)
-        condition = self.parse_expression()
+        condition = self.parse_variable()
         self.expect(TokenType.THEN)
         truthy_branch = self.parse_statement()
         self.expect(TokenType.ELSE)

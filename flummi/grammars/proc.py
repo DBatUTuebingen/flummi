@@ -62,7 +62,7 @@ class Break(Statement[E, T]):
 
 @dataclass
 class If(Statement[E, T]):
-    condition: common.Expression[E]
+    condition: common.Variable
     truthy_branch: Statement[E, T]
     falsey_branch: Statement[E, T]
 
