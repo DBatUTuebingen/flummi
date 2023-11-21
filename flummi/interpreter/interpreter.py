@@ -13,7 +13,7 @@ __all__ = (
 )
 
 #TODO: add documentation
-def interpret(program: proc.Program[E, T]):
+def interpret(program: proc.Program[E, T]) -> duckdb.DuckDBPyRelation:
     """
     Interprets given program
 
@@ -21,7 +21,7 @@ def interpret(program: proc.Program[E, T]):
     program (proc.Program[E, T]): program to be interpreted
 
     Returns:
-    ...
+    duckdb.DuckDBPyRelation: return value of the program
     """
 
     #get return type and first statement of function from program
