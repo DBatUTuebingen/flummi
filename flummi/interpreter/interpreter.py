@@ -10,29 +10,38 @@ __all__ = (
     "interpret"
 )
 
-#TO DO: add documentation
+#TODO: add documentation
 def interpret(program: proc.Program[E, T]):
 
-    #process inputs in DuckDB and get function
-    processed_inputs, program_function = program_helper(program)
-
-    #get return type and the beginning statement of the function
-    return_type, statement = function_helper(processed_inputs, program_function)
+    #get return type and first statement of function from program
+    return_type, first_function_statement = program_helper(program)
 
     #start going down the statements
-    match statement:
+    match first_function_statement:
         case _:
             print("nothing to see here yet")
 
-    #TO DO: check return type
+    #TODO: check return type
     ...
 
-def program_helper(program: proc.Program[E,T])-> tuple(list[common.Expression[E]],proc.Function[E,T]):
-    #TO DO: need to integrate DuckDB
-    processed_inputs: list[common.Expression[E]] = program.inputs
-    program_function: proc.Function = program.function
-    return processed_inputs, program_function
+def program_helper(program: proc.Program[E,T])-> tuple(proc.Statement[E,T],common.Type[T]):
+    # for faster access
+    f = program.function
+    
+    #TODO: Error for mismatched arguments
+    if len(f.parameters) != len(program.inputs):  
+        ...
 
-def function_helper(inputs: list[common.Expression[E]], f: proc.Function[E,T]) -> tuple(T, proc.Statement[E, T]):
-    ...
-    #TO DO: assign input values to function variables, can probably just use Assignment structure and add them to the top of the Block list
+    #create assignments for parameters <- arguments
+    #add them to a block
+    #add the block at the beginning of the function body
+    temp_block = proc.Block([]) 
+
+    for x in range(0, len(f.parameters)):
+        temp_assignment = proc.Assignment(f.parameters.keys[x],program.inputs[x])
+        temp_block.statements.append(temp_assignment)
+
+    temp_block.statements.append(f.body)
+    f.body = temp_block
+
+    return f.body, f.emits
