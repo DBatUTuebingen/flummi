@@ -1,6 +1,7 @@
 CALL (§4§[], §5§[]) IN
 FUN (a: §int§, b: §int§) -> §int§: {
   c: §int§;
+  condition: §bool§;
 
   c <- §0§[];
 
@@ -11,7 +12,8 @@ FUN (a: §int§, b: §int§) -> §int§: {
 
     b <- §{0} - 1§[b];
 
-    IF §0 = {0}§[b]
+    condition <- §0 = {0}§[b];
+    IF condition
       THEN BREAK multiplication_loop
       ELSE CONTINUE multiplication_loop
   };
