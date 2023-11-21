@@ -161,8 +161,6 @@ class Lowering(Generic[E, T]):
                 return label
 
             case proc.If(condition, truthy_branch, falsey_branch):
-                condition_variable = self._new_variable("condition%")
-                self._add_program_variable(condition_variable, self.boolean_type)
                 truthy_label = self._new_block_label("truthy")
                 self._create_empty_block(truthy_label)
                 falsey_label = self._new_block_label("falsey")
@@ -170,18 +168,10 @@ class Lowering(Generic[E, T]):
                 merge_label = self._new_block_label("merge")
                 self._create_empty_block(merge_label)
 
-                label = self.lower_statement(
-                    label,
-                    proc.Assignment(
-                        variable=condition_variable,
-                        expression=condition
-                    )
-                )
-
                 self._terminate_block(
                     label,
                     CFG.If(
-                        condition=condition_variable,
+                        condition=condition,
                         truthy_terminal=CFG.GoTo(
                             label=truthy_label,
                             arguments=[],
