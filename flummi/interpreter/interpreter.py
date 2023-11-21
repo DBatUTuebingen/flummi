@@ -1,3 +1,5 @@
+import duckdb
+
 from typing import TypeVar
 
 from ..grammars import proc, common
@@ -12,6 +14,15 @@ __all__ = (
 
 #TODO: add documentation
 def interpret(program: proc.Program[E, T]):
+    """
+    Interprets given program
+
+    Parameters:
+    program (proc.Program[E, T]): program to be interpreted
+
+    Returns:
+    ...
+    """
 
     #get return type and first statement of function from program
     return_type, first_function_statement = program_helper(program)
@@ -24,13 +35,13 @@ def interpret(program: proc.Program[E, T]):
     #TODO: check return type
     ...
 
+#TODO: add documentation
 def program_helper(program: proc.Program[E,T])-> tuple(proc.Statement[E,T],common.Type[T]):
     # for faster access
     f = program.function
     
-    #TODO: Error for mismatched arguments
     if len(f.parameters) != len(program.inputs):  
-        ...
+        raise TypeError("Incorrect number of arguments given.")
 
     #create assignments for parameters <- arguments
     #add them to a block
