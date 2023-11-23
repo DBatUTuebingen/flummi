@@ -1,0 +1,5 @@
+CALL (§4§[]) IN
+FUN (a: §int§) -> §int§: {
+  EMIT §{0}§[a];
+  STOP
+}
