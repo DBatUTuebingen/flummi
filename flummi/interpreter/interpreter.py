@@ -1,5 +1,6 @@
 import duckdb
 import numpy
+import pandas
 
 from typing import TypeVar
 
@@ -63,7 +64,7 @@ def program_helper(program: proc.Program[E,T])-> proc.Statement[E,T]:
 
     return f.body
 
-def statement_helper(statement: proc.Statement[E, T], env: dict[common.Variable, common.Expression[E]], return_list: list[duckdb.DuckDBPyRelation]) -> tuple[dict[common.Variable, common.Expression[E]], list[duckdb.DuckDBPyRelation]]:
+def statement_helper(statement: proc.Statement[E, T], env: dict[common.Variable, any], return_list: list[duckdb.DuckDBPyRelation]) -> tuple[dict[common.Variable, any], list[duckdb.DuckDBPyRelation]]:
     """
     Goes through all statements of a function to return result(s)
 
@@ -86,26 +87,25 @@ def statement_helper(statement: proc.Statement[E, T], env: dict[common.Variable,
             values = []
             for variable in to_emit.free_variables:
                 value = env[variable]
-                values.append(env[variable])
+                values.append(value)
             
             formatted_emit = to_emit.source.format(*values)
-            result = duckdb.sql(formatted_emit)
+            result = duckdb.sql("SELECT " + formatted_emit)
             return_list.append(result)
             return env, return_list
 
         case proc.Declaration(variable, type):
-            # do i need this?
             return env, return_list
 
         case proc.Assignment(variable, expression):
             formatted_exp = expression.source.format(expression.free_variables)
-            env[variable] = duckdb.sql("SELECT " + formatted_exp)
-            print(duckdb.sql("SELECT " + formatted_exp).fetchnumpy)
+            env[variable] = [*duckdb.execute("SELECT " + formatted_exp).fetchnumpy().values()][0][0]
             return env, return_list
 
         case proc.Block(statements):
             for block_statement in statements:
                 env, return_list = statement_helper(block_statement, env, return_list)
+            return env, return_list
             
         case proc.Stop():
             return env, return_list
