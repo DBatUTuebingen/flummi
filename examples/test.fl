@@ -1,5 +1,14 @@
 CALL (§4§[]) IN
 FUN (a: §int§) -> §int§: {
-  EMIT §{0}§[a];
+  LOOP loop {
+    b <- §1§[];
+    LOOP loop2 {
+      d <- §3§[];
+      BREAK loop2
+    };
+    BREAK loop
+  };
+  c <- §{0} + {1} * {2}§[a, b, d];
+  EMIT §{0}§[c];
   STOP
 }
