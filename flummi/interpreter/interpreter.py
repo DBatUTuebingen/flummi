@@ -94,7 +94,13 @@ def statement_helper(statement: proc.Statement[E, T], env: dict[common.Variable,
             raise LoopBreak(name)
         
         case proc.If(condition, t_branch, f_branch):
-            ...
+            condition_str = replace_values(condition, env[condition], env)
+            condition_result = [*duckdb.execute("SELECT " + condition_str).fetchnumpy().values()][0][0]
+            if condition_result:
+                return statement_helper(t_branch, env, return_list)
+            else:
+                return statement_helper(f_branch, env, return_list)
+
         case proc.Emit(to_emit):
             values = []
             for variable in to_emit.free_variables:
@@ -110,7 +116,10 @@ def statement_helper(statement: proc.Statement[E, T], env: dict[common.Variable,
             return env, return_list
 
         case proc.Assignment(variable, expression):
-            env[variable] = expression
+            if variable in env.keys():
+                env[variable] = common.Expression(replace_values(variable, expression, env),[])
+            else: 
+                env[variable] = expression
             return env, return_list
 
         case proc.Block(statements):
@@ -122,11 +131,13 @@ def statement_helper(statement: proc.Statement[E, T], env: dict[common.Variable,
             return env, return_list
         
 
-def replace_values(variable: common.Variable, expression: common.Expression[E], env: dict[common.Variable, any]) -> common.Expression[E]:
+def replace_values(variable: common.Variable, expression: common.Expression[E], env: dict[common.Variable, any]) -> str:
     formatted_exp = f"{expression.source}".format(*expression.free_variables)
-    if(expression.free_variables == 0):
-        env[variable] = [*duckdb.execute("SELECT " + formatted_exp).fetchnumpy().values()][0][0]
-        return env[variable]
+    
+    if(expression.free_variables == 0):    
+        value = [*duckdb.execute("SELECT " + formatted_exp).fetchnumpy().values()][0][0]
+        return value
+    
     formatted_exp = f"{expression.source}".format(*list(map(lambda x: replace_values(x, env[x], env), expression.free_variables)))
-    env[variable] = formatted_exp
-    return env[variable]
+    
+    return formatted_exp

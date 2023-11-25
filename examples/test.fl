@@ -4,7 +4,7 @@ FUN (a: §int§, b: §int§) -> §int§: {
     b <- §1§[];
     LOOP loop2 {
       d <- §3§[];
-      BREAK loop2
+      BREAK loop
     };
     BREAK loop
   };
