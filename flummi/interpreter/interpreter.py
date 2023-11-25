@@ -1,6 +1,5 @@
 import duckdb
 import numpy
-import pandas
 
 from typing import TypeVar
 
@@ -41,10 +40,8 @@ def program_helper(program: proc.Program[E,T])-> proc.Statement[E,T]:
     Assigns program arguments to function parameters and appends them at the front of the statement list of the function
 
     Parameters:
-    program (proc.Program[E, T]): program to be interpreted
 
     Returns:
-    proc.Statement[E,T]: first statement of function
     """
 
     # for faster access
@@ -80,9 +77,7 @@ def statement_helper(statement: proc.Statement[E, T], env: dict[common.Variable,
 
     match statement:
         case proc.Loop(name, body):
-            loop_variable = common.Variable(name)
-            env[loop_variable] = body
-            while(env[loop_variable] != "BREAK"):
+            while(True):
                 try:
                     env, return_list = statement_helper(body, env, return_list)
                 except LoopBreak as e:
@@ -97,9 +92,6 @@ def statement_helper(statement: proc.Statement[E, T], env: dict[common.Variable,
         
         case proc.Break(name):
             raise LoopBreak(name)
-            break_variable = list({k:v for k,v in env.items() if k.identifier == name}.keys())[0]
-            env[break_variable] = "BREAK"
-            return env, return_list
         
         case proc.If(condition, t_branch, f_branch):
             ...

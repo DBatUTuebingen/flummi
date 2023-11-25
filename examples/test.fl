@@ -1,5 +1,5 @@
-CALL (§4§[]) IN
-FUN (a: §int§) -> §int§: {
+CALL (§4§[], §5§[]) IN
+FUN (a: §int§, b: §int§) -> §int§: {
   LOOP loop {
     b <- §1§[];
     LOOP loop2 {
@@ -8,7 +8,7 @@ FUN (a: §int§) -> §int§: {
     };
     BREAK loop
   };
-  c <- §{0} + {1} * {2}§[a, b, d];
+  c <- §{0} + {1} * {2} + {1}§[a, b, d];
   EMIT §{0}§[c];
   STOP
 }

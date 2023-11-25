@@ -1,5 +1,6 @@
 import duckdb
 import numpy
+import io
 
 from flummi.interpreter import interpreter
 from flummi import parser
@@ -7,7 +8,7 @@ from flummi import parser
 #print(interpreter.interpret.__doc__) 
 #duckdb.sql("SELECT 42").show()
 
-with open("examples/test.fl") as file:
+with io.open("examples/test.fl", "r", encoding="utf-8") as file:
     data = file.read()
 
 print(interpreter.interpret(parser.parse(data)))
