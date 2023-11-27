@@ -1,14 +1,14 @@
 CALL (
-  §x§[],
-  §y§[],
+  §0§[],
+  §0§[],
 
-  §cam.x§[],  -- ⎫          ⎛ cam.x ⎞
-  §cam.y§[],  -- ⎬ origin = ⎢ cam.y ⎥
-  §cam.z§[],  -- ⎭          ⎝ cam.z ⎠
+  §0§[],     -- ⎫          ⎛ cam.x ⎞
+  §0§[],     -- ⎬ origin = ⎢ cam.y ⎥
+  §-4.5§[],  -- ⎭          ⎝ cam.z ⎠
 
-  §direction.x§[],  -- ⎫             ⎛ direction.x ⎞
-  §direction.y§[],  -- ⎬ direction = ⎢ direction.y ⎥
-  §direction.z§[],  -- ⎭             ⎝ direction.z ⎠
+  §0§[],  -- ⎫             ⎛ direction.x ⎞
+  §0§[],  -- ⎬ direction = ⎢ direction.y ⎥
+  §1§[],  -- ⎭             ⎝ direction.z ⎠
 
   §true§[],  -- } shadows = true
   §10§[],  -- } max_rec_depth = 10
