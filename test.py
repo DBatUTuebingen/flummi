@@ -1,14 +1,17 @@
 import duckdb
 import numpy
 import io
+import sys
 
-from flummi.interpreter import interpreter
+from flummi.interpreter.interpreter import Interpreter
 from flummi import parser
 
 #print(interpreter.interpret.__doc__) 
 #duckdb.sql("SELECT 42").show()
 
-with io.open("examples/mul.fl", "r", encoding="utf-8") as file:
+#sys.argv[1]
+
+with io.open("examples/ray.fl", "r", encoding="utf-8") as file:
     data = file.read()
 
-print(interpreter.Interpreter.interpret(parser.parse(data)))
+print(Interpreter().interpret(parser.parse(data)))
