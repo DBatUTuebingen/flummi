@@ -8,7 +8,7 @@ from flummi import parser
 #print(interpreter.interpret.__doc__) 
 #duckdb.sql("SELECT 42").show()
 
-with io.open("examples/ray.fl", "r", encoding="utf-8") as file:
+with io.open("examples/mul.fl", "r", encoding="utf-8") as file:
     data = file.read()
 
-print(interpreter.interpret(parser.parse(data)))
+print(interpreter.Interpreter.interpret(parser.parse(data)))
