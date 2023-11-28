@@ -1,5 +1,6 @@
 import duckdb
 import numpy
+import re
 
 from typing import TypeVar
 
@@ -19,6 +20,7 @@ class LoopBreak(Exception): ...
 class Interpreter():
     return_list: list[duckdb.DuckDBPyRelation] = []
     env: dict[common.Variable, any] = {}
+    types: dict[common.Variable, any] = {}
 
     def interpret(self, program: proc.Program[E, T]) -> list[duckdb.DuckDBPyRelation]:
         """
@@ -59,10 +61,13 @@ class Interpreter():
         temp_block = proc.Block([]) 
 
         for x in range(0, len(f.parameters)):
-            parameter_list = list(f.parameters.keys())
-            temp_assignment = proc.Assignment(parameter_list[x],program.inputs[x])
+            parameter_keys = list(f.parameters.keys())
+            parameter_values = list(f.parameters.values())
+            temp_assignment = proc.Assignment(parameter_keys[x],program.inputs[x])
+            temp_declaration = proc.Declaration(parameter_keys[x], parameter_values[x])
+            temp_block.statements.append(temp_declaration)
             temp_block.statements.append(temp_assignment)
-
+        
         temp_block.statements.append(f.body)
         f.body = temp_block
 
@@ -107,7 +112,7 @@ class Interpreter():
                 ...
 
             case proc.Declaration(variable, type):
-                ...
+                self.types[variable] = re.match(r"(\w+)",type.source).group(0)
 
             case proc.Assignment(variable, expression):
                 self.env[variable] = self.expression_helper(expression)
@@ -121,16 +126,14 @@ class Interpreter():
             
 
     def expression_helper(self, expression: common.Expression[E]) -> str:
-        print(expression)
-        formatted_exp = f"{expression.source}".format(*map(self.env.__getitem__, expression.free_variables))       
-        return duckdb.execute(f"SELECT ({formatted_exp})").fetchone()[0]
+        placeholder_list = list(dict.fromkeys(re.findall(r"\{(\d)\}", expression.source)))
 
-        # if(expression.free_variables == 0):    
-        #     value = [*duckdb.execute("SELECT " + formatted_exp).fetchnumpy().values()][0][0]
-        #     return value
+        if len(expression.free_variables) != 0:
+            placeholder_tuple = [(self.types[expression.free_variables[int(x)]], placeholder_list[int(x)]) for x in placeholder_list]
+            placeholder_list = list(map(lambda tuple: f"({{{str(int(tuple[1])+1)}}} :: {tuple[0]})", placeholder_tuple))
+
+        temp_expression = expression.source.format(*placeholder_list)
+        temp_expression = re.sub(r"\{(\d)\}", r"$\1", temp_expression)
         
-        # formatted_exp = f"{expression.source}".format(*list(map(lambda x: self.replace_values(x, env[x], env), expression.free_variables)))
-        
-        return formatted_exp
-    
+        return duckdb.execute(f"SELECT ({temp_expression})", [self.env[x] for x in expression.free_variables]).fetchone()[0]
 
