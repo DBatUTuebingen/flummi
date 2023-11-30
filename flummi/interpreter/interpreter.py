@@ -15,11 +15,13 @@ __all__ = (
 )
 
 
+#used to move up the call stack for BREAK, CONTINUE and STOP
 class LoopBreak(Exception): ...
 class LoopContinue(Exception): ...
 class Stop(Exception): ...
 
 class Interpreter():
+   
     return_list: list[duckdb.DuckDBPyRelation] = []
     env: dict[common.Variable, any] = {}
     types: dict[common.Variable, any] = {}
