@@ -1,11 +1,9 @@
 import duckdb
-import numpy
 import re
 
 from typing import TypeVar
 
 from ..grammars import proc, common
-from .. import parser
 
 E = TypeVar("E", bound=common.SupportsFormat)
 T = TypeVar("T", bound=common.SupportsStr)
