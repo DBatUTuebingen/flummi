@@ -58,12 +58,12 @@ class Interpreter():
             raise TypeError("Incorrect number of arguments given.")
 
         temp_block = proc.Block([]) 
+        parameter_keys = list(f.parameters.keys())
+        parameter_values = list(f.parameters.values())
 
         for x in range(0, len(f.parameters)):
-            parameter_keys = list(f.parameters.keys())
-            parameter_values = list(f.parameters.values())
-            temp_assignment = proc.Assignment(parameter_keys[x],program.inputs[x])
             temp_declaration = proc.Declaration(parameter_keys[x], parameter_values[x])
+            temp_assignment = proc.Assignment(parameter_keys[x],program.inputs[x]) 
             temp_block.statements.append(temp_declaration)
             temp_block.statements.append(temp_assignment)
 
@@ -118,6 +118,8 @@ class Interpreter():
                 self.types[variable] = re.match(r"(\w+)",type.source).group(0)
 
             case proc.Assignment(variable, expression):
+                if variable not in self.types:
+                    raise NameError("Variable" + variable.identifier + "has not been declared yet.")
                 self.env[variable] = self.expression_helper(expression)
 
             case proc.Block(statements):
