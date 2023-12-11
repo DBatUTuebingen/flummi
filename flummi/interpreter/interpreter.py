@@ -119,7 +119,7 @@ class Interpreter():
 
             case proc.Assignment(variable, expression):
                 if variable not in self.types:
-                    raise NameError("Variable" + variable.identifier + "has not been declared yet.")
+                    raise NameError("Variable " + variable.identifier + " has not been declared yet.")
                 self.env[variable] = self.expression_helper(expression)
 
             case proc.Block(statements):
@@ -158,4 +158,5 @@ class Interpreter():
         
         #run the sql query and return it
         return duckdb.execute(f"SELECT ({temp_expression})", [self.env[x] for x in expression.free_variables]).fetchone()[0]
+
 
