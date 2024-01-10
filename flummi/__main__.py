@@ -39,7 +39,7 @@ def main():
     compiler_parser.add_argument('-i', '--intermediates', default=None, type=Path, help="Directory to write IR representation for each transformation to.")
 
     interpret_parser = subparsers.add_parser('interpret')
-    interpret_parser.add_argument('infile', type=argparse.FileType('r'))
+    interpret_parser.add_argument('infile', type=argparse.FileType('r', encoding='utf-8'))
     interpret_parser.add_argument('-s', '--setup', default=None, type=argparse.FileType('r'))
 
     arguments = parser.parse_args()
