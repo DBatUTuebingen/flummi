@@ -40,8 +40,8 @@ class Interpreter():
             self.statement_helper(first_function_statement)
         except Stop:
             return self.return_list
-
-        return self.return_list
+        else:
+            raise SyntaxError("No STOP Statement found.")
 
     def program_helper(self, program: proc.Program[E,T])-> None:
         """
