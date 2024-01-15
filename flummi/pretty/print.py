@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from textwrap import indent, dedent
 
-from ..grammars import CFG
+from .. import CFG
 
 
 def _indent(lines: str, prefix: str):
@@ -157,65 +157,30 @@ class Color:
 STYLE = Color()
 
 
-def pretty(node: CFG.Node[str, str]) -> str:
+def pretty(node: CFG.Node) -> str:
     match node:
-        case CFG.Graph(entry_label, inputs, emits, variables, blocks, jumps):
-            inputs = (
-                '\n' * (0 < len(inputs)) +
-                indent(f'{STYLE.COMMA}\n'.join(
-                    f"{variable!s} {STYLE.LARROW} {expression!s}"
-                    for variable, expression in inputs.items()
-                ), ' '*18) +
-                ('\n' + ' '*16) * (0 < len(inputs))
-            )
-
-            variables = (
-                '\n' * (0 < len(variables)) +
-                indent(f'{STYLE.COMMA}\n'.join(
-                    f"{variable!s} {STYLE.COLON} {type!s}"
-                    for variable, type in variables.items()
-                ), ' '*18) +
-                ('\n' + ' '*16) * (0 < len(variables))
-            )
-
+        case CFG.Graph(entry_label, blocks):
             blocks = (
                 '\n' * (0 < len(blocks)) +
                 indent('\n\n'.join(map(pretty, blocks.values())), ' '*18) +
                 ('\n' + ' '*16) * (0 < len(blocks))
             )
-            jumps = (
-                '\n' * (0 < len(jumps)) +
-                indent(',\n'.join(map(pretty, jumps)), ' '*18) +
-                ('\n' + ' '*16) * (0 < len(jumps))
-            )
 
             return dedent(f"""
                 {STYLE.ENTRYPOINT} {STYLE.label(entry_label)}
-                {STYLE.INPUTS} {STYLE.LPAREN}{inputs}{STYLE.RPAREN}
-                {STYLE.EMITS} {emits!s}
-                {STYLE.VARS} {STYLE.LPAREN}{variables}{STYLE.RPAREN}
                 {STYLE.BLOCKS} {STYLE.LBRACE}{blocks}{STYLE.RBRACE}
-                {STYLE.JUMPS} {STYLE.LBRACK}{jumps}{STYLE.RBRACK}
             """)[1:-1]
 
-        case CFG.Block(block_label, parameters, statements, terminal, predecessor_references):
-            parameters = STYLE.COMMA.join(map(str, parameters))
-            predecessor_references = (
-                '\n' * (0 < len(predecessor_references)) +
-                indent(',\n'.join(map(pretty, predecessor_references)), ' '*18) +
-                ('\n' + ' '*16) * (0 < len(predecessor_references))
-            )
+        case CFG.Block(block_label, statements, terminal):
             statements = (
-                '\n' * (0 < len(statements)) +
-                indent(f'{STYLE.SEMI}\n'.join(map(pretty, statements)), ' '*18) +
+                _indent(f'{STYLE.SEMI}\n'.join(map(pretty, statements)), ' '*18) +
                 STYLE.SEMI * (0 < len(statements))
             )
             terminal = _indent(pretty(terminal), ' '*18)
 
             return dedent(f"""
-                {STYLE.BLOCK} {STYLE.label(block_label)} {STYLE.LPAREN}{parameters}{STYLE.RPAREN}
-                {STYLE.LBRACK}{predecessor_references}{STYLE.RBRACK}
-                {STYLE.LBRACE}{statements}
+                {STYLE.BLOCK} {STYLE.label(block_label)} {STYLE.LBRACE}
+                  {statements}
                   {terminal}
                 {STYLE.RBRACE}
             """)[1:-1]
@@ -227,38 +192,17 @@ def pretty(node: CFG.Node[str, str]) -> str:
             indent_len = len(variable.identifier) + 5
             return f"{variable} {STYLE.LARROW} {_indent(str(expression), ' '*indent_len)}"
 
-        case CFG.Jump(target, arguments):
-            return f"{STYLE.JUMP} {STYLE.label(target)} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, arguments))}{STYLE.RPAREN}"
+        case CFG.Jump(target):
+            return f"{STYLE.JUMP} {STYLE.label(target)}"
 
-        case CFG.GoTo(target, arguments):
-            return f"{STYLE.GOTO} {STYLE.label(target)} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, arguments))}{STYLE.RPAREN}"
+        case CFG.GoTo(target):
+            return f"{STYLE.GOTO} {STYLE.label(target)}"
 
         case CFG.Stop():
             return f"{STYLE.STOP}"
 
         case CFG.If(condition, truthy, falsey):
             return f"{STYLE.IF} {condition}\n{STYLE.THEN} {_indent(pretty(truthy), ' '*5)}\n{STYLE.ELSE} {_indent(pretty(falsey), ' '*5)}"
-
-        case CFG.JumpDirective(origin, destination, parameters, predicate):
-            return f"{STYLE.FROM} {STYLE.label(origin)} {STYLE.TO} {STYLE.label(destination)}\n{STYLE.WITH} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, parameters))}{STYLE.RPAREN}\n{STYLE.WHERE} {pretty(predicate)}"
-
-        case CFG.Variable(variable):
-            return str(variable)
-
-        case CFG.Not(operand):
-            return f"{STYLE.NOT} {STYLE.LPAREN}{pretty(operand)}{STYLE.RPAREN}"
-
-        case CFG.And(left, right):
-            return f"{STYLE.LPAREN}{pretty(left)}{STYLE.RPAREN} {STYLE.AND} {STYLE.LPAREN}{pretty(right)}{STYLE.RPAREN}"
-
-        case CFG.Tautology():
-            return f"{STYLE.TRUE}"
-
-        case CFG.FromLoop(expected_label):
-            return f"{STYLE.FROM} {STYLE.LOOP} {STYLE.AS} {expected_label.label}"
-
-        case CFG.FromBlock(target_label, arguments, predicate):
-            return f"{STYLE.FROM} {STYLE.label(target_label)}\n{STYLE.WITH} {STYLE.LPAREN}{STYLE.COMMA.join(map(str, arguments))}{STYLE.RPAREN}\n{STYLE.WHERE} {pretty(predicate)}"
 
         case _:
             raise TypeError("Unknown CFG form.")

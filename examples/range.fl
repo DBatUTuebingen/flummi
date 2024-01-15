@@ -1,0 +1,10 @@
+CALL (§1§[], §10§[]) IN
+FUN (l: §int§, u: §int§) -> §int§: {
+  c: §bool§;
+  LOOP loop {
+    EMIT §{0}§[l];
+    l <- §{0} + 1§[l];
+    c <- §{0} > {1}§[l,u];
+    IF c THEN STOP ELSE CONTINUE loop
+  }
+}

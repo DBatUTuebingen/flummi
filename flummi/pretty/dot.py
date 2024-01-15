@@ -1,12 +1,11 @@
 from itertools import chain
 
-from ..grammars import CFG
-from ..algorithms import compute_successors, get_jumps, compute_depth_information
+from .. import CFG
 from .print import pretty, STYLE
 
 
 TEMPLATE= """\
-digraph "%pdg%" {{
+digraph "%cfg%" {{
   node [
     shape=rectangle,
     nojustify=true,
@@ -47,18 +46,16 @@ digraph "%pdg%" {{
       color="#A37ACC",
       style="dashed"
     ];
-    "%inputs%" [label="{inputs}\l"];
     "%inputs%" -> "{root}";
   }}
 }}
 """
 
-NODE_TEMPLATE = '"{label}" [label="{body}\l"];'
+NODE_TEMPLATE = '"{label}" [label="{body}\\l"];'
 
 
-def dot(graph: CFG.Graph[str, str], font: str = "PragmataPro") -> str:
+def dot(graph: CFG.Graph, font: str = "PragmataPro") -> str:
     STYLE.off()
-    jumps = get_jumps(graph)
     nodes = "\n    ".join(
         NODE_TEMPLATE.format(
             label=label.label,
@@ -68,28 +65,16 @@ def dot(graph: CFG.Graph[str, str], font: str = "PragmataPro") -> str:
     )
     edges = "\n    ".join(chain.from_iterable(
         (
-          f'"{label.label}" -> "{successor.label}" [style="{["solid", "dashed"][(label,successor) in jumps]}"];'
-          for successor in successors
+          f'"{label.label}" -> "{successor.label}" [style="{["solid", "dashed"][successor in CFG.jumps(block)]}"];'
+          for successor in CFG.successors(block)
         )
-        for label, successors in compute_successors(graph).items()
+        for label, block in graph.blocks.items()
     ))
-    inputs = "\\l".join(
-        f"{variable} <- {input!s}"
-        for variable, input in graph.inputs.items()
-    )
-    # jumps = "\\l".join(
-    #     pretty(jump).replace("\n", "\\l")
-    #     for jump in graph.jumps
-    # )
-    # depths = compute_depth_information(graph)
-    # jump_placement = f'{max(depths, key=depths.__getitem__).label} -> "%jumps%";'
     STYLE.on()
     return TEMPLATE.format(
         font=font,
         nodes=nodes,
         edges=edges,
-        inputs=inputs,
+        inputs="",
         root=graph.entry_label.label,
-        # jumps=jumps,
-        # jump_placement=jump_placement
     )

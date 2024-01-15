@@ -2,9 +2,9 @@ from dataclasses import dataclass, field
 from enum import Enum, unique
 import re
 from textwrap import dedent
-from typing import Callable, Iterator, TypeVar
+from typing import Callable, Iterator
 
-from .grammars import proc, common
+from . import grammar
 
 
 __all__ = (
@@ -12,11 +12,7 @@ __all__ = (
 )
 
 
-T = common.T
-K = TypeVar("K")
-
-
-def parse(source: str) -> proc.Program[str, str]:
+def parse(source: str) -> grammar.Program:
     token_stream = tokenize(source)
     return Parser(token_stream).parse_program()
 
@@ -26,26 +22,27 @@ class TokenType(Enum):
     LEFT_PAREN = r"\("
     LEFT_BRACE = r"{"
     LEFT_BRACKET = r"\["
-    LEFT_ARROW = r"<-|←"
+    LEFT_ARROW = r"<-"
     RIGHT_PAREN = r"\)"
     RIGHT_BRACE = r"}"
     RIGHT_BRACKET = r"\]"
-    RIGHT_ARROW = r"->|→"
+    RIGHT_ARROW = r"->"
     COLON = r":"
     SEMICOLON = r";"
     COMMA = r","
-    EXTERNAL = r"[§⎡][^§⎦]+[§⎦]"
-    IF = r"IF|𝗜𝗙"
-    CALL = r"CALL|𝗖𝗔𝗟𝗟"
-    IN = r"IN|𝗜𝗡"
-    FUN = r"FUN|𝗙𝗨𝗡"
-    LOOP = r"LOOP|𝗟𝗢𝗢𝗣"
-    CONTINUE = r"CONTINUE|𝗖𝗢𝗡𝗧𝗜𝗡𝗨𝗘"
-    BREAK = r"BREAK|𝗕𝗥𝗘𝗔𝗞"
-    THEN = r"THEN|𝗧𝗛𝗘𝗡"
-    ELSE = r"ELSE|𝗘𝗟𝗦𝗘"
-    EMIT = r"EMIT|𝗘𝗠𝗜𝗧"
-    STOP = r"STOP|𝗦𝗧𝗢𝗣"
+    EXTERNAL = r"[§][^§]+[§]"
+    IF = r"IF"
+    CALL = r"CALL"
+    IN = r"IN"
+    FUN = r"FUN"
+    LOOP = r"LOOP"
+    CONTINUE = r"CONTINUE"
+    BREAK = r"BREAK"
+    THEN = r"THEN"
+    ELSE = r"ELSE"
+    EMIT = r"EMIT"
+    STOP = r"STOP"
+    NOOP = r"NOOP|NOPE|NOTHING|MEH|NAH|IDK|NULL|NIX"
     IDENTIFIER = r"[a-zA-Z_][a-zA-Z_0-9]*"
     COMMENT = r"--[^\n]*"
     NEWLINE = r"\n"
@@ -153,13 +150,13 @@ class Parser:
         else:
             raise self.error(msg or f"Expected {token_type.name}, found {self.current.token_type.name}")
 
-    def sequence(self, separator_type: TokenType, parser: Callable[[], K]) -> Iterator[K]:
+    def sequence[T](self, separator_type: TokenType, parser: Callable[[], T]) -> Iterator[T]:
         while True:
             yield parser()
             if not self.match(separator_type):
                 return
 
-    def parse_expression(self) -> common.Expression[str]:
+    def parse_expression(self) -> grammar.Expression:
         value = self.expectv(TokenType.EXTERNAL)[1:-1]
         self.expect(TokenType.LEFT_BRACKET)
         if self.match(TokenType.RIGHT_BRACKET):
@@ -167,24 +164,24 @@ class Parser:
         else:
             free_variables = list(self.sequence(TokenType.COMMA, self.parse_variable))
             self.expect(TokenType.RIGHT_BRACKET)
-        return common.Expression(
+        return grammar.Expression(
             source=dedent(value).strip(),
             free_variables=free_variables
         )
 
-    def parse_variable(self) -> common.Variable:
+    def parse_variable(self) -> grammar.Variable:
         identifier = self.expectv(TokenType.IDENTIFIER)
-        return common.Variable(
+        return grammar.Variable(
             identifier=identifier
         )
 
-    def parse_type(self) -> common.Type[str]:
+    def parse_type(self) -> grammar.Type:
         value = self.expectv(TokenType.EXTERNAL)[1:-1]
-        return common.Type(
+        return grammar.Type(
             source=value
         )
 
-    def parse_program(self) -> proc.Program[str, str]:
+    def parse_program(self) -> grammar.Program:
         self.expect(TokenType.CALL)
         self.expect(TokenType.LEFT_PAREN)
         if self.match(TokenType.RIGHT_PAREN):
@@ -194,12 +191,12 @@ class Parser:
           self.expect(TokenType.RIGHT_PAREN)
         self.expect(TokenType.IN)
         function = self.parse_function()
-        return proc.Program(
+        return grammar.Program(
             inputs=inputs,
             function=function
         )
 
-    def parse_function(self) -> proc.Function[str, str]:
+    def parse_function(self) -> grammar.Function:
         self.expect(TokenType.FUN)
         self.expect(TokenType.LEFT_PAREN)
         if self.match(TokenType.RIGHT_PAREN):
@@ -215,13 +212,13 @@ class Parser:
         self.expect(TokenType.COLON)
         body = self.parse_statement()
 
-        return proc.Function(
+        return grammar.Function(
             parameters=parameters,
             emits=emits,
             body=body
         )
 
-    def parse_statement(self) -> proc.Statement[str, str]:
+    def parse_statement(self) -> grammar.Statement:
         if self.lookahead(TokenType.LOOP):
             return self.parse_loop()
         elif self.lookahead(TokenType.CONTINUE):
@@ -240,77 +237,83 @@ class Parser:
             return self.parse_block()
         elif self.lookahead(TokenType.STOP):
             return self.parse_stop()
+        elif self.lookahead(TokenType.NOOP):
+            return self.parse_noop()
         else:
             raise self.error("Expected statement")
 
-    def parse_loop(self) -> proc.Loop[str, str]:
+    def parse_loop(self) -> grammar.Loop:
         self.expect(TokenType.LOOP)
         name = self.expectv(TokenType.IDENTIFIER)
         body = self.parse_statement()
-        return proc.Loop(
+        return grammar.Loop(
             name=name,
             body=body
         )
 
-    def parse_continue(self) -> proc.Continue[str, str]:
+    def parse_continue(self) -> grammar.Continue:
         self.expect(TokenType.CONTINUE)
         name = self.expectv(TokenType.IDENTIFIER)
-        return proc.Continue(name)
+        return grammar.Continue(name)
 
-    def parse_break(self) -> proc.Break[str, str]:
+    def parse_break(self) -> grammar.Break:
         self.expect(TokenType.BREAK)
         name = self.expectv(TokenType.IDENTIFIER)
-        return proc.Break(name)
+        return grammar.Break(name)
 
-    def parse_if(self) -> proc.If[str, str]:
+    def parse_if(self) -> grammar.If:
         self.expect(TokenType.IF)
         condition = self.parse_variable()
         self.expect(TokenType.THEN)
         truthy_branch = self.parse_statement()
         self.expect(TokenType.ELSE)
         falsey_branch = self.parse_statement()
-        return proc.If(
+        return grammar.If(
             condition=condition,
             truthy_branch=truthy_branch,
             falsey_branch=falsey_branch
         )
 
-    def parse_emit(self) -> proc.Emit[str, str]:
+    def parse_emit(self) -> grammar.Emit:
         self.expect(TokenType.EMIT)
         to_emit = self.parse_expression()
-        return proc.Emit(
+        return grammar.Emit(
             to_emit=to_emit
         )
 
-    def parse_declaration(self) -> proc.Declaration[str, str]:
+    def parse_declaration(self) -> grammar.Declaration:
         variable = self.parse_variable()
         self.expect(TokenType.COLON)
         type = self.parse_type()
-        return proc.Declaration(
+        return grammar.Declaration(
             variable=variable,
             type=type
         )
 
-    def parse_assignment(self) -> proc.Assignment[str, str]:
+    def parse_assignment(self) -> grammar.Assignment:
         variable = self.parse_variable()
         self.expect(TokenType.LEFT_ARROW)
         expression = self.parse_expression()
-        return proc.Assignment(
+        return grammar.Assignment(
             variable=variable,
             expression=expression
         )
 
-    def parse_block(self) -> proc.Block[str, str]:
+    def parse_block(self) -> grammar.Block:
         self.expect(TokenType.LEFT_BRACE)
         if self.match(TokenType.RIGHT_BRACE):
             statements = []
         else:
             statements = list(self.sequence(TokenType.SEMICOLON, self.parse_statement))
             self.expect(TokenType.RIGHT_BRACE)
-        return proc.Block(
+        return grammar.Block(
             statements=statements
         )
 
-    def parse_stop(self) -> proc.Stop[str, str]:
+    def parse_stop(self) -> grammar.Stop:
         self.expect(TokenType.STOP)
-        return proc.Stop()
+        return grammar.Stop()
+
+    def parse_noop(self) -> grammar.NoOp:
+        self.expect(TokenType.NOOP)
+        return grammar.NoOp()

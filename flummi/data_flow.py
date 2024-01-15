@@ -1,0 +1,68 @@
+from functools import reduce
+from collections.abc import Iterator
+from operator import or_
+
+from . import CFG, grammar
+from .label_graph import LabelGraph, collect_successors
+
+
+def union[T](sets: Iterator[set[T]]) -> set[T]:
+    return reduce(or_, sets, set())
+
+
+def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.BlockLabel, set[CFG.grammar.Variable]], set[CFG.grammar.Variable]]:
+    jump_targets = {graph.entry_label} | union(
+        CFG.jumps(block)
+        for block in graph.blocks.values()
+    )
+
+    inputs = {
+        label: CFG.free_variables(block)
+        for label, block in graph.blocks.items()
+    }
+
+    while True:
+
+        old_inputs = inputs
+
+        inputs = {
+            label: inputs[label] | union(
+                inputs[successor] - CFG.bound_variables(block)
+                for successor in CFG.successors(block)
+            )
+            for label, block in graph.blocks.items()
+        }
+
+        jump_set = union(inputs[jump_target] for jump_target in jump_targets)
+
+        for jump_target in jump_targets:
+            inputs[jump_target] = jump_set
+
+        if old_inputs == inputs:
+            break
+
+    return inputs, jump_set
+
+
+def compute_outputs(successors: LabelGraph, inputs: dict[CFG.BlockLabel, set[CFG.grammar.Variable]]) -> dict[CFG.BlockLabel, set[CFG.grammar.Variable]]:
+  return {
+      label: union(inputs[child] for child in children)
+      for label, children in successors.items()
+  }
+
+
+def materialize_data_flow(graph: CFG.Graph) -> CFG.Graph:
+    inputs, _ = get_block_inputs(graph)
+    outputs = compute_outputs(collect_successors(graph), inputs)
+
+    for label, block in graph.blocks.items():
+        existing_bindings = CFG.bound_variables(block)
+        for missing_binding in outputs[label] - existing_bindings:
+            block.statements.append(
+                CFG.Assignment(
+                    missing_binding,
+                    grammar.Expression("{0}", [missing_binding])
+                )
+            )
+
+    return graph

@@ -1,18 +1,16 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
+from itertools import chain
 from textwrap import dedent, indent
-from typing import Generic, TypeVar, Iterator
 
-from .algorithms import compute_loopless_successors, dependent_ordering
-from .grammars import common, CFG
 
+from . import CFG, grammar
+from .analyzer import SymbolTable, VariableBindings
+from .label_graph import *
+from .data_flow import *
 
 __all__ = (
     "codegen",
 )
-
-
-E = TypeVar("E", bound=common.SupportsFormat)
-T = TypeVar("T", bound=common.SupportsStr)
 
 
 def _indent(lines: str, prefix: str):
@@ -25,8 +23,8 @@ def _indent(lines: str, prefix: str):
     return out
 
 
-def codegen(graph: CFG.Graph) -> str:
-    return CodeGen().gen_program(graph)
+def codegen(graph: CFG.Graph, symbol_table: SymbolTable, emit_type: grammar.Type, variable_bindings: VariableBindings, include_trace: bool = False) -> str:
+    return CodeGen(symbol_table, emit_type, variable_bindings, include_trace).gen_program(graph)
 
 
 class CodeGenError(Exception):
@@ -34,261 +32,176 @@ class CodeGenError(Exception):
 
 
 @dataclass
-class CodeGen(Generic[E, T]):
-    row_source: str = field(init=False)
-    control_columns: list[str] = field(init=False)
-    scope_columns: list[str] = field(init=False)
+class CodeGen:
+    symbol_table: SymbolTable
+    emit_type: InitVar[grammar.Type]
+    variable_bindings: VariableBindings
+    include_trace: bool
 
-    def gen_type(self, type: common.Type[T]) -> str:
+    entry_label: CFG.BlockLabel = field(init=False)
+    inputs: dict[CFG.BlockLabel, set[grammar.Variable]] = field(init=False)
+    jump_predecessors: LabelGraph = field(init=False)
+    goto_predecessors: LabelGraph = field(init=False)
+    emit_type_sql: str = field(init=False)
+
+    def __post_init__(self, emit_type: grammar.Type):
+        self.emit_type_sql = self.gen_type(emit_type)
+
+
+
+    def gen_type(self, type: grammar.Type) -> str:
         return str(type.source)
 
-    def gen_expression(self, expression: common.Expression[E]) -> str:
+    def gen_expression(self, expression: grammar.Expression) -> str:
         return f"""({_indent(expression.source.format(*(
-            '"%sources%".' + self.gen_variable(variable)
+            self.gen_variable(variable)
             for variable in expression.free_variables
         )), ' ')})"""
 
-    def gen_variable(self, variable: common.Variable) -> str:
+    def gen_variable(self, variable: grammar.Variable) -> str:
         return f'"{variable.identifier}"'
 
     def gen_label(self, label: CFG.BlockLabel) -> str:
         return f'"{label.label}"'
 
-    def gen_program(self, graph: CFG.Graph[E, T]) -> str:
-        if graph.jumps:
-            return self.gen_nonlinear_program(graph)
-        else:
-            return self.gen_linear_program(graph)
+    def gen_program(self, graph: CFG.Graph) -> str:
+        self.entry_label = graph.entry_label
 
-    def gen_linear_program(self, graph: CFG.Graph[E, T]) -> str:
-        data_type = self.gen_type(graph.emits)
+        self.jump_predecessors = invert_label_graph(collect_jumps(graph))
+        self.goto_predecessors = invert_label_graph(collect_gotos(graph))
+        self.inputs, jump_variables = get_block_inputs(graph)
+        self.outputs = compute_outputs(collect_successors(graph), self.inputs)
 
-        input_variables = (
-            ', ' * (0 < len(graph.inputs)) +
-            ', '.join(
-                self.gen_variable(variable)
-                for variable in graph.blocks[graph.entry_label].parameters
-            )
-        )
 
-        input_bindings = (
-            (',\n' + ' '*19) * (0 < len(graph.inputs)) +
-            ',\n'.join(
-                indent(
-                    self.gen_expression(graph.inputs[variable]) +
-                    " :: " + self.gen_type(graph.variables[variable]) +
-                    " AS " + self.gen_variable(variable),
-                    ' ' * 19 * (i > 0)
-                )
-                for i, variable in enumerate(graph.blocks[graph.entry_label].parameters)
-            )
-        )
-
-        self.row_source = '"%entrypoint%"'
-        self.control_columns = ['"%kind%"', '"%result%"']
-        self.scope_columns = [variable.identifier for variable in graph.blocks[graph.entry_label].parameters]
-
-        blocks = indent(',\n'.join(
-            self.gen_block(graph.blocks[label])
-            for label in dependent_ordering(compute_loopless_successors(graph), graph.entry_label)
-        ), ' ' * 10)[10:]
-
-        emits = indent('\n  UNION ALL\n'.join(
-            dedent(f"""
-                SELECT "%result%"
-                FROM   {self.gen_label(label)}
-                WHERE  "%kind%" = 'data'
-            """)[1:-1]
+        jump_sources = [
+            label
             for label, block in graph.blocks.items()
-            if any(isinstance(statement, CFG.Emit) for statement in block.statements)
-        ), ' ' * 8)[8:]
+            if CFG.contains_jumps(block)
+        ]
 
-        return dedent(f"""
-        WITH
-          "%entrypoint%"("%kind%", "%result%"{input_variables}) AS (
-            SELECT 'control', NULL :: {data_type}{input_bindings}
-          ),
-          {blocks}
+        emit_sources = [
+            label
+            for label, block in graph.blocks.items()
+            if CFG.contains_emits(block)
+        ]
 
-        {emits};
-        """)[1:-1]
-
-    def gen_nonlinear_program(self, graph: CFG.Graph[E, T]) -> str:
-        data_type = self.gen_type(graph.emits)
-
-        trampolined_variables = (
-            ', ' * (0 < len(graph.inputs)) +
+        working_table_columns_sql = (
+            ', ' * (0 < len(jump_variables)) +
             ', '.join(
                 self.gen_variable(variable)
-                for variable in graph.blocks[graph.entry_label].parameters
+                for variable in jump_variables
             )
         )
 
-        input_bindings = (
-            (',\n' + ' '*21) * (0 < len(graph.inputs)) +
-            ',\n'.join(
-                indent(
-                    self.gen_expression(graph.inputs[variable]) +
-                    " :: " + self.gen_type(graph.variables[variable]) +
-                    " AS " + self.gen_variable(variable),
-                    ' ' * 21 * (i > 0)
-                )
-                for i, variable in enumerate(graph.blocks[graph.entry_label].parameters)
+        working_table_nulls_sql = (
+            ', ' * (0 < len(jump_variables)) +
+            ', '.join(
+                f"CAST(NULL AS {self.gen_type(self.symbol_table[variable])})"
+                for variable in jump_variables
             )
         )
 
-        entry_label = graph.entry_label.label
-
-        self.row_source = '"%trampoline%"'
-        self.control_columns = ['"%kind%"', '"%result%"', '"%label%"']
-        self.scope_columns = [variable.identifier for variable in graph.blocks[graph.entry_label].parameters]
+        initial_row_sql = (
+            ', ' * (0 < len(jump_variables)) +
+            ', '.join(
+                f"CAST({self.gen_expression(self.variable_bindings[variable]) if variable in self.variable_bindings else "NULL"} AS {self.gen_type(self.symbol_table[variable])})"
+                for variable in jump_variables
+            )
+        )
 
         blocks = indent(',\n'.join(
             self.gen_block(graph.blocks[label])
-            for label in dependent_ordering(compute_loopless_successors(graph), graph.entry_label)
+            for label in dependent_ordering(collect_gotos(graph))
         ), ' ' * 16)[16:]
 
-        jumps = indent('\n  UNION ALL\n'.join(
-            self.gen_jump(jump)
-            for jump in graph.jumps
-        ), ' ' * 14)[14:]
-
-        emit_scope = (
-          ', ' * (0 < len(graph.inputs)) +
-          ', '.join(["NULL"] * len(graph.inputs))
+        trace_column_sql = (
+            ', "%trace%"'
+            if self.include_trace else
+            ""
         )
-        emits = indent('\n  UNION ALL\n'.join(
-            dedent(f"""
-                SELECT "%kind%", "%result%", "%label%"{emit_scope}
-                FROM   {self.gen_label(label)}
-                WHERE  "%kind%" = 'data'
-            """)[1:-1]
-            for label, block in graph.blocks.items()
-            if any(isinstance(statement, CFG.Emit) for statement in block.statements)
-        ), ' ' * 14)[14:]
 
+        trace_null_column_sql = (
+            ", CAST(NULL AS json)"
+            if self.include_trace else
+            ""
+        )
 
         return dedent(f"""
         WITH RECURSIVE
-          "%trampoline%"("%kind%", "%result%", "%label%"{trampolined_variables}) AS (
-            (
-              SELECT 'control', NULL :: {data_type}, '{entry_label}'{input_bindings}
-            )
+          "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}) AS (
+            (SELECT 'jump', '{graph.entry_label.label}'{initial_row_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql})
               UNION ALL -- recursive union!
-            (
-              WITH
+            (WITH
+                "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}) AS (
+                  TABLE "%loop%"
+                ),
                 {blocks}
 
-              -- jumps
-              {jumps}
-                UNION ALL
-              -- emits
-              {emits}
+             {
+                _indent(
+                    '\n  UNION ALL\n'.join(
+                        chain(
+                            (
+                                dedent(
+                                    f"""
+                                    SELECT 'jump', "%label%"{working_table_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}
+                                    FROM   {label.label}
+                                    WHERE  "%kind%"='jump'
+                                    """
+                                )[1:-1]
+                                for label in jump_sources
+                            ),
+                            (
+                                dedent(
+                                    f"""
+                                    SELECT 'emit', NULL{working_table_nulls_sql}, "%result%"{trace_null_column_sql}
+                                    FROM   {label.label}
+                                    WHERE  "%kind%"='emit'
+                                    """
+                                )[1:-1]
+                                for label in emit_sources
+                            ),
+                            (
+                                dedent(
+                                    f"""
+                                    SELECT 'trace', "%label%"{working_table_nulls_sql}, CAST(NULL AS {self.emit_type_sql}){trace_column_sql}
+                                    FROM   {label.label}
+                                    WHERE  "%kind%"='trace'
+                                    """
+                                )[1:-1]
+                                for label in graph.blocks
+                                if self.include_trace
+                            )
+                        )
+                    ),
+                    ' ' * 13
+                )
+             }
             )
           )
 
-        SELECT "%result%" FROM "%trampoline%" WHERE "%kind%" = 'data';
+        SELECT "%result%" FROM "%loop%" WHERE "%kind%"='emit';
         """)[1:-1]
 
-    def gen_jump(self, jump: CFG.JumpDirective) -> str:
-        destination = jump.destination.label
-        origin = self.gen_label(jump.origin)
-        predicate = self.gen_predicate(jump.predicate)
-        scope = (
-            ', ' * (0 < len(jump.parameters)) +
+    def gen_block(self, block: CFG.Block) -> str:
+        inputs = self.inputs[block.label]
+        outputs = self.outputs[block.label]
+        goto_predecessors = self.goto_predecessors[block.label]
+        jump_predecessors = self.jump_predecessors[block.label]
+
+        input_columns_sql = (
+            ', ' * bool(inputs) +
             ', '.join(
-                self.gen_variable(parameter)
-                for parameter in jump.parameters
-            )+
-            ' ' * (0 < len(jump.parameters))
-        )
-
-        return dedent(f"""
-            SELECT 'control', NULL, '{destination}'{scope}
-            FROM   {origin}
-            WHERE  "%kind%" = 'control'
-            AND    {predicate}
-        """)[1:-1]
-
-    def gen_predicate(self, predicate: CFG.Predicate) -> str:
-        match predicate:
-            case CFG.Variable(variable):
-                return f"{self.gen_variable(variable)} IS NOT DISTINCT FROM TRUE"
-            case CFG.Not(operand):
-                return f"NOT ({self.gen_predicate(operand)})"
-            case CFG.And(left_operand, right_operand):
-                return f"{self.gen_predicate(left_operand)} AND {self.gen_predicate(right_operand)}"
-            case CFG.Tautology():
-                return "TRUE"
-            case _:
-                raise CodeGenError("Unknown predicate form.")
-
-    def conditional_variables(self, terminal: CFG.Terminal) -> list[common.Variable]:
-        def iter(terminal: CFG.Terminal) -> Iterator[common.Variable]:
-          match terminal:
-              case CFG.If(condition, truthy_terminal, falsey_terminal):
-                  yield condition
-                  yield from self.conditional_variables(truthy_terminal)
-                  yield from self.conditional_variables(falsey_terminal)
-              case _:
-                  return
-        return list(iter(terminal))
-
-    def output_parameter_variables(self, terminal: CFG.Terminal) -> list[common.Variable]:
-        match terminal:
-            case CFG.If(_, truthy_terminal, falsey_terminal):
-                truthy_branch = self.output_parameter_variables(truthy_terminal)
-                falsey_branch = self.output_parameter_variables(falsey_terminal)
-                return truthy_branch + [
-                    parameter
-                    for parameter in falsey_branch
-                    if parameter not in truthy_branch
-                ]
-            case CFG.GoTo(_, arguments) | CFG.Jump(_, arguments):
-                return arguments
-            case _:
-                return []
-
-    def gen_block(self, block: CFG.Block[E]) -> str:
-        label = block.label.label
-
-        control_columns = ', '.join(self.control_columns)
-
-        input_scope_columns = (
-            ', ' * (0 < len(block.parameters)) +
-            ', '.join(
-                self.gen_variable(parameter)
-                for parameter in block.parameters
+                self.gen_variable(variable)
+                for variable in inputs
             )
         )
 
-        output_parameter_variables = self.output_parameter_variables(block.terminal)
-        conditional_variables = self.conditional_variables(block.terminal)
-
-        actual_output_variables = output_parameter_variables + [
-          parameter
-          for parameter in conditional_variables
-          if parameter not in output_parameter_variables
-        ]
-
-        assignments = {
-            statement.variable: self.gen_expression(statement.expression)
+        assignments = [
+            statement
             for statement in block.statements
             if isinstance(statement, CFG.Assignment)
-        }
-
-        output_columns = [
-            f'{assignments.get(variable, self.gen_variable(variable))} AS "new%{variable.identifier}"'
-            for variable in actual_output_variables
         ]
-
-        output_columns = (
-            (',\n' + ' '*19) * (0 < len(output_columns)) +
-            ',\n'.join(
-                [indent,_indent][i == 0](output_column, ' ' * 19)
-                for i, output_column in enumerate(output_columns)
-            )
-        )
 
         emits = [
             statement
@@ -296,99 +209,175 @@ class CodeGen(Generic[E, T]):
             if isinstance(statement, CFG.Emit)
         ]
 
-        control = (
-            indent(dedent(f"""
-            SELECT 'control', {', '.join(['NULL']*(len(self.control_columns)-1))}{output_columns}
-            FROM   "%sources%"
-            """)[1:[-1, None][0 < len(emits)]], ' ' * 10)[10:]
-            if output_columns else ""
+        assign_columns_sql = (
+            ', ' * bool(inputs) +
+            ', '.join(
+                self.gen_variable(assignment.variable)
+                for assignment in assignments
+            )
         )
 
-        output_variables = (
-            ', ' * (0 < len(actual_output_variables)) +
+        output_columns_sql = (
+            ', ' * bool(outputs) +
             ', '.join(
                 self.gen_variable(variable)
-                for variable in actual_output_variables
+                for variable in outputs
             )
         )
 
-        sources = indent('\n  UNION ALL\n'.join(
-            self.gen_reference(reference)
-            for reference in block.predecessor_references
-        ), ' ' * 14)[14:]
-
-        emit_scope = _indent(
-            ',\n' * (0 < len(actual_output_variables) + len(self.control_columns) - 2) +
-            ',\n'.join(["NULL"] * (len(actual_output_variables) + len(self.control_columns) - 2)),
-            ' '*23
-        )
-        emits = (
-            ('\n'+' '*12+'UNION ALL\n\n') * (0 < len(emits)) * (0 < len(output_columns)) +
-            indent('\n  UNION ALL\n'.join(
-                dedent(f'''
-                SELECT 'data',
-                       {_indent(self.gen_expression(statement.to_emit), ' '*23)}{emit_scope}
-                FROM   "%sources%"
-                ''')[1:-1]
-                for statement in emits
-            ), ' ' * 10)[10 * (0 == len(output_columns)):]
+        output_nulls_sql = (
+            ', ' * bool(outputs) +
+            ', '.join(
+                f"CAST(NULL AS {self.gen_type(self.symbol_table[variable])})"
+                for variable in outputs
+            )
         )
 
+        trace_column_keys_sql = (
+            ', ' * bool(outputs) +
+            ', '.join(
+                f"'{assignment.variable.identifier}'"
+                for assignment in assignments
+            )
+        )
+
+        trace_column_values_sql = (
+            ', ' * bool(outputs) +
+            ', '.join(
+                f"CAST({self.gen_variable(assignment.variable)} AS TEXT)"
+                for assignment in assignments
+            )
+        )
+
+        trace_column_sql = (
+            ', "%trace%"'
+            if self.include_trace else
+            ""
+        )
+
+        trace_null_column_sql = (
+            ", CAST(NULL AS json)"
+            if self.include_trace else
+            ""
+        )
+
+        successor_info = self.destructure_terminal(block.terminal)
 
         return dedent(f"""
-        "{label}"({control_columns}{output_variables}) AS (
+        "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}) AS (
           WITH
-            "%sources%"({control_columns}{input_scope_columns}) AS (
-              {sources}
+            "%inputs%"("%"{input_columns_sql}) AS (
+              {
+                _indent(
+                    "\n  UNION ALL\n".join(
+                        chain(
+                            [
+                                dedent(
+                                    f"""
+                                    SELECT NULL{input_columns_sql}
+                                    FROM   "%loop%"
+                                    WHERE  "%kind%"='jump'
+                                    AND    "%label%"='{block.label.label}'
+                                    """
+                                )[1:-1]
+                            ] * (bool(jump_predecessors) or self.entry_label == block.label),
+                            (
+                                dedent(
+                                    f"""
+                                    SELECT NULL{input_columns_sql}
+                                    FROM   "{parent_label.label}"
+                                    WHERE  "%kind%"='goto'
+                                    AND    "%label%"='{block.label.label}'
+                                    """
+                                )[1:-1]
+                                for parent_label in goto_predecessors
+                            )
+                        )
+                    ),
+                    ' ' * 14
+                )
+              }
+            ),
+            "%assign%"("%"{assign_columns_sql}) AS (
+              SELECT NULL{
+                        ',\n' * bool(assignments) +
+                        indent(
+                            ",\n".join(
+                                f'CAST({self.gen_expression(assignment.expression)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
+                                for assignment in assignments
+                            ),
+                            ' ' * 21
+                        )
+                     }
+              FROM "%inputs%"
             )
-
-          {control}{emits}
+          {
+            _indent(
+               "\n  UNION ALL\n".join(
+                    chain(
+                        (
+                            dedent(
+                                f"""
+                                SELECT {kind}, {label}{output_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}
+                                FROM   "%assign%"
+                                WHERE  {predicate}
+                                """
+                            )[1:-1]
+                            for kind, label, predicate in successor_info
+                        ),
+                        (
+                            dedent(
+                                f"""
+                                SELECT 'emit', NULL{output_nulls_sql},
+                                       CAST({_indent(self.gen_expression(emit.to_emit), ' ' * 39)} AS {self.emit_type_sql}){trace_null_column_sql}
+                                FROM   "%inputs%"
+                                """
+                            )[1:-1]
+                            for emit in emits
+                        ),
+                        [
+                            dedent(
+                                f"""
+                                SELECT 'trace', '{block.label.label}'{output_nulls_sql}, CAST(NULL AS {self.emit_type_sql}),
+                                        json_object(
+                                          '%kind%' VALUE {kind},
+                                          '%label%' VALUE {label},
+                                          {
+                                            _indent(
+                                                ",\n".join(
+                                                    f"'{assignment.variable.identifier}' VALUE {self.gen_variable(assignment.variable)}"
+                                                    for assignment in assignments
+                                                ),
+                                                ' ' * 42
+                                            )
+                                          }
+                                       ) AS "%trace%"
+                                FROM   "%assign%"
+                                WHERE  {predicate}
+                                """
+                            )[1:-1]
+                            for kind, label, predicate in successor_info
+                        ] * self.include_trace
+                    )
+                ),
+                " " * 10
+            )
+          }
         )
         """)[1:-1]
 
-    def gen_reference(self, reference: CFG.Reference) -> str:
-        match reference:
-            case CFG.FromLoop(exepected_label):
-                control_columns = ', '.join(self.control_columns)
-
-                scope_columns = (
-                    (',\n' + ' '*27) * (0 < len(self.scope_columns)) +
-                    (',\n' + ' '*27).join(
-                        f'"{column}"'
-                        for column in self.scope_columns
-                    )
+    def destructure_terminal(self, terminal: CFG.Terminal, predicate: str = "TRUE") -> set[tuple[str,str,str]]:
+        match terminal:
+            case CFG.Stop():
+                return set()
+            case CFG.GoTo(label):
+                return {("'goto'",f"'{label.label}'",predicate)}
+            case CFG.Jump(label):
+                return {("'jump'",f"'{label.label}'",predicate)}
+            case CFG.If(condition, truthy, falsey):
+                return (
+                    self.destructure_terminal(truthy, f"{predicate} AND {condition}") |
+                    self.destructure_terminal(falsey, f"{predicate} AND NOT {condition}")
                 )
-
-                exepected_label = exepected_label.label
-
-                return dedent(f"""
-                    SELECT {control_columns}{scope_columns}
-                    FROM   {self.row_source}
-                    WHERE  "%kind%" = 'control'
-                    AND    "%label%" = '{exepected_label}'
-                """)[1:-1]
-
-            case CFG.FromBlock(label, arguments, predicate):
-                control_columns = ', '.join(self.control_columns)
-
-                arguments = (
-                    (',\n' + ' '*27) * (0 < len(arguments)) +
-                    (',\n' + ' '*27).join(
-                        self.gen_variable(argument)
-                        for argument in arguments
-                    )
-                )
-
-                if isinstance(predicate, CFG.Tautology):
-                    predicate = ""
-                else:
-                    predicate = '\n' + ' ' * 20 + f'AND    {self.gen_predicate(predicate)}'
-
-                return dedent(f"""
-                    SELECT {control_columns}{arguments}
-                    FROM   {self.gen_label(label)}
-                    WHERE  "%kind%" = 'control'{predicate}
-                """)[1:-1]
-
             case _:
-                raise CodeGenError("Unknown reference form.")
+                raise TypeError(f"Unexpected kind of terminal: {terminal}")

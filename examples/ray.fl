@@ -122,7 +122,7 @@ FUN (
       det <- §{0} * {1} + {2} * {3} + {4} * {5}§[e1_x, P_x, e1_y, P_y, e1_z, P_z]; -- } det = e1 ⋅ P
 
       condition <- §abs({0}) <= {1}§[det, epsilon];
-      IF condition THEN {}
+      IF condition THEN NOOP
       ELSE {
         T1_x <- §{0} - {1}.p1_x§[origin_x, triangle];  -- ⎫
         T1_y <- §{0} - {1}.p1_y§[origin_y, triangle];  -- ⎬ T1 = origin - p1
@@ -131,7 +131,7 @@ FUN (
         u <- §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[T1_x, P_x, T1_y, P_y, T1_z, P_z, det];  -- } u = (T1 ⋅ P) / det
 
         condition <- §{0} NOT BETWEEN 0 AND 1§[u];
-        IF condition THEN {}
+        IF condition THEN NOOP
         ELSE {
           Q_x <- §{0} * {1} - {2} * {3}§[T1_y, e1_z, T1_z, e1_y];  -- ⎫
           Q_y <- §{0} * {1} - {2} * {3}§[T1_z, e1_x, T1_x, e1_z];  -- ⎬ Q = T1 × e1
@@ -140,12 +140,12 @@ FUN (
           v <- §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[direction_x, Q_x, direction_y, Q_y, direction_z, Q_z, det];  -- } v = (direction ⋅ Q) / det
 
           condition <- §0 > {0} OR {0} + {1} > 1§[v, u];
-          IF condition THEN {}
+          IF condition THEN NOOP
           ELSE {
             dist <- §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[e2_x, Q_x, e2_y, Q_y, e2_z, Q_z, det];  -- } dist = (e2 ⋅ Q) / det
 
             condition <- §{0} <= {1} OR {0} >= {2}§[dist, epsilon, min_dist];
-            IF condition THEN {}
+            IF condition THEN NOOP
             ELSE {
               material <- §{0}.material§[triangle];
               min_dist <- §{0}§[dist];
@@ -165,7 +165,7 @@ FUN (
                 normal_x <- §{0} * -1§[normal_x];  -- ⎫
                 normal_y <- §{0} * -1§[normal_y];  -- ⎬ normal = -normal
                 normal_z <- §{0} * -1§[normal_z]   -- ⎭
-              } ELSE {};
+              } ELSE NOOP;
 
               condition <- §{0} = 'm'§[material];
               IF condition
@@ -173,7 +173,7 @@ FUN (
                 color_r <- §{0}.r§[triangle];
                 color_g <- §{0}.g§[triangle];
                 color_b <- §{0}.b§[triangle]
-              } ELSE {}
+              } ELSE NOOP
             }
           }
         }
@@ -198,13 +198,13 @@ FUN (
       d2 <- §{0} ** 2 + {1} ** 2 + {2} ** 2 - {3} ** 2§[L_x, L_y, L_z, tca];  -- } d2 = |L|² - tca²
 
       condition <- §{0} > {1}.radius ** 2§[d2, sphere];
-      IF condition THEN {}
+      IF condition THEN NOOP
       ELSE {                                               --          _____________
         thc <- §sqrt({0}.radius ** 2 - {1})§[sphere, d2];  -- } thc = √radius² - d2`
         dist <- §least({0} + {1}, greatest({0} - {1}, 0))§[tca, thc];  -- } dist = min(tca + tch, max(tca - thc, 0))
 
         condition <- §{0} NOT BETWEEN {1} AND {2}§[dist, epsilon, min_dist];
-        IF condition THEN {}
+        IF condition THEN NOOP
         ELSE {
           material <- §{0}.material§[sphere];
           min_dist <- §{0}§[dist];
@@ -232,7 +232,7 @@ FUN (
             color_r <- §{0}.r§[sphere];
             color_g <- §{0}.g§[sphere];
             color_b <- §{0}.b§[sphere]
-          } ELSE {}
+          } ELSE NOOP
         }
       };
 
@@ -250,7 +250,7 @@ FUN (
         pixel_r <- §0§[];                  -- ⎪ Black out the color and be done with it.
         pixel_g <- §0§[];                  -- ⎪
         pixel_b <- §0§[]                   -- ⎪
-      } ELSE {};                           -- ⎪
+      } ELSE NOOP;                           -- ⎪
       BREAK ray_loop                       -- ⎭
     } ELSE {
       condition <- §{0} = 'l'§[material];
@@ -334,7 +334,7 @@ FUN (
           step <- §{0} + 1§[step];                     -- ⎪   ...go in for another round
           CONTINUE ray_loop                            -- ⎪   ...otherwise we are done here.
         } ELSE BREAK ray_loop                          -- ⎭
-      } ELSE {}}}
+      } ELSE NOOP}}
     };
     BREAK ray_loop
   };

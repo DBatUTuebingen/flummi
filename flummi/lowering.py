@@ -1,10 +1,10 @@
 from collections import defaultdict
 from contextlib import contextmanager
-from dataclasses import dataclass, field, replace
-from typing import Generic, Generator, TypeVar
+from dataclasses import dataclass, field
+from typing import Generator
 from warnings import warn
 
-from .grammars import proc, common, CFG
+from . import CFG, grammar
 
 
 __all__ = (
@@ -12,58 +12,36 @@ __all__ = (
 )
 
 
-E = TypeVar("E", bound=common.SupportsFormat)
-T = TypeVar("T", bound=common.SupportsStr)
 
-
-def lower(program: proc.Program[E, T], boolean_type: T) -> CFG.Graph[E, T]:
-    return Lowering(common.Type(boolean_type)).lower_program(program)
-
-
-class LoweringWarning(UserWarning):
-    ...
-
-
-class LoweringError(Exception):
-    ...
+def lower(program: grammar.Program) -> CFG.Graph:
+    return Lowering().lower_program(program)
 
 
 @dataclass
-class Lowering(Generic[E, T]):
-    boolean_type: common.Type[T]
-    _emit_type: common.Type[T] = field(init=False)
-    _blocks: dict[CFG.BlockLabel, CFG.Block[E]] = field(init=False, default_factory=dict)
-    _terminated_blocks: set[CFG.BlockLabel] = field(init=False, default_factory=set)
+class Lowering:
+    _blocks: dict[CFG.BlockLabel, CFG.Block] = field(init=False, default_factory=dict)
     _loop_labels: dict[str, tuple[CFG.BlockLabel, CFG.BlockLabel]] = field(init=False, default_factory=dict)
     _variable_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
     _label_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
-    _variables: dict[common.Variable, common.Type[T]] = field(init=False, default_factory=dict)
+    _terminated_blocks: set[CFG.BlockLabel] = field(init=False, default_factory=set)
 
     def _create_empty_block(self, label: CFG.BlockLabel):
         self._blocks[label] = CFG.Block(
             label=label,
-            parameters=[],
             statements=[],
             terminal=CFG.Stop(),
-            predecessor_references=[],
         )
 
-    def _add_statement(self, label: CFG.BlockLabel, statement: CFG.Statement[E]):
-        self._blocks[label].statements.append(statement)
+    def _next_block(self, label: CFG.BlockLabel):
         next_label = self._new_block_label("inter")
-        self._terminate_block(label, CFG.GoTo(next_label, []))
+        self._terminate_block(label, CFG.GoTo(next_label))
         self._create_empty_block(next_label)
         return next_label
 
-    def _terminate_block(self, label: CFG.BlockLabel, terminal: CFG.Terminal):
-        if label not in self._terminated_blocks:
-            self._blocks[label].terminal = terminal
-            self._terminated_blocks.add(label)
-
-    def _new_variable(self, prefix: str) -> common.Variable:
+    def _new_variable(self, prefix: str) -> grammar.Variable:
         suffix = str(self._variable_counters[prefix])
         self._variable_counters[prefix] += 1
-        return common.Variable(
+        return grammar.Variable(
             identifier=prefix + suffix,
         )
 
@@ -74,15 +52,13 @@ class Lowering(Generic[E, T]):
             label=prefix + suffix
         )
 
-    def _add_program_variable(self, variable: common.Variable, type: common.Type[T]):
-        if variable in self._variables:
-            raise LoweringError("Tried to redeclare an already declared variable.")
-        self._variables[variable] = type
+    def _terminate_block(self, label: CFG.BlockLabel, terminal: CFG.Terminal):
+        if label not in self._terminated_blocks:
+            self._terminated_blocks.add(label)
+            self._blocks[label].terminal = terminal
 
     @contextmanager
     def _new_loop(self, name: str) -> Generator[tuple[CFG.BlockLabel, CFG.BlockLabel], None, None]:
-        if name in self._loop_labels:
-            raise LoweringError("Tried to reuse loop name.")
         head_label = CFG.BlockLabel(name + "_head")
         self._create_empty_block(head_label)
         exit_label = CFG.BlockLabel(name + "_exit")
@@ -91,76 +67,40 @@ class Lowering(Generic[E, T]):
         yield head_label, exit_label
 
     def _get_loop_labels(self, name: str) -> tuple[CFG.BlockLabel, CFG.BlockLabel]:
-        if name not in self._loop_labels:
-            raise LoweringError("Tried to find unknown loop label.")
         return self._loop_labels[name]
 
-    def lower_program(self, program: proc.Program[E, T]) -> CFG.Graph[E, T]:
+    def lower_program(self, program: grammar.Program) -> CFG.Graph:
         entry_label = CFG.BlockLabel("entry")
         self.lower_function(entry_label, program.function)
         return CFG.Graph(
             entry_label=entry_label,
-            inputs=dict(zip(program.function.parameters, program.inputs)),
-            emits=program.function.emits,
-            variables=self._variables,
             blocks=self._blocks,
-            jumps=[]
         )
 
-    def lower_function(self, label: CFG.BlockLabel, function: proc.Function[E, T]) -> None:
-        self._emit_type = function.emits
-        for parameter, type in function.parameters.items():
-            self._add_program_variable(parameter, type)
+    def lower_function(self, label: CFG.BlockLabel, function: grammar.Function) -> None:
         self._create_empty_block(label)
         self.lower_statement(label, function.body)
 
-    def lower_statement(self, label: CFG.BlockLabel, statement: proc.Statement[E, T]) -> CFG.BlockLabel:
+    def lower_statement(self, label: CFG.BlockLabel, statement: grammar.Statement) -> CFG.BlockLabel:
         match statement:
-            case proc.Loop(name, body):
+            case grammar.Loop(name, body):
                 with self._new_loop(name) as (head_label, exit_label):
-                    self._terminate_block(
-                        label,
-                        CFG.GoTo(
-                            label=head_label,
-                            arguments=[]
-                        )
-                    )
-
+                    self._blocks[label].terminal = CFG.GoTo(head_label)
                     final_body_label = self.lower_statement(head_label, body)
-
-                    self._terminate_block(
-                        final_body_label,
-                        CFG.GoTo(
-                            label=head_label,
-                            arguments=[]
-                        )
-                    )
-
+                    self._terminate_block(final_body_label, CFG.Jump(head_label))
                     return exit_label
 
-            case proc.Continue(name):
+            case grammar.Continue(name):
                 head_label, _ = self._get_loop_labels(name)
-                self._terminate_block(
-                    label,
-                    CFG.GoTo(
-                        label=head_label,
-                        arguments=[]
-                    )
-                )
-                return label
+                self._terminate_block(label, CFG.Jump(head_label))
+                return self._next_block(label)
 
-            case proc.Break(name):
+            case grammar.Break(name):
                 _, exit_label = self._get_loop_labels(name)
-                self._terminate_block(
-                    label,
-                    CFG.GoTo(
-                        label=exit_label,
-                        arguments=[]
-                    )
-                )
-                return label
+                self._terminate_block(label, CFG.GoTo(exit_label))
+                return self._next_block(label)
 
-            case proc.If(condition, truthy_branch, falsey_branch):
+            case grammar.If(condition, truthy_branch, falsey_branch):
                 truthy_label = self._new_block_label("truthy")
                 self._create_empty_block(truthy_label)
                 falsey_label = self._new_block_label("falsey")
@@ -168,77 +108,39 @@ class Lowering(Generic[E, T]):
                 merge_label = self._new_block_label("merge")
                 self._create_empty_block(merge_label)
 
-                self._terminate_block(
-                    label,
-                    CFG.If(
-                        condition=condition,
-                        truthy_terminal=CFG.GoTo(
-                            label=truthy_label,
-                            arguments=[],
-                        ),
-                        falsey_terminal=CFG.GoTo(
-                            label=falsey_label,
-                            arguments=[],
-                        )
-                    )
+                self._blocks[label].terminal = CFG.If(
+                    condition=condition,
+                    truthy_terminal=CFG.GoTo(truthy_label),
+                    falsey_terminal=CFG.GoTo(falsey_label)
                 )
 
                 final_truthy_label = self.lower_statement(truthy_label, truthy_branch)
-                self._terminate_block(
-                    final_truthy_label,
-                    CFG.GoTo(
-                        label=merge_label,
-                        arguments=[]
-                    )
-                )
+                self._terminate_block(final_truthy_label, CFG.GoTo(merge_label))
 
                 final_falsey_label = self.lower_statement(falsey_label, falsey_branch)
-                self._terminate_block(
-                    final_falsey_label,
-                    CFG.GoTo(
-                        label=merge_label,
-                        arguments=[]
-                    )
-                )
+                self._terminate_block(final_falsey_label, CFG.GoTo(merge_label))
 
                 return merge_label
 
-            case proc.Emit(to_emit):
-                return self._add_statement(
-                    label,
-                    CFG.Emit(to_emit=to_emit)
-                )
+            case grammar.Emit(to_emit):
+                self._blocks[label].statements.append(CFG.Emit(to_emit))
+                return self._next_block(label)
 
-            case proc.Stop():
+            case grammar.Stop():
                 self._terminate_block(label, CFG.Stop())
-                label = self._new_block_label("unreachable")
-                self._create_empty_block(label)
-                return label
+                new_label = self._new_block_label("unreachable")
+                self._create_empty_block(new_label)
+                return new_label
 
-            case proc.Declaration(variable, type):
-                self._add_program_variable(variable, type)
-                return label
+            case grammar.Assignment(variable, expression):
+                self._blocks[label].statements.append(CFG.Assignment(variable, expression))
+                return self._next_block(label)
 
-            case proc.Assignment(variable, expression):
-                if variable not in self._variables:
-                    raise LoweringError(f"Tried to assign to undeclared variable: {variable}")
-                for free_variable in expression.free_variables:
-                    if free_variable not in self._variables:
-                        raise LoweringError(f"Tried to use an undeclared variable: {free_variable}")
-
-                return self._add_statement(
-                    label,
-                    CFG.Assignment(
-                        variable=variable,
-                        expression=expression,
-                    ),
-                )
-
-            case proc.Block(statements):
+            case grammar.Block(statements):
                 for statement in statements:
                     label = self.lower_statement(label, statement)
                 return label
 
             case _:
-                warn(LoweringWarning(f"Unknown construct: {statement}"))
+                warn(f"Found unlowerable construct: {statement}", source="Lowering")
                 return label
