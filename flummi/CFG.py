@@ -161,3 +161,17 @@ def bound_variables(block: Block) -> set[grammar.Variable]:
                 vars.add(variable)
 
     return vars
+
+
+def jumpify(terminal: Terminal, label: BlockLabel) -> Terminal:
+    match terminal:
+        case GoTo(_label) if _label == label:
+            return Jump(label)
+        case If(condition, truthy, falsey):
+            return If(
+                condition,
+                jumpify(truthy, label),
+                jumpify(falsey, label)
+            )
+        case _:
+            return terminal

@@ -1,11 +1,11 @@
 import argparse
 from pathlib import Path
 
-from . import CFG
+from . import CFG, label_graph
 from .parser import parse
 from .analyzer import analyze
 from .lowering import lower
-from .optimizer import optimize
+from .optimizer import optimize, find_traces
 from .data_flow import materialize_data_flow
 from .codegen import codegen
 
@@ -32,6 +32,7 @@ def main():
     parser.add_argument('-g', '--graphs', default=None, type=Path, help="Directory to write graphviz files for each transformation to.")
     parser.add_argument('-i', '--intermediates', default=None, type=Path, help="Directory to write IR representation for each transformation to.")
     parser.add_argument('-t', '--trace', action='store_true', help="Include trace generation in output.")
+    parser.add_argument('-j', '--jumps', choices=['backedges','loops','traces','all'], default='backedges', help="Control the placement of jumps in the CFG.")
     arguments = parser.parse_args()
 
     if arguments.graphs and not arguments.graphs.exists():
@@ -74,13 +75,39 @@ def main():
     print_intermediate(cfg, "1_optimize.flir")
     printer[2](pretty(cfg))
 
-    printer[1]("\033[1;2m[2]\033[0;36m materializing data flow\033[0m")
-    cfg = materialize_data_flow(cfg)
-    print_graph(cfg, "2_materialize_data_flow.gv")
-    print_intermediate(cfg, "2_materialize_data_flow.flir")
+    printer[1](f"\033[1;2m[2]\033[0;36m placing additional JUMPs: mode={arguments.jumps}\033[0m")
+    match arguments.jumps:
+        case 'all':
+            for block in cfg.blocks.values():
+                for label in cfg.blocks.keys():
+                    block.terminal = CFG.jumpify(block.terminal, label)
+
+        case 'traces':
+            for trace_head, *_ in find_traces(cfg):
+                for block in cfg.blocks.values():
+                    block.terminal = CFG.jumpify(block.terminal, trace_head)
+
+        case 'loops':
+            successors = label_graph.collect_successors(cfg)
+            loop_heads = label_graph.loop_heads(successors)
+            for block in cfg.blocks.values():
+                for loop_head in loop_heads:
+                    block.terminal = CFG.jumpify(block.terminal, loop_head)
+
+        case _:
+            ...
+
+    print_graph(cfg, "2_additional_jumps.gv")
+    print_intermediate(cfg, "2_additional_jumps.flir")
     printer[2](pretty(cfg))
 
-    printer[1]("\033[1;2m[3]\033[0;36m generating SQL code\033[0m")
+    printer[1]("\033[1;2m[3]\033[0;36m materializing data flow\033[0m")
+    cfg = materialize_data_flow(cfg)
+    print_graph(cfg, "3_materialize_data_flow.gv")
+    print_intermediate(cfg, "3_materialize_data_flow.flir")
+    printer[2](pretty(cfg))
+
+    printer[1]("\033[1;2m[4]\033[0;36m generating SQL code\033[0m")
     sql = codegen(cfg, symbol_table, emit_type, variable_bindings, include_trace=arguments.trace)
 
     if arguments.output:
