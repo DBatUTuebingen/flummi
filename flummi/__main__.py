@@ -1,4 +1,5 @@
 import argparse
+from enum import Enum, unique, auto
 from pathlib import Path
 
 from . import CFG, label_graph
@@ -24,6 +25,16 @@ class Printer:
             return lambda *args, **kwargs: ...
 
 
+@unique
+class Flag(Enum):
+    JUMP_INTO_LOOPS = auto()
+    JUMP_INTO_TRACES = auto()
+    JUMPS_ONLY = auto()
+    EXPLICIT_MATERIALIZED = auto()
+    AVOID_MULTIPLE_RECURSIVE_REFERENCE = auto()
+    INJECT_TRACE_GENERATION = auto()
+
+
 def main():
     parser = argparse.ArgumentParser("flummi", description="CTE-focussed compilation of imperative programs to recursive SQL.")
     parser.add_argument('infile', type=argparse.FileType('r'))
@@ -31,10 +42,13 @@ def main():
     parser.add_argument('-v', '--verbose', default=0, action="count", help="Control the level of verbosity.")
     parser.add_argument('-g', '--graphs', default=None, type=Path, help="Directory to write graphviz files for each transformation to.")
     parser.add_argument('-i', '--intermediates', default=None, type=Path, help="Directory to write IR representation for each transformation to.")
-    parser.add_argument('-t', '--trace', action='store_true', help="Include trace generation in output.")
-    parser.add_argument('-e', '--explicit-materialized', action='store_true', help="Add explicit MATERIALIZED annotations into SQL code.")
-    parser.add_argument('-j', '--jumps', choices=['backedges','loops','traces','all'], default='backedges', help="Control the placement of jumps in the CFG.")
+    parser.add_argument('-f', '--flag', action='append', choices=Flag._member_map_.keys(), help="Configure compilation.")
     arguments = parser.parse_args()
+
+    flags = {
+        Flag[flag_name]
+        for flag_name in arguments.flag or []
+    }
 
     if arguments.graphs and not arguments.graphs.exists():
         arguments.graphs.mkdir()
@@ -76,27 +90,21 @@ def main():
     print_intermediate(cfg, "1_optimize.flir")
     printer[2](pretty(cfg))
 
-    printer[1](f"\033[1;2m[2]\033[0;36m placing additional JUMPs: mode={arguments.jumps}\033[0m")
-    match arguments.jumps:
-        case 'all':
+    printer[1](f"\033[1;2m[2]\033[0;36m placing additional JUMPs\033[0m")
+    if Flag.JUMPS_ONLY in flags:
+        for block in cfg.blocks.values():
+            for label in cfg.blocks.keys():
+                block.terminal = CFG.jumpify(block.terminal, label)
+    elif Flag.JUMP_INTO_TRACES in flags:
+        for trace_head, *_ in find_traces(cfg):
             for block in cfg.blocks.values():
-                for label in cfg.blocks.keys():
-                    block.terminal = CFG.jumpify(block.terminal, label)
-
-        case 'traces':
-            for trace_head, *_ in find_traces(cfg):
-                for block in cfg.blocks.values():
-                    block.terminal = CFG.jumpify(block.terminal, trace_head)
-
-        case 'loops':
-            successors = label_graph.collect_successors(cfg)
-            loop_heads = label_graph.loop_heads(successors)
-            for block in cfg.blocks.values():
-                for loop_head in loop_heads:
-                    block.terminal = CFG.jumpify(block.terminal, loop_head)
-
-        case _:
-            ...
+                block.terminal = CFG.jumpify(block.terminal, trace_head)
+    elif Flag.JUMP_INTO_LOOPS in flags:
+        successors = label_graph.collect_successors(cfg)
+        loop_heads = label_graph.loop_heads(successors)
+        for block in cfg.blocks.values():
+            for loop_head in loop_heads:
+                block.terminal = CFG.jumpify(block.terminal, loop_head)
 
     print_graph(cfg, "2_additional_jumps.gv")
     print_intermediate(cfg, "2_additional_jumps.flir")
@@ -109,7 +117,15 @@ def main():
     printer[2](pretty(cfg))
 
     printer[1]("\033[1;2m[4]\033[0;36m generating SQL code\033[0m")
-    sql = codegen(cfg, symbol_table, emit_type, variable_bindings, include_trace=arguments.trace, explicit_materialized=arguments.explicit_materialized)
+    sql = codegen(
+        cfg,
+        symbol_table,
+        emit_type,
+        variable_bindings,
+        include_trace=Flag.INJECT_TRACE_GENERATION in flags,
+        explicit_materialized=Flag.EXPLICIT_MATERIALIZED in flags,
+        avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCE in flags,
+    )
 
     if arguments.output:
         printer[1](f"\033[1;2m*\033[0;36m writing output to \033[4m'{arguments.output.name}'\033[0m")
