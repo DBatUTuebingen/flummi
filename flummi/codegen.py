@@ -303,7 +303,7 @@ class CodeGen:
                         ',\n' * bool(assignments) +
                         indent(
                             ",\n".join(
-                                f'CAST({self.gen_expression(assignment.expression)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
+                                f'CAST({_indent(self.gen_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
                                 for assignment in assignments
                             ),
                             ' ' * 21
@@ -329,7 +329,7 @@ class CodeGen:
                             dedent(
                                 f"""
                                 SELECT 'emit', NULL{output_nulls_sql},
-                                       CAST({_indent(self.gen_expression(emit.to_emit), ' ' * 39)} AS {self.emit_type_sql}){trace_null_column_sql}
+                                       CAST({_indent(self.gen_expression(emit.to_emit), ' ' * 45)} AS {self.emit_type_sql}){trace_null_column_sql}
                                 FROM   "%inputs%"
                                 """
                             )[1:-1]
