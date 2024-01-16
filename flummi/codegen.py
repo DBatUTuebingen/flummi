@@ -62,7 +62,7 @@ class CodeGen:
 
     def gen_expression(self, expression: grammar.Expression) -> str:
         return f"""({_indent(expression.source.format(*(
-            self.gen_variable(variable)
+            f'("%inputs%".{self.gen_variable(variable)})'
             for variable in expression.free_variables
         )), ' ')})"""
 
