@@ -23,8 +23,15 @@ def _indent(lines: str, prefix: str):
     return out
 
 
-def codegen(graph: CFG.Graph, symbol_table: SymbolTable, emit_type: grammar.Type, variable_bindings: VariableBindings, include_trace: bool = False) -> str:
-    return CodeGen(symbol_table, emit_type, variable_bindings, include_trace).gen_program(graph)
+def codegen(
+    graph: CFG.Graph,
+    symbol_table: SymbolTable,
+    emit_type: grammar.Type,
+    variable_bindings: VariableBindings,
+    include_trace: bool = False,
+    explicit_materialized: bool = False
+) -> str:
+    return CodeGen(symbol_table, emit_type, variable_bindings, include_trace, explicit_materialized).gen_program(graph)
 
 
 class CodeGenError(Exception):
@@ -37,6 +44,7 @@ class CodeGen:
     emit_type: InitVar[grammar.Type]
     variable_bindings: VariableBindings
     include_trace: bool
+    explicit_materialized: bool
 
     entry_label: CFG.BlockLabel = field(init=False)
     inputs: dict[CFG.BlockLabel, set[grammar.Variable]] = field(init=False)
@@ -132,7 +140,7 @@ class CodeGen:
             (SELECT 'jump', '{graph.entry_label.label}'{initial_row_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql})
               UNION ALL -- recursive union!
             (WITH
-                "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}) AS (
+                "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}) AS{" MATERIALIZED" * self.explicit_materialized} (
                   TABLE "%loop%"
                 ),
                 {blocks}
@@ -145,7 +153,7 @@ class CodeGen:
                                 dedent(
                                     f"""
                                     SELECT 'jump', "%label%"{working_table_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}
-                                    FROM   {label.label}
+                                    FROM   "{label.label}"
                                     WHERE  "%kind%"='jump'
                                     """
                                 )[1:-1]
@@ -155,7 +163,7 @@ class CodeGen:
                                 dedent(
                                     f"""
                                     SELECT 'emit', NULL{working_table_nulls_sql}, "%result%"{trace_null_column_sql}
-                                    FROM   {label.label}
+                                    FROM   "{label.label}"
                                     WHERE  "%kind%"='emit'
                                     """
                                 )[1:-1]
@@ -165,7 +173,7 @@ class CodeGen:
                                 dedent(
                                     f"""
                                     SELECT 'trace', "%label%"{working_table_nulls_sql}, CAST(NULL AS {self.emit_type_sql}){trace_column_sql}
-                                    FROM   {label.label}
+                                    FROM   "{label.label}"
                                     WHERE  "%kind%"='trace'
                                     """
                                 )[1:-1]
@@ -233,22 +241,6 @@ class CodeGen:
             )
         )
 
-        trace_column_keys_sql = (
-            ', ' * bool(outputs) +
-            ', '.join(
-                f"'{assignment.variable.identifier}'"
-                for assignment in assignments
-            )
-        )
-
-        trace_column_values_sql = (
-            ', ' * bool(outputs) +
-            ', '.join(
-                f"CAST({self.gen_variable(assignment.variable)} AS TEXT)"
-                for assignment in assignments
-            )
-        )
-
         trace_column_sql = (
             ', "%trace%"'
             if self.include_trace else
@@ -264,9 +256,9 @@ class CodeGen:
         successor_info = self.destructure_terminal(block.terminal)
 
         return dedent(f"""
-        "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}) AS (
+        "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
           WITH
-            "%inputs%"("%"{input_columns_sql}) AS (
+            "%inputs%"("%"{input_columns_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and bool(emits) and bool(assignments))} (
               {
                 _indent(
                     "\n  UNION ALL\n".join(
@@ -298,7 +290,7 @@ class CodeGen:
                 )
               }
             ),
-            "%assign%"("%"{assign_columns_sql}) AS (
+            "%assign%"("%"{assign_columns_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) > 1 or self.include_trace))} (
               SELECT NULL{
                         ',\n' * bool(assignments) +
                         indent(

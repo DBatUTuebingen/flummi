@@ -32,6 +32,7 @@ def main():
     parser.add_argument('-g', '--graphs', default=None, type=Path, help="Directory to write graphviz files for each transformation to.")
     parser.add_argument('-i', '--intermediates', default=None, type=Path, help="Directory to write IR representation for each transformation to.")
     parser.add_argument('-t', '--trace', action='store_true', help="Include trace generation in output.")
+    parser.add_argument('-e', '--explicit-materialized', action='store_true', help="Add explicit MATERIALIZED annotations into SQL code.")
     parser.add_argument('-j', '--jumps', choices=['backedges','loops','traces','all'], default='backedges', help="Control the placement of jumps in the CFG.")
     arguments = parser.parse_args()
 
@@ -108,7 +109,7 @@ def main():
     printer[2](pretty(cfg))
 
     printer[1]("\033[1;2m[4]\033[0;36m generating SQL code\033[0m")
-    sql = codegen(cfg, symbol_table, emit_type, variable_bindings, include_trace=arguments.trace)
+    sql = codegen(cfg, symbol_table, emit_type, variable_bindings, include_trace=arguments.trace, explicit_materialized=arguments.explicit_materialized)
 
     if arguments.output:
         printer[1](f"\033[1;2m*\033[0;36m writing output to \033[4m'{arguments.output.name}'\033[0m")
