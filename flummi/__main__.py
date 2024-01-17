@@ -43,12 +43,27 @@ def main():
     parser.add_argument('-g', '--graphs', default=None, type=Path, help="Directory to write graphviz files for each transformation to.")
     parser.add_argument('-i', '--intermediates', default=None, type=Path, help="Directory to write IR representation for each transformation to.")
     parser.add_argument('-f', '--flag', action='append', choices=Flag._member_map_.keys(), help="Configure compilation.")
+    parser.add_argument('-d', '--dbms', choices=['duckdb','postgres','umbra'], help="Apply DBMS specific flag set.")
     arguments = parser.parse_args()
 
     flags = {
         Flag[flag_name]
         for flag_name in arguments.flag or []
     }
+
+    match arguments.dbms:
+        case 'postgres':
+            flags.update({
+                Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCE
+            })
+        case 'duckdb':
+            flags.update({
+                Flag.EXPLICIT_MATERIALIZED
+            })
+        case 'umbra':
+            flags.update({
+
+            })
 
     if arguments.graphs and not arguments.graphs.exists():
         arguments.graphs.mkdir()
