@@ -126,7 +126,7 @@ class CodeGen:
             )
         )
 
-        blocks = indent(',\n'.join(
+        blocks = _indent(',\n'.join(
             self.gen_block(graph.blocks[label])
             for label in dependent_ordering(collect_gotos(graph))
         ), ' ' * 14)
