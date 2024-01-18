@@ -42,7 +42,7 @@ class TokenType(Enum):
     ELSE = r"ELSE"
     EMIT = r"EMIT"
     STOP = r"STOP"
-    NOOP = r"NOOP|NOPE|NOTHING|MEH|NAH|IDK|NULL|NIX"
+    NOOP = r"NOOP"
     IDENTIFIER = r"[a-zA-Z_][a-zA-Z_0-9]*"
     COMMENT = r"--[^\n]*"
     NEWLINE = r"\n"
