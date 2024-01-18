@@ -393,8 +393,8 @@ class CodeGen:
                 return {("'jump'",f"'{label.label}'",predicate)}
             case CFG.If(condition, truthy, falsey):
                 return (
-                    self.destructure_terminal(truthy, f"{predicate} AND {condition}") |
-                    self.destructure_terminal(falsey, f"{predicate} AND NOT {condition}")
+                    self.destructure_terminal(truthy, f'{predicate} AND "%assign%".{self.gen_variable(condition)}') |
+                    self.destructure_terminal(falsey, f'{predicate} AND NOT "%assign%".{self.gen_variable(condition)}')
                 )
             case _:
                 raise TypeError(f"Unexpected kind of terminal: {terminal}")
