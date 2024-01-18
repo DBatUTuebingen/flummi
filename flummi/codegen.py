@@ -148,7 +148,7 @@ class CodeGen:
           "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}) AS (
             (SELECT 'jump' AS "%kind%",
                     '{graph.entry_label.label}' AS "%label%",
-                    {initial_row_sql}{(',\n' + ' ' * 20) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result"{(',\n' + ' ' * 20) * self.include_trace}{trace_null_column_sql})
+                    {initial_row_sql}{(',\n' + ' ' * 20) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 20) * self.include_trace}{trace_null_column_sql})
               UNION ALL -- recursive union!
             (WITH
               {

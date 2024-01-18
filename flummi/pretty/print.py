@@ -180,8 +180,7 @@ def pretty(node: CFG.Node) -> str:
 
             return dedent(f"""
                 {STYLE.BLOCK} {STYLE.label(block_label)} {STYLE.LBRACE}
-                  {statements}
-                  {terminal}
+                  {statements}{('\n' + ' ' * 18) * bool(statements)}{terminal}
                 {STYLE.RBRACE}
             """)[1:-1]
 
