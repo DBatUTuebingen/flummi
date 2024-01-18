@@ -118,12 +118,12 @@ class CodeGen:
             )
         )
 
-        initial_row_sql = (
-            ', ' * (0 < len(jump_variables)) +
-            ', '.join(
-                f"CAST({self.gen_expression(self.variable_bindings[variable]) if variable in self.variable_bindings else "NULL"} AS {self.gen_type(self.symbol_table[variable])})"
+        initial_row_sql = _indent(
+            ',\n'.join(
+                f"CAST({self.gen_expression(self.variable_bindings[variable]) if variable in self.variable_bindings else "NULL"} AS {self.gen_type(self.symbol_table[variable])}) AS \"{variable.identifier}\""
                 for variable in jump_variables
-            )
+            ),
+            ' ' * 20
         )
 
         blocks = _indent(',\n'.join(
@@ -138,7 +138,7 @@ class CodeGen:
         )
 
         trace_null_column_sql = (
-            ", CAST(NULL AS json)"
+            "CAST(NULL AS json)"
             if self.include_trace else
             ""
         )
@@ -146,7 +146,9 @@ class CodeGen:
         return dedent(f"""
         WITH RECURSIVE
           "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}) AS (
-            (SELECT 'jump', '{graph.entry_label.label}'{initial_row_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql})
+            (SELECT 'jump' AS "%kind%",
+                    '{graph.entry_label.label}' AS "%label%",
+                    {initial_row_sql}{(',\n' + ' ' * 20) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result"{(',\n' + ' ' * 20) * self.include_trace}{trace_null_column_sql})
               UNION ALL -- recursive union!
             (WITH
               {
@@ -160,7 +162,7 @@ class CodeGen:
                     ),
                     ' ' * 14
                 ) * self.avoid_multiple_recursive_references
-              }{blocks}
+              }{(' ' * 14) * self.avoid_multiple_recursive_references}{blocks}
 
              {
                 _indent(
@@ -169,7 +171,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'jump', "%label%"{working_table_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}
+                                    SELECT 'jump', "%label%"{working_table_columns_sql}, CAST(NULL AS {self.emit_type_sql}){', ' * self.include_trace}{trace_null_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='jump'
                                     """
@@ -179,7 +181,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'emit', NULL{working_table_nulls_sql}, "%result%"{trace_null_column_sql}
+                                    SELECT 'emit', NULL{working_table_nulls_sql}, "%result%"{', ' * self.include_trace}{trace_null_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='emit'
                                     """
@@ -189,7 +191,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'trace', "%label%"{working_table_nulls_sql}, CAST(NULL AS {self.emit_type_sql}){trace_column_sql}
+                                    SELECT 'trace', "%label%"{working_table_nulls_sql}, CAST(NULL AS {self.emit_type_sql}){',' * self.include_trace}{trace_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='trace'
                                     """
