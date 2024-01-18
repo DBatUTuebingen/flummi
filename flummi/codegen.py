@@ -306,19 +306,28 @@ class CodeGen:
                     ' ' * 14
                 )
               }
-            ),
-            "%assign%"({assign_columns_sql or '"%"'}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) > 1 or self.include_trace))} (
-              SELECT {
-                        _indent(
-                            ",\n".join(
-                                f'CAST({_indent(self.gen_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
-                                for assignment in assignments
-                            ),
-                            ' ' * 21
-                        ) or "NULL"
-                     }
-              FROM "%inputs%"
-            )
+            ){
+                _indent(
+                    ",\n" +
+                    dedent(
+                        f"""
+                        "%assign%"({assign_columns_sql or '"%"'}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) > 1 or self.include_trace))} (
+                          SELECT {
+                                    _indent(
+                                        ",\n".join(
+                                            f'CAST({_indent(self.gen_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
+                                            for assignment in assignments
+                                        ),
+                                        ' ' * 33
+                                    ) or "NULL"
+                                  }
+                          FROM "%inputs%"
+                        )
+                        """[1:]
+                    ),
+                    ' ' * 12
+                ) * bool(assignments)
+            }
           {
             _indent(
                "\n  UNION ALL\n".join(
