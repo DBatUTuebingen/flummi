@@ -56,7 +56,7 @@ class CodeGen:
     avoid_multiple_recursive_references: bool
 
     entry_label: CFG.BlockLabel = field(init=False)
-    inputs: dict[CFG.BlockLabel, set[grammar.Variable]] = field(init=False)
+    inputs: dict[CFG.BlockLabel, list[grammar.Variable]] = field(init=False)
     jump_predecessors: LabelGraph = field(init=False)
     goto_predecessors: LabelGraph = field(init=False)
     emit_type_sql: str = field(init=False)
@@ -86,8 +86,17 @@ class CodeGen:
 
         self.jump_predecessors = invert_label_graph(collect_jumps(graph))
         self.goto_predecessors = invert_label_graph(collect_gotos(graph))
-        self.inputs, jump_variables = get_block_inputs(graph)
-        self.outputs = compute_outputs(collect_successors(graph), self.inputs)
+        unsorted_inputs, unsorted_jump_variables = get_block_inputs(graph)
+        jump_variables = list(sorted(unsorted_jump_variables, key=lambda variable: variable.identifier))
+        self.inputs = {
+            label: list(sorted(inputs, key=lambda variable: variable.identifier))
+            for label, inputs in unsorted_inputs.items()
+        }
+        unsorted_outputs = compute_outputs(collect_successors(graph), unsorted_inputs)
+        self.outputs = {
+            label: list(sorted(inputs, key=lambda variable: variable.identifier))
+            for label, inputs in unsorted_outputs.items()
+        }
 
 
         jump_sources = [
@@ -223,17 +232,23 @@ class CodeGen:
             )
         )
 
-        assignments = [
-            statement
-            for statement in block.statements
-            if isinstance(statement, CFG.Assignment)
-        ]
+        assignments = list(sorted(
+            (
+                statement
+                for statement in block.statements
+                if isinstance(statement, CFG.Assignment)
+            ),
+            key=lambda assignment: assignment.variable.identifier
+        ))
 
-        emits = [
-            statement
-            for statement in block.statements
-            if isinstance(statement, CFG.Emit)
-        ]
+        emits = list(sorted(
+            (
+                statement
+                for statement in block.statements
+                if isinstance(statement, CFG.Emit)
+            ),
+            key=lambda emit: emit.to_emit.free_variables
+        ))
 
         assign_columns_sql = (
             ', '.join(
@@ -270,7 +285,7 @@ class CodeGen:
             ""
         )
 
-        successor_info = self.destructure_terminal(block.terminal)
+        successor_info = list(sorted(self.destructure_terminal(block.terminal)))
 
         return dedent(f"""
         "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
