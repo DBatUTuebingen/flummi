@@ -57,7 +57,7 @@ def materialize_data_flow(graph: CFG.Graph) -> CFG.Graph:
 
     for label, block in graph.blocks.items():
         existing_bindings = CFG.bound_variables(block)
-        for missing_binding in outputs[label] - existing_bindings:
+        for missing_binding in (outputs[label] | CFG.condition_variables(block.terminal)) - existing_bindings:
             block.statements.append(
                 CFG.Assignment(
                     missing_binding,

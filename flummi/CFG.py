@@ -140,16 +140,18 @@ def free_variables(block: Block) -> set[grammar.Variable]:
             case Emit(expression) | Assignment(_, expression):
                 vars.update(expression.free_variables)
 
-    def scan_terminal(terminal: Terminal) -> set[grammar.Variable]:
-        match terminal:
-            case If(var, truthy, falsey):
-                return {var} | scan_terminal(truthy) | scan_terminal(falsey)
-            case _:
-                return set()
-
-    vars |= scan_terminal(block.terminal) - bound_variables(block)
+    vars |= condition_variables(block.terminal) - bound_variables(block)
 
     return vars
+
+
+def condition_variables(terminal: Terminal) -> set[grammar.Variable]:
+    match terminal:
+        case If(var, truthy, falsey):
+            return {var} | condition_variables(truthy) | condition_variables(falsey)
+        case _:
+            return set()
+
 
 
 def bound_variables(block: Block) -> set[grammar.Variable]:
