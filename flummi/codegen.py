@@ -311,7 +311,7 @@ class CodeGen:
                     ",\n" +
                     dedent(
                         f"""
-                        "%assign%"({assign_columns_sql or '"%"'}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) > 1 or self.include_trace))} (
+                        "%assign%"({assign_columns_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) > 1 or self.include_trace))} (
                           SELECT {
                                     _indent(
                                         ",\n".join(
@@ -319,7 +319,7 @@ class CodeGen:
                                             for assignment in assignments
                                         ),
                                         ' ' * 33
-                                    ) or "NULL"
+                                    )
                                   }
                           FROM "%inputs%"
                         )
