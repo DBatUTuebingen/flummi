@@ -130,7 +130,8 @@ def main():
     printer[2](pretty(cfg))
 
     printer[1]("\033[1;2m[3]\033[0;36m materializing data flow\033[0m")
-    cfg = materialize_data_flow(cfg)
+    cfg, data_flow_statistics = materialize_data_flow(cfg)
+    print_stats(data_flow_statistics)
     print_graph(cfg, "3_materialize_data_flow.gv")
     print_intermediate(cfg, "3_materialize_data_flow.flir")
     printer[2](pretty(cfg))

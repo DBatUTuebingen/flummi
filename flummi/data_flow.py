@@ -1,9 +1,40 @@
+from dataclasses import dataclass
 from functools import reduce
 from collections.abc import Iterator
 from operator import or_
 
 from . import CFG, grammar
 from .label_graph import LabelGraph, collect_successors
+
+
+
+@dataclass
+class Statistics:
+    number_of_variables: int
+    number_of_loop_carried_variables: int
+
+
+def materialize_data_flow(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
+    inputs, loop_carried_variables = get_block_inputs(graph)
+    outputs = compute_outputs(collect_successors(graph), inputs)
+
+    number_of_variables = len(union(inputs.values()))
+    number_of_loop_carried_variables = len(loop_carried_variables)
+
+    for label, block in graph.blocks.items():
+        existing_bindings = CFG.bound_variables(block)
+        for missing_binding in (outputs[label] | CFG.condition_variables(block.terminal)) - existing_bindings:
+            block.statements.append(
+                CFG.Assignment(
+                    missing_binding,
+                    grammar.Expression("{0}", [missing_binding])
+                )
+            )
+
+    return graph, Statistics(
+        number_of_variables,
+        number_of_loop_carried_variables
+    )
 
 
 def union[T](sets: Iterator[set[T]]) -> set[T]:
@@ -49,20 +80,3 @@ def compute_outputs(successors: LabelGraph, inputs: dict[CFG.BlockLabel, set[CFG
       label: union(inputs[child] for child in children)
       for label, children in successors.items()
   }
-
-
-def materialize_data_flow(graph: CFG.Graph) -> CFG.Graph:
-    inputs, _ = get_block_inputs(graph)
-    outputs = compute_outputs(collect_successors(graph), inputs)
-
-    for label, block in graph.blocks.items():
-        existing_bindings = CFG.bound_variables(block)
-        for missing_binding in (outputs[label] | CFG.condition_variables(block.terminal)) - existing_bindings:
-            block.statements.append(
-                CFG.Assignment(
-                    missing_binding,
-                    grammar.Expression("{0}", [missing_binding])
-                )
-            )
-
-    return graph
