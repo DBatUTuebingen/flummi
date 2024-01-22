@@ -1,9 +1,23 @@
+from dataclasses import dataclass
+
 from . import CFG
 from .label_graph import *
 
 
-def optimize(graph: CFG.Graph) -> CFG.Graph:
+@dataclass
+class Statistics:
+  blocks_before_scheduling: int
+  blocks_after_scheduling: int
+  number_of_traces: int
+
+
+def optimize(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
+  graph = elide_unreachable_blocks(graph)
+
+  blocks_before_scheduling = len(graph.blocks)
+
   traces = find_traces(graph)
+  number_of_traces = len(traces)
   for trace in traces:
     statements = extract_statements(graph, trace)
     dependence_graph = build_dependence_graph(statements)
@@ -19,7 +33,14 @@ def optimize(graph: CFG.Graph) -> CFG.Graph:
   graph = inline_control_only_blocks(graph)
   graph = elide_unreachable_blocks(graph)
 
-  return graph
+  blocks_after_scheduling = len(graph.blocks)
+
+  return graph, Statistics(
+    blocks_before_scheduling,
+    blocks_after_scheduling,
+    number_of_traces
+  )
+
 
 type Trace = list[CFG.BlockLabel]
 

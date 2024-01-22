@@ -73,6 +73,9 @@ def main():
 
     printer = Printer(arguments.verbose)
 
+    def print_stats(stats):
+        printer[1](f"\033[1;2m>> \033[0m{stats!r}")
+
     def print_graph(graph: CFG.Graph, path: str):
         if arguments.graphs:
             with open(arguments.graphs / path, "w+") as f:
@@ -100,7 +103,8 @@ def main():
     printer[2](pretty(cfg))
 
     printer[1]("\033[1;2m[1]\033[0;36m optimizing CFG\033[0m")
-    cfg = optimize(cfg)
+    cfg, optimizer_statistics = optimize(cfg)
+    print_stats(optimizer_statistics)
     print_graph(cfg, "1_optimize.gv")
     print_intermediate(cfg, "1_optimize.flir")
     printer[2](pretty(cfg))
