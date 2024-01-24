@@ -60,11 +60,10 @@ class CodeGen:
     jump_predecessors: LabelGraph = field(init=False)
     goto_predecessors: LabelGraph = field(init=False)
     emit_type_sql: str = field(init=False)
+    condition_variable_counter: int = field(init=False, default=0)
 
     def __post_init__(self, emit_type: grammar.Type):
         self.emit_type_sql = self.gen_type(emit_type)
-
-
 
     def gen_type(self, type: grammar.Type) -> str:
         return str(type.source)
@@ -91,11 +90,6 @@ class CodeGen:
         self.inputs = {
             label: list(sorted(inputs, key=lambda variable: variable.identifier))
             for label, inputs in unsorted_inputs.items()
-        }
-        unsorted_outputs = compute_outputs(collect_successors(graph), unsorted_inputs)
-        self.outputs = {
-            label: list(sorted(inputs, key=lambda variable: variable.identifier))
-            for label, inputs in unsorted_outputs.items()
         }
 
 
@@ -137,7 +131,7 @@ class CodeGen:
 
         blocks = _indent(',\n'.join(
             self.gen_block(graph.blocks[label])
-            for label in dependent_ordering(collect_gotos(graph))
+            for label in sorted(dependent_ordering(collect_gotos(graph)), key=lambda label: label.label)
         ), ' ' * 14)
 
         trace_column_sql = (
@@ -221,9 +215,11 @@ class CodeGen:
 
     def gen_block(self, block: CFG.Block) -> str:
         inputs = self.inputs[block.label]
-        outputs = self.outputs[block.label]
         goto_predecessors = self.goto_predecessors[block.label]
         jump_predecessors = self.jump_predecessors[block.label]
+
+        unsorted_successor_info, conditional_variable_bindings = self.destructure_terminal(block.terminal)
+        successor_info = list(sorted(unsorted_successor_info))
 
         input_columns_sql = (
             ', '.join(
@@ -253,23 +249,23 @@ class CodeGen:
         assign_columns_sql = (
             ', '.join(
                 self.gen_variable(assignment.variable)
-                for assignment in assignments
+                for assignment in chain(assignments, conditional_variable_bindings)
             )
         )
 
         output_columns_sql = (
-            ', ' * bool(outputs) +
+            ', ' * bool(assignments) +
             ', '.join(
-                self.gen_variable(variable)
-                for variable in outputs
+                self.gen_variable(assignment.variable)
+                for assignment in assignments
             )
         )
 
         output_nulls_sql = (
-            ', ' * bool(outputs) +
+            ', ' * bool(assignments) +
             ', '.join(
-                f"CAST(NULL AS {self.gen_type(self.symbol_table[variable])})"
-                for variable in outputs
+                f"CAST(NULL AS {self.gen_type(self.symbol_table[assignment.variable])})"
+                for assignment in assignments
             )
         )
 
@@ -285,7 +281,7 @@ class CodeGen:
             ""
         )
 
-        successor_info = list(sorted(self.destructure_terminal(block.terminal)))
+
 
         return dedent(f"""
         "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
@@ -331,7 +327,7 @@ class CodeGen:
                                     _indent(
                                         ",\n".join(
                                             f'CAST({_indent(self.gen_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
-                                            for assignment in assignments
+                                            for assignment in chain(assignments, conditional_variable_bindings)
                                         ),
                                         ' ' * 33
                                     )
@@ -341,7 +337,7 @@ class CodeGen:
                         """[1:]
                     ),
                     ' ' * 12
-                ) * bool(assignments)
+                ) * (bool(assignments) or bool(conditional_variable_bindings))
             }
           {
             _indent(
@@ -398,18 +394,20 @@ class CodeGen:
         )
         """)[1:-1]
 
-    def destructure_terminal(self, terminal: CFG.Terminal, predicate: str = "TRUE") -> set[tuple[str,str,str]]:
+    def destructure_terminal(self, terminal: CFG.Terminal, predicate: str = "TRUE") -> tuple[set[tuple[str,str,str]], list[CFG.Assignment]]:
         match terminal:
             case CFG.Stop():
-                return set()
+                return set(), []
             case CFG.GoTo(label):
-                return {("'goto'",f"'{label.label}'",predicate)}
+                return {("'goto'",f"'{label.label}'",predicate)}, []
             case CFG.Jump(label):
-                return {("'jump'",f"'{label.label}'",predicate)}
-            case CFG.If(condition, truthy, falsey):
-                return (
-                    self.destructure_terminal(truthy, f'{predicate} AND "%assign%".{self.gen_variable(condition)}') |
-                    self.destructure_terminal(falsey, f'{predicate} AND NOT "%assign%".{self.gen_variable(condition)}')
-                )
+                return {("'jump'",f"'{label.label}'",predicate)}, []
+            case CFG.If(expression, truthy, falsey):
+                var = f"condition%{self.condition_variable_counter}"
+                self.symbol_table[grammar.Variable(var)] = grammar.Type("bool")
+                self.condition_variable_counter += 1
+                truthy_branches, truthy_bindings = self.destructure_terminal(truthy, f'{predicate} AND "{var}"')
+                falsey_branches, falsey_bindings = self.destructure_terminal(falsey, f'{predicate} AND NOT "{var}"')
+                return truthy_branches | falsey_branches, [CFG.Assignment(grammar.Variable(var), expression), *truthy_bindings, *falsey_bindings]
             case _:
                 raise TypeError(f"Unexpected kind of terminal: {terminal}")

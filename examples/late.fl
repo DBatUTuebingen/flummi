@@ -4,12 +4,10 @@ FUN (suppkey: §int§, orderkey: §int§) -> §bool§: {
   lineitem: §struct(l_receiptdate date, l_commitdate date, l_suppkey: int)§;
   blame: §bool§;
   multi: §bool§;
-  condition: §bool§;
 
   current_item <- §SELECT MAX(l.l_linenumber) FROM lineitem AS l WHERE l.l_orderkey = {0}§[orderkey];
   LOOP loop {
-    condition <- §{0} < 1§[current_item];
-    IF condition
+    IF §{0} < 1§[current_item]
     THEN BREAK loop
     ELSE {
       lineitem <- §
@@ -20,11 +18,9 @@ FUN (suppkey: §int§, orderkey: §int§) -> §bool§: {
       §[orderkey, current_item];
 
       multi <- §{0} OR {1}.l_suppkey <> {2}§[multi, lineitem, suppkey];
-      condition <- §{0}.l_receiptdate > {0}.l_commitdate§[lineitem];
-      IF condition
+      IF §{0}.l_receiptdate > {0}.l_commitdate§[lineitem]
       THEN {
-        condition <- §{0}.l_suppkey <> {1}§[lineitem, suppkey];
-        IF condition
+        IF §{0}.l_suppkey <> {1}§[lineitem, suppkey]
         THEN { EMIT §false§[]; STOP }
         ELSE blame <- §true§[]
       } ELSE NOOP;

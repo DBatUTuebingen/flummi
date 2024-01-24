@@ -263,7 +263,7 @@ class Parser:
 
     def parse_if(self) -> grammar.If:
         self.expect(TokenType.IF)
-        condition = self.parse_variable()
+        condition = self.parse_expression()
         self.expect(TokenType.THEN)
         truthy_branch = self.parse_statement()
         self.expect(TokenType.ELSE)

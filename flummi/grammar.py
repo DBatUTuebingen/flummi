@@ -87,7 +87,7 @@ class Break(Statement):
 
 @dataclass
 class If(Statement):
-    condition: Variable
+    condition: Expression
     truthy_branch: Statement
     falsey_branch: Statement
 

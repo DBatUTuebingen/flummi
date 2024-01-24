@@ -88,12 +88,12 @@ class Analyzer:
             new_statements.append(sub_statement)
         return grammar.Block(new_statements), len(new_statements) == 0
 
-      case grammar.If(condition, truthy, falsey):
-        self._analyze_variable(condition)
+      case grammar.If(expression, truthy, falsey):
+        self._analyze_expression(expression)
         truthy, elide_truthy = self._analyze_statement(truthy)
         falsey, elide_falsey = self._analyze_statement(falsey)
         return grammar.If(
-          condition,
+          expression,
           grammar.NoOp() if elide_truthy else truthy,
           grammar.NoOp() if elide_falsey else falsey,
         ), elide_truthy and elide_falsey

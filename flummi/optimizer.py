@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 
 from . import CFG
@@ -155,23 +156,30 @@ def materialize_schedule(graph: CFG.Graph, statements: list[CFG.Statement], trac
 
 
 def inline_control_only_blocks(graph: CFG.Graph) -> CFG.Graph:
-    changed = True
-    while changed:
-        succ = collect_successors(graph)
-        pred = invert_label_graph(succ)
-        changed = False
-        for label, inlinee_block in graph.blocks.items():
-            if not inlinee_block.statements:
-                for inlineable in pred[label]:
-                    block = graph.blocks[inlineable]
-                    block.terminal, _changed = inline_terminal(block.terminal, label, inlinee_block.terminal)
-                    changed |= _changed
-    return graph
+  writes = {
+    label: CFG.bound_variables(block)
+    for label, block in graph.blocks.items()
+  }
+
+  changed = True
+  while changed:
+    succ = collect_successors(graph)
+    pred = invert_label_graph(succ)
+    changed = False
+    for label, inlinee_block in graph.blocks.items():
+      if not inlinee_block.statements:
+        for inlineable in pred[label]:
+          if CFG.free_variables(inlinee_block.terminal) & writes[inlineable]:
+            continue
+          block = graph.blocks[inlineable]
+          block.terminal, _changed = inline_terminal(block.terminal, label, inlinee_block.terminal)
+          changed |= _changed
+  return graph
 
 
 def inline_terminal(into: CFG.Terminal, label: CFG.BlockLabel, replacement: CFG.Terminal) -> tuple[CFG.Terminal, bool]:
     match into:
-        case CFG.GoTo(_label) | CFG.Jump(_label) if _label == label:
+        case CFG.GoTo(_label) if _label == label:
             return replacement, True
         case CFG.If(condition, truthy, falsey):
             truthy, changed_truthy = inline_terminal(truthy, label, replacement)

@@ -74,7 +74,7 @@ class Stop(Terminal):
 
 @dataclass
 class If(Terminal):
-    condition: grammar.Variable
+    condition: grammar.Expression
     truthy_terminal: Terminal
     falsey_terminal: Terminal
 
@@ -132,23 +132,30 @@ def contains_emits(block: Block) -> bool:
     )
 
 
-def free_variables(block: Block) -> set[grammar.Variable]:
-    vars = set()
+def free_variables(node: Node) -> set[grammar.Variable]:
+    match node:
+        case Block(_, statements, terminal):
+            vars = set()
 
-    for statement in block.statements:
-        match statement:
-            case Emit(expression) | Assignment(_, expression):
-                vars.update(expression.free_variables)
+            for statement in statements:
+                vars |= free_variables(statement)
 
-    vars |= condition_variables(block.terminal) - bound_variables(block)
+            vars |= free_variables(terminal)
 
-    return vars
+            return vars
+
+        case Emit(expression) | Assignment(_, expression):
+            return set(expression.free_variables)
+
+        case If(expression, truthy, falsey):
+            return set(expression.free_variables) | free_variables(truthy) | free_variables(falsey)
+
+        case _:
+            return set()
 
 
 def condition_variables(terminal: Terminal) -> set[grammar.Variable]:
     match terminal:
-        case If(var, truthy, falsey):
-            return {var} | condition_variables(truthy) | condition_variables(falsey)
         case _:
             return set()
 
