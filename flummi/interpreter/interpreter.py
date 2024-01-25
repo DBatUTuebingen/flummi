@@ -141,10 +141,10 @@ class Interpreter():
         
         """
 
-        # makes a list with all unique placeholer numbers in the expression
+        # makes a list with all unique placeholder numbers in the expression
         placeholder_list = list(dict.fromkeys(re.findall(r"\{(\d)\}", expression.source)))
 
-        # if free veriables exist in the expression 
+        # if free variables exist in the expression 
         if len(expression.free_variables) != 0:
             # then get its type and its corresponding placement number 
             placeholder_tuple = [(self.types[expression.free_variables[int(x)]], placeholder_list[int(x)]) for x in placeholder_list]
