@@ -1,4 +1,4 @@
-from collections import defaultdict
+from pprint import pprint
 from dataclasses import dataclass
 
 from . import CFG
@@ -95,21 +95,32 @@ type DependenceGraph = dict[int, set[int]]
 
 def build_dependence_graph(statements: list[CFG.Statement]) -> DependenceGraph:
   writes = {}
+  reads = {}
 
   for i, statement in enumerate(statements):
     match statement:
-      case CFG.Assignment(variable, _):
+      case CFG.Assignment(variable, expression):
         writes[i] = variable
+        reads[i] = expression.free_variables
+      case CFG.Emit(expression):
+        reads[i] = expression.free_variables
 
   dependence_graph = {}
 
   for i, statement in enumerate(statements):
     match statement:
-      case CFG.Emit(expression) | CFG.Assignment(_, expression):
+      case CFG.Emit(expression):
         dependence_graph[i] = {
           j
           for j in range(0, i)
           if writes.get(j) in expression.free_variables
+        }
+      case CFG.Assignment(variable, expression):
+        dependence_graph[i] = {
+          j
+          for j in range(0, i)
+          if writes.get(j) in expression.free_variables
+          or variable in reads.get(j, set())
         }
 
   return dependence_graph

@@ -194,7 +194,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'trace', "%label%"{working_table_nulls_sql}, CAST(NULL AS {self.emit_type_sql}){',' * self.include_trace}{trace_column_sql}
+                                    SELECT 'trace', "%label%"{working_table_nulls_sql}, CAST(NULL AS {self.emit_type_sql}){trace_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='trace'
                                     """
