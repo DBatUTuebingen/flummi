@@ -31,6 +31,7 @@ def codegen(
     include_trace: bool = False,
     explicit_materialized: bool = False,
     avoid_multiple_recursive_references: bool = False,
+    include_emit_order: bool = False
 ) -> str:
     return CodeGen(
         symbol_table,
@@ -38,7 +39,8 @@ def codegen(
         variable_bindings,
         include_trace,
         explicit_materialized,
-        avoid_multiple_recursive_references
+        avoid_multiple_recursive_references,
+        include_emit_order
     ).gen_program(graph)
 
 
@@ -54,6 +56,7 @@ class CodeGen:
     include_trace: bool
     explicit_materialized: bool
     avoid_multiple_recursive_references: bool
+    include_emit_order: bool
 
     entry_label: CFG.BlockLabel = field(init=False)
     inputs: dict[CFG.BlockLabel, list[grammar.Variable]] = field(init=False)
@@ -146,12 +149,24 @@ class CodeGen:
             ""
         )
 
+        ordinaltiy_column_sql = (
+            ', "%ordinality%"'
+            if self.include_emit_order else
+            ""
+        )
+
+        ordinaltiy_zero_column_sql = (
+            "CAST(0 AS int)"
+            if self.include_emit_order else
+            ""
+        )
+
         return dedent(f"""
         WITH RECURSIVE
-          "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}) AS (
+          "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}{ordinaltiy_column_sql}) AS (
             (SELECT 'jump' AS "%kind%",
                     '{graph.entry_label.label}' AS "%label%",
-                    {initial_row_sql}{(',\n' + ' ' * 20) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 20) * self.include_trace}{trace_null_column_sql})
+                    {initial_row_sql}{(',\n' + ' ' * 20) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 20) * (self.include_trace or self.include_emit_order)}{trace_null_column_sql}{', ' * self.include_trace}{ordinaltiy_zero_column_sql})
               UNION ALL -- recursive union!
             (WITH
               {
@@ -174,7 +189,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'jump', "%label%"{working_table_columns_sql}, CAST(NULL AS {self.emit_type_sql}){', ' * self.include_trace}{trace_null_column_sql}
+                                    SELECT 'jump', "%label%"{working_table_columns_sql}, CAST(NULL AS {self.emit_type_sql}){', ' * self.include_trace}{trace_null_column_sql}{ordinaltiy_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='jump'
                                     """
@@ -184,7 +199,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'emit', NULL{working_table_nulls_sql}, "%result%"{', ' * self.include_trace}{trace_null_column_sql}
+                                    SELECT 'emit', NULL{working_table_nulls_sql}, "%result%"{', ' * self.include_trace}{trace_null_column_sql}{ordinaltiy_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='emit'
                                     """
@@ -194,7 +209,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'trace', "%label%"{working_table_nulls_sql}, CAST(NULL AS {self.emit_type_sql}){trace_column_sql}
+                                    SELECT 'trace', "%label%"{working_table_nulls_sql}, CAST(NULL AS {self.emit_type_sql}){trace_column_sql}{ordinaltiy_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='trace'
                                     """
@@ -210,7 +225,7 @@ class CodeGen:
             )
           )
 
-        SELECT "%result%" FROM "%loop%" WHERE "%kind%"='emit';
+        SELECT "%result%"{', "%ordinality%"' * self.include_emit_order} FROM "%loop%" WHERE "%kind%"='emit';
         """)[1:-1]
 
     def gen_block(self, block: CFG.Block) -> str:
@@ -281,10 +296,20 @@ class CodeGen:
             ""
         )
 
+        ordinality_column_sql = (
+            ', "%ordinality%"'
+            if self.include_emit_order else
+            ""
+        )
 
+        next_ordinality_column_sql = (
+            f', "%ordinality%" + CAST({len(emits)} AS int)'
+            if self.include_emit_order else
+            ""
+        )
 
         return dedent(f"""
-        "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
+        "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
           WITH
             "%inputs%"({input_columns_sql or '"%"'}) AS{" MATERIALIZED" * (self.explicit_materialized and bool(emits) and bool(assignments))} (
               {
@@ -294,7 +319,7 @@ class CodeGen:
                             [
                                 dedent(
                                     f"""
-                                    SELECT {input_columns_sql or 'NULL'}
+                                    SELECT {input_columns_sql or 'NULL'}{ordinality_column_sql}
                                     FROM   "%loop%"
                                     WHERE  "%kind%"='jump'
                                     AND    "%label%"='{block.label.label}'
@@ -304,7 +329,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT {input_columns_sql or 'NULL'}
+                                    SELECT {input_columns_sql or 'NULL'}{ordinality_column_sql}
                                     FROM   "{parent_label.label}"
                                     WHERE  "%kind%"='goto'
                                     AND    "%label%"='{block.label.label}'
@@ -322,7 +347,7 @@ class CodeGen:
                     ",\n" +
                     dedent(
                         f"""
-                        "%assign%"({assign_columns_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) > 1 or self.include_trace))} (
+                        "%assign%"({assign_columns_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) > 1 or self.include_trace))} (
                           SELECT {
                                     _indent(
                                         ",\n".join(
@@ -331,7 +356,7 @@ class CodeGen:
                                         ),
                                         ' ' * 33
                                     )
-                                  }
+                                 }{(',\n' + ' ' * 33 + '"%ordinality%"') * self.include_emit_order}
                           FROM "%inputs%"
                         )
                         """[1:]
@@ -346,7 +371,7 @@ class CodeGen:
                         (
                             dedent(
                                 f"""
-                                SELECT {kind}, {label}{output_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}
+                                SELECT {kind}, {label}{output_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}{next_ordinality_column_sql}
                                 FROM   "%assign%"
                                 WHERE  {predicate}
                                 """
@@ -357,7 +382,7 @@ class CodeGen:
                             dedent(
                                 f"""
                                 SELECT 'emit', NULL{output_nulls_sql},
-                                       CAST({_indent(self.gen_expression(emit.to_emit), ' ' * 45)} AS {self.emit_type_sql}){trace_null_column_sql}
+                                       CAST({_indent(self.gen_expression(emit.to_emit), ' ' * 45)} AS {self.emit_type_sql}){trace_null_column_sql}{ordinality_column_sql}
                                 FROM   "%inputs%"
                                 """
                             )[1:-1]
@@ -379,7 +404,7 @@ class CodeGen:
                                                 ' ' * 42
                                             )
                                           }
-                                       ) AS "%trace%"
+                                       ) AS "%trace%"{', CAST(NULL AS int)' * self.include_emit_order}
                                 FROM   "%assign%"
                                 WHERE  {predicate}
                                 """
