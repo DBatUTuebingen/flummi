@@ -144,7 +144,7 @@ class CodeGen:
         )
 
         trace_null_column_sql = (
-            "CAST(NULL AS json)"
+            'CAST(NULL AS json) AS "%trace%"'
             if self.include_trace else
             ""
         )
@@ -156,7 +156,7 @@ class CodeGen:
         )
 
         ordinaltiy_zero_column_sql = (
-            "CAST(0 AS int)"
+            'CAST(0 AS int) AS "%ordinality%"'
             if self.include_emit_order else
             ""
         )
