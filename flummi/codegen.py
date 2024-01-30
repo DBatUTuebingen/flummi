@@ -314,6 +314,12 @@ class CodeGen:
             ""
         )
 
+        step_update_sql = (
+            ', "%step%" + 1 AS "%step%"'
+            if self.include_trace else
+            ""
+        )
+
         trace_null_column_sql = (
             ", CAST(NULL AS json)"
             if self.include_trace else
@@ -401,7 +407,7 @@ class CodeGen:
                         (
                             dedent(
                                 f"""
-                                SELECT {kind}, {label}{output_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}{step_null_column_sql}{next_ordinality_column_sql}
+                                SELECT {kind}, {label}{output_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}{step_update_sql}{next_ordinality_column_sql}
                                 FROM   "%assign%"
                                 WHERE  {predicate}
                                 """
