@@ -207,7 +207,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'jump', "%label%"{working_table_columns_sql}, CAST(NULL AS {self.emit_type_sql}){', ' * self.include_trace}{trace_null_column_sql}{', ' * self.include_trace}{step_null_column_sql}{ordinaltiy_column_sql}
+                                    SELECT 'jump', "%label%"{working_table_columns_sql}, CAST(NULL AS {self.emit_type_sql}){', ' * self.include_trace}{trace_null_column_sql}{step_column_sql}{ordinaltiy_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='jump'
                                     """
