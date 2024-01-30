@@ -435,7 +435,7 @@ class CodeGen:
                                             )
                                           }
                                        ) AS "%trace%",
-                                       "%step%" + 1 AS "%step%"{', CAST(NULL AS int)' * self.include_emit_order}
+                                       "%step%"{(',\n' + ' ' * 39 + 'CAST(NULL AS int)') * self.include_emit_order}
                                 FROM   "%assign%"
                                 WHERE  {predicate}
                                 """
