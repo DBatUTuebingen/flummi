@@ -20,7 +20,7 @@ class Stop(Exception): ...
 
 class Interpreter():
    
-    return_list: list[duckdb.DuckDBPyRelation] = []
+    return_list: list[any] = []
     env: dict[common.Variable, any] = {}
     types: dict[common.Variable, any] = {}
 
