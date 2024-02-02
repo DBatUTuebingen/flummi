@@ -1,5 +1,6 @@
 from collections.abc import Iterator
 from functools import reduce
+import operator as op
 
 from . import CFG
 
@@ -41,17 +42,24 @@ def invert_label_graph(graph: LabelGraph) -> LabelGraph:
 
 def dependent_ordering(graph: LabelGraph) -> Iterator[CFG.BlockLabel]:
   predecessors = invert_label_graph(graph)
-  stack = [
-    label
-    for label, parents in predecessors.items()
-    if not parents
-  ]
+  stack = [*sorted(
+    (
+      label
+      for label, parents in predecessors.items()
+      if not parents
+    ),
+    key=op.attrgetter("label")
+  )]
+  sorted_graph = {
+    label: sorted(children, key=op.attrgetter("label"))
+    for label, children in graph.items()
+  }
   seen = set()
   while stack:
     label = stack.pop()
     yield label
     seen.add(label)
-    for child in graph[label]:
+    for child in sorted_graph[label]:
       if seen.issuperset(predecessors[child]):
         stack.append(child)
 
@@ -107,4 +115,3 @@ def loop_heads(successors: LabelGraph) -> set[CFG.BlockLabel]:
                 stack.append(successor)
 
     return heads
-

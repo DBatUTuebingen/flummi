@@ -134,7 +134,7 @@ class CodeGen:
 
         blocks = _indent(',\n'.join(
             self.gen_block(graph.blocks[label])
-            for label in sorted(dependent_ordering(collect_gotos(graph)), key=lambda label: label.label)
+            for label in dependent_ordering(collect_gotos(graph))
         ), ' ' * 14)
 
         trace_column_sql = (
