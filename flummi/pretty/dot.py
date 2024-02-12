@@ -10,9 +10,10 @@ digraph "%cfg%" {{
     shape=rectangle,
     nojustify=true,
     penwidth=2,
-    style="rounded,filled",
-    fontcolor="#5C6166",
+    style="rounded",
     fontname = "{font}",
+    fontcolor="#000",
+    color="#000",
   ];
   graph [
     fontname = "{font}",
@@ -21,51 +22,29 @@ digraph "%cfg%" {{
   edge [
     fontname = "{font}",
     penwidth=2,
-    color="#FA8D3E"
   ];
-  subgraph "%cfg%" {{
-    cluster=true;
-    style="rounded,dotted";
-    color="#5C6166";
-    node [
-      fillcolor="#DDF0F6",
-      color="#55B4D4"
-    ];
-    edge [
-      color="#FA8D3E"
-    ];
-    {nodes}
-    {edges}
-  }}
-  subgraph "%inputs%" {{
-    node [
-      fillcolor="#F6F2F9",
-      color="#A37ACC";
-    ];
-    edge [
-      color="#A37ACC",
-      style="dashed"
-    ];
-    "%inputs%" -> "{root}";
-  }}
+  {nodes}
+  {edges}
 }}
 """
 
 NODE_TEMPLATE = '"{label}" [label="{body}\\l"];'
 
+JUMP_STYLE = 'style="dashed",color="#F7921D"'
+GOTO_STYLE = 'style="solid",color="#0071BC"'
 
 def dot(graph: CFG.Graph, font: str = "PragmataPro") -> str:
     STYLE.off()
-    nodes = "\n    ".join(
+    nodes = "\n  ".join(
         NODE_TEMPLATE.format(
             label=label.label,
             body=pretty(block).replace("\n", "\\l"),
         )
         for label, block in graph.blocks.items()
     )
-    edges = "\n    ".join(chain.from_iterable(
+    edges = "\n  ".join(chain.from_iterable(
         (
-          f'"{label.label}" -> "{successor.label}" [style="{["solid", "dashed"][successor in CFG.jumps(block)]}"];'
+          f'"{label.label}" -> "{successor.label}" [{[GOTO_STYLE, JUMP_STYLE][successor in CFG.jumps(block)]}];'
           for successor in CFG.successors(block)
         )
         for label, block in graph.blocks.items()
@@ -75,6 +54,4 @@ def dot(graph: CFG.Graph, font: str = "PragmataPro") -> str:
         font=font,
         nodes=nodes,
         edges=edges,
-        inputs="",
-        root=graph.entry_label.label,
     )
