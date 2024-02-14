@@ -1,9 +1,9 @@
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-import duckdb
-import re
-
+from itertools import chain
 from typing import Any
+
+import duckdb
 
 from . import grammar
 
@@ -35,23 +35,20 @@ class Interpreter:
 
         Returns: None
         """
-
-        f = program.function
-
-        temp_block = grammar.Block([])
-        parameter_keys = list(f.parameters.keys())
-        parameter_values = list(f.parameters.values())
-
-        for x in range(0, len(f.parameters)):
-            temp_declaration = grammar.Declaration(parameter_keys[x], parameter_values[x])
-            temp_assignment = grammar.Assignment(parameter_keys[x],program.inputs[x])
-            temp_block.statements.append(temp_declaration)
-            temp_block.statements.append(temp_assignment)
-
-        temp_block.statements.append(f.body)
-
         try:
-            yield from self.eval_statement(temp_block)
+            yield from self.eval_statement(grammar.Block([
+                *chain.from_iterable(
+                    (
+                        grammar.Declaration(parameter, type),
+                        grammar.Assignment(parameter, expression),
+                    )
+                    for (parameter, type), expression in zip(
+                        program.function.parameters.items(),
+                        program.inputs
+                    )
+                ),
+                program.function.body
+            ]))
         except Stop:
             ...
 
