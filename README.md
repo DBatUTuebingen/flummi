@@ -5,8 +5,8 @@
 ```
 $ python -m flummi compile -h
 usage: flummi compile [-h] [-o OUTPUT] [-v] [-g GRAPHS] [-i INTERMEDIATES]
-                      [-f {...}]
-                      [-d {duckdb,postgres,umbra}]
+                      [-f {<see below>}]
+                      [-d {<see below>}]
                       infile
 
 positional arguments:
@@ -21,9 +21,9 @@ options:
                         Directory to write graphviz files for each transformation to.
   -i INTERMEDIATES, --intermediates INTERMEDIATES
                         Directory to write IR representation for each transformation to.
-  -f {...}, --flag {...}
+  -f {<see below>}, --flag {<see below>}
                         Configure compilation.
-  -d {duckdb,postgres,umbra}, --dbms {duckdb,postgres,umbra}
+  -d {<see below>}, --dbms {<see below>}
                         Apply DBMS specific flag set.
 ```
 
