@@ -37,13 +37,10 @@ class Interpreter:
         """
         try:
             yield from self.eval_statement(grammar.Block([
-                *chain.from_iterable(
-                    (
-                        grammar.Declaration(parameter, type),
-                        grammar.Assignment(parameter, expression),
-                    )
-                    for (parameter, type), expression in zip(
-                        program.function.parameters.items(),
+                *(
+                    grammar.Assignment(parameter, expression)
+                    for parameter, expression in zip(
+                        program.function.parameters,
                         program.inputs
                     )
                 ),
@@ -98,8 +95,11 @@ class Interpreter:
             case grammar.Stop():
                 raise Stop()
 
-            case _:
+            case grammar.NoOp():
                 ...
+
+            case _:
+                raise RuntimeError(f"Unsupported statement: {statement}")
 
     def eval_expression(self, expression: grammar.Expression) -> Any:
         """
