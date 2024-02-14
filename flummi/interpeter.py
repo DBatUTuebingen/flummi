@@ -93,8 +93,7 @@ class Interpreter:
                 self.environment[variable] = self.eval_expression(expression)
 
             case grammar.Block(statements):
-                for block_statement in statements:
-                    yield from self.eval_statement(block_statement)
+                yield from chain.from_iterable(map(self.eval_statement, statements))
 
             case grammar.Stop():
                 raise Stop()
