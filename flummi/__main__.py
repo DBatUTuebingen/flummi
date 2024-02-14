@@ -14,6 +14,8 @@ from .interpeter import interpret
 from .pretty.print import pretty, STYLE
 from .pretty.dot import dot
 
+import duckdb
+
 
 class Printer:
     def __init__(self, verbostiy: int):
@@ -43,8 +45,8 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
 
     compiler_parser = subparsers.add_parser('compile')
-    compiler_parser.add_argument('infile', type=argparse.FileType('r'))
-    compiler_parser.add_argument('-o', '--output', type=argparse.FileType('w'), default="out.sql", help="The file to write the compilation result to.")
+    compiler_parser.add_argument('infile', type=argparse.FileType('r', encoding='utf-8'))
+    compiler_parser.add_argument('-o', '--output', type=argparse.FileType('w', encoding='utf-8'), default="out.sql", help="The file to write the compilation result to.")
     compiler_parser.add_argument('-v', '--verbose', default=0, action="count", help="Control the level of verbosity.")
     compiler_parser.add_argument('-g', '--graphs', default=None, type=Path, help="Directory to write graphviz files for each transformation to.")
     compiler_parser.add_argument('-i', '--intermediates', default=None, type=Path, help="Directory to write IR representation for each transformation to.")
@@ -52,7 +54,8 @@ def main():
     compiler_parser.add_argument('-d', '--dbms', choices=['duckdb','postgres','umbra'], help="Apply DBMS specific flag set.")
 
     interpreter_parser = subparsers.add_parser('interpret')
-    interpreter_parser.add_argument('infile', type=argparse.FileType('r'))
+    interpreter_parser.add_argument('infile', type=argparse.FileType('r', encoding='utf-8'))
+    interpreter_parser.add_argument('-s', '--setup', default=None, type=argparse.FileType('r', encoding='utf-8'), help="SQL file to execute in the DB before program interpretation.")
 
     arguments = parser.parse_args()
 
@@ -90,13 +93,13 @@ def main():
 
             def print_graph(graph: CFG.Graph, path: str):
                 if arguments.graphs:
-                    with open(arguments.graphs / path, "w+") as f:
+                    with open(arguments.graphs / path, "w+", encoding='utf-8') as f:
                         f.write(dot(graph))
                     printer[1](f"\033[1;2m>> \033[0;2;4m{arguments.graphs / path}\033[0m")
 
             def print_intermediate(graph: CFG.Graph, path: str):
                 if arguments.intermediates:
-                    with open(arguments.intermediates / path, "w+") as f:
+                    with open(arguments.intermediates / path, "w+", encoding='utf-8') as f:
                         STYLE.off()
                         f.write(pretty(graph))
                         STYLE.on()
@@ -166,6 +169,9 @@ def main():
                 arguments.output.write(sql + "\n")
 
         case "interpret":
+            if arguments.setup is not None:
+                duckdb.sql(arguments.setup.read())
+
             source = arguments.infile.read()
 
             ast = parse(source)
