@@ -41,6 +41,14 @@ options:
 | `FORCE_WITH_RECURSIVE`               | Disable loopless program translation rule.                                                                   |
 
 
+### DBMS Specific Flag Sets
+
+| Name       | Flags                                |
+| :--------- | :----------------------------------- |
+| `duckdb`   | `EXPLICIT_MATERIALIZED`              |
+| `postgres` | `AVOID_MULTIPLE_RECURSIVE_REFERENCE` |
+| `umbra`    | _None_                               |
+
 ## Usage: `interpret`
 
 ```
