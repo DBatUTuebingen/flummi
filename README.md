@@ -1,23 +1,60 @@
 # ⚙️ `flummi/compiler`
 
-## Usage
+## Usage: `compile`
 
 ```
-$ python -m flummi -h
-
-usage: flummi [-h] [-o OUTPUT] [-v] infile
-
-CTE-focussed compilation of imperative programs to recursive SQL.
+$ python -m flummi compile -h
+usage: flummi compile [-h] [-o OUTPUT] [-v] [-g GRAPHS] [-i INTERMEDIATES]
+                      [-f {...}]
+                      [-d {duckdb,postgres,umbra}]
+                      infile
 
 positional arguments:
   infile
 
 options:
-  -h, --help                  show this help message and exit
-  -o OUTPUT, --output OUTPUT  The file to write the compilation result to.
-  -v, --verbose               Control the level of verbosity.
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        The file to write the compilation result to.
+  -v, --verbose         Control the level of verbosity.
+  -g GRAPHS, --graphs GRAPHS
+                        Directory to write graphviz files for each transformation to.
+  -i INTERMEDIATES, --intermediates INTERMEDIATES
+                        Directory to write IR representation for each transformation to.
+  -f {...}, --flag {...}
+                        Configure compilation.
+  -d {duckdb,postgres,umbra}, --dbms {duckdb,postgres,umbra}
+                        Apply DBMS specific flag set.
 ```
 
+### Compiler Flags
+
+| Name                                 | Description                                                                                                  |
+| :----------------------------------- | :----------------------------------------------------------------------------------------------------------- |
+| `JUMP_INTO_LOOPS`                    | Transform `GOTO`s into `JUMP`s at all loop entries.                                                          |
+| `JUMP_INTO_TRACES`                   | Transform `GOTO`s into `JUMP`s at all trace entries.                                                         |
+| `JUMPS_ONLY`                         | Transform all `GOTO`s into `JUMP`s.                                                                          |
+| `EXPLICIT_MATERIALIZED`              | Add the `MATERIALIZED`-keyword to each CTE that is read more than once.                                      |
+| `AVOID_MULTIPLE_RECURSIVE_REFERENCE` | Add the "_classic hack_" to avoid multiple recursive references by aliasing the working table through a CTE. |
+| `INJECT_TRACE_GENERATION`            | Add JSON based program trace generation to the compiled query.                                               |
+| `INCLUDE_EMIT_ORDER`                 | Add `WITH ORDINALITY`-style column to the compiled query.                                                    |
+| `FORCE_WITH_RECURSIVE`               | Disable loopless program translation rule.                                                                   |
+
+
+## Usage: `interpret`
+
+```
+$ thon -m flummi interpret -h
+usage: flummi interpret [-h] [-s SETUP] infile
+
+positional arguments:
+  infile
+
+options:
+  -h, --help            show this help message and exit
+  -s SETUP, --setup SETUP
+                        SQL file to execute in the DB before program interpretation.
+```
 
 ## Syntax/Semantics of PL/Flummi
 
