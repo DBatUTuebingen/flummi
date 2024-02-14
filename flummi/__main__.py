@@ -9,6 +9,7 @@ from .lowering import lower
 from .optimizer import optimize, find_traces
 from .data_flow import materialize_data_flow
 from .codegen import codegen
+from .interpeter import interpret
 
 from .pretty.print import pretty, STYLE
 from .pretty.dot import dot
@@ -49,6 +50,9 @@ def main():
     compiler_parser.add_argument('-i', '--intermediates', default=None, type=Path, help="Directory to write IR representation for each transformation to.")
     compiler_parser.add_argument('-f', '--flag', action='append', choices=Flag._member_map_.keys(), help="Configure compilation.")
     compiler_parser.add_argument('-d', '--dbms', choices=['duckdb','postgres','umbra'], help="Apply DBMS specific flag set.")
+
+    interpreter_parser = subparsers.add_parser('interpret')
+    interpreter_parser.add_argument('infile', type=argparse.FileType('r'))
 
     arguments = parser.parse_args()
 
@@ -161,6 +165,15 @@ def main():
                 printer[1](f"\033[1;2m*\033[0;36m writing output to \033[4m'{arguments.output.name}'\033[0m")
                 arguments.output.write(sql + "\n")
 
+        case "interpret":
+            source = arguments.infile.read()
+
+            ast = parse(source)
+
+            ast, symbol_table, *_ = analyze(ast)
+
+            for emitted_value in interpret(ast, symbol_table):
+                print(emitted_value)
 
 if __name__ == "__main__":
     main()
