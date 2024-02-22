@@ -30,14 +30,19 @@ class Printer:
 
 @unique
 class Flag(Enum):
+    # placement of JUMPs
     JUMP_INTO_LOOPS = auto()
     JUMP_INTO_TRACES = auto()
     JUMPS_ONLY = auto()
+
+    # SQL codegen tweaks
+    FORCE_WITH_RECURSIVE = auto()
     EXPLICIT_MATERIALIZED = auto()
     AVOID_MULTIPLE_RECURSIVE_REFERENCE = auto()
-    INJECT_TRACE_GENERATION = auto()
-    INCLUDE_EMIT_ORDER = auto()
-    FORCE_WITH_RECURSIVE = auto()
+
+    # additional features
+    INCLUDE_TRACE_GENERATION = auto()
+    INCLUDE_EMIT_ORDINALITY = auto()
 
 
 def main():
@@ -157,10 +162,10 @@ def main():
                 symbol_table,
                 emit_type,
                 variable_bindings,
-                include_trace=Flag.INJECT_TRACE_GENERATION in flags,
+                include_trace=Flag.INCLUDE_TRACE_GENERATION in flags,
                 explicit_materialized=Flag.EXPLICIT_MATERIALIZED in flags,
                 avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCE in flags,
-                include_emit_order=Flag.INCLUDE_EMIT_ORDER in flags,
+                include_emit_order=Flag.INCLUDE_EMIT_ORDINALITY in flags,
                 force_with_recursive=Flag.FORCE_WITH_RECURSIVE in flags,
             )
 

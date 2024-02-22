@@ -34,11 +34,11 @@ options:
 | `JUMP_INTO_LOOPS`                    | Transform `GOTO`s into `JUMP`s at all loop entries.                                                          |
 | `JUMP_INTO_TRACES`                   | Transform `GOTO`s into `JUMP`s at all trace entries.                                                         |
 | `JUMPS_ONLY`                         | Transform all `GOTO`s into `JUMP`s.                                                                          |
+| `FORCE_WITH_RECURSIVE`               | Disable loopless program translation rule.                                                                   |
 | `EXPLICIT_MATERIALIZED`              | Add the `MATERIALIZED`-keyword to each CTE that is read more than once.                                      |
 | `AVOID_MULTIPLE_RECURSIVE_REFERENCE` | Add the "_classic hack_" to avoid multiple recursive references by aliasing the working table through a CTE. |
-| `INJECT_TRACE_GENERATION`            | Add JSON based program trace generation to the compiled query.                                               |
-| `INCLUDE_EMIT_ORDER`                 | Add `WITH ORDINALITY`-style column to the compiled query.                                                    |
-| `FORCE_WITH_RECURSIVE`               | Disable loopless program translation rule.                                                                   |
+| `INCLUDE_TRACE_GENERATION`           | Add JSON based program trace generation to the compiled query.                                               |
+| `INCLUDE_EMIT_ORDINALITY`            | Add `WITH ORDINALITY`-style column to the compiled query.                                                    |
 
 
 ### DBMS Specific Flag Sets
