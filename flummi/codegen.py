@@ -98,6 +98,10 @@ class CodeGen:
             label: list(sorted(inputs, key=lambda variable: variable.identifier))
             for label, inputs in unsorted_inputs.items()
         }
+        self.outputs = {
+            label: list(sorted(outputs, key=lambda variable: variable.identifier))
+            for label, outputs in compute_outputs(collect_successors(graph), unsorted_inputs).items()
+        }
 
         if self.force_with_recursive or any(pred for pred in self.jump_predecessors.values()):
             return self.gen_program_with_jumps(graph)
@@ -375,228 +379,194 @@ class CodeGen:
 
     def gen_block(self, block: CFG.Block) -> str:
         inputs = self.inputs[block.label]
+        outputs = self.outputs[block.label]
         goto_predecessors = self.goto_predecessors[block.label]
         jump_predecessors = self.jump_predecessors[block.label]
 
-        unsorted_successor_info, conditional_variable_bindings = self.destructure_terminal(block.terminal)
-        successor_info = list(sorted(unsorted_successor_info))
+        input_columns = [
+            self.gen_variable(variable)
+            for variable in inputs
+        ]
 
-        input_columns_sql = (
-            ', '.join(
-                self.gen_variable(variable)
-                for variable in inputs
-            )
-        )
+        output_columns = [
+            self.gen_variable(variable)
+            for variable in outputs
+        ]
+
+        output_nulls = [
+            f"CAST(NULL AS {self.gen_type(self.symbol_table[output])})"
+            for output in outputs
+        ]
 
         assignments = list(sorted(
-            (
-                statement
-                for statement in block.statements
-                if isinstance(statement, CFG.Assignment)
-            ),
+            block.assignments,
             key=lambda assignment: assignment.variable.identifier
         ))
 
-        emits = list(sorted(
-            (
-                statement
-                for statement in block.statements
-                if isinstance(statement, CFG.Emit)
-            ),
-            key=lambda emit: emit.to_emit.free_variables
+        emitted_vars = list(sorted(
+            CFG.emited_variables(block),
+            key=lambda emit_var: emit_var.identifier
         ))
 
-        assign_columns_sql = (
-            ', '.join(
-                self.gen_variable(assignment.variable)
-                for assignment in chain(assignments, conditional_variable_bindings)
-            )
-        )
+        assign_columns = [
+            self.gen_variable(assignment.variable)
+            for assignment in assignments
+        ]
 
-        output_columns_sql = (
-            ', ' * bool(assignments) +
-            ', '.join(
-                self.gen_variable(assignment.variable)
-                for assignment in assignments
-            )
-        )
+        auxiliary_output_columns = []
+        auxiliary_input_columns = []
 
-        output_nulls_sql = (
-            ', ' * bool(assignments) +
-            ', '.join(
-                f"CAST(NULL AS {self.gen_type(self.symbol_table[assignment.variable])})"
-                for assignment in assignments
-            )
-        )
+        if self.include_trace:
+            auxiliary_input_columns.append('"%step%"')
+            auxiliary_output_columns.append('"%trace%"')
+            auxiliary_output_columns.append('"%step%"')
 
-        trace_column_sql = (
-            ', "%trace%"'
-            if self.include_trace else
-            ""
-        )
+        if self.include_emit_order:
+            auxiliary_input_columns.append('"%ordinality%"')
+            auxiliary_output_columns.append('"%ordinality%"')
 
-        step_column_sql = (
-            ', "%step%"'
-            if self.include_trace else
-            ""
-        )
+        row_sources = [
+            dedent(
+                f"""\
+                SELECT {_indent(',\n'.join(input_columns or ["NULL"]), ' ' * 23)}
+                FROM   "{predecessor.label}"
+                WHERE  "%kind%"='goto'
+                AND    "%label%"='{block.label.label}'
+                """
+            ).strip()
+            for predecessor in goto_predecessors
+        ]
 
-        step_update_sql = (
-            ', "%step%" + 1 AS "%step%"'
-            if self.include_trace else
-            ""
-        )
+        if jump_predecessors or self.entry_label == block.label:
+            row_sources.append(dedent(
+                f"""\
+                SELECT {_indent(',\n'.join(input_columns or ["NULL"]), ' ' * 23)}
+                FROM   "%loop%"
+                WHERE  "%kind%"='jump'
+                AND    "%label%"='{block.label.label}'
+                """
+            ).strip())
 
-        trace_null_column_sql = (
-            ", CAST(NULL AS json)"
-            if self.include_trace else
-            ""
-        )
+        data_source = "%assign%" if assignments else "%inputs%"
+        all_output_columns = ['"%kind%"', '"%label%"', *output_columns, '"%result%"', *auxiliary_output_columns]
 
-        step_null_column_sql = (
-            ", CAST(NULL AS int)"
-            if self.include_trace else
-            ""
-        )
+        row_generators = []
+        emit_count = 0
+        for terminal in block.terminals:
+            predicate = ("\nWHERE  " + "\nAND    ".join(chain(
+                (         self.gen_variable(var) for var in terminal.truthy),
+                ("NOT " + self.gen_variable(var) for var in terminal.falsey),
+            ))) * bool(terminal.truthy or terminal.falsey)
 
-        ordinality_column_sql = (
-            ', "%ordinality%"'
-            if self.include_emit_order else
-            ""
-        )
+            match terminal.type:
+                case CFG.Emit(to_emit):
+                    columns = [
+                        "'emit'",
+                        "NULL",
+                        *output_nulls,
+                        f"CAST({_indent(self.gen_variable(to_emit), ' ' * 5)} AS {self.emit_type_sql})"
+                    ]
+                    if self.include_trace:
+                        columns.append("CAST(NULL AS json)")
+                        columns.append("CAST(NULL AS int)")
+                    if self.include_emit_order:
+                        emit_count += 1
+                        columns.append(f'"%ordinality%" + {emit_count}')
 
-        next_ordinality_column_sql = (
-            f', "%ordinality%" + CAST({len(emits)} AS int)'
-            if self.include_emit_order else
-            ""
-        )
+                case CFG.GoTo(label) | CFG.Jump(label):
+                    columns = [
+                        "'goto'" if isinstance(terminal.type, CFG.GoTo) else "'jump'",
+                        f"'{label.label}'",
+                        *output_columns,
+                        f"CAST(NULL AS {self.emit_type_sql})"
+                    ]
+                    if self.include_trace:
+                        columns.append("CAST(NULL AS json)")
+                        columns.append('"%step%" + 1')
+                    if self.include_emit_order:
+                        columns.append(f'"%ordinality%" + {len(emitted_vars)}')
 
-        return dedent(f"""
-        "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}{step_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
+                case _:
+                    continue
+
+            row_generators.append(dedent(
+                f"""\
+                SELECT {_indent(',\n'.join(f"{var} AS {name}" for var, name in zip(columns, all_output_columns)), ' ' * 23)}
+                FROM   "{data_source}"
+                """
+            ).strip() + predicate)
+
+        if self.include_trace:
+            for terminal in block.terminals:
+                predicate = ("\nWHERE  " + "\nAND    ".join(chain(
+                    (         self.gen_variable(var) for var in terminal.truthy),
+                    ("NOT " + self.gen_variable(var) for var in terminal.falsey),
+                ))) * bool(terminal.truthy or terminal.falsey)
+
+                match terminal.type:
+                    case CFG.GoTo(label) | CFG.Jump(label):
+                        columns = [
+                            "'trace'",
+                            f"'{block.label.label}'",
+                            *output_nulls,
+                            f"CAST(NULL AS {self.emit_type_sql})",
+                            dedent(f"""\
+                                json_object(
+                                  '%kind%' VALUE '{"goto" if isinstance(terminal.type, CFG.GoTo) else "jump"}',
+                                  '%label%' VALUE '{label.label}',
+                                  {
+                                    _indent(
+                                        ",\n".join(
+                                            f"'{assignment.variable.identifier}' VALUE {self.gen_variable(assignment.variable)}"
+                                            for assignment in assignments
+                                        ),
+                                        ' ' * 34
+                                    )
+                                  }
+                                )
+                            """).strip(),
+                            '"%step%"'
+                        ]
+                        if self.include_emit_order:
+                            columns.append(f'"%ordinality%"')
+
+                    case _:
+                        continue
+
+                row_generators.append(dedent(
+                    f"""\
+                    SELECT {_indent(',\n'.join(f"{var} AS {name}" for var, name in zip(columns, all_output_columns)), ' ' * 27)}
+                    FROM   "{data_source}"
+                    """
+                ).strip() + predicate)
+
+        return dedent(f"""\
+        "{block.label.label}"({", ".join(all_output_columns)}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(block.terminals) + self.include_trace > 1))} (
           WITH
-            "%inputs%"({input_columns_sql or '"%"'}{step_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and bool(emits) and bool(assignments))} (
-              {
-                _indent(
-                    "\n  UNION ALL\n".join(
-                        chain(
-                            [
-                                dedent(
-                                    f"""
-                                    SELECT {input_columns_sql or 'NULL'}{step_column_sql}{ordinality_column_sql}
-                                    FROM   "%loop%"
-                                    WHERE  "%kind%"='jump'
-                                    AND    "%label%"='{block.label.label}'
-                                    """
-                                )[1:-1]
-                            ] * (bool(jump_predecessors) or self.entry_label == block.label),
-                            (
-                                dedent(
-                                    f"""
-                                    SELECT {input_columns_sql or 'NULL'}{step_column_sql}{ordinality_column_sql}
-                                    FROM   "{parent_label.label}"
-                                    WHERE  "%kind%"='goto'
-                                    AND    "%label%"='{block.label.label}'
-                                    """
-                                )[1:-1]
-                                for parent_label in goto_predecessors
-                            )
-                        )
-                    ),
-                    ' ' * 14
-                )
-              }
+            "%inputs%"({', '.join([*input_columns, *auxiliary_input_columns] or ['"%"'])}) AS{" MATERIALIZED" * (self.explicit_materialized and bool(emitted_vars) and bool(assignments))} (
+              {_indent("\n  UNION ALL\n".join(row_sources), ' ' * 14)}
             ){
                 _indent(
                     ",\n" +
                     dedent(
                         f"""
-                        "%assign%"({assign_columns_sql}{step_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) > 1 or self.include_trace))} (
+                        "%assign%"({", ".join([*assign_columns, *auxiliary_input_columns])}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(block.terminals) > 1 or self.include_trace))} (
                           SELECT {
                                     _indent(
                                         ",\n".join(
                                             f'CAST({_indent(self.gen_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
-                                            for assignment in chain(assignments, conditional_variable_bindings)
+                                            for assignment in assignments
                                         ),
                                         ' ' * 33
                                     )
                                  }{(',\n' + ' ' * 33 + '"%step%"') * self.include_trace}{(',\n' + ' ' * 33 + '"%ordinality%"') * self.include_emit_order}
-                          FROM "%inputs%"
+                          FROM   "%inputs%"
                         )
                         """[1:]
                     ),
                     ' ' * 12
-                ) * (bool(assignments) or bool(conditional_variable_bindings))
+                ) * bool(assignments)
             }
-          {
-            _indent(
-               "\n  UNION ALL\n".join(
-                    chain(
-                        (
-                            dedent(
-                                f"""
-                                SELECT {kind}, {label}{output_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}{step_update_sql}{next_ordinality_column_sql}
-                                FROM   "%assign%"
-                                WHERE  {predicate}
-                                """
-                            )[1:-1]
-                            for kind, label, predicate in successor_info
-                        ),
-                        (
-                            dedent(
-                                f"""
-                                SELECT 'emit', NULL{output_nulls_sql},
-                                       CAST({_indent(self.gen_expression(emit.to_emit), ' ' * 45)} AS {self.emit_type_sql}){trace_null_column_sql}{step_null_column_sql}{ordinality_column_sql}
-                                FROM   "%inputs%"
-                                """
-                            )[1:-1]
-                            for emit in emits
-                        ),
-                        [
-                            dedent(
-                                f"""
-                                SELECT 'trace', '{block.label.label}'{output_nulls_sql}, CAST(NULL AS {self.emit_type_sql}),
-                                        json_object(
-                                          '%kind%' VALUE {kind},
-                                          '%label%' VALUE {label},
-                                          {
-                                            _indent(
-                                                ",\n".join(
-                                                    f"'{assignment.variable.identifier}' VALUE {self.gen_variable(assignment.variable)}"
-                                                    for assignment in assignments
-                                                ),
-                                                ' ' * 42
-                                            )
-                                          }
-                                       ) AS "%trace%",
-                                       "%step%"{(',\n' + ' ' * 39 + 'CAST(NULL AS int)') * self.include_emit_order}
-                                FROM   "%assign%"
-                                WHERE  {predicate}
-                                """
-                            )[1:-1]
-                            for kind, label, predicate in successor_info
-                        ] * self.include_trace
-                    )
-                ),
-                " " * 10
-            )
-          }
+          {_indent("\n  UNION ALL\n".join(row_generators), " " * 10)}
         )
-        """)[1:-1]
-
-    def destructure_terminal(self, terminal: CFG.Terminal, predicate: str = "TRUE") -> tuple[set[tuple[str,str,str]], list[CFG.Assignment]]:
-        match terminal:
-            case CFG.Stop():
-                return set(), []
-            case CFG.GoTo(label):
-                return {("'goto'",f"'{label.label}'",predicate)}, []
-            case CFG.Jump(label):
-                return {("'jump'",f"'{label.label}'",predicate)}, []
-            case CFG.If(expression, truthy, falsey):
-                var = f"condition%{self.condition_variable_counter}"
-                self.symbol_table[grammar.Variable(var)] = grammar.Type("bool")
-                self.condition_variable_counter += 1
-                truthy_branches, truthy_bindings = self.destructure_terminal(truthy, f'{predicate} AND "{var}"')
-                falsey_branches, falsey_bindings = self.destructure_terminal(falsey, f'{predicate} AND NOT "{var}"')
-                return truthy_branches | falsey_branches, [CFG.Assignment(grammar.Variable(var), expression), *truthy_bindings, *falsey_bindings]
-            case _:
-                raise TypeError(f"Unexpected kind of terminal: {terminal}")
+        """).strip()

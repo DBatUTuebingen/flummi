@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+from itertools import chain
 from textwrap import indent, dedent
 
 from .. import CFG
@@ -171,37 +171,40 @@ def pretty(node: CFG.Node) -> str:
                 {STYLE.BLOCKS} {STYLE.LBRACE}{blocks}{STYLE.RBRACE}
             """)[1:-1]
 
-        case CFG.Block(block_label, statements, terminal):
+        case CFG.Block(block_label, statements, terminals):
             statements = (
                 _indent(f'{STYLE.SEMI}\n'.join(map(pretty, statements)), ' '*18) +
                 STYLE.SEMI * (0 < len(statements))
             )
-            terminal = _indent(pretty(terminal), ' '*18)
+            terminals = _indent('\n'.join(map(pretty, terminals)), ' '*18)
 
             return dedent(f"""
                 {STYLE.BLOCK} {STYLE.label(block_label)} {STYLE.LBRACE}
-                  {statements}{('\n' + ' ' * 18) * bool(statements)}{terminal}
+                  {statements}{('\n' + ' ' * 18) * bool(statements)}{terminals}
                 {STYLE.RBRACE}
             """)[1:-1]
-
-        case CFG.Emit(to_emit):
-            return f"{STYLE.EMIT} {to_emit!s}"
 
         case CFG.Assignment(variable, expression):
             indent_len = len(variable.identifier) + 5
             return f"{variable} {STYLE.LARROW} {_indent(str(expression), ' '*indent_len)}"
+
+        case CFG.Terminal(type, truthy_vars, falsey_vars):
+            predicate = " AND ".join(chain(
+                (                  var.identifier for var in truthy_vars),
+                (f"{STYLE.NOT} " + var.identifier for var in falsey_vars),
+            ))
+            if predicate:
+                predicate = f" {STYLE.WHERE} {predicate}"
+            return pretty(type) + predicate
+
+        case CFG.Emit(to_emit):
+            return f"{STYLE.EMIT} {to_emit!s}"
 
         case CFG.Jump(target):
             return f"{STYLE.JUMP} {STYLE.label(target)}"
 
         case CFG.GoTo(target):
             return f"{STYLE.GOTO} {STYLE.label(target)}"
-
-        case CFG.Stop():
-            return f"{STYLE.STOP}"
-
-        case CFG.If(condition, truthy, falsey):
-            return f"{STYLE.IF} {condition}\n{STYLE.THEN} {_indent(pretty(truthy), ' '*5)}\n{STYLE.ELSE} {_indent(pretty(falsey), ' '*5)}"
 
         case _:
             raise TypeError("Unknown CFG form.")

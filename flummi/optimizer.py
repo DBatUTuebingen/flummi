@@ -1,8 +1,12 @@
 from pprint import pprint
 from dataclasses import dataclass
+from operator import or_
 
 from . import CFG
 from .label_graph import *
+
+
+type Statement = CFG.Assignment | CFG.Terminal[CFG.Emit]
 
 
 @dataclass
@@ -10,6 +14,10 @@ class Statistics:
   blocks_before_scheduling: int
   blocks_after_scheduling: int
   number_of_traces: int
+
+
+def union[T](sets: Iterator[set[T]]) -> set[T]:
+    return reduce(or_, sets, set())
 
 
 def optimize(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
@@ -83,17 +91,18 @@ def find_traces(graph: CFG.Graph) -> list[Trace]:
   return traces
 
 
-def extract_statements(graph: CFG.Graph, trace: Trace) -> list[CFG.Statement]:
-  statements = []
+def extract_statements(graph: CFG.Graph, trace: Trace) -> list[Statement]:
+  assignments = []
   for label in trace:
-    statements.extend(graph.blocks[label].statements)
-  return statements
+    assignments.extend(graph.blocks[label].assignments)
+    assignments.extend(terminal for terminal in graph.blocks[label].terminals if isinstance(terminal.type, CFG.Emit))
+  return assignments
 
 
 type DependenceGraph = dict[int, set[int]]
 
 
-def build_dependence_graph(statements: list[CFG.Statement]) -> DependenceGraph:
+def build_dependence_graph(statements: list[Statement]) -> DependenceGraph:
   writes = {}
   reads = {}
 
@@ -102,26 +111,18 @@ def build_dependence_graph(statements: list[CFG.Statement]) -> DependenceGraph:
       case CFG.Assignment(variable, expression):
         writes[i] = variable
         reads[i] = expression.free_variables
-      case CFG.Emit(expression):
-        reads[i] = expression.free_variables
+      case CFG.Terminal(CFG.Emit(emitted_variable), truthy, falsey):
+        reads[i] = {emitted_variable, *truthy, *falsey}
 
-  dependence_graph = {}
-
-  for i, statement in enumerate(statements):
-    match statement:
-      case CFG.Emit(expression):
-        dependence_graph[i] = {
-          j
-          for j in range(0, i)
-          if writes.get(j) in expression.free_variables
-        }
-      case CFG.Assignment(variable, expression):
-        dependence_graph[i] = {
-          j
-          for j in range(0, i)
-          if writes.get(j) in expression.free_variables
-          or variable in reads.get(j, set())
-        }
+  dependence_graph = {
+    i: {
+      j
+      for j in range(0, i)
+      if writes.get(j) in reads[i]
+      or writes.get(i) in reads[j]
+    }
+    for i, _ in enumerate(statements)
+  }
 
   return dependence_graph
 
@@ -152,16 +153,23 @@ def schedule_statements(dependence_graph: DependenceGraph) -> Schedule:
   return schedule
 
 
-def materialize_schedule(graph: CFG.Graph, statements: list[CFG.Statement], trace: Trace, schedule: Schedule) -> CFG.Graph:
+def materialize_schedule(graph: CFG.Graph, statements: list[Statement], trace: Trace, schedule: Schedule) -> CFG.Graph:
   x = 0
-  for x, (label, timestep) in enumerate(zip(trace, schedule)):
-    graph.blocks[label].statements = [
-      statements[i]
-      for i in timestep
-    ]
+  for label, timestep in zip(trace, schedule):
+    x += 1
+    graph.blocks[label].assignments = []
+    graph.blocks[label].terminals = [terminal for terminal in graph.blocks[label].terminals if not isinstance(terminal.type, CFG.Emit)]
+    for i in timestep:
+      statement = statements[i]
+      match statement:
+        case CFG.Assignment():
+          graph.blocks[label].assignments.append(statement)
+        case CFG.Terminal(CFG.Emit()):
+          graph.blocks[label].terminals.append(statement)
   else:
-    for label in trace[x+1:]:
-      graph.blocks[label].statements = []
+    for label in trace[x:]:
+      graph.blocks[label].assignments = []
+      graph.blocks[label].terminals = [terminal for terminal in graph.blocks[label].terminals if not isinstance(terminal.type, CFG.Emit)]
 
   return graph
 
@@ -178,26 +186,25 @@ def inline_control_only_blocks(graph: CFG.Graph) -> CFG.Graph:
     pred = invert_label_graph(succ)
     changed = False
     for label, inlinee_block in graph.blocks.items():
-      if not inlinee_block.statements:
+      if not inlinee_block.assignments:
         for inlineable in pred[label]:
-          if CFG.free_variables(inlinee_block.terminal) & writes[inlineable]:
-            continue
-          block = graph.blocks[inlineable]
-          block.terminal, _changed = inline_terminal(block.terminal, label, inlinee_block.terminal)
-          changed |= _changed
+          changed = True
+          new_terminals = []
+          for terminal in graph.blocks[inlineable].terminals:
+            match terminal.type:
+              case CFG.GoTo(_label) if _label == label:
+                new_terminals.extend(
+                  CFG.Terminal(
+                    inlinee_terminal.type,
+                    truthy=inlinee_terminal.truthy + terminal.truthy,
+                    falsey=inlinee_terminal.falsey + terminal.falsey,
+                  )
+                  for inlinee_terminal in inlinee_block.terminals
+                )
+              case _:
+                new_terminals.append(terminal)
+          graph.blocks[inlineable].terminals = new_terminals
   return graph
-
-
-def inline_terminal(into: CFG.Terminal, label: CFG.BlockLabel, replacement: CFG.Terminal) -> tuple[CFG.Terminal, bool]:
-    match into:
-        case CFG.GoTo(_label) if _label == label:
-            return replacement, True
-        case CFG.If(condition, truthy, falsey):
-            truthy, changed_truthy = inline_terminal(truthy, label, replacement)
-            falsey, changed_falsey = inline_terminal(falsey, label, replacement)
-            return CFG.If(condition, truthy, falsey), changed_truthy or changed_falsey
-        case _:
-            return into, False
 
 
 def elide_unreachable_blocks(graph: CFG.Graph) -> CFG.Graph:

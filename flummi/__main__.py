@@ -2,7 +2,7 @@ import argparse
 from enum import Enum, unique, auto
 from pathlib import Path
 
-from . import CFG, label_graph
+from . import CFG, grammar, label_graph
 from .parser import parse
 from .analyzer import analyze
 from .lowering import lower
@@ -117,10 +117,20 @@ def main():
             ast, symbol_table, emit_type, variable_bindings = analyze(ast)
 
             printer[1]("\033[1;2m[0]\033[0;36m lowering to CFG\033[0m")
-            cfg = lower(ast)
+            cfg, condition_variables, emit_variables = lower(ast)
             print_graph(cfg, "0_lowering.gv")
             print_intermediate(cfg, "0_lowering.flir")
             printer[2](pretty(cfg))
+
+            symbol_table |= {
+                var: grammar.Type("bool")
+                for var in condition_variables
+            }
+
+            symbol_table |= {
+                var: emit_type
+                for var in emit_variables
+            }
 
             printer[1]("\033[1;2m[1]\033[0;36m optimizing CFG\033[0m")
             cfg, optimizer_statistics = optimize(cfg)
@@ -132,18 +142,26 @@ def main():
             printer[1](f"\033[1;2m[2]\033[0;36m placing additional JUMPs\033[0m")
             if Flag.JUMPS_ONLY in flags:
                 for block in cfg.blocks.values():
-                    for label in cfg.blocks.keys():
-                        block.terminal = CFG.jumpify(block.terminal, label)
+                    for terminal in block.terminals:
+                        match terminal.type:
+                            case CFG.GoTo(label):
+                                terminal.type = CFG.Jump(label)
+
             elif Flag.JUMP_INTO_TRACES in flags:
-                for trace_head, *_ in find_traces(cfg):
-                    for block in cfg.blocks.values():
-                        block.terminal = CFG.jumpify(block.terminal, trace_head)
-            elif Flag.JUMP_INTO_LOOPS in flags:
-                successors = label_graph.collect_successors(cfg)
-                loop_heads = label_graph.loop_heads(successors)
+                trace_heads = {head for head, *_ in find_traces(cfg)}
                 for block in cfg.blocks.values():
-                    for loop_head in loop_heads:
-                        block.terminal = CFG.jumpify(block.terminal, loop_head)
+                    for terminal in block.terminals:
+                        match terminal.type:
+                            case CFG.GoTo(label) if label in trace_heads:
+                                terminal.type = CFG.Jump(label)
+
+            elif Flag.JUMP_INTO_LOOPS in flags:
+                loop_heads = label_graph.loop_heads(label_graph.collect_successors(cfg))
+                for block in cfg.blocks.values():
+                    for terminal in block.terminals:
+                        match terminal.type:
+                            case CFG.GoTo(label) if label in loop_heads:
+                                terminal.type = CFG.Jump(label)
 
             print_graph(cfg, "2_additional_jumps.gv")
             print_intermediate(cfg, "2_additional_jumps.flir")

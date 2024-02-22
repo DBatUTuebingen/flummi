@@ -1,7 +1,6 @@
 from __future__ import annotations
 from abc import ABC
-from dataclasses import dataclass
-from functools import reduce
+from dataclasses import dataclass, field
 
 from . import grammar
 
@@ -9,11 +8,12 @@ __all__ = (
     "BlockLabel",
     "Graph",
     "Block",
+    "Assignment",
     "Terminal",
+    "TerminalType",
+    "Emit",
     "Jump",
     "GoTo",
-    "Stop",
-    "If",
 )
 
 
@@ -34,91 +34,81 @@ class Graph:
 @dataclass
 class Block:
     label: BlockLabel
-    statements: list[Statement]
-    terminal: Terminal
-
-
-class Statement(ABC):
-    ...
+    assignments: list[Assignment]
+    terminals: list[Terminal]
 
 
 @dataclass
-class Emit(Statement):
-    to_emit: grammar.Expression
-
-
-@dataclass
-class Assignment(Statement):
+class Assignment:
     variable: grammar.Variable
     expression: grammar.Expression
 
 
-class Terminal(ABC):
+@dataclass
+class Terminal[T]:
+    type: T
+    truthy: list[grammar.Variable] = field(default_factory=list)
+    falsey: list[grammar.Variable] = field(default_factory=list)
+
+
+class TerminalType(ABC):
     ...
+
+@dataclass
+class Emit(TerminalType):
+    to_emit: grammar.Variable
 
 
 @dataclass
-class Jump(Terminal):
+class Jump(TerminalType):
     label: BlockLabel
 
 
 @dataclass
-class GoTo(Terminal):
+class GoTo(TerminalType):
     label: BlockLabel
 
 
-@dataclass
-class Stop(Terminal):
-    ...
-
-
-@dataclass
-class If(Terminal):
-    condition: grammar.Expression
-    truthy_terminal: Terminal
-    falsey_terminal: Terminal
-
-
-type Node = Graph | Block | Statement | Terminal
+type Node = Graph | Block | Assignment | Emit | Terminal | TerminalType
 
 
 def successors(block: Block) -> set[BlockLabel]:
-    def scan_terminal(terminal: Terminal) -> set[BlockLabel]:
-        match terminal:
-            case GoTo(label) | Jump(label):
-                return {label}
-            case If(_, truthy, falsey):
-                return scan_terminal(truthy) | scan_terminal(falsey)
-            case _:
-                return set()
-
-    return scan_terminal(block.terminal)
+    return {
+        terminal.type.label
+        for terminal in block.terminals
+        if isinstance(terminal.type, (Jump, GoTo))
+    }
 
 
 def jumps(block: Block) -> set[BlockLabel]:
-    def scan_terminal(terminal: Terminal) -> set[BlockLabel]:
-        match terminal:
-            case Jump(label):
-                return {label}
-            case If(_, truthy, falsey):
-                return scan_terminal(truthy) | scan_terminal(falsey)
-            case _:
-                return set()
-
-    return scan_terminal(block.terminal)
+    return {
+        terminal.type.label
+        for terminal in block.terminals
+        if isinstance(terminal.type, Jump)
+    }
 
 
 def gotos(block: Block) -> set[BlockLabel]:
-    def scan_terminal(terminal: Terminal) -> set[BlockLabel]:
-        match terminal:
-            case GoTo(label):
-                return {label}
-            case If(_, truthy, falsey):
-                return scan_terminal(truthy) | scan_terminal(falsey)
-            case _:
-                return set()
+    return {
+        terminal.type.label
+        for terminal in block.terminals
+        if isinstance(terminal.type, GoTo)
+    }
 
-    return scan_terminal(block.terminal)
+
+def emits(block: Block) -> list[Emit]:
+    return [
+        terminal.type
+        for terminal in block.terminals
+        if isinstance(terminal.type, Emit)
+    ]
+
+
+def emited_variables(block: Block) -> list[grammar.Variable]:
+    return [
+        emit.to_emit
+        for emit in emits(block)
+    ]
 
 
 def contains_jumps(block: Block) -> bool:
@@ -126,29 +116,31 @@ def contains_jumps(block: Block) -> bool:
 
 
 def contains_emits(block: Block) -> bool:
-    return any(
-        isinstance(statement, Emit)
-        for statement in block.statements
-    )
+    return bool(emits(block))
 
 
 def free_variables(node: Node) -> set[grammar.Variable]:
     match node:
-        case Block(_, statements, terminal):
-            vars = set()
+        case Block(_, assignments, terminals):
+            assigned, vars = set(), set()
 
-            for statement in statements:
-                vars |= free_variables(statement)
+            for assignment in assignments:
+                assigned.add(assignment.variable)
+                vars |= free_variables(assignment)
 
-            vars |= free_variables(terminal)
+            for terminal in terminals:
+                vars |= free_variables(terminal) - assigned
 
             return vars
 
-        case Emit(expression) | Assignment(_, expression):
-            return set(expression.free_variables)
+        case Terminal(type, truthy, falsey):
+            return {*truthy, *falsey} | free_variables(type)
 
-        case If(expression, truthy, falsey):
-            return set(expression.free_variables) | free_variables(truthy) | free_variables(falsey)
+        case Emit(to_emit):
+            return {to_emit}
+
+        case Assignment(_, expression):
+            return set(expression.free_variables)
 
         case _:
             return set()
@@ -156,31 +148,14 @@ def free_variables(node: Node) -> set[grammar.Variable]:
 
 def condition_variables(terminal: Terminal) -> set[grammar.Variable]:
     match terminal:
+        case Terminal(_, truthy, falsey):
+            return {*truthy, *falsey}
         case _:
             return set()
 
 
-
 def bound_variables(block: Block) -> set[grammar.Variable]:
-    vars = set()
-
-    for statement in block.statements:
-        match statement:
-            case Assignment(variable, _):
-                vars.add(variable)
-
-    return vars
-
-
-def jumpify(terminal: Terminal, label: BlockLabel) -> Terminal:
-    match terminal:
-        case GoTo(_label) if _label == label:
-            return Jump(label)
-        case If(condition, truthy, falsey):
-            return If(
-                condition,
-                jumpify(truthy, label),
-                jumpify(falsey, label)
-            )
-        case _:
-            return terminal
+    return {
+        assignment.variable
+        for assignment in block.assignments
+    }
