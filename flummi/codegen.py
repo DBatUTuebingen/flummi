@@ -425,10 +425,13 @@ class CodeGen:
             auxiliary_input_columns.append('"%ordinality%"')
             auxiliary_output_columns.append('"%ordinality%"')
 
+        all_input_columns = [*input_columns, *auxiliary_input_columns]
+        all_output_columns = ['"%kind%"', '"%label%"', *output_columns, '"%result%"', *auxiliary_output_columns]
+
         row_sources = [
             dedent(
                 f"""\
-                SELECT {_indent(',\n'.join(input_columns or ["NULL"]), ' ' * 23)}
+                SELECT {_indent(',\n'.join(all_input_columns or ["NULL"]), ' ' * 23)}
                 FROM   "{predecessor.label}"
                 WHERE  "%kind%"='goto'
                 AND    "%label%"='{block.label.label}'
@@ -440,7 +443,7 @@ class CodeGen:
         if jump_predecessors or self.entry_label == block.label:
             row_sources.append(dedent(
                 f"""\
-                SELECT {_indent(',\n'.join(input_columns or ["NULL"]), ' ' * 23)}
+                SELECT {_indent(',\n'.join(all_input_columns or ["NULL"]), ' ' * 23)}
                 FROM   "%loop%"
                 WHERE  "%kind%"='jump'
                 AND    "%label%"='{block.label.label}'
@@ -448,7 +451,6 @@ class CodeGen:
             ).strip())
 
         data_source = "%assign%" if assignments else "%inputs%"
-        all_output_columns = ['"%kind%"', '"%label%"', *output_columns, '"%result%"', *auxiliary_output_columns]
 
         row_generators = []
         emit_count = 0
@@ -543,7 +545,7 @@ class CodeGen:
         return dedent(f"""\
         "{block.label.label}"({", ".join(all_output_columns)}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(block.terminals) + self.include_trace > 1))} (
           WITH
-            "%inputs%"({', '.join([*input_columns, *auxiliary_input_columns] or ['"%"'])}) AS{" MATERIALIZED" * (self.explicit_materialized and bool(emitted_vars) and bool(assignments))} (
+            "%inputs%"({', '.join(all_input_columns or ['"%"'])}) AS{" MATERIALIZED" * (self.explicit_materialized and bool(emitted_vars) and bool(assignments))} (
               {_indent("\n  UNION ALL\n".join(row_sources), ' ' * 14)}
             ){
                 _indent(
