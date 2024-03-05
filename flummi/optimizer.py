@@ -21,8 +21,6 @@ def union[T](sets: Iterator[set[T]]) -> set[T]:
 
 
 def optimize(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
-  graph = elide_unreachable_blocks(graph)
-
   blocks_before_scheduling = len(graph.blocks)
 
   traces = find_traces(graph)

@@ -6,7 +6,7 @@ from . import CFG, grammar, label_graph
 from .parser import parse
 from .analyzer import analyze
 from .lowering import lower
-from .optimizer import optimize, find_traces
+from .optimizer import optimize, find_traces, elide_unreachable_blocks
 from .data_flow import materialize_data_flow
 from .codegen import codegen
 from .interpeter import interpret
@@ -118,6 +118,7 @@ def main():
 
             printer[1]("\033[1;2m[0]\033[0;36m lowering to CFG\033[0m")
             cfg, condition_variables, emit_variables = lower(ast)
+            cfg = elide_unreachable_blocks(cfg)
             print_graph(cfg, "0_lowering.gv")
             print_intermediate(cfg, "0_lowering.flir")
             printer[2](pretty(cfg))
