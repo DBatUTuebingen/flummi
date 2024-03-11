@@ -33,6 +33,7 @@ def codegen(
     avoid_multiple_recursive_references: bool = False,
     include_emit_order: bool = False,
     force_with_recursive: bool = False,
+    materializedb_flavor: bool = False,
 ) -> str:
     return CodeGen(
         symbol_table,
@@ -43,6 +44,7 @@ def codegen(
         avoid_multiple_recursive_references,
         include_emit_order,
         force_with_recursive,
+        materializedb_flavor
     ).gen_program(graph)
 
 
@@ -60,6 +62,7 @@ class CodeGen:
     avoid_multiple_recursive_references: bool
     include_emit_order: bool
     force_with_recursive: bool
+    materializedb_flavor: bool
 
     entry_label: CFG.BlockLabel = field(init=False)
     inputs: dict[CFG.BlockLabel, list[grammar.Variable]] = field(init=False)
@@ -81,8 +84,8 @@ class CodeGen:
             for variable in expression.free_variables
         )), ' ')})"""
 
-    def gen_variable(self, variable: grammar.Variable) -> str:
-        return f'"{variable.identifier}"'
+    def gen_variable(self, variable: grammar.Variable, include_type: bool = False) -> str:
+        return f'"{variable.identifier}"' + (f' {self.gen_type(self.symbol_table[variable])}') * include_type
 
     def gen_label(self, label: CFG.BlockLabel) -> str:
         return f'"{label.label}"'
@@ -223,6 +226,8 @@ class CodeGen:
         """)[1:-1]
 
     def gen_program_with_jumps(self, graph: CFG.Graph) -> str:
+        with_sql = f'WITH{" MUTUALLY" * self.materializedb_flavor} RECURSIVE'
+
         jump_sources = [
             label
             for label, block in graph.blocks.items()
@@ -238,7 +243,7 @@ class CodeGen:
         working_table_columns_sql = (
             ', ' * (0 < len(self.jump_variables)) +
             ', '.join(
-                self.gen_variable(variable)
+                self.gen_variable(variable, include_type=self.materializedb_flavor)
                 for variable in self.jump_variables
             )
         )
@@ -263,6 +268,12 @@ class CodeGen:
             self.gen_block(graph.blocks[label])
             for label in dependent_ordering(collect_gotos(graph))
         ), ' ' * 14)
+
+        kind_column_sql = f'"%kind%"{" text" * self.materializedb_flavor}'
+
+        label_column_sql = f'"%label%"{" text" * self.materializedb_flavor}'
+
+        result_column_sql = f'"%result%"{f" {self.emit_type_sql}" * self.materializedb_flavor}'
 
         trace_column_sql = (
             ', "%trace%"'
@@ -307,8 +318,8 @@ class CodeGen:
         )
 
         return dedent(f"""
-        WITH RECURSIVE
-          "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}) AS (
+        {with_sql}
+          "%loop%"({kind_column_sql}, {label_column_sql}{working_table_columns_sql}, {result_column_sql}{trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}) AS (
             (SELECT 'jump' AS "%kind%",
                     '{graph.entry_label.label}' AS "%label%",
                     {initial_row_sql}{(',\n' + ' ' * 20) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 20) * (self.include_trace or self.include_emit_order)}{trace_null_column_sql}{(',\n' + ' ' * 20) * self.include_trace}{step_zero_column_sql}{', ' * (self.include_trace and self.include_emit_order)}{ordinaltiy_zero_column_sql})
@@ -373,7 +384,7 @@ class CodeGen:
         SELECT "%result%"{', "%ordinality%"' * self.include_emit_order} FROM "%loop%" WHERE "%kind%"='emit';
         """)[1:-1]
 
-    def gen_block(self, block: CFG.Block) -> str:
+    def gen_block(self, block: CFG.Block, specify_column_types: bool = False) -> str:
         inputs = self.inputs[block.label]
         goto_predecessors = self.goto_predecessors[block.label]
         jump_predecessors = self.jump_predecessors[block.label]
@@ -413,6 +424,14 @@ class CodeGen:
             )
         )
 
+        output_columns_head_sql = (
+            ', ' * bool(assignments) +
+            ', '.join(
+                self.gen_variable(assignment.variable, include_type=specify_column_types)
+                for assignment in assignments
+            )
+        )
+
         output_columns_sql = (
             ', ' * bool(assignments) +
             ', '.join(
@@ -428,6 +447,12 @@ class CodeGen:
                 for assignment in assignments
             )
         )
+
+        kind_column_sql = f'"%kind%"{" text" * specify_column_types}'
+
+        label_column_sql = f'"%label%"{" text" * specify_column_types}'
+
+        result_column_sql = f'"%result%"{f" {self.emit_type_sql}" * specify_column_types}'
 
         trace_column_sql = (
             ', "%trace%"'
@@ -472,7 +497,7 @@ class CodeGen:
         )
 
         return dedent(f"""
-        "{block.label.label}"("%kind%", "%label%"{output_columns_sql}, "%result%"{trace_column_sql}{step_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
+        "{block.label.label}"({kind_column_sql}, {label_column_sql}{output_columns_head_sql}, {result_column_sql}{trace_column_sql}{step_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
           WITH
             "%inputs%"({input_columns_sql or '"%"'}{step_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and bool(emits) and bool(assignments))} (
               {

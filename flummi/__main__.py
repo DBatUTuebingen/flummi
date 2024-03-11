@@ -39,6 +39,7 @@ class Flag(Enum):
     FORCE_WITH_RECURSIVE = auto()
     EXPLICIT_MATERIALIZED = auto()
     AVOID_MULTIPLE_RECURSIVE_REFERENCE = auto()
+    MATERIALIZEDB_FLAVOR = auto()
 
     # additional features
     INCLUDE_TRACE_GENERATION = auto()
@@ -56,7 +57,7 @@ def main():
     compiler_parser.add_argument('-g', '--graphs', default=None, type=Path, help="Directory to write graphviz files for each transformation to.")
     compiler_parser.add_argument('-i', '--intermediates', default=None, type=Path, help="Directory to write IR representation for each transformation to.")
     compiler_parser.add_argument('-f', '--flag', action='append', choices=Flag._member_map_.keys(), help="Configure compilation.")
-    compiler_parser.add_argument('-d', '--dbms', choices=['duckdb','postgres','umbra'], help="Apply DBMS specific flag set.")
+    compiler_parser.add_argument('-d', '--dbms', choices=['duckdb','materialize','postgres','umbra'], help="Apply DBMS specific flag set.")
 
     interpreter_parser = subparsers.add_parser('interpret')
     interpreter_parser.add_argument('infile', type=argparse.FileType('r', encoding='utf-8'))
@@ -83,6 +84,10 @@ def main():
                 case 'umbra':
                     flags.update({
 
+                    })
+                case 'materialize':
+                    flags.update({
+                        Flag.MATERIALIZEDB_FLAVOR
                     })
 
             if arguments.graphs and not arguments.graphs.exists():
@@ -167,6 +172,7 @@ def main():
                 avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCE in flags,
                 include_emit_order=Flag.INCLUDE_EMIT_ORDINALITY in flags,
                 force_with_recursive=Flag.FORCE_WITH_RECURSIVE in flags,
+                materializedb_flavor=Flag.MATERIALIZEDB_FLAVOR in flags,
             )
 
             if arguments.output:

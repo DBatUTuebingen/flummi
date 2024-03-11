@@ -39,15 +39,17 @@ options:
 | `AVOID_MULTIPLE_RECURSIVE_REFERENCE` | Add the "_classic hack_" to avoid multiple recursive references by aliasing the working table through a CTE. |
 | `INCLUDE_TRACE_GENERATION`           | Add JSON based program trace generation to the compiled query.                                               |
 | `INCLUDE_EMIT_ORDINALITY`            | Add `WITH ORDINALITY`-style column to the compiled query.                                                    |
+| `MATERIALIZEDB_FLAVOR`               | Adjust generated SQL syntax to the `WITH MUTUALLY RECURSIVE` flavor used in Materialize DB.                  |
 
 
 ### DBMS Specific Flag Sets
 
-| Name       | Flags                                |
-| :--------- | :----------------------------------- |
-| `duckdb`   | `EXPLICIT_MATERIALIZED`              |
-| `postgres` | `AVOID_MULTIPLE_RECURSIVE_REFERENCE` |
-| `umbra`    | _None_                               |
+| Name          | Flags                                |
+| :------------ | :----------------------------------- |
+| `duckdb`      | `EXPLICIT_MATERIALIZED`              |
+| `materialize` | `MATERIALIZEDB_FLAVOR`               |
+| `postgres`    | `AVOID_MULTIPLE_RECURSIVE_REFERENCE` |
+| `umbra`       | _None_                               |
 
 ## Usage: `interpret`
 
