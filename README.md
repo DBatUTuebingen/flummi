@@ -40,16 +40,17 @@ options:
 | `INCLUDE_TRACE_GENERATION`           | Add JSON based program trace generation to the compiled query.                                               |
 | `INCLUDE_EMIT_ORDINALITY`            | Add `WITH ORDINALITY`-style column to the compiled query.                                                    |
 | `MATERIALIZEDB_FLAVOR`               | Adjust generated SQL syntax to the `WITH MUTUALLY RECURSIVE` flavor used in Materialize DB.                  |
+| `USE_MUTUAL_RECURSION`               | Use mutual recursion in the CTEs, transforming all `JUMP`s into `GOTO`s. Illegal in most DBMSes.             |
 
 
 ### DBMS Specific Flag Sets
 
-| Name          | Flags                                |
-| :------------ | :----------------------------------- |
-| `duckdb`      | `EXPLICIT_MATERIALIZED`              |
-| `materialize` | `MATERIALIZEDB_FLAVOR`               |
-| `postgres`    | `AVOID_MULTIPLE_RECURSIVE_REFERENCE` |
-| `umbra`       | _None_                               |
+| Name          | Flags                                          |
+| :------------ | :--------------------------------------------- |
+| `duckdb`      | `EXPLICIT_MATERIALIZED`                        |
+| `materialize` | `MATERIALIZEDB_FLAVOR`, `USE_MUTUAL_RECURSION` |
+| `postgres`    | `AVOID_MULTIPLE_RECURSIVE_REFERENCE`           |
+| `umbra`       | _None_                                         |
 
 ## Usage: `interpret`
 

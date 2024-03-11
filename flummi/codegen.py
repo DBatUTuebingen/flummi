@@ -34,6 +34,7 @@ def codegen(
     include_emit_order: bool = False,
     force_with_recursive: bool = False,
     materializedb_flavor: bool = False,
+    use_mutual_recursion: bool = False,
 ) -> str:
     return CodeGen(
         symbol_table,
@@ -44,7 +45,8 @@ def codegen(
         avoid_multiple_recursive_references,
         include_emit_order,
         force_with_recursive,
-        materializedb_flavor
+        materializedb_flavor,
+        use_mutual_recursion
     ).gen_program(graph)
 
 
@@ -63,6 +65,7 @@ class CodeGen:
     include_emit_order: bool
     force_with_recursive: bool
     materializedb_flavor: bool
+    use_mutual_recursion: bool
 
     entry_label: CFG.BlockLabel = field(init=False)
     inputs: dict[CFG.BlockLabel, list[grammar.Variable]] = field(init=False)
@@ -102,10 +105,12 @@ class CodeGen:
             for label, inputs in unsorted_inputs.items()
         }
 
-        if self.force_with_recursive or any(pred for pred in self.jump_predecessors.values()):
-            return self.gen_program_with_jumps(graph)
-        else:
+        if not self.force_with_recursive and not any(pred for pred in self.jump_predecessors.values()):
             return self.gen_program_without_jumps(graph)
+        elif self.use_mutual_recursion:
+            return self.gen_program_mutual_recursive(graph)
+        else:
+            return self.gen_program_with_jumps(graph)
 
     def gen_program_without_jumps(self, graph: CFG.Graph) -> str:
         emit_sources = [
@@ -188,6 +193,132 @@ class CodeGen:
         return dedent(f"""
         WITH
           "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}) AS (
+            SELECT 'jump' AS "%kind%",
+                   '{graph.entry_label.label}' AS "%label%",
+                   {initial_row_sql}{(',\n' + ' ' * 19) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 19) * (self.include_trace or self.include_emit_order)}{trace_null_column_sql}{(',\n' + ' ' * 20) * self.include_trace}{step_zero_column_sql}{', ' * (self.include_trace and self.include_emit_order)}{ordinaltiy_zero_column_sql}
+           ),{blocks}
+
+        {
+           _indent(
+               '\n  UNION ALL\n'.join(
+                   chain(
+                       (
+                           dedent(
+                               f"""
+                               SELECT "%result%"{', ' * self.include_trace}{trace_null_column_sql}{', ' * self.include_trace}{step_null_column_sql}{ordinaltiy_column_sql}
+                               FROM   "{label.label}"
+                               WHERE  "%kind%"='emit'
+                               """
+                           )[1:-1]
+                           for label in emit_sources
+                       ),
+                       (
+                           dedent(
+                               f"""
+                               SELECT CAST(NULL AS {self.emit_type_sql}){trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}
+                               FROM   "{label.label}"
+                               WHERE  "%kind%"='trace'
+                               """
+                           )[1:-1]
+                           for label in graph.blocks
+                           if self.include_trace
+                       )
+                   )
+               ),
+               ' ' * 8
+           )
+        };
+        """)[1:-1]
+
+    def gen_program_mutual_recursive(self, graph: CFG.Graph) -> str:
+        with_sql = f'WITH{" MUTUALLY" * self.materializedb_flavor} RECURSIVE'
+
+        emit_sources = [
+            label
+            for label, block in graph.blocks.items()
+            if CFG.contains_emits(block)
+        ]
+
+        working_table_columns_sql = (
+            ', ' * (0 < len(self.jump_variables)) +
+            ', '.join(
+                self.gen_variable(variable, include_type=self.materializedb_flavor)
+                for variable in self.jump_variables
+            )
+        )
+
+        working_table_nulls_sql = (
+            ', ' * (0 < len(self.jump_variables)) +
+            ', '.join(
+                f"CAST(NULL AS {self.gen_type(self.symbol_table[variable])})"
+                for variable in self.jump_variables
+            )
+        )
+
+        initial_row_sql = _indent(
+            ',\n'.join(
+                f"CAST({self.gen_expression(self.variable_bindings[variable]) if variable in self.variable_bindings else "NULL"} AS {self.gen_type(self.symbol_table[variable])}) AS \"{variable.identifier}\""
+                for variable in self.jump_variables
+            ),
+            ' ' * 19
+        )
+
+        blocks = _indent(',\n'.join(
+            self.gen_block(graph.blocks[label], specify_column_types=self.materializedb_flavor)
+            for label in dependent_ordering(collect_gotos(graph))
+        ), ' ' * 11)
+
+        kind_column_sql = f'"%kind%"{" text" * self.materializedb_flavor}'
+
+        label_column_sql = f'"%label%"{" text" * self.materializedb_flavor}'
+
+        result_column_sql = f'"%result%"{f" {self.emit_type_sql}" * self.materializedb_flavor}'
+
+        trace_column_sql = (
+            ', "%trace%"'
+            if self.include_trace else
+            ""
+        )
+
+        trace_null_column_sql = (
+            'CAST(NULL AS json) AS "%trace%"'
+            if self.include_trace else
+            ""
+        )
+
+        step_column_sql = (
+            ', "%step%"'
+            if self.include_trace else
+            ""
+        )
+
+        step_zero_column_sql = (
+            'CAST(0 AS int) AS "%step%"'
+            if self.include_trace else
+            ""
+        )
+
+        step_null_column_sql = (
+            'CAST(NULL AS int) AS "%step%"'
+            if self.include_trace else
+            ""
+        )
+
+        ordinaltiy_column_sql = (
+            ', "%ordinality%"'
+            if self.include_emit_order else
+            ""
+        )
+
+        ordinaltiy_zero_column_sql = (
+            'CAST(0 AS int) AS "%ordinality%"'
+            if self.include_emit_order else
+            ""
+        )
+
+        return dedent(f"""
+        {with_sql}
+          "%loop%"({kind_column_sql}, {label_column_sql}{working_table_columns_sql}, {result_column_sql}{trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}) AS (
             SELECT 'jump' AS "%kind%",
                    '{graph.entry_label.label}' AS "%label%",
                    {initial_row_sql}{(',\n' + ' ' * 19) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 19) * (self.include_trace or self.include_emit_order)}{trace_null_column_sql}{(',\n' + ' ' * 20) * self.include_trace}{step_zero_column_sql}{', ' * (self.include_trace and self.include_emit_order)}{ordinaltiy_zero_column_sql}
@@ -513,7 +644,7 @@ class CodeGen:
                                     AND    "%label%"='{block.label.label}'
                                     """
                                 )[1:-1]
-                            ] * (bool(jump_predecessors) or self.entry_label == block.label),
+                            ] * ((bool(jump_predecessors) and not self.use_mutual_recursion) or self.entry_label == block.label),
                             (
                                 dedent(
                                     f"""
@@ -523,7 +654,7 @@ class CodeGen:
                                     AND    "%label%"='{block.label.label}'
                                     """
                                 )[1:-1]
-                                for parent_label in goto_predecessors
+                                for parent_label in (goto_predecessors | (jump_predecessors if self.use_mutual_recursion else set()))
                             )
                         )
                     ),
@@ -559,7 +690,7 @@ class CodeGen:
                         (
                             dedent(
                                 f"""
-                                SELECT {kind}, {label}{output_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}{step_update_sql}{next_ordinality_column_sql}
+                                SELECT {kind if not self.use_mutual_recursion else "'goto'"}, {label}{output_columns_sql}, CAST(NULL AS {self.emit_type_sql}){trace_null_column_sql}{step_update_sql}{next_ordinality_column_sql}
                                 FROM   "%assign%"
                                 WHERE  {predicate}
                                 """

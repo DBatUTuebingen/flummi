@@ -34,6 +34,7 @@ class Flag(Enum):
     JUMP_INTO_LOOPS = auto()
     JUMP_INTO_TRACES = auto()
     JUMPS_ONLY = auto()
+    USE_MUTUAL_RECURSION = auto()  # With mutual recursion, no JUMPs are placed at all
 
     # SQL codegen tweaks
     FORCE_WITH_RECURSIVE = auto()
@@ -87,7 +88,8 @@ def main():
                     })
                 case 'materialize':
                     flags.update({
-                        Flag.MATERIALIZEDB_FLAVOR
+                        Flag.MATERIALIZEDB_FLAVOR,
+                        Flag.USE_MUTUAL_RECURSION
                     })
 
             if arguments.graphs and not arguments.graphs.exists():
@@ -173,6 +175,7 @@ def main():
                 include_emit_order=Flag.INCLUDE_EMIT_ORDINALITY in flags,
                 force_with_recursive=Flag.FORCE_WITH_RECURSIVE in flags,
                 materializedb_flavor=Flag.MATERIALIZEDB_FLAVOR in flags,
+                use_mutual_recursion=Flag.USE_MUTUAL_RECURSION in flags,
             )
 
             if arguments.output:
