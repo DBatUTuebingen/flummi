@@ -1,127 +1,242 @@
-from collections.abc import Iterator
+from __future__ import annotations
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
-from itertools import chain
-from typing import Any
+from itertools import groupby as _groupby, repeat
+from typing import Any, Callable
 
+import pandas as pd
 import duckdb
 
-from . import grammar
+from . import grammar, errors
 
 __all__ = (
     "interpret",
 )
 
 
-def interpret(program: grammar.Program, symbol_table: dict[grammar.Variable, grammar.Type]) -> Iterator[Any]:
+class EvaluationError(errors.FlummiError, name="Eval"):
+    ...
+
+
+def interpret(
+    program: grammar.Program,
+    symbol_table: dict[grammar.Variable, grammar.Type]
+) -> Iterator[Any]:
     yield from Interpreter(symbol_table).eval_program(program)
 
 
-# used to move up the call stack for BREAK, CONTINUE and STOP
-class LoopBreak(Exception): ...
-class LoopContinue(Exception): ...
-class Stop(Exception): ...
+def groupby[T, K](
+    things: Iterable[T],
+    key: Callable[[T], K]
+) -> Iterator[tuple[K, Iterable[T]]]:
+    return _groupby(sorted(things, key=key), key=key)  # type: ignore
+
+
+def _stringify(things: Iterable[grammar.Variable]) -> list[str]:
+    return [
+        variable.identifier
+        for variable in things
+    ]
+
+
+type Environment = dict[str, Any]
 
 
 @dataclass
 class Interpreter:
     symbol_table: dict[grammar.Variable, grammar.Type]
-    environment: dict[grammar.Variable, duckdb.DuckDBPyRelation] = field(init=False, default_factory=dict)
+    results: list[Any] = field(init=False, default_factory=list)
 
     def eval_program(self, program: grammar.Program)-> Iterator[Any]:
-        """
-        Assigns program arguments to function parameters and appends them at the front of the statement list of the function
-
-        Parameters: program (grammar.Program): program to be interpreted
-
-        Returns: None
-        """
-        try:
-            yield from self.eval_statement(grammar.Block([
-                *(
-                    grammar.Assignment(parameter, expression)
-                    for parameter, expression in zip(
-                        program.function.parameters,
-                        program.inputs
-                    )
-                ),
-                program.function.body
-            ]))
-        except Stop:
-            ...
-
-    def eval_statement(self, statement: grammar.Statement) -> Iterator[Any]:
-        """
-        Goes through all statements of a function to return result(s)
-
-        Parameters: statement (grammar.Statement): statement to be matched
-
-        Returns: None
-
-        """
-        match statement:
-            case grammar.Loop(name, body):
-                while(True):
-                    try:
-                        yield from self.eval_statement(body)
-                    except LoopBreak as e:
-                        if name == e.args[0]:
-                            break
-                        else:
-                            raise e
-                    except LoopContinue as e:
-                        if name == e.args[0]:
-                            continue
-                        else:
-                            raise e
-
-            case grammar.Continue(name):
-                raise LoopContinue(name)
-
-            case grammar.Break(name):
-                raise LoopBreak(name)
-
-            case grammar.If(condition, t_branch, f_branch):
-                yield from self.eval_statement(t_branch if self.eval_expression(condition) else f_branch)
-
-            case grammar.Emit(to_emit):
-                yield self.eval_expression(to_emit)
-
-            case grammar.Assignment(variable, expression):
-                self.environment[variable] = self.eval_expression(expression)
-
-            case grammar.Block(statements):
-                yield from chain.from_iterable(map(self.eval_statement, statements))
-
-            case grammar.Stop():
-                raise Stop()
-
-            case grammar.NoOp():
-                ...
-
-            case _:
-                raise RuntimeError(f"Unsupported statement: {statement}")
-
-    def eval_expression(self, expression: grammar.Expression) -> Any:
-        """
-        Inserts values into placeholders, runs it as a DuckDB query and returns the result
-
-        Parameters: expression (grammar.Expression): expression to be queried
-
-        Returns: str: Value of the expression in as a str
-
-        """
-        result = duckdb.execute(
-            "SELECT " + expression.source.format(*(
-                f"(${i+1} :: {self.symbol_table[free_variable].source})"
-                for i, free_variable in enumerate(expression.free_variables)
-            )),
-            [
-                self.environment[free_variable]
-                for free_variable in expression.free_variables
+        blank_state = dict(zip(_stringify(self.symbol_table), repeat(None)))
+        if program.inputs is not None:
+            duckdb.execute(program.inputs.source)
+            results = duckdb.fetchall()
+            if (
+                program.inputs.valuedness == grammar.Valuedness.SCALAR and
+                len(results) > 1
+            ):
+                raise EvaluationError(
+                    "Expected expression to be scalar-valued "
+                    "but it yielded a too many of results.",
+                    program.inputs.location
+                )
+            elif len(results) == 0:
+                raise EvaluationError(
+                    "Expression produced no rows! "
+                    "Can't call the function with no inputs...",
+                    program.inputs.location
+                )
+            initial_states = [
+                blank_state | dict(zip(
+                    _stringify(program.function.parameters.keys()),
+                    binding
+                ))
+                for binding in results
             ]
-        )
-
-        if (row := result.fetchone()) is not None:
-            return row[0]
         else:
-            raise RuntimeError("Embedded SQL expression produced no rows.")
+            initial_states = [blank_state]
+        states = self.eval_statement(program.function.body, initial_states)
+        if len(states) > 0:
+            raise EvaluationError(
+                "Program terminated with dangling states! "
+                "Seems like you are missing a STOP somewhere.",
+                program.function.location
+            )
+        yield from self.results
+
+    def eval_statement(
+        self,
+        statement: grammar.Statement,
+        states: list[Environment]
+    ) -> list[Environment]:
+        match statement:
+            case grammar.If(_, condition, truthy_branch, falsey_branch):
+                truthy_states, falsey_states = [], []
+                for state in states:
+                    if state[condition.identifier]:
+                        truthy_states.append(state)
+                    else:
+                        falsey_states.append(state)
+                return (
+                    self.eval_statement(truthy_branch, truthy_states) +
+                    self.eval_statement(falsey_branch, falsey_states)
+                )
+
+            case grammar.Emit(_, to_emit):
+                self.results.extend(
+                    tuple(
+                        state[variable.identifier]
+                        for variable in to_emit
+                    )
+                    for state in states
+                )
+                return states
+
+            case grammar.Block(_, statements):
+                # Blocks sequence the statements they contain such that each
+                # statement consumes the states produced by the statement
+                # preceeding it.
+                for statement in statements[:-1]:
+                    states = self.eval_statement(statement, states)
+                    #! [TODO] This check shouldn't be necessary since it's
+                    #!        actually the analyzers job. But that has part has
+                    #!        yet to be implemented.
+                    if len(states) == 0:
+                        raise EvaluationError(
+                            "Statement produced no states! "
+                            "This behaviour is reserved for the STOP keyword.",
+                            statement.location
+                        )
+                return self.eval_statement(statements[-1], states)
+
+            case grammar.Stop(_):
+                # STOP voids all current states and yield none instead.
+                return []
+
+            case grammar.NoOp(_):
+                # NOOP literally does nothing and just forwards the states.
+                return states
+
+            case grammar.Assignment(_, assigned_variables, expression):
+                set_valued_inputs = set(_stringify(
+                    argument.variable
+                    for argument in expression.arguments
+                    if argument.valuedness == grammar.Valuedness.SET
+                ))
+                grouped_variables = [
+                    variable
+                    for variable in _stringify(self.symbol_table)
+                    if variable not in set_valued_inputs
+                ]
+                assigned_variables = _stringify(assigned_variables)
+
+                next_states = []
+                for fixed, grouped_states in groupby(
+                    states,
+                    key=lambda state: tuple(
+                        state[variable]
+                        for variable in grouped_variables
+                    )
+                ):
+                    # /!\ This DataFrame is created and bound here to allow
+                    #     DuckDB to find it as table through their
+                    #     replacement scans magic. ;)
+                    __flummi_state__ = pd.DataFrame.from_records([
+                        {
+                            f"__{key}__": value
+                            for key, value in state.items()
+                        }
+                        for state in grouped_states
+                    ])
+
+                    try:
+                        formatted_sql = expression.source.format(
+                            state="__flummi_state__",
+                            **{
+                                argument.variable.identifier:
+                                f"__{argument.variable.identifier}__"
+                                for argument in expression.arguments
+                            }
+                        )
+                    except KeyError as e:
+                        raise EvaluationError(
+                            f"The query used variable {str(e)}, "
+                            "but it was not supplied in the arguments to it.",
+                            expression.location
+                        ) from e
+
+                    try:
+                        duckdb.execute(formatted_sql)
+                        results = duckdb.fetchall()
+                    except Exception as e:
+                        # We wrap any errors DuckDB may produce in our own
+                        # exception type for prettier error messages.
+                        raise EvaluationError(
+                            str(e) +
+                            f"\nCurrent scope:\n{__flummi_state__}",
+                            expression.location
+                        ) from e
+
+                    # We would like this to a static "pre-flight" check, but
+                    # without introspecting the user-provided SQL queries that
+                    # is not possible.
+                    if (
+                        expression.valuedness == grammar.Valuedness.SCALAR and
+                        len(results) > 1
+                    ):
+                        raise EvaluationError(
+                            "Expected expression to be scalar-valued "
+                            "but it yielded a too many of results.\n"
+                            f"Current scope:\n{__flummi_state__}",
+                            expression.location
+                        )
+                    elif len(results) == 0:
+                        raise EvaluationError(
+                            "Expression produced no rows! "
+                            "This behaviour is reserved for the STOP keyword.\n"
+                            f"Current scope:\n{__flummi_state__}",
+                            expression.location
+                        )
+
+                    next_states.extend(
+                        (
+                            # variables that are "scalar-valued wrt. the
+                            # expression" retain old values
+                            dict(zip(grouped_variables, fixed)) |
+
+                            # variables that are "set-valued wrt. the
+                            # expression" loose old values
+                            dict(zip(set_valued_inputs, repeat(None))) |
+
+                            # variables that are assigned to gain new values
+                            dict(zip(assigned_variables, bindings))
+                        )
+                        for bindings in results
+                    )
+                return next_states
+
+        raise EvaluationError(
+            f"Unsupported statement: {statement!s}",
+            statement.location
+        )

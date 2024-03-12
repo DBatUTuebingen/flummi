@@ -1,7 +1,7 @@
 from itertools import chain
 from textwrap import indent, dedent
 
-from .. import CFG
+from .. import CFG, grammar
 
 
 def _indent(lines: str, prefix: str):
@@ -37,22 +37,7 @@ class Color:
     def ENTRYPOINT(self): return self.keyword('ENTRYPOINT')
 
     @property
-    def EMITS(self): return self.keyword('EMITS')
-
-    @property
-    def INPUTS(self): return self.keyword('INPUTS')
-
-    @property
-    def IN(self): return self.keyword('IN')
-
-    @property
-    def VARS(self): return self.keyword('VARS')
-
-    @property
     def BLOCKS(self): return self.keyword('BLOCKS')
-
-    @property
-    def JUMPS(self): return self.keyword('JUMPS')
 
     @property
     def BLOCK(self): return self.keyword('BLOCK')
@@ -61,31 +46,13 @@ class Color:
     def EMIT(self): return self.keyword('EMIT')
 
     @property
-    def JUMP(self): return self.keyword('JUMP')
-
-    @property
     def GOTO(self): return self.keyword('GOTO')
 
     @property
-    def STOP(self): return self.keyword('STOP')
+    def MANY(self): return self.keyword('MANY')
 
     @property
-    def IF(self): return self.keyword('IF')
-
-    @property
-    def THEN(self): return self.keyword('THEN')
-
-    @property
-    def ELSE(self): return self.keyword('ELSE')
-
-    @property
-    def FROM(self): return self.keyword('FROM')
-
-    @property
-    def TO(self): return self.keyword('TO')
-
-    @property
-    def WITH(self): return self.keyword('WITH')
+    def ONE(self): return self.keyword('ONE')
 
     @property
     def WHERE(self): return self.keyword('WHERE')
@@ -95,15 +62,6 @@ class Color:
 
     @property
     def AND(self): return self.keyword('AND')
-
-    @property
-    def TRUE(self): return self.keyword('TRUE')
-
-    @property
-    def LOOP(self): return self.keyword('LOOP')
-
-    @property
-    def AS(self): return self.keyword('AS')
 
     def operator(self, op: str) -> str:
         if self.active:
@@ -153,11 +111,17 @@ class Color:
         else:
             return label.label
 
+    def external(self, content: str) -> str:
+        if self.active:
+            return f"\033[2m{content}\033[0m"
+        else:
+            return content
+
 
 STYLE = Color()
 
 
-def pretty(node: CFG.Node) -> str:
+def pretty(node: CFG.Graph | CFG.Block | CFG.Action | CFG.Terminal | CFG.TerminalType | grammar.Assignment | grammar.Valuedness | grammar.Argument | grammar.Expression) -> str:
     match node:
         case CFG.Graph(entry_label, blocks):
             blocks = (
@@ -171,25 +135,41 @@ def pretty(node: CFG.Node) -> str:
                 {STYLE.BLOCKS} {STYLE.LBRACE}{blocks}{STYLE.RBRACE}
             """)[1:-1]
 
-        case CFG.Block(block_label, statements, terminals):
-            statements = (
-                _indent(f'{STYLE.SEMI}\n'.join(map(pretty, statements)), ' '*18) +
-                STYLE.SEMI * (0 < len(statements))
-            )
+        case CFG.Block(block_label, action, terminals):
+            action = pretty(action) if action is not None else ""
             terminals = _indent('\n'.join(map(pretty, terminals)), ' '*18)
 
             return dedent(f"""
                 {STYLE.BLOCK} {STYLE.label(block_label)} {STYLE.LBRACE}
-                  {statements}{('\n' + ' ' * 18) * bool(statements)}{terminals}
+                  {action}{('\n' + ' ' * 18) * bool(action)}{terminals}
                 {STYLE.RBRACE}
             """)[1:-1]
 
-        case CFG.Assignment(variable, expression):
-            indent_len = len(variable.identifier) + 5
-            return f"{variable} {STYLE.LARROW} {_indent(str(expression), ' '*indent_len)}"
+        case CFG.ReducingAssignment(assignment):
+            return pretty(assignment)
+
+        case CFG.SpanningAssignments(assignments):
+            return "\n".join(map(pretty, assignments))
+
+        case grammar.Assignment(_, variables, expression):
+            variables = ", ".join(variable.identifier for variable in variables)
+            indent_len = len(variables) + 5
+            return f"{variables} {STYLE.LARROW} {_indent(pretty(expression), ' '*indent_len)}"
+
+        case grammar.Expression(_, valuedness, source, arguments):
+            return f"{pretty(valuedness)} §{STYLE.external(source)}§[{', '.join(map(pretty, arguments))}]"
+
+        case grammar.Argument(_, valuedness, variable):
+            return f"{pretty(valuedness)} {variable.identifier}"
+
+        case grammar.Valuedness.SET:
+            return STYLE.MANY
+
+        case grammar.Valuedness.SCALAR:
+            return STYLE.ONE
 
         case CFG.Terminal(type, truthy_vars, falsey_vars):
-            predicate = " AND ".join(chain(
+            predicate = f" {STYLE.AND} ".join(chain(
                 (                  var.identifier for var in truthy_vars),
                 (f"{STYLE.NOT} " + var.identifier for var in falsey_vars),
             ))
@@ -197,11 +177,8 @@ def pretty(node: CFG.Node) -> str:
                 predicate = f" {STYLE.WHERE} {predicate}"
             return pretty(type) + predicate
 
-        case CFG.Emit(to_emit):
-            return f"{STYLE.EMIT} {to_emit!s}"
-
-        case CFG.Jump(target):
-            return f"{STYLE.JUMP} {STYLE.label(target)}"
+        case CFG.Emit(emit):
+            return f"{STYLE.EMIT} {', '.join(map(str, emit.to_emit))}"
 
         case CFG.GoTo(target):
             return f"{STYLE.GOTO} {STYLE.label(target)}"

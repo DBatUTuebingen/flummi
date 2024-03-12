@@ -1,0 +1,9 @@
+CALL (ONE §SELECT 10§[]) IN
+FUN (x: §int§) -> ONE §int§: {
+  y: §int§;
+  y <- MANY §SELECT UNNEST(RANGE({x})) FROM {state}§[ONE x];
+  y <- ONE §SELECT {y} + 1 FROM {state}§[ONE y];
+  y <- ONE §SELECT PRODUCT({y}) :: int FROM {state}§[MANY y];
+  EMIT y;
+  STOP
+}

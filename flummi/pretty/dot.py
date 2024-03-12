@@ -44,7 +44,7 @@ def dot(graph: CFG.Graph, font: str = "PragmataPro") -> str:
     )
     edges = "\n  ".join(chain.from_iterable(
         (
-          f'"{label.label}" -> "{successor.label}" [{[GOTO_STYLE, JUMP_STYLE][successor in CFG.jumps(block)]}];'
+          f'"{label.label}" -> "{successor.label}" [{GOTO_STYLE}];'
           for successor in CFG.successors(block)
         )
         for label, block in graph.blocks.items()

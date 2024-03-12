@@ -1,18 +1,18 @@
 from __future__ import annotations
-from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum, unique
 
 
 __all__ = (
+    "Location",
     "Variable",
+    "Valuedness",
     "Expression",
+    "Argument",
     "Type",
     "Program",
     "Function",
     "Statement",
-    "Loop",
-    "Continue",
-    "Break",
     "If",
     "Emit",
     "Stop",
@@ -25,76 +25,73 @@ __all__ = (
 
 
 @dataclass
-class Variable:
+class Location:
+    line: int
+    column: int
+
+
+@dataclass
+class Node:
+    location: Location = field(hash=False, compare=False)
+
+
+@dataclass(unsafe_hash=True)
+class Variable(Node):
     identifier: str
 
-    def __hash__(self) -> int:
-        return hash(self.identifier)
 
-    def __str__(self) -> str:
-        return self.identifier
+@unique
+class Valuedness(Enum):
+    SCALAR = "ONE"
+    SET = "MANY"
 
 
 @dataclass
-class Expression:
+class Expression(Node):
+    valuedness: Valuedness
     source: str
-    free_variables: list[Variable]
-
-    def __str__(self) -> str:
-        return f"§{self.source!s}§[{', '.join(map(str, self.free_variables))}]"
+    arguments: list[Argument]
 
 
 @dataclass
-class Type:
+class Argument(Node):
+    valuedness: Valuedness
+    variable: Variable
+
+
+@dataclass
+class Type(Node):
     source: str
 
-    def __str__(self) -> str:
-        return f"§{self.source!s}§"
-
 
 @dataclass
-class Program:
-    inputs: list[Expression]
+class Program(Node):
+    inputs: Expression | None
     function: Function
 
 
 @dataclass
-class Function:
+class Function(Node):
     parameters: dict[Variable, Type]
-    emits: Type
+    valuedness: Valuedness
+    emits: tuple[Type, ...]
     body: Statement
 
 
-class Statement(ABC):
+class Statement(Node):
     ...
 
 
 @dataclass
-class Loop(Statement):
-    name: str
-    body: Statement
-
-
-@dataclass
-class Continue(Statement):
-    name: str
-
-
-@dataclass
-class Break(Statement):
-    name: str
-
-
-@dataclass
 class If(Statement):
-    condition: Expression
+    condition: Variable
     truthy_branch: Statement
     falsey_branch: Statement
 
 
 @dataclass
 class Emit(Statement):
-    to_emit: Expression
+    to_emit: list[Variable]
 
 
 @dataclass
@@ -110,7 +107,7 @@ class Declaration(Statement):
 
 @dataclass
 class Assignment(Statement):
-    variable: Variable
+    variables: list[Variable]
     expression: Expression
 
 

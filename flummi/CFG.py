@@ -8,12 +8,13 @@ __all__ = (
     "BlockLabel",
     "Graph",
     "Block",
-    "Assignment",
+    "Action",
+    "SpanningAssignments",
+    "ReducingAssignment",
     "Terminal",
     "TerminalType",
-    "Emit",
-    "Jump",
     "GoTo",
+    "Emit",
 )
 
 
@@ -34,19 +35,27 @@ class Graph:
 @dataclass
 class Block:
     label: BlockLabel
-    assignments: list[Assignment]
+    action: Action | None
     terminals: list[Terminal]
 
 
-@dataclass
-class Assignment:
-    variable: grammar.Variable
-    expression: grammar.Expression
+class Action(ABC):
+    ...
 
 
 @dataclass
-class Terminal[T]:
-    type: T
+class SpanningAssignments(Action):
+    assignments: list[grammar.Assignment]
+
+
+@dataclass
+class ReducingAssignment(Action):
+    assignment: grammar.Assignment
+
+
+@dataclass
+class Terminal:
+    type: TerminalType
     truthy: list[grammar.Variable] = field(default_factory=list)
     falsey: list[grammar.Variable] = field(default_factory=list)
 
@@ -54,43 +63,20 @@ class Terminal[T]:
 class TerminalType(ABC):
     ...
 
-@dataclass
-class Emit(TerminalType):
-    to_emit: grammar.Variable
-
-
-@dataclass
-class Jump(TerminalType):
-    label: BlockLabel
-
 
 @dataclass
 class GoTo(TerminalType):
-    label: BlockLabel
+    target: BlockLabel
 
 
-type Node = Graph | Block | Assignment | Emit | Terminal | TerminalType
+@dataclass
+class Emit(TerminalType):
+    emit: grammar.Emit
 
 
 def successors(block: Block) -> set[BlockLabel]:
     return {
-        terminal.type.label
-        for terminal in block.terminals
-        if isinstance(terminal.type, (Jump, GoTo))
-    }
-
-
-def jumps(block: Block) -> set[BlockLabel]:
-    return {
-        terminal.type.label
-        for terminal in block.terminals
-        if isinstance(terminal.type, Jump)
-    }
-
-
-def gotos(block: Block) -> set[BlockLabel]:
-    return {
-        terminal.type.label
+        terminal.type.target
         for terminal in block.terminals
         if isinstance(terminal.type, GoTo)
     }
@@ -104,29 +90,28 @@ def emits(block: Block) -> list[Emit]:
     ]
 
 
-def emited_variables(block: Block) -> list[grammar.Variable]:
-    return [
-        emit.to_emit
-        for emit in emits(block)
-    ]
-
-
-def contains_jumps(block: Block) -> bool:
-    return bool(jumps(block))
+def emited_variables(block: Block) -> set[grammar.Variable]:
+    return set(sum(
+        (
+            emit.emit.to_emit
+            for emit in emits(block)
+        ),
+        start=[]
+    ))
 
 
 def contains_emits(block: Block) -> bool:
     return bool(emits(block))
 
 
-def free_variables(node: Node) -> set[grammar.Variable]:
+def free_variables(node: Block | Terminal | Emit | TerminalType | Action) -> set[grammar.Variable]:
     match node:
-        case Block(_, assignments, terminals):
-            assigned, vars = set(), set()
-
-            for assignment in assignments:
-                assigned.add(assignment.variable)
-                vars |= free_variables(assignment)
+        case Block(_, action, terminals):
+            if action is not None:
+                vars = free_variables(action)
+                assigned = bound_variables(action)
+            else:
+                vars, assigned = set(), set()
 
             for terminal in terminals:
                 vars |= free_variables(terminal) - assigned
@@ -136,11 +121,23 @@ def free_variables(node: Node) -> set[grammar.Variable]:
         case Terminal(type, truthy, falsey):
             return {*truthy, *falsey} | free_variables(type)
 
-        case Emit(to_emit):
-            return {to_emit}
+        case Emit(emit):
+            return set(emit.to_emit)
 
-        case Assignment(_, expression):
-            return set(expression.free_variables)
+        case SpanningAssignments(assignments):
+            vars = set()
+            for assignment in assignments:
+                vars |= {
+                    argument.variable
+                    for argument in assignment.expression.arguments
+                }
+            return vars
+
+        case ReducingAssignment(assignment):
+            return {
+                argument.variable
+                for argument in assignment.expression.arguments
+            }
 
         case _:
             return set()
@@ -154,8 +151,23 @@ def condition_variables(terminal: Terminal) -> set[grammar.Variable]:
             return set()
 
 
-def bound_variables(block: Block) -> set[grammar.Variable]:
-    return {
-        assignment.variable
-        for assignment in block.assignments
-    }
+def bound_variables(node: Block | Action) -> set[grammar.Variable]:
+    match node:
+        case Block(_, action, _):
+            if action is not None:
+                return bound_variables(action)
+            else:
+                return set()
+
+        case SpanningAssignments(assignments):
+            vars = set()
+            for assignment in assignments:
+                vars.update(assignment.variables)
+            return vars
+
+        case ReducingAssignment(assignment):
+            return set(assignment.variables)
+
+        case _:
+            return set()
+

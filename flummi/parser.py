@@ -4,12 +4,16 @@ import re
 from textwrap import dedent
 from typing import Callable, Iterator
 
-from . import grammar
+from . import grammar, errors
 
 
 __all__ = (
     "parse",
 )
+
+
+class ParseError(errors.FlummiError, name="Syntax"):
+    ...
 
 
 def parse(source: str) -> grammar.Program:
@@ -35,14 +39,13 @@ class TokenType(Enum):
     CALL = r"CALL"
     IN = r"IN"
     FUN = r"FUN"
-    LOOP = r"LOOP"
-    CONTINUE = r"CONTINUE"
-    BREAK = r"BREAK"
     THEN = r"THEN"
     ELSE = r"ELSE"
     EMIT = r"EMIT"
     STOP = r"STOP"
     NOOP = r"NOOP"
+    ONE = r"ONE"
+    MANY = r"MANY"
     IDENTIFIER = r"[a-zA-Z_][a-zA-Z_0-9]*"
     COMMENT = r"--[^\n]*"
     NEWLINE = r"\n"
@@ -55,6 +58,10 @@ class Token:
     value: str
     line: int
     column: int
+
+    @property
+    def location(self) -> grammar.Location:
+        return grammar.Location(self.line, self.column)
 
 
 def tokenize(code: str) -> Iterator[Token]:
@@ -85,12 +92,8 @@ class Parser:
     def __post_init__(self):
         self.advance()
 
-    def error(self, msg: str) -> SyntaxError:
-        return SyntaxError(
-            msg + f" (at {self.current.line}:{self.current.column})",
-            self.current.line,
-            self.current.column,
-        )
+    def error(self, msg: str) -> ParseError:
+        return ParseError(msg, self.current.location)
 
     @property
     def done(self) -> bool:
@@ -157,46 +160,75 @@ class Parser:
                 return
 
     def parse_expression(self) -> grammar.Expression:
+        location = self.current.location
+        valuedness = self.parse_valuedness()
         value = self.expectv(TokenType.EXTERNAL)[1:-1]
         self.expect(TokenType.LEFT_BRACKET)
         if self.match(TokenType.RIGHT_BRACKET):
-            free_variables = []
+            arguments = []
         else:
-            free_variables = list(self.sequence(TokenType.COMMA, self.parse_variable))
+            arguments = list(self.sequence(TokenType.COMMA, self.parse_argument))
             self.expect(TokenType.RIGHT_BRACKET)
         return grammar.Expression(
+            location=location,
+            valuedness=valuedness,
             source=dedent(value).strip(),
-            free_variables=free_variables
+            arguments=arguments
+        )
+
+    def parse_valuedness(self) -> grammar.Valuedness:
+        if self.match(TokenType.MANY):
+            return grammar.Valuedness.SET
+        elif self.match(TokenType.ONE):
+            return grammar.Valuedness.SCALAR
+        else:
+            raise self.error("Expected either MANY or ONE")
+
+    def parse_argument(self) -> grammar.Argument:
+        location = self.current.location
+        valuedness = self.parse_valuedness()
+        variable = self.parse_variable()
+        return grammar.Argument(
+            location=location,
+            valuedness=valuedness,
+            variable=variable,
         )
 
     def parse_variable(self) -> grammar.Variable:
+        location = self.current.location
         identifier = self.expectv(TokenType.IDENTIFIER)
         return grammar.Variable(
+            location=location,
             identifier=identifier
         )
 
     def parse_type(self) -> grammar.Type:
+        location = self.current.location
         value = self.expectv(TokenType.EXTERNAL)[1:-1]
         return grammar.Type(
+            location=location,
             source=value
         )
 
     def parse_program(self) -> grammar.Program:
+        location = self.current.location
         self.expect(TokenType.CALL)
         self.expect(TokenType.LEFT_PAREN)
         if self.match(TokenType.RIGHT_PAREN):
-            inputs = []
+            inputs = None
         else:
-          inputs = list(self.sequence(TokenType.COMMA, self.parse_expression))
-          self.expect(TokenType.RIGHT_PAREN)
+            inputs = self.parse_expression()
+            self.expect(TokenType.RIGHT_PAREN)
         self.expect(TokenType.IN)
         function = self.parse_function()
         return grammar.Program(
+            location=location,
             inputs=inputs,
             function=function
         )
 
     def parse_function(self) -> grammar.Function:
+        location = self.current.location
         self.expect(TokenType.FUN)
         self.expect(TokenType.LEFT_PAREN)
         if self.match(TokenType.RIGHT_PAREN):
@@ -208,24 +240,23 @@ class Parser:
             }
             self.expect(TokenType.RIGHT_PAREN)
         self.expect(TokenType.RIGHT_ARROW)
-        emits = self.parse_type()
+        valuedness = self.parse_valuedness()
+        emits = [self.parse_type()]
+        while self.match(TokenType.COMMA):
+            emits.append(self.parse_type())
         self.expect(TokenType.COLON)
         body = self.parse_statement()
 
         return grammar.Function(
+            location=location,
             parameters=parameters,
-            emits=emits,
+            valuedness=valuedness,
+            emits=tuple(emits),
             body=body
         )
 
     def parse_statement(self) -> grammar.Statement:
-        if self.lookahead(TokenType.LOOP):
-            return self.parse_loop()
-        elif self.lookahead(TokenType.CONTINUE):
-            return self.parse_continue()
-        elif self.lookahead(TokenType.BREAK):
-            return self.parse_break()
-        elif self.lookahead(TokenType.IF):
+        if self.lookahead(TokenType.IF):
             return self.parse_if()
         elif self.lookahead(TokenType.EMIT):
             return self.parse_emit()
@@ -242,64 +273,58 @@ class Parser:
         else:
             raise self.error("Expected statement")
 
-    def parse_loop(self) -> grammar.Loop:
-        self.expect(TokenType.LOOP)
-        name = self.expectv(TokenType.IDENTIFIER)
-        body = self.parse_statement()
-        return grammar.Loop(
-            name=name,
-            body=body
-        )
-
-    def parse_continue(self) -> grammar.Continue:
-        self.expect(TokenType.CONTINUE)
-        name = self.expectv(TokenType.IDENTIFIER)
-        return grammar.Continue(name)
-
-    def parse_break(self) -> grammar.Break:
-        self.expect(TokenType.BREAK)
-        name = self.expectv(TokenType.IDENTIFIER)
-        return grammar.Break(name)
-
     def parse_if(self) -> grammar.If:
+        location = self.current.location
         self.expect(TokenType.IF)
-        condition = self.parse_expression()
+        condition = self.parse_variable()
         self.expect(TokenType.THEN)
         truthy_branch = self.parse_statement()
         self.expect(TokenType.ELSE)
         falsey_branch = self.parse_statement()
         return grammar.If(
+            location=location,
             condition=condition,
             truthy_branch=truthy_branch,
             falsey_branch=falsey_branch
         )
 
     def parse_emit(self) -> grammar.Emit:
+        location = self.current.location
         self.expect(TokenType.EMIT)
-        to_emit = self.parse_expression()
+        to_emit = [self.parse_variable()]
+        while self.match(TokenType.COMMA):
+            to_emit.append(self.parse_variable())
         return grammar.Emit(
+            location=location,
             to_emit=to_emit
         )
 
     def parse_declaration(self) -> grammar.Declaration:
+        location = self.current.location
         variable = self.parse_variable()
         self.expect(TokenType.COLON)
         type = self.parse_type()
         return grammar.Declaration(
+            location=location,
             variable=variable,
             type=type
         )
 
     def parse_assignment(self) -> grammar.Assignment:
-        variable = self.parse_variable()
+        location = self.current.location
+        variables = [self.parse_variable()]
+        while self.match(TokenType.COMMA):
+            variables.append(self.parse_variable())
         self.expect(TokenType.LEFT_ARROW)
         expression = self.parse_expression()
         return grammar.Assignment(
-            variable=variable,
+            location=location,
+            variables=variables,
             expression=expression
         )
 
     def parse_block(self) -> grammar.Block:
+        location = self.current.location
         self.expect(TokenType.LEFT_BRACE)
         if self.match(TokenType.RIGHT_BRACE):
             statements = []
@@ -307,13 +332,20 @@ class Parser:
             statements = list(self.sequence(TokenType.SEMICOLON, self.parse_statement))
             self.expect(TokenType.RIGHT_BRACE)
         return grammar.Block(
+            location=location,
             statements=statements
         )
 
     def parse_stop(self) -> grammar.Stop:
+        location = self.current.location
         self.expect(TokenType.STOP)
-        return grammar.Stop()
+        return grammar.Stop(
+            location=location
+        )
 
     def parse_noop(self) -> grammar.NoOp:
+        location = self.current.location
         self.expect(TokenType.NOOP)
-        return grammar.NoOp()
+        return grammar.NoOp(
+            location=location
+        )
