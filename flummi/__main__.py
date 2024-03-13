@@ -96,8 +96,14 @@ def main():
                 if arguments.setup is not None:
                     duckdb.sql(arguments.setup.read())
 
-                for emitted_value in interpret(ast, symbol_table):
-                    print(*map(repr, emitted_value), sep=", ")
+                for inputs, results in interpret(ast, symbol_table):
+                    pretty_inputs = f"{inputs} -> "
+                    print(
+                        pretty_inputs +
+                        ("\n" + " " * len(pretty_inputs)).join(
+                            ", ".join(map(str, result)) for result in results
+                        )
+                    )
 
             case "analyze":
                 print("ok")

@@ -82,7 +82,7 @@ def tokenize(code: str) -> Iterator[Token]:
         yield Token(token_type, value, line, column)
 
 
-@dataclass
+@dataclass(slots=True)
 class Parser:
     stream: Iterator[Token]
     _done: bool = False
