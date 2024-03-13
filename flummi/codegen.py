@@ -158,6 +158,12 @@ class CodeGen:
 
         result_column_sql = f'"%result%"{f" {self.emit_type_sql}" * is_with_mutually_recursive}'
 
+        trace_column_head_sql = (
+            f', "%trace%"{" json" * is_with_mutually_recursive}'
+            if self.include_trace else
+            ""
+        )
+
         trace_column_sql = (
             ', "%trace%"'
             if self.include_trace else
@@ -166,6 +172,12 @@ class CodeGen:
 
         trace_null_column_sql = (
             'CAST(NULL AS json) AS "%trace%"'
+            if self.include_trace else
+            ""
+        )
+
+        step_column_head_sql = (
+            f', "%step%"{" int" * is_with_mutually_recursive}'
             if self.include_trace else
             ""
         )
@@ -188,6 +200,12 @@ class CodeGen:
             ""
         )
 
+        ordinaltiy_column_head_sql = (
+            f', "%ordinality%"{" int" * is_with_mutually_recursive}'
+            if self.include_emit_order else
+            ""
+        )
+
         ordinaltiy_column_sql = (
             ', "%ordinality%"'
             if self.include_emit_order else
@@ -202,7 +220,7 @@ class CodeGen:
 
         return dedent(f"""
         {with_sql}
-          "%loop%"({kind_column_sql}, {label_column_sql}{working_table_columns_sql}, {result_column_sql}{trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}) AS (
+          "%loop%"({kind_column_sql}, {label_column_sql}{working_table_columns_sql}, {result_column_sql}{trace_column_head_sql}{step_column_head_sql}{ordinaltiy_column_head_sql}) AS (
             SELECT 'jump' AS "%kind%",
                    '{graph.entry_label.label}' AS "%label%",
                    {initial_row_sql}{(',\n' + ' ' * 19) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 19) * (self.include_trace or self.include_emit_order)}{trace_null_column_sql}{(',\n' + ' ' * 20) * self.include_trace}{step_zero_column_sql}{', ' * (self.include_trace and self.include_emit_order)}{ordinaltiy_zero_column_sql}
@@ -290,6 +308,12 @@ class CodeGen:
 
         result_column_sql = f'"%result%"{f" {self.emit_type_sql}" * self.materializedb_flavor}'
 
+        trace_column_head_sql = (
+            f', "%trace%"{" json" * self.materializedb_flavor}'
+            if self.include_trace else
+            ""
+        )
+
         trace_column_sql = (
             ', "%trace%"'
             if self.include_trace else
@@ -298,6 +322,12 @@ class CodeGen:
 
         trace_null_column_sql = (
             'CAST(NULL AS json) AS "%trace%"'
+            if self.include_trace else
+            ""
+        )
+
+        step_column_head_sql = (
+            f', "%step%"{" int" * self.materializedb_flavor}'
             if self.include_trace else
             ""
         )
@@ -320,6 +350,12 @@ class CodeGen:
             ""
         )
 
+        ordinaltiy_column_head_sql = (
+            f', "%ordinality%"{" int" * self.materializedb_flavor}'
+            if self.include_emit_order else
+            ""
+        )
+
         ordinaltiy_column_sql = (
             ', "%ordinality%"'
             if self.include_emit_order else
@@ -334,7 +370,7 @@ class CodeGen:
 
         return dedent(f"""
         {with_sql}
-          "%loop%"({kind_column_sql}, {label_column_sql}{working_table_columns_sql}, {result_column_sql}{trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}) AS (
+          "%loop%"({kind_column_sql}, {label_column_sql}{working_table_columns_sql}, {result_column_sql}{trace_column_head_sql}{step_column_head_sql}{ordinaltiy_column_head_sql}) AS (
             (SELECT 'jump' AS "%kind%",
                     '{graph.entry_label.label}' AS "%label%",
                     {initial_row_sql}{(',\n' + ' ' * 20) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 20) * (self.include_trace or self.include_emit_order)}{trace_null_column_sql}{(',\n' + ' ' * 20) * self.include_trace}{step_zero_column_sql}{', ' * (self.include_trace and self.include_emit_order)}{ordinaltiy_zero_column_sql})
@@ -469,8 +505,20 @@ class CodeGen:
 
         result_column_sql = f'"%result%"{f" {self.emit_type_sql}" * specify_column_types}'
 
+        trace_column_head_sql = (
+            f', "%trace%"{" json" * specify_column_types}'
+            if self.include_trace else
+            ""
+        )
+
         trace_column_sql = (
             ', "%trace%"'
+            if self.include_trace else
+            ""
+        )
+
+        step_column_head_sql = (
+            f', "%step%"{" int" * specify_column_types}'
             if self.include_trace else
             ""
         )
@@ -499,6 +547,12 @@ class CodeGen:
             ""
         )
 
+        ordinality_column_head_sql = (
+            f', "%ordinality%"{" int" * specify_column_types}'
+            if self.include_emit_order else
+            ""
+        )
+
         ordinality_column_sql = (
             ', "%ordinality%"'
             if self.include_emit_order else
@@ -512,7 +566,7 @@ class CodeGen:
         )
 
         return dedent(f"""
-        "{block.label.label}"({kind_column_sql}, {label_column_sql}{output_columns_head_sql}, {result_column_sql}{trace_column_sql}{step_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
+        "{block.label.label}"({kind_column_sql}, {label_column_sql}{output_columns_head_sql}, {result_column_sql}{trace_column_head_sql}{step_column_head_sql}{ordinality_column_head_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and (len(successor_info) + len(emits) + self.include_trace > 1))} (
           WITH
             "%inputs%"({input_columns_sql or '"%"'}{step_column_sql}{ordinality_column_sql}) AS{" MATERIALIZED" * (self.explicit_materialized and bool(emits) and bool(assignments))} (
               {
