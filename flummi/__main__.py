@@ -136,8 +136,15 @@ def main():
             print_intermediate(cfg, "1_optimize.flir")
             printer[2](pretty(cfg))
 
-            printer[1](f"\033[1;2m[2]\033[0;36m placing additional JUMPs\033[0m")
-            if Flag.JUMPS_ONLY in flags:
+            has_mutual_recursion = False  # Flag USE_MUTUAL_RECURSION is set and the program is not loopless
+
+            printer[1](f"\033[1;2m[2]\033[0;36m placing additional JUMPs or GOTOs\033[0m")
+            if Flag.USE_MUTUAL_RECURSION in flags:
+                for block in cfg.blocks.values():
+                    for label in cfg.blocks.keys():
+                        block.terminal, were_jumps_replaced = CFG.gotoify(block.terminal, label)
+                        has_mutual_recursion = has_mutual_recursion or were_jumps_replaced
+            elif Flag.JUMPS_ONLY in flags:
                 for block in cfg.blocks.values():
                     for label in cfg.blocks.keys():
                         block.terminal = CFG.jumpify(block.terminal, label)
@@ -175,7 +182,7 @@ def main():
                 include_emit_order=Flag.INCLUDE_EMIT_ORDINALITY in flags,
                 force_with_recursive=Flag.FORCE_WITH_RECURSIVE in flags,
                 materializedb_flavor=Flag.MATERIALIZEDB_FLAVOR in flags,
-                use_mutual_recursion=Flag.USE_MUTUAL_RECURSION in flags,
+                has_mutual_recursion=has_mutual_recursion
             )
 
             if arguments.output:

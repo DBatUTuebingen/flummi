@@ -184,3 +184,19 @@ def jumpify(terminal: Terminal, label: BlockLabel) -> Terminal:
             )
         case _:
             return terminal
+
+
+def gotoify(terminal: Terminal, label: BlockLabel) -> tuple[Terminal, bool]:
+    match terminal:
+        case Jump(_label) if _label == label:
+            return GoTo(label), True
+        case If(condition, truthy, falsey):
+            gotoified_truthy, were_jumps_replaced_truthy = gotoify(truthy, label)
+            gotoified_falsey, were_jumps_replaced_falsey = gotoify(falsey, label)
+            return If(
+                condition,
+                gotoified_truthy,
+                gotoified_falsey
+            ), (were_jumps_replaced_truthy or were_jumps_replaced_falsey)
+        case _:
+            return terminal, False
