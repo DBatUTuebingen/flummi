@@ -136,7 +136,7 @@ INSERT INTO "init"
                     vec.make(0.0, 0.0, -4.5)  -- camera position
                   ) AS rot_z,
                   vec.cross(
-                    vec.make(0.0, 1.0,  0.0), -- up vector
+                    vec.make(0.0,-1.0,  0.0), -- up vector
                     rot_z
                   ) AS rot_x,
                   vec.cross(rot_z, rot_x)  AS rot_y
