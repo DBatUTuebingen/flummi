@@ -1,19 +1,19 @@
 from __future__ import annotations
-from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 __all__ = (
+    "Location",
     "Variable",
     "Expression",
     "Type",
     "Program",
     "Function",
     "Statement",
-    "Loop",
-    "Continue",
-    "Break",
     "If",
+    "Loop",
+    "Break",
+    "Continue",
     "Emit",
     "Stop",
     "Declaration",
@@ -24,77 +24,76 @@ __all__ = (
 
 
 
+@dataclass(unsafe_hash=True, order=True)
+class Location:
+    line: int
+    column: int
+
+
 @dataclass
-class Variable:
+class Node:
+    location: Location = field(hash=False, compare=False)
+
+
+@dataclass(unsafe_hash=True, order=True)
+class Variable(Node):
     identifier: str
 
-    def __hash__(self) -> int:
-        return hash(self.identifier)
-
-    def __str__(self) -> str:
-        return self.identifier
-
 
 @dataclass
-class Expression:
+class Expression(Node):
     source: str
     free_variables: list[Variable]
 
-    def __str__(self) -> str:
-        return f"§{self.source!s}§[{', '.join(map(str, self.free_variables))}]"
-
 
 @dataclass
-class Type:
+class Type(Node):
     source: str
 
-    def __str__(self) -> str:
-        return f"§{self.source!s}§"
-
 
 @dataclass
-class Program:
-    inputs: list[Expression]
+class Program(Node):
+    inputs: Expression | None
     function: Function
 
 
 @dataclass
-class Function:
+class Function(Node):
     parameters: dict[Variable, Type]
-    emits: Type
+    emits: list[Type]
     body: Statement
 
 
-class Statement(ABC):
+class Statement(Node):
     ...
 
 
 @dataclass
 class Loop(Statement):
-    name: str
+    name: Variable
     body: Statement
 
 
 @dataclass
 class Continue(Statement):
-    name: str
+    name: Variable
 
 
 @dataclass
 class Break(Statement):
-    name: str
+    name: Variable
 
 
 @dataclass
 class If(Statement):
-    condition: Expression
+    condition: Variable
     truthy_branch: Statement
     falsey_branch: Statement
 
 
 @dataclass
 class Emit(Statement):
-    to_emit: Expression
+    to_emit: list[Variable]
 
 
 @dataclass
@@ -104,13 +103,13 @@ class Stop(Statement):
 
 @dataclass
 class Declaration(Statement):
-    variable: Variable
+    variables: list[Variable]
     type: Type
 
 
 @dataclass
 class Assignment(Statement):
-    variable: Variable
+    variables: list[Variable]
     expression: Expression
 
 

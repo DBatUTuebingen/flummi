@@ -1,27 +1,44 @@
-CALL (§suppkey§[], §orderkey§[]) IN
+CALL (§SELECT s_suppkey, o_orderkey FROM supplier, orders LIMIT 1§[]) IN
 FUN (suppkey: §int§, orderkey: §int§) -> §bool§: {
   current_item: §int§;
-  lineitem: §struct(l_receiptdate date, l_commitdate date, l_suppkey: int)§;
+  receiptdate: §date§;
+  commitdate: §date§;
+  other_suppkey: §int§;
   blame: §bool§;
   multi: §bool§;
+  condition: §bool§;
 
-  current_item <- §SELECT MAX(l.l_linenumber) FROM lineitem AS l WHERE l.l_orderkey = {0}§[orderkey];
+  multi <- §false§[];
+  blame <- §false§[];
+
+  current_item <- §
+    SELECT MAX(l.l_linenumber)
+    FROM   lineitem AS l
+    WHERE  l.l_orderkey = {0}
+  §[orderkey];
   LOOP loop {
-    IF §{0} < 1§[current_item]
+    condition <- §{0} < 1§[current_item];
+    IF condition
     THEN BREAK loop
     ELSE {
-      lineitem <- §
-        SELECT (l.l_receiptdate, l.l_commitdate, l.l_suppkey)
+      receiptdate, commitdate, other_suppkey <- §
+        SELECT l_receiptdate, l_commitdate, l_suppkey
         FROM   lineitem AS l
         WHERE  l.l_orderkey = {0}
         AND    l.l_linenumber = {1}
       §[orderkey, current_item];
 
-      multi <- §{0} OR {1}.l_suppkey <> {2}§[multi, lineitem, suppkey];
-      IF §{0}.l_receiptdate > {0}.l_commitdate§[lineitem]
+      multi <- §{0} OR {1} <> {2}§[multi, other_suppkey, suppkey];
+      condition <- §{0} > {1}§[receiptdate, commitdate];
+      IF condition
       THEN {
-        IF §{0}.l_suppkey <> {1}§[lineitem, suppkey]
-        THEN { EMIT §false§[]; STOP }
+        condition <- §{0} <> {1}§[other_suppkey, suppkey];
+        IF condition
+        THEN {
+          condition <- §false§[];
+          EMIT condition;
+          STOP
+        }
         ELSE blame <- §true§[]
       } ELSE NOOP;
 
@@ -29,6 +46,7 @@ FUN (suppkey: §int§, orderkey: §int§) -> §bool§: {
     }
   };
 
-  EMIT §{0} AND {1}§[multi, blame];
+  condition <- §{0} AND {1}§[multi, blame];
+  EMIT condition;
   STOP
 }

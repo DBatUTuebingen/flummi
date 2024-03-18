@@ -1,17 +1,17 @@
-CALL (§4§[], §5§[]) IN
+CALL (§SELECT 4, 10§[]) IN
 FUN (a: §int§, b: §int§) -> §int§: {
   c: §int§;
+  k: §bool§;
 
   c <- §0§[];
 
   LOOP multiplication_loop {
-    c <- §{0} + {1}§[a, c];
+    c, b <- §SELECT {0} + {1}, {2} - 1§[a, c, b];
 
-    EMIT §{0}§[c];
+    EMIT c;
 
-    b <- §{0} - 1§[b];
-
-    IF §0 = {0}§[b]
+    k <- §0 = {0}§[b];
+    IF k
       THEN BREAK multiplication_loop
       ELSE CONTINUE multiplication_loop
   };

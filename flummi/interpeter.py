@@ -1,127 +1,190 @@
 from collections.abc import Iterator
-from dataclasses import dataclass, field
-from itertools import chain
 from typing import Any
 
 import duckdb
 
-from . import grammar
+from . import grammar, errors, sql
+from .utils import _indent
+
 
 __all__ = (
     "interpret",
 )
 
 
-def interpret(program: grammar.Program, symbol_table: dict[grammar.Variable, grammar.Type]) -> Iterator[Any]:
-    yield from Interpreter(symbol_table).eval_program(program)
+class EvaluationError(errors.FlummiError, name="evaluation"):
+    ...
 
 
-# used to move up the call stack for BREAK, CONTINUE and STOP
-class LoopBreak(Exception): ...
-class LoopContinue(Exception): ...
-class Stop(Exception): ...
-
-
-@dataclass
-class Interpreter:
+def interpret(
+    program: grammar.Program,
     symbol_table: dict[grammar.Variable, grammar.Type]
-    environment: dict[grammar.Variable, duckdb.DuckDBPyRelation] = field(init=False, default_factory=dict)
-
-    def eval_program(self, program: grammar.Program)-> Iterator[Any]:
-        """
-        Assigns program arguments to function parameters and appends them at the front of the statement list of the function
-
-        Parameters: program (grammar.Program): program to be interpreted
-
-        Returns: None
-        """
-        try:
-            yield from self.eval_statement(grammar.Block([
-                *(
-                    grammar.Assignment(parameter, expression)
-                    for parameter, expression in zip(
-                        program.function.parameters,
-                        program.inputs
-                    )
+) -> Iterator[tuple[Any, ...]]:
+    if program.inputs is not None:
+        statement = grammar.Block(
+            program.location,
+            [
+                grammar.Assignment(
+                    program.inputs.location,
+                    list(program.function.parameters.keys()),
+                    program.inputs
                 ),
                 program.function.body
-            ]))
-        except Stop:
-            ...
+            ]
+        )
+    else:
+        statement = program.function.body
 
-    def eval_statement(self, statement: grammar.Statement) -> Iterator[Any]:
-        """
-        Goes through all statements of a function to return result(s)
+    query_cache: dict[grammar.Location, str] = {}
+    stack: list[grammar.Statement] = [statement]
+    environment: dict[str, Any] = {}
 
-        Parameters: statement (grammar.Statement): statement to be matched
+    while stack:
+        statement = stack.pop()
 
-        Returns: None
-
-        """
         match statement:
-            case grammar.Loop(name, body):
-                while(True):
-                    try:
-                        yield from self.eval_statement(body)
-                    except LoopBreak as e:
-                        if name == e.args[0]:
-                            break
-                        else:
-                            raise e
-                    except LoopContinue as e:
-                        if name == e.args[0]:
-                            continue
-                        else:
-                            raise e
-
-            case grammar.Continue(name):
-                raise LoopContinue(name)
-
-            case grammar.Break(name):
-                raise LoopBreak(name)
-
-            case grammar.If(condition, t_branch, f_branch):
-                yield from self.eval_statement(t_branch if self.eval_expression(condition) else f_branch)
-
-            case grammar.Emit(to_emit):
-                yield self.eval_expression(to_emit)
-
-            case grammar.Assignment(variable, expression):
-                self.environment[variable] = self.eval_expression(expression)
-
-            case grammar.Block(statements):
-                yield from chain.from_iterable(map(self.eval_statement, statements))
-
-            case grammar.Stop():
-                raise Stop()
-
             case grammar.NoOp():
                 ...
 
+            case grammar.Block(_, statements):
+                stack.extend(statements[::-1])
+
+            case grammar.Stop():
+                break
+
+            case grammar.Emit(_, variables):
+                yield tuple(
+                    environment[variable.identifier]
+                    for variable in variables
+                )
+
+            case grammar.If(_, condition, t_branch, f_branch):
+                choice = environment[condition.identifier]
+                if not isinstance(choice, bool):
+                    raise EvaluationError(
+                        "Condition is non-boolean.",
+                        condition.location,
+                        "",
+                        "Current scope:",
+                        *(
+                            f"{variable} := {value!r}"
+                            for variable, value in environment.items()
+                        ),
+                    )
+                stack.append(t_branch if choice else f_branch)
+
+            case grammar.Loop(_, name, body):
+                stack.append(statement)
+                stack.append(body)
+
+            case grammar.Continue(_, name) | grammar.Break(_, name):
+                while stack:
+                    next = stack.pop()
+                    match next:
+                        case grammar.Loop(_, _name, body) if name == _name:
+                            if isinstance(statement, grammar.Continue):
+                                stack.append(next)
+                            break
+                else:
+                    ...
+
+            case grammar.Assignment(location, variables, expression):
+                if location not in query_cache:
+                    try:
+                        query = sql.select(
+                            select_list=[
+                                sql.cast(
+                                    sql.variable(variable.identifier, row="_"),
+                                    symbol_table[variable].source
+                                )
+                                for variable in variables
+                            ],
+                            from_list=[
+                                sql.named(
+                                    sql.paren(
+                                        (
+                                            expression.source
+                                            if len(variables) > 1 else
+                                            f"SELECT ({expression.source})"
+                                        ).format(*(
+                                            f"(${i+1} :: {symbol_table[free_variable].source})"
+                                            for i, free_variable in enumerate(expression.free_variables)
+                                        ))
+                                    ),
+                                    name = "_",
+                                    columns=[
+                                        variable.identifier
+                                        for variable in variables
+                                    ]
+                                )
+                            ]
+                        )
+                    except Exception as e:
+                        raise EvaluationError(
+                            "Encountered an error during formatting of an "
+                            "embedded SQL expression.",
+                            expression.location,
+                            "",
+                            "Given Query:",
+                            expression.source,
+                            "",
+                            "Current scope:",
+                            *(
+                                f"{variable} := {value!r}"
+                                for variable, value in environment.items()
+                            ),
+                            "",
+                            "Error:",
+                            repr(e)
+                        ) from e
+
+                    query_cache[location] = query
+                else:
+                    query = query_cache[location]
+                parameters = [
+                    environment[free_variable.identifier]
+                    for free_variable in expression.free_variables
+                ]
+                try:
+                    row = duckdb.execute(query, parameters).fetchone()
+                except Exception as e:
+                    raise EvaluationError(
+                        "Encountered an error during evaluation of an "
+                        "embedded SQL expression.",
+                        expression.location,
+                        "",
+                        "Executed Query:",
+                        query,
+                        "",
+                        "Current scope:",
+                        *(
+                            f"{variable} := {value!r}"
+                            for variable, value in environment.items()
+                        ),
+                        "",
+                        "Error:",
+                        str(e)
+                    ) from e
+
+                if row is None:
+                    raise EvaluationError(
+                        "Embedded SQL expression produced no output.",
+                        expression.location,
+                        "",
+                        "Current scope:",
+                        *(
+                            f"{variable} := {value!r}"
+                            for variable, value in environment.items()
+                        ),
+                    )
+
+                environment.update(
+                    (variable.identifier, value)
+                    for variable, value in zip(variables, row)
+                )
+
             case _:
-                raise RuntimeError(f"Unsupported statement: {statement}")
-
-    def eval_expression(self, expression: grammar.Expression) -> Any:
-        """
-        Inserts values into placeholders, runs it as a DuckDB query and returns the result
-
-        Parameters: expression (grammar.Expression): expression to be queried
-
-        Returns: str: Value of the expression in as a str
-
-        """
-        result = duckdb.execute(
-            "SELECT " + expression.source.format(*(
-                f"(${i+1} :: {self.symbol_table[free_variable].source})"
-                for i, free_variable in enumerate(expression.free_variables)
-            )),
-            [
-                self.environment[free_variable]
-                for free_variable in expression.free_variables
-            ]
-        )
-
-        if (row := result.fetchone()) is not None:
-            return row[0]
-        else:
-            raise RuntimeError("Embedded SQL expression produced no rows.")
+                raise EvaluationError(
+                    "Encountered unsupported statement.",
+                    statement.location
+                )

@@ -1,10 +1,8 @@
 from dataclasses import dataclass
-from functools import reduce
 from collections.abc import Iterator
-from operator import or_
-from pprint import pprint
 
 from . import CFG, grammar
+from .utils import *
 from .label_graph import LabelGraph, collect_successors
 
 
@@ -24,12 +22,22 @@ def materialize_data_flow(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
 
     for label, block in graph.blocks.items():
         existing_bindings = CFG.bound_variables(block)
-        missing_bindings = union(map(CFG.free_variables, block.terminals))
-        for missing_binding in (outputs[label] | missing_bindings) - existing_bindings:
+        missing_bindings = (
+            (
+                outputs[label] |
+                union(map(CFG.free_variables, block.terminals))
+            ) -
+            existing_bindings
+        )
+        for binding in missing_bindings:
             block.assignments.append(
                 CFG.Assignment(
-                    missing_binding,
-                    grammar.Expression("{0}", [missing_binding])
+                    [binding],
+                    grammar.Expression(
+                        grammar.Location(-1,-1),
+                        "{0}",
+                        [binding]
+                    )
                 )
             )
 
@@ -37,10 +45,6 @@ def materialize_data_flow(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
         number_of_variables,
         number_of_loop_carried_variables
     )
-
-
-def union[T](sets: Iterator[set[T]]) -> set[T]:
-    return reduce(or_, sets, set())
 
 
 def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.BlockLabel, set[CFG.grammar.Variable]], set[CFG.grammar.Variable]]:

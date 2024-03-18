@@ -3,6 +3,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 
 from . import grammar
+from .utils import *
 
 __all__ = (
     "BlockLabel",
@@ -17,17 +18,15 @@ __all__ = (
 )
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class BlockLabel:
     label: str
-
-    def __hash__(self) -> int:
-        return hash(self.label)
 
 
 @dataclass
 class Graph:
     entry_label: BlockLabel
+    initialising_assignment: Assignment | None
     blocks: dict[BlockLabel, Block]
 
 
@@ -40,7 +39,7 @@ class Block:
 
 @dataclass
 class Assignment:
-    variable: grammar.Variable
+    variables: list[grammar.Variable]
     expression: grammar.Expression
 
 
@@ -56,7 +55,7 @@ class TerminalType(ABC):
 
 @dataclass
 class Emit(TerminalType):
-    to_emit: grammar.Variable
+    to_emit: list[grammar.Variable]
 
 
 @dataclass
@@ -105,10 +104,13 @@ def emits(block: Block) -> list[Emit]:
 
 
 def emited_variables(block: Block) -> list[grammar.Variable]:
-    return [
-        emit.to_emit
-        for emit in emits(block)
-    ]
+    return sum(
+        (
+            emit.to_emit
+            for emit in emits(block)
+        ),
+        start=[]
+    )
 
 
 def contains_jumps(block: Block) -> bool:
@@ -125,7 +127,7 @@ def free_variables(node: Node) -> set[grammar.Variable]:
             assigned, vars = set(), set()
 
             for assignment in assignments:
-                assigned.add(assignment.variable)
+                assigned.update(assignment.variables)
                 vars |= free_variables(assignment)
 
             for terminal in terminals:
@@ -137,7 +139,7 @@ def free_variables(node: Node) -> set[grammar.Variable]:
             return {*truthy, *falsey} | free_variables(type)
 
         case Emit(to_emit):
-            return {to_emit}
+            return set(to_emit)
 
         case Assignment(_, expression):
             return set(expression.free_variables)
@@ -155,7 +157,7 @@ def condition_variables(terminal: Terminal) -> set[grammar.Variable]:
 
 
 def bound_variables(block: Block) -> set[grammar.Variable]:
-    return {
-        assignment.variable
+    return union(
+        assignment.variables
         for assignment in block.assignments
-    }
+    )

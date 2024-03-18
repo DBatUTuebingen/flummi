@@ -1,134 +1,254 @@
-from warnings import warn
+from dataclasses import dataclass, field, replace
 
-from . import grammar
+from . import grammar, errors
 
 __all__ = (
-  "analyze",
-  "SymbolTable",
+    "analyze",
+    "SymbolTable",
 )
 
 
+class AnalysisError(errors.FlummiError, name="analysis"):
+    ...
+
+
 type SymbolTable = dict[grammar.Variable, grammar.Type]
-type VariableBindings = dict[grammar.Variable, grammar.Expression]
 
 
-def analyze(program: grammar.Program) -> tuple[grammar.Program, SymbolTable, grammar.Type, VariableBindings]:
-  return Analyzer().analyze(program)
+def analyze(
+    program: grammar.Program
+) -> tuple[grammar.Program, SymbolTable]:
+    return Analyzer().analyze(program)
 
 
+@dataclass
 class Analyzer:
-  def __init__(self) -> None:
-    self._symbol_table: SymbolTable = {}
-    self._used_symbols: set[grammar.Variable] = set()
-    self._number_of_inputs: int = 0
-    self._loop_names: set[str] = set()
-    self._loop_scope: list[str] = []
-    self._emit_exists: bool = False
+    symbol_table     : SymbolTable                  = field(init=False, default_factory=dict)
+    bound_symbols    : set[grammar.Variable]        = field(init=False, default_factory=set)
+    number_of_inputs : int                          = field(init=False, default=0)
+    loop_names       : set[grammar.Variable]        = field(init=False, default_factory=set)
+    loop_scope       : list[grammar.Variable]       = field(init=False, default_factory=list)
+    loop_broken      : dict[grammar.Variable, bool] = field(init=False, default_factory=dict)
+    loop_stopped     : dict[grammar.Variable, bool] = field(init=False, default_factory=dict)
+    emit_exists      : bool                         = field(init=False, default=False)
 
-  def analyze(self, program: grammar.Program) -> tuple[grammar.Program, SymbolTable, grammar.Type, VariableBindings]:
-    self._number_of_inputs = len(program.inputs)
-    for input in program.inputs:
-      if len(input.free_variables) > 0:
-        raise ValueError("Input expression can't have free variables!")
+    def analyze(
+        self,
+        program: grammar.Program
+    ) -> tuple[grammar.Program, SymbolTable]:
+        if (
+            program.inputs is not None and
+            len(program.function.parameters) == 0
+        ):
+             raise AnalysisError(
+                  "Program supplies an input expression...",
+                  program.inputs.location,
+                  "",
+                  "...but the defined function did not expect one.",
+                  next(iter(program.function.parameters)).location
+             )
 
-    program.function, emit_type = self._analyze_function(program.function)
+        program.function = self.analyze_function(program.function)
 
-    variable_bindings = dict(zip(program.function.parameters.keys(),program.inputs))
+        return program, self.symbol_table
 
-    return program, self._symbol_table, emit_type, variable_bindings
+    def analyze_function(self, function: grammar.Function) -> grammar.Function:
+        self.symbol_table.update(function.parameters)
+        self.bound_symbols.update(function.parameters.keys())
 
-  def _analyze_function(self, function: grammar.Function) -> tuple[grammar.Function, grammar.Type]:
-    if len(function.parameters) != self._number_of_inputs:
-      raise ValueError("Number of inputs and function parameters do not match!")
-    self._symbol_table.update(function.parameters)
+        function.body, stopped, _ = self.analyze_statement(function.body)
 
-    function.body, elide = self._analyze_statement(function.body)
+        if not stopped:
+            raise AnalysisError(
+                "Not all linear control paths in this function are termianted "
+                "by a STOP statement.",
+                function.location
+            )
 
-    if elide:
-      warn("Found top expression to be elidable!", source="Analysis")
-      function.body = grammar.NoOp()
+        return function
 
-    if not self._emit_exists:
-      raise ValueError("Found no emits!")
+    def analyze_statement(
+        self,
+        statement: grammar.Statement
+    ) -> tuple[grammar.Statement, bool, bool]:
+        match statement:
+            case grammar.Block(location, statements):
+                if not statements:
+                    raise AnalysisError(
+                        "Found empty block.",
+                        location
+                    )
 
-    if not self._used_symbols.issubset(self._symbol_table):
-      raise ValueError(f"Found use of undeclared variables!")
+                new_statements = []
+                for child_statement in statements:
+                    new_child_statement, stopped, elide =\
+                        self.analyze_statement(child_statement)
 
-    return function, function.emits
+                    if not elide:
+                        new_statements.append(new_child_statement)
+                        if stopped:
+                            break
 
-  def _analyze_statement(self, statement: grammar.Statement) -> tuple[grammar.Statement, bool]:
-    match statement:
-      case grammar.NoOp():
-        return statement, True
+                return (
+                    replace(statement, statements=new_statements),
+                    stopped,
+                    len(new_statements) == 0
+                )
 
-      case grammar.Stop():
-        return statement, False
+            case grammar.Stop(_):
+                for loop_label in self.loop_scope:
+                    self.loop_stopped[loop_label] = True
 
-      case grammar.Emit(expression):
-        self._emit_exists = True
-        self._analyze_expression(expression)
-        return statement, False
+                return statement, True, False
 
-      case grammar.Declaration(variable, type):
-        if variable in self._symbol_table:
-          raise ValueError(f"Found re-declaration of {variable}!")
-        self._symbol_table[variable] = type
-        return statement, True
+            case grammar.NoOp(_):
+                return statement, False, True
 
-      case grammar.Assignment(variable, expression):
-        self._analyze_variable(variable)
-        self._analyze_expression(expression)
-        return statement, False
+            case grammar.Declaration(_, variables, type):
+                for variable in variables:
+                    if variable in self.symbol_table:
+                        original_declaration = next(
+                            _variable
+                            for _variable in self.symbol_table
+                            if _variable.identifier == variable.identifier
+                        )
+                        raise AnalysisError(
+                            "Found declaration of variable "
+                            f"{variable.identifier!r}...",
+                            variable.location,
+                            "",
+                            "...that was already declared at.",
+                            original_declaration.location
+                        )
+                    else:
+                        self.symbol_table[variable] = type
 
-      case grammar.Block(statements):
-        new_statements = []
-        for sub_statement in statements:
-          sub_statement, elide = self._analyze_statement(sub_statement)
-          if not elide:
-            new_statements.append(sub_statement)
-        return grammar.Block(new_statements), len(new_statements) == 0
+                return statement, False, True
 
-      case grammar.If(expression, truthy, falsey):
-        self._analyze_expression(expression)
-        truthy, elide_truthy = self._analyze_statement(truthy)
-        falsey, elide_falsey = self._analyze_statement(falsey)
-        return grammar.If(
-          expression,
-          grammar.NoOp() if elide_truthy else truthy,
-          grammar.NoOp() if elide_falsey else falsey,
-        ), elide_truthy and elide_falsey
+            case grammar.Assignment(_, variables, expression):
+                self.analyze_expression(expression)
 
-      case grammar.Loop(name, body):
-        if name in self._loop_names:
-          raise ValueError(f"Found reused loop name {name}")
-        self._loop_names.add(name)
-        self._loop_scope.append(name)
-        body, elide = self._analyze_statement(body)
-        del self._loop_scope[-1]
-        return grammar.Loop(name, body), elide
+                for variable in variables:
+                    self.analyze_variable_write(variable)
 
-      case grammar.Continue(name):
-        if name not in self._loop_names:
-          raise ValueError(f"Tried to continue unknown loop {name}")
-        if name not in self._loop_scope:
-          raise ValueError(f"Tried to continue out-of-scope loop {name}")
-        return statement, False
+                return statement, False, False
 
-      case grammar.Break(name):
-        if name not in self._loop_names:
-          raise ValueError(f"Tried to break unknown loop {name}")
-        if name not in self._loop_scope:
-          raise ValueError(f"Tried to break out-of-scope loop {name}")
-        return statement, False
+            case grammar.Emit(_, variables):
+                for variable in variables:
+                    self.analyze_variable_read(variable)
 
-      case _:
-        raise ValueError(f"Found unknown statement: {statement}")
+                return statement, False, False
 
-  def _analyze_expression(self, expression: grammar.Expression):
-    for free_variable in expression.free_variables:
-      self._analyze_variable(free_variable)
+            case grammar.If(_, condition, truthy_branch, falsey_branch):
+                self.analyze_variable_read(condition)
 
-  def _analyze_variable(self, variable: grammar.Variable):
-      if variable not in self._symbol_table:
-        warn(f"Use of possibly undeclared variable {variable}", source="Analysis")
-      self._used_symbols.add(variable)
+                truthy_branch, truthy_stopped, elide_truthy =\
+                    self.analyze_statement(truthy_branch)
+
+                falsey_branch, falsey_stopped, elide_falsey =\
+                    self.analyze_statement(falsey_branch)
+
+                return (
+                    replace(
+                        statement,
+                        truthy_branch=
+                            grammar.NoOp(truthy_branch.location)
+                            if elide_truthy else truthy_branch,
+                        falsey_branch=
+                            grammar.NoOp(falsey_branch.location)
+                            if elide_falsey else falsey_branch
+                    ),
+                    truthy_stopped and falsey_stopped,
+                    elide_truthy and elide_falsey
+                )
+
+            case grammar.Loop(location, loop_label, body):
+                if loop_label in self.loop_names:
+                    original_introduction = next(
+                        variable
+                        for variable in self.loop_names
+                        if variable.identifier == loop_label.identifier
+                    )
+                    raise AnalysisError(
+                        "Found introduction of loop label "
+                        f"{loop_label.identifier!r}...",
+                        loop_label.location,
+                        "",
+                        "...that was already introduced at.",
+                        original_introduction.location
+                    )
+
+                self.loop_names.add(loop_label)
+                self.loop_scope.append(loop_label)
+                self.loop_broken[loop_label] = False
+                self.loop_stopped[loop_label] = False
+
+                body, _, elide_body =\
+                    self.analyze_statement(body)
+
+                self.loop_scope.append(loop_label)
+                if (
+                    not self.loop_stopped[loop_label] and
+                    not self.loop_broken[loop_label]
+                ):
+                    raise AnalysisError(
+                        "Found loop containing neither a STOP statement nor "
+                        "a BREAK statement referencing either this loop or any "
+                        "of its parent loops.",
+                        location,
+                    )
+
+                return statement, self.loop_stopped[loop_label], elide_body
+
+            case grammar.Break(_, loop_label):
+                if loop_label not in self.loop_scope:
+                    raise AnalysisError(
+                        "Found break to unintroduced loop label "
+                        f"{loop_label.identifier!r}.",
+                        loop_label.location
+                    )
+
+                for _loop_label in self.loop_scope[::-1]:
+                    self.loop_broken[_loop_label] = True
+                    if loop_label == _loop_label:
+                        break
+
+                return statement, False, False
+
+            case grammar.Continue(_, loop_label):
+                if loop_label not in self.loop_scope:
+                    raise AnalysisError(
+                        "Found continue to unintroduced loop label "
+                        f"{loop_label.identifier!r}.",
+                        loop_label.location
+                    )
+
+                return statement, False, False
+
+            case _:
+                raise AnalysisError(
+                    "Found unknown statement.",
+                    statement.location
+                )
+
+    def analyze_expression(self, expression: grammar.Expression):
+        for variable in expression.free_variables:
+            self.analyze_variable_read(variable)
+
+    def analyze_variable_read(self, variable: grammar.Variable):
+        if variable not in self.bound_symbols:
+            raise AnalysisError(
+                "Found read from uninitialised variable "
+                f"{variable.identifier!r}.",
+                variable.location
+            )
+
+    def analyze_variable_write(self, variable: grammar.Variable):
+        if variable not in self.bound_symbols:
+            if variable not in self.symbol_table:
+                raise AnalysisError(
+                    "Found write to undeclared variable "
+                    f"{variable.identifier!r}.",
+                    variable.location
+                )
+        self.bound_symbols.add(variable)

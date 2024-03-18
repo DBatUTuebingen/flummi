@@ -1,30 +1,39 @@
-CALL (§c.c_custkey§[]) IN
+CALL (§SELECT c.c_custkey§[]) IN
 FUN (custkey: §int§) -> §text§: {
-  ground: §int§;
-  air   : §int§;
-  mail  : §int§;
+  ground_count: §int§;
+  air_count   : §int§;
+  mail_count  : §int§;
 
-  ground <- §
-    SELECT COUNT(*)
+  is_ground   : §bool§;
+  is_air      : §bool§;
+  is_mail     : §bool§;
+
+  ground_label : §text§;
+  air_label    : §text§;
+  mail_label   : §text§;
+
+  ground_label, air_label, mail_label <- §
+    SELECT 'ground', 'air', 'mail'
+  §[];
+
+  ground_count, air_count, mail_count <- §
+    SELECT COUNT(* WHERE l.l_shipmode = 'GROUND'),
+           COUNT(* WHERE l.l_shipmode = 'AIR'   ),
+           COUNT(* WHERE l.l_shipmode = 'MAIL'  )
     FROM   lineitem AS l, orders AS o
     WHERE  l.l_orderkey = o.o_orderkey AND o.o_custkey = {0}
-    AND    l.l_shipmode IN ('RAIL', 'TRUCK')
-  §[custkey];
-  air <- §
-    SELECT COUNT(*)
-    FROM   lineitem AS l, orders AS o
-    WHERE  l.l_orderkey = o.o_orderkey AND o.o_custkey = {0}
-    AND    l.l_shipmode IN ('AIR', 'AIR REG')
-  §[custkey];
-  mail <- §
-    SELECT COUNT(*)
-    FROM   lineitem AS l, orders AS o
-    WHERE  l.l_orderkey = o.o_orderkey AND o.o_custkey = {0}
-    AND    l.l_shipmode = 'MAIL'
   §[custkey];
 
-  IF §{0} >= {1} AND {0} >= {2}§[ground,air,mail] THEN EMIT §'ground'§[] ELSE
-  IF §{0} >= {1} AND {0} >= {2}§[air,ground,mail] THEN EMIT §'air'§[]    ELSE
-  IF §{0} >= {1} AND {0} >= {2}§[mail,ground,air] THEN EMIT §'mail'§[]   ELSE
+  is_ground, is_air, is_mail <- §
+    SELECT {0} >= {1} AND {0} >= {2},
+           {1} >= {0} AND {1} >= {2},
+           {2} >= {0} AND {2} >= {1}
+  §[ground_count,air_count,mail_count];
+
+  IF is_ground THEN EMIT ground_label ELSE
+  IF is_air    THEN EMIT air_label    ELSE
+  IF is_mail   THEN EMIT mail_label   ELSE
+  NOOP;
+
   STOP
 }

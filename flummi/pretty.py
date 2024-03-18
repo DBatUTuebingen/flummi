@@ -1,17 +1,8 @@
 from itertools import chain
 from textwrap import indent, dedent
 
-from .. import CFG
-
-
-def _indent(lines: str, prefix: str):
-    out = ""
-    for i, line in enumerate(lines.splitlines(keepends=True)):
-        if i > 0:
-            out += prefix + line
-        else:
-            out += line
-    return out
+from . import CFG
+from .utils import _indent
 
 
 class Color:
@@ -37,22 +28,10 @@ class Color:
     def ENTRYPOINT(self): return self.keyword('ENTRYPOINT')
 
     @property
-    def EMITS(self): return self.keyword('EMITS')
-
-    @property
-    def INPUTS(self): return self.keyword('INPUTS')
-
-    @property
     def IN(self): return self.keyword('IN')
 
     @property
-    def VARS(self): return self.keyword('VARS')
-
-    @property
     def BLOCKS(self): return self.keyword('BLOCKS')
-
-    @property
-    def JUMPS(self): return self.keyword('JUMPS')
 
     @property
     def BLOCK(self): return self.keyword('BLOCK')
@@ -70,24 +49,6 @@ class Color:
     def STOP(self): return self.keyword('STOP')
 
     @property
-    def IF(self): return self.keyword('IF')
-
-    @property
-    def THEN(self): return self.keyword('THEN')
-
-    @property
-    def ELSE(self): return self.keyword('ELSE')
-
-    @property
-    def FROM(self): return self.keyword('FROM')
-
-    @property
-    def TO(self): return self.keyword('TO')
-
-    @property
-    def WITH(self): return self.keyword('WITH')
-
-    @property
     def WHERE(self): return self.keyword('WHERE')
 
     @property
@@ -95,15 +56,6 @@ class Color:
 
     @property
     def AND(self): return self.keyword('AND')
-
-    @property
-    def TRUE(self): return self.keyword('TRUE')
-
-    @property
-    def LOOP(self): return self.keyword('LOOP')
-
-    @property
-    def AS(self): return self.keyword('AS')
 
     def operator(self, op: str) -> str:
         if self.active:
@@ -142,9 +94,6 @@ class Color:
     def LARROW(self): return self.operator('<-')
 
     @property
-    def RARROW(self): return self.operator('->')
-
-    @property
     def PARA(self): return self.operator('§')
 
     def label(self, label: CFG.BlockLabel) -> str:
@@ -152,6 +101,12 @@ class Color:
             return f"\033[4m{label.label}\033[0m"
         else:
             return label.label
+
+    def external(self, content: str) -> str:
+        if self.active:
+            return f"\033[2m{content}\033[0m"
+        else:
+            return content
 
 
 STYLE = Color()
@@ -172,10 +127,7 @@ def pretty(node: CFG.Node) -> str:
             """)[1:-1]
 
         case CFG.Block(block_label, statements, terminals):
-            statements = (
-                _indent(f'{STYLE.SEMI}\n'.join(map(pretty, statements)), ' '*18) +
-                STYLE.SEMI * (0 < len(statements))
-            )
+            statements = _indent(f'\n'.join(map(pretty, statements)), ' '*18)
             terminals = _indent('\n'.join(map(pretty, terminals)), ' '*18)
 
             return dedent(f"""
@@ -184,12 +136,23 @@ def pretty(node: CFG.Node) -> str:
                 {STYLE.RBRACE}
             """)[1:-1]
 
-        case CFG.Assignment(variable, expression):
-            indent_len = len(variable.identifier) + 5
-            return f"{variable} {STYLE.LARROW} {_indent(str(expression), ' '*indent_len)}"
+        case CFG.Assignment(variables, expression):
+            variables = ", ".join(
+                variable.identifier
+                for variable in variables
+            )
+            inputs = ", ".join(
+                variable.identifier
+                for variable in expression.free_variables
+            )
+            return (
+                f"{variables} {STYLE.LARROW} " +
+                STYLE.external(f"§{_indent(expression.source, ' ' * (len(variables) + 5))}§") +
+                f"[{inputs}]"
+            )
 
         case CFG.Terminal(type, truthy_vars, falsey_vars):
-            predicate = " AND ".join(chain(
+            predicate = f" {STYLE.AND} ".join(chain(
                 (                  var.identifier for var in truthy_vars),
                 (f"{STYLE.NOT} " + var.identifier for var in falsey_vars),
             ))
@@ -198,7 +161,11 @@ def pretty(node: CFG.Node) -> str:
             return pretty(type) + predicate
 
         case CFG.Emit(to_emit):
-            return f"{STYLE.EMIT} {to_emit!s}"
+            variables = ", ".join(
+                variable.identifier
+                for variable in to_emit
+            )
+            return f"{STYLE.EMIT} {variables}"
 
         case CFG.Jump(target):
             return f"{STYLE.JUMP} {STYLE.label(target)}"

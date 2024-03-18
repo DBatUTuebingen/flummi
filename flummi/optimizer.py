@@ -1,9 +1,8 @@
-from pprint import pprint
 from dataclasses import dataclass
-from operator import or_
 
-from . import CFG
+from . import CFG, grammar
 from .label_graph import *
+from .utils import *
 
 
 type Statement = CFG.Assignment | CFG.Terminal[CFG.Emit]
@@ -14,10 +13,6 @@ class Statistics:
   blocks_before_scheduling: int
   blocks_after_scheduling: int
   number_of_traces: int
-
-
-def union[T](sets: Iterator[set[T]]) -> set[T]:
-    return reduce(or_, sets, set())
 
 
 def optimize(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
@@ -101,23 +96,23 @@ type DependenceGraph = dict[int, set[int]]
 
 
 def build_dependence_graph(statements: list[Statement]) -> DependenceGraph:
-  writes = {}
-  reads = {}
+  writes: dict[int, set[grammar.Variable]] = {}
+  reads: dict[int, set[grammar.Variable]] = {}
 
   for i, statement in enumerate(statements):
     match statement:
-      case CFG.Assignment(variable, expression):
-        writes[i] = variable
-        reads[i] = expression.free_variables
-      case CFG.Terminal(CFG.Emit(emitted_variable), truthy, falsey):
-        reads[i] = {emitted_variable, *truthy, *falsey}
+      case CFG.Assignment(variables, expression):
+        writes[i] = set(variables)
+        reads[i] = set(expression.free_variables)
+      case CFG.Terminal(CFG.Emit(emitted_variables), truthy, falsey):
+        reads[i] = {*emitted_variables, *truthy, *falsey}
 
   dependence_graph = {
     i: {
       j
       for j in range(0, i)
-      if writes.get(j) in reads[i]
-      or writes.get(i) in reads[j]
+      if writes.get(j, set()).intersection(reads[i])
+      or writes.get(i, set()).intersection(reads[j])
     }
     for i, _ in enumerate(statements)
   }
@@ -173,11 +168,6 @@ def materialize_schedule(graph: CFG.Graph, statements: list[Statement], trace: T
 
 
 def inline_control_only_blocks(graph: CFG.Graph) -> CFG.Graph:
-  writes = {
-    label: CFG.bound_variables(block)
-    for label, block in graph.blocks.items()
-  }
-
   changed = True
   while changed:
     succ = collect_successors(graph)
@@ -186,11 +176,11 @@ def inline_control_only_blocks(graph: CFG.Graph) -> CFG.Graph:
     for label, inlinee_block in graph.blocks.items():
       if not inlinee_block.assignments:
         for inlineable in pred[label]:
-          changed = True
           new_terminals = []
           for terminal in graph.blocks[inlineable].terminals:
             match terminal.type:
               case CFG.GoTo(_label) if _label == label:
+                changed = True
                 new_terminals.extend(
                   CFG.Terminal(
                     inlinee_terminal.type,

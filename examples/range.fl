@@ -1,9 +1,11 @@
-CALL (§1§[], §10§[]) IN
+CALL (§SELECT 1, 10§[]) IN
 FUN (l: §int§, u: §int§) -> §int§: {
+  c: §bool§;
   LOOP loop {
-    EMIT §{0}§[l];
+    EMIT l;
     l <- §{0} + 1§[l];
-    IF §{0} >= {1}§[l,u]
+    c <- §{0} >= {1}§[l,u];
+    IF c
     THEN STOP
     ELSE CONTINUE loop
   }

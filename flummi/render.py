@@ -1,7 +1,12 @@
 from itertools import chain
 
-from .. import CFG
-from .print import pretty, STYLE
+from . import CFG
+from .pretty import pretty, STYLE
+
+
+__all__ = (
+    "render",
+)
 
 
 TEMPLATE= """\
@@ -33,7 +38,7 @@ NODE_TEMPLATE = '"{label}" [label="{body}\\l"];'
 JUMP_STYLE = 'style="dashed",color="#F7921D"'
 GOTO_STYLE = 'style="solid",color="#0071BC"'
 
-def dot(graph: CFG.Graph, font: str = "PragmataPro") -> str:
+def render(graph: CFG.Graph, font: str = "PragmataPro") -> str:
     STYLE.off()
     nodes = "\n  ".join(
         NODE_TEMPLATE.format(
