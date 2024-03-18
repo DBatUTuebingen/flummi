@@ -114,7 +114,7 @@ STYLE = Color()
 
 def pretty(node: CFG.Node) -> str:
     match node:
-        case CFG.Graph(entry_label, blocks):
+        case CFG.Graph(entry_label, _, blocks):
             blocks = (
                 '\n' * (0 < len(blocks)) +
                 indent('\n\n'.join(map(pretty, blocks.values())), ' '*18) +

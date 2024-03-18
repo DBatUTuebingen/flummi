@@ -52,7 +52,7 @@ options:
 ## Usage: `interpret`
 
 ```
-$ thon -m flummi interpret -h
+$ python -m flummi interpret -h
 usage: flummi interpret [-h] [-s SETUP] infile
 
 positional arguments:

@@ -205,6 +205,16 @@ class CodeGen:
                         )
                     )
 
+            if self.avoid_multiple_recursive_references:
+                block_ctes = [
+                    sql.cte(
+                        name="%loop%",
+                        columns=working_table_columns,
+                        body="SELECT * FROM " + sql.variable("%loop%")
+                    ),
+                    *block_ctes
+                ]
+
             return sql.with_ctes(
                 ctes=[sql.cte(
                     name="%loop%",

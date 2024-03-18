@@ -40,7 +40,7 @@ class Flag(Enum):
     # SQL codegen tweaks
     FORCE_WITH_RECURSIVE = auto()
     EXPLICIT_MATERIALIZED = auto()
-    AVOID_MULTIPLE_RECURSIVE_REFERENCE = auto()
+    AVOID_MULTIPLE_RECURSIVE_REFERENCES = auto()
 
     # additional features
     INCLUDE_TRACE_GENERATION = auto()
@@ -84,7 +84,7 @@ def cli():
                 match arguments.dbms:
                     case 'postgres':
                         flags.update({
-                            Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCE
+                            Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCES
                         })
                     case 'duckdb':
                         flags.update({
@@ -148,7 +148,7 @@ def cli():
                     ast.function.emits,
                     include_trace=Flag.INCLUDE_TRACE_GENERATION in flags,
                     explicit_materialized=Flag.EXPLICIT_MATERIALIZED in flags,
-                    avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCE in flags,
+                    avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCES in flags,
                     include_emit_order=Flag.INCLUDE_EMIT_ORDINALITY in flags,
                     force_with_recursive=Flag.FORCE_WITH_RECURSIVE in flags,
                 )
