@@ -1,0 +1,16 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "flummi"
+version = "1.1.0"
+description = "CTE-focussed compilation of imperative programs to recursive SQL."
+authors = [{ name = "Tim Fischer", email = "tim.fischer@uni-tuebingen.de" }]
+readme = "README.md"
+
+[project.urls]
+Home = "https://db.cs.uni-tuebingen.de/git/flummi/compiler"
+
+[project.scripts]
+flummi = "flummi.cli:cli"
