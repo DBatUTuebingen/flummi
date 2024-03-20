@@ -145,7 +145,7 @@ def cli():
                 sql = codegen(
                     cfg,
                     symbol_table,
-                    ast.function.emits,
+                    ast,
                     include_trace=Flag.INCLUDE_TRACE_GENERATION in flags,
                     explicit_materialized=Flag.EXPLICIT_MATERIALIZED in flags,
                     avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCES in flags,
@@ -165,6 +165,7 @@ def cli():
                     print(*map(repr, emitted_value), sep=", ")
 
             case "analyze":
+                print(pretty(ast))
                 print("ok")
     except FlummiError as e:
         print(e.format(source), file=sys.stderr)

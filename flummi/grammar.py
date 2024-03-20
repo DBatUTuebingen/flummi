@@ -21,6 +21,9 @@ __all__ = (
     "Assignment",
     "Block",
     "NoOp",
+    "Condition",
+    "HandleCheck",
+    "VariableCheck",
 )
 
 
@@ -104,6 +107,24 @@ class Emit(Statement):
 
 
 @dataclass
+class Spawn(Statement):
+    handle: Variable
+    target: Variable
+    arguments: list[Variable]
+
+
+@dataclass
+class Join(Statement):
+    handle: Variable
+
+
+@dataclass
+class Fetch(Statement):
+    handle: Variable
+    variables: list[Variable]
+
+
+@dataclass
 class Stop(Statement):
     ...
 
@@ -132,6 +153,20 @@ class NoOp(Statement):
 
 @dataclass
 class If(Statement):
-    condition: Variable
+    condition: Condition
     truthy_branch: Statement
     falsey_branch: Statement
+
+
+class Condition(Node):
+    ...
+
+
+@dataclass
+class HandleCheck(Condition):
+    handle: Variable
+
+
+@dataclass
+class VariableCheck(Condition):
+    variable: Variable

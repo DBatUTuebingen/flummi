@@ -256,6 +256,12 @@ class Parser:
             return self.parse_continue()
         elif self.lookahead(TokenType.BREAK):
             return self.parse_break()
+        elif self.lookahead(TokenType.SPAWN):
+            return self.parse_spawn()
+        elif self.lookahead(TokenType.JOIN):
+            return self.parse_join()
+        elif self.lookahead(TokenType.FETCH):
+            return self.parse_fetch()
         elif self.lookahead(TokenType.IF):
             return self.parse_if()
         elif self.lookahead(TokenType.EMIT):
@@ -300,10 +306,54 @@ class Parser:
             name=name
         )
 
+    def parse_spawn(self) -> grammar.Spawn:
+        location = self.current.location
+        self.expect(TokenType.SPAWN)
+        handle = self.parse_variable()
+        self.expect(TokenType.AS)
+        target = self.parse_variable()
+        self.expect(TokenType.LEFT_PAREN)
+        if self.match(TokenType.RIGHT_PAREN):
+            arguments = []
+        else:
+            arguments = [self.parse_variable()]
+            while self.match(TokenType.COMMA):
+                arguments.append(self.parse_variable())
+            self.expect(TokenType.RIGHT_PAREN)
+        return grammar.Spawn(
+            location=location,
+            handle=handle,
+            target=target,
+            arguments=arguments
+        )
+
+    def parse_join(self) -> grammar.Join:
+        location = self.current.location
+        self.expect(TokenType.JOIN)
+        handle = self.parse_variable()
+        return grammar.Join(
+            location=location,
+            handle=handle
+        )
+
+    def parse_fetch(self) -> grammar.Fetch:
+        location = self.current.location
+        self.expect(TokenType.FETCH)
+        handle = self.parse_variable()
+        self.expect(TokenType.INTO)
+        variables = [self.parse_variable()]
+        while self.match(TokenType.COMMA):
+            variables.append(self.parse_variable())
+        return grammar.Fetch(
+            location=location,
+            handle=handle,
+            variables=variables
+        )
+
     def parse_if(self) -> grammar.If:
         location = self.current.location
         self.expect(TokenType.IF)
-        condition = self.parse_variable()
+        condition = self.parse_condition()
         self.expect(TokenType.THEN)
         truthy_branch = self.parse_statement()
         self.expect(TokenType.ELSE)
@@ -314,6 +364,23 @@ class Parser:
             truthy_branch=truthy_branch,
             falsey_branch=falsey_branch
         )
+
+    def parse_condition(self) -> grammar.Condition:
+        location = self.current.location
+        if self.match(TokenType.DONE):
+            handle = self.parse_variable()
+            return grammar.HandleCheck(
+                location=location,
+                handle=handle
+            )
+        elif self.match(TokenType.VAR):
+            variable = self.parse_variable()
+            return grammar.VariableCheck(
+                location=location,
+                variable=variable
+            )
+        else:
+            raise self.error("Expected condition expression.")
 
     def parse_emit(self) -> grammar.Emit:
         location = self.current.location

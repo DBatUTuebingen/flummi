@@ -100,6 +100,27 @@ class Style:
     def ELSE(self): return self.keyword('ELSE')
 
     @property
+    def SPAWN(self): return self.keyword('SPAWN')
+
+    @property
+    def AS(self): return self.keyword('AS')
+
+    @property
+    def JOIN(self): return self.keyword('JOIN')
+
+    @property
+    def FETCH(self): return self.keyword('FETCH')
+
+    @property
+    def INTO(self): return self.keyword('INTO')
+
+    @property
+    def DONE(self): return self.keyword('DONE')
+
+    @property
+    def VAR(self): return self.keyword('VAR')
+
+    @property
     def COMMA(self): return self.punctuation(',')
 
     @property
@@ -230,6 +251,32 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
                 f"{style.THEN} {pretty(truthy)}\n"
                 f"{style.ELSE} {pretty(falsey)}"
             )
+
+        case grammar.HandleCheck(_, handle):
+            handle = pretty(handle)
+            return f"{style.DONE} {handle}"
+
+        case grammar.VariableCheck(_, variable):
+            variable = pretty(variable)
+            return f"{style.VAR} {variable}"
+
+        case grammar.Loop(_, loop_label, body):
+            return f"{style.LOOP} {pretty(loop_label)} {pretty(body)}"
+
+        case grammar.Spawn(_, handle, target, arguments):
+            handle = pretty(handle)
+            target = pretty(target)
+            arguments = f"{style.COMMA} ".join(map(pretty, arguments))
+            return f"{style.SPAWN} {handle} {style.AS} {target}{style.LPAREN}{arguments}{style.RPAREN}"
+
+        case grammar.Join(_, handle):
+            handle = pretty(handle)
+            return f"{style.JOIN} {handle}"
+
+        case grammar.Fetch(_, handle, variables):
+            handle = pretty(handle)
+            variables = f"{style.COMMA} ".join(map(pretty, variables))
+            return f"{style.FETCH} {handle} {style.INTO} {variables}"
 
         case grammar.Function(_, name, parameters, emits, body):
             name = pretty(name)

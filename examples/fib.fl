@@ -1,0 +1,24 @@
+CALL fib(§SELECT 15§[]) IN
+FUN fib(n: §int§) -> §int§: {
+  done : §bool§;
+  temp : §int§;
+  done <- §{0} <= 1§[n];
+  IF VAR done
+  THEN EMIT n
+  ELSE {
+    n <- §{0} - 1§[n];
+    SPAWN a AS fib(n);
+    n <- §{0} - 1§[n];
+    SPAWN b AS fib(n);
+    FETCH a INTO temp;
+    FETCH b INTO n;
+    n <- §{0} + {1}§[temp, n];
+    EMIT n;
+    JOIN a;
+    JOIN b;
+    IF DONE b
+    THEN NOOP
+    ELSE FETCH b INTO n
+  };
+  STOP
+}

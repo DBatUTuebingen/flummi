@@ -18,7 +18,7 @@ __all__ = (
 def codegen(
     graph: CFG.Graph,
     symbol_table: SymbolTable,
-    emit_types: list[grammar.Type],
+    program: grammar.Program,
     include_trace: bool = False,
     explicit_materialized: bool = False,
     avoid_multiple_recursive_references: bool = False,
@@ -27,7 +27,7 @@ def codegen(
 ) -> str:
     return CodeGen(
         symbol_table,
-        emit_types,
+        program,
         include_trace,
         explicit_materialized,
         avoid_multiple_recursive_references,
@@ -43,7 +43,7 @@ class CodeGenError(errors.FlummiError, name="code generation"):
 @dataclass
 class CodeGen:
     symbol_table: SymbolTable
-    emit_types: list[grammar.Type]
+    program: grammar.Program
     include_trace: bool
     explicit_materialized: bool
     avoid_multiple_recursive_references: bool

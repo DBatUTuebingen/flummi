@@ -1,0 +1,40 @@
+CALL add(§SELECT 4, 10§[]) IN
+
+FUN add(a: §int§, b: §int§) -> §int§: {
+  k: §bool§;
+
+  EMIT a;
+
+  LOOP loop {
+    a, b <- §SELECT {0} + 1, {1} - 1§[a, b];
+
+    EMIT a;
+
+    k <- §SELECT 0 = {0}§[b];
+    IF k
+    THEN BREAK loop
+    ELSE CONTINUE loop
+  };
+
+  STOP
+}
+
+FUN mul(a: §int§, b: §int§) -> §int§: {
+  c: §int§;
+  k: §bool§;
+
+  c <- §0§[];
+
+  LOOP loop {
+    c, b <- §SELECT {0} + {1}, {2} - 1§[a, c, b];
+
+    EMIT c;
+
+    k <- §0 = {0}§[b];
+    IF k
+    THEN BREAK loop
+    ELSE CONTINUE loop
+  };
+
+  STOP
+}
