@@ -19,21 +19,21 @@ class EvaluationError(errors.FlummiError, name="evaluation"):
 def interpret(
     program: grammar.Program,
     symbol_table: dict[grammar.Variable, grammar.Type]
-) -> Iterator[tuple[Any, ...]]:
+) -> tuple[Any, ...]:
     if program.inputs is not None:
         statement = grammar.Block(
             program.location,
             [
                 grammar.Assignment(
                     program.inputs.location,
-                    list(program.function.parameters.keys()),
+                    list(program.main_function.parameters.keys()),
                     program.inputs
                 ),
-                program.function.body
+                program.main_function.body
             ]
         )
     else:
-        statement = program.function.body
+        statement = program.main_function.body
 
     query_cache: dict[grammar.Location, str] = {}
     stack: list[grammar.Statement] = [statement]
@@ -49,11 +49,8 @@ def interpret(
             case grammar.Block(_, statements):
                 stack.extend(statements[::-1])
 
-            case grammar.Stop():
-                break
-
-            case grammar.Emit(_, variables):
-                yield tuple(
+            case grammar.Return(_, variables):
+                return tuple(
                     environment[variable.identifier]
                     for variable in variables
                 )
@@ -188,3 +185,7 @@ def interpret(
                     "Encountered unsupported statement.",
                     statement.location
                 )
+    raise EvaluationError(
+        "Ran out of things to do before expecting it...",
+        program.location,
+    )

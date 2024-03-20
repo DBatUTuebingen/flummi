@@ -15,8 +15,6 @@ __all__ = (
     "Loop",
     "Break",
     "Continue",
-    "Emit",
-    "Stop",
     "Declaration",
     "Assignment",
     "Block",
@@ -74,7 +72,7 @@ class Program(Node):
 class Function(Node):
     name: Variable
     parameters: dict[Variable, Type]
-    emits: list[Type]
+    returns: list[Type]
     body: Statement
 
 
@@ -99,13 +97,8 @@ class Break(Statement):
 
 
 @dataclass
-class Emit(Statement):
-    to_emit: list[Variable]
-
-
-@dataclass
-class Stop(Statement):
-    ...
+class Return(Statement):
+    variables: list[Variable]
 
 
 @dataclass

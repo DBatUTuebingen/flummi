@@ -1,19 +1,14 @@
-CALL (§4, 10§[]) IN
-FUN (a: §int§, b: §int§) -> §int§: {
+CALL add(§SELECT 4, 10§[]) IN
+FUN add(a: §int§, b: §int§) -> §int§: {
   k: §bool§;
 
-  EMIT a;
-
-  LOOP addition_loop {
+  LOOP loop {
     a, b <- §SELECT {0} + 1, {1} - 1§[a, b];
 
-    EMIT a;
 
     k <- §SELECT 0 = {0}§[b];
     IF k
-      THEN BREAK addition_loop
-      ELSE CONTINUE addition_loop
-  };
-
-  STOP
+      THEN RETURN a
+      ELSE CONTINUE loop
+  }
 }

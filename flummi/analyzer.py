@@ -61,7 +61,6 @@ class Analyzer:
 
     function_name    : grammar.Variable = field(init=False)
 
-    emit_exists      : bool                   = field(init=False, default=False)
     symbol_table     : SymbolTable            = field(init=False, default_factory=dict)
     bound_symbols    : set[grammar.Variable]  = field(init=False, default_factory=set)
     names            : list[grammar.Variable] = field(init=False, default_factory=list)
@@ -133,12 +132,6 @@ class Analyzer:
                         len(new_statements) == 0
                     )
 
-            case grammar.Stop(_):
-                for loop_label in self.loop_scope:
-                    self.loop_stopped[loop_label] = True
-
-                return statement, True, False
-
             case grammar.NoOp(_):
                 return statement, False, True
 
@@ -172,11 +165,15 @@ class Analyzer:
 
                 return statement, False, False
 
-            case grammar.Emit(_, variables):
+            case grammar.Return(_, variables):
+                for loop_label in self.loop_scope:
+                    self.loop_stopped[loop_label] = True
+
                 for variable in variables:
                     self.analyze_variable_read(variable)
 
-                return statement, False, False
+                return statement, True, False
+
 
             case grammar.If(_, condition, truthy_branch, falsey_branch):
                 self.analyze_variable_read(condition)

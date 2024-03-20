@@ -52,6 +52,9 @@ class Style:
     def BLOCK(self): return self.keyword('BLOCK')
 
     @property
+    def RETURN(self): return self.keyword('RETURN')
+
+    @property
     def EMIT(self): return self.keyword('EMIT')
 
     @property
@@ -77,9 +80,6 @@ class Style:
 
     @property
     def CONTINUE(self): return self.keyword('CONTINUE')
-
-    @property
-    def STOP(self): return self.keyword('STOP')
 
     @property
     def NOOP(self): return self.keyword('NOOP')
@@ -176,9 +176,13 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
                 predicate = f" {style.WHERE} {predicate}"
             return pretty(type) + predicate
 
-        case CFG.Emit(to_emit) | grammar.Emit(_, to_emit):
+        case CFG.Emit(to_emit):
             variables = f"{style.COMMA} ".join(map(pretty, to_emit))
             return f"{style.EMIT} {variables}"
+
+        case grammar.Return(_, variables):
+            variables = f"{style.COMMA} ".join(map(pretty, variables))
+            return f"{style.RETURN} {variables}"
 
         case CFG.Jump(target):
             return f"{style.JUMP} {style.label(target)}"
@@ -205,9 +209,6 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
         case grammar.NoOp(_):
             return style.NOOP
 
-        case grammar.Stop(_):
-            return style.STOP
-
         case grammar.Continue(_, loop_label):
             return f"{style.CONTINUE} {pretty(loop_label)}"
 
@@ -231,15 +232,15 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
                 f"{style.ELSE} {pretty(falsey)}"
             )
 
-        case grammar.Function(_, name, parameters, emits, body):
+        case grammar.Function(_, name, parameters, returns, body):
             name = pretty(name)
             parameters = f"{style.COMMA} ".join(
                 f"{pretty(parameter)}{style.COLON} {pretty(type)}"
                 for parameter, type in parameters.items()
             )
-            emits = f"{style.COMMA} ".join(map(pretty, emits))
+            returns = f"{style.COMMA} ".join(map(pretty, returns))
             body = pretty(body)
-            return f"{style.FUN} {name}{style.LPAREN}{parameters}{style.RPAREN} {style.RARROW} {emits} {body}"
+            return f"{style.FUN} {name}{style.LPAREN}{parameters}{style.RPAREN} {style.RARROW} {returns} {body}"
 
         case grammar.Program(_, main_function_name, inputs, function_list):
             main_function_name = pretty(main_function_name)

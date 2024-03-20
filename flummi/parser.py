@@ -37,7 +37,6 @@ class TokenType(Enum):
     EXTERNAL = r"[§][^§]+[§]"
     IF = r"IF"
     CALL = r"CALL"
-    INTO = r"INTO"
     IN = r"IN"
     AS = r"AS"
     FUN = r"FUN"
@@ -46,14 +45,8 @@ class TokenType(Enum):
     BREAK = r"BREAK"
     THEN = r"THEN"
     ELSE = r"ELSE"
-    EMIT = r"EMIT"
-    STOP = r"STOP"
-    SPAWN = r"SPAWN"
-    JOIN = r"JOIN"
-    FETCH = r"FETCH"
+    RETURN = r"RETURN"
     NOOP = r"NOOP"
-    VAR = r"VAR"
-    DONE = r"DONE"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -235,9 +228,9 @@ class Parser:
             }
             self.expect(TokenType.RIGHT_PAREN)
         self.expect(TokenType.RIGHT_ARROW)
-        emits = [self.parse_type()]
+        returns = [self.parse_type()]
         while self.match(TokenType.COMMA):
-            emits.append(self.parse_type())
+            returns.append(self.parse_type())
         self.expect(TokenType.COLON)
         body = self.parse_statement()
 
@@ -245,7 +238,7 @@ class Parser:
             location=location,
             name=name,
             parameters=parameters,
-            emits=emits,
+            returns=returns,
             body=body
         )
 
@@ -258,14 +251,12 @@ class Parser:
             return self.parse_break()
         elif self.lookahead(TokenType.IF):
             return self.parse_if()
-        elif self.lookahead(TokenType.EMIT):
-            return self.parse_emit()
+        elif self.lookahead(TokenType.RETURN):
+            return self.parse_return()
         elif self.lookahead(TokenType.IDENTIFIER):
             return self.parse_declaration_or_assignment()
         elif self.lookahead(TokenType.LEFT_BRACE):
             return self.parse_block()
-        elif self.lookahead(TokenType.STOP):
-            return self.parse_stop()
         elif self.lookahead(TokenType.NOOP):
             return self.parse_noop()
         else:
@@ -315,15 +306,15 @@ class Parser:
             falsey_branch=falsey_branch
         )
 
-    def parse_emit(self) -> grammar.Emit:
+    def parse_return(self) -> grammar.Return:
         location = self.current.location
-        self.expect(TokenType.EMIT)
+        self.expect(TokenType.RETURN)
         variables = [self.parse_variable()]
         while self.match(TokenType.COMMA):
             variables.append(self.parse_variable())
-        return grammar.Emit(
+        return grammar.Return(
             location=location,
-            to_emit=variables
+            variables=variables
         )
 
     def parse_declaration_or_assignment(self) -> grammar.Declaration | grammar.Assignment:
@@ -371,13 +362,6 @@ class Parser:
         return grammar.Block(
             location=location,
             statements=statements
-        )
-
-    def parse_stop(self) -> grammar.Stop:
-        location = self.current.location
-        self.expect(TokenType.STOP)
-        return grammar.Stop(
-            location=location
         )
 
     def parse_noop(self) -> grammar.NoOp:

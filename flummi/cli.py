@@ -145,7 +145,7 @@ def cli():
                 sql = codegen(
                     cfg,
                     symbol_table,
-                    ast.function.emits,
+                    ast.function.returns,
                     include_trace=Flag.INCLUDE_TRACE_GENERATION in flags,
                     explicit_materialized=Flag.EXPLICIT_MATERIALIZED in flags,
                     avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCES in flags,
@@ -161,8 +161,7 @@ def cli():
                 if arguments.setup is not None:
                     duckdb.sql(arguments.setup.read())
 
-                for emitted_value in interpret(ast, symbol_table):
-                    print(*map(repr, emitted_value), sep=", ")
+                print(*map(repr, interpret(ast, symbol_table)), sep=", ")
 
             case "analyze":
                 print("ok")
