@@ -1,13 +1,19 @@
+from dataclasses import dataclass
 from itertools import chain
 from textwrap import indent, dedent
 
-from . import CFG
+from . import CFG, grammar
 from .utils import _indent
 
 
-class Color:
-    def __init__(self):
-        self.active = True
+@dataclass
+class Style:
+    keyword_style: str = "1;34"
+    punctuation_style: str = "2"
+    label_style: str = "4"
+    external_style: str = "2;3"
+
+    active: bool = True
 
     def off(self):
         self.active = False
@@ -15,14 +21,23 @@ class Color:
     def on(self):
         self.active = True
 
-    def __bool__(self):
-        return self.active
+    def _style(self, style: str, to_style: str) -> str:
+        if self.active:
+            return f"\033[{style}m{to_style}\033[0m"
+        else:
+            return to_style
 
     def keyword(self, word: str) -> str:
-        if self.active:
-            return f"\033[1;34m{word}\033[0m"
-        else:
-            return word
+        return self._style(self.keyword_style, word)
+
+    def punctuation(self, op: str) -> str:
+        return self._style(self.punctuation_style, op)
+
+    def label(self, label: CFG.BlockLabel) -> str:
+        return self._style(self.label_style, label.label)
+
+    def external(self, content: str) -> str:
+        return self._style(self.external_style, content)
 
     @property
     def ENTRYPOINT(self): return self.keyword('ENTRYPOINT')
@@ -46,9 +61,6 @@ class Color:
     def GOTO(self): return self.keyword('GOTO')
 
     @property
-    def STOP(self): return self.keyword('STOP')
-
-    @property
     def WHERE(self): return self.keyword('WHERE')
 
     @property
@@ -57,62 +69,77 @@ class Color:
     @property
     def AND(self): return self.keyword('AND')
 
-    def operator(self, op: str) -> str:
-        if self.active:
-            return f"\033[1;2m{op}\033[0m"
-        else:
-            return op
+    @property
+    def LOOP(self): return self.keyword('LOOP')
 
     @property
-    def COMMA(self): return self.operator(',')
+    def BREAK(self): return self.keyword('BREAK')
 
     @property
-    def SEMI(self): return self.operator(';')
+    def CONTINUE(self): return self.keyword('CONTINUE')
 
     @property
-    def COLON(self): return self.operator(':')
+    def STOP(self): return self.keyword('STOP')
 
     @property
-    def LPAREN(self): return self.operator('(')
+    def NOOP(self): return self.keyword('NOOP')
 
     @property
-    def RPAREN(self): return self.operator(')')
+    def FUN(self): return self.keyword('FUN')
 
     @property
-    def LBRACK(self): return self.operator('[')
+    def CALL(self): return self.keyword('CALL')
 
     @property
-    def RBRACK(self): return self.operator(']')
+    def IF(self): return self.keyword('IF')
 
     @property
-    def LBRACE(self): return self.operator('{')
+    def THEN(self): return self.keyword('THEN')
 
     @property
-    def RBRACE(self): return self.operator('}')
+    def ELSE(self): return self.keyword('ELSE')
 
     @property
-    def LARROW(self): return self.operator('<-')
+    def COMMA(self): return self.punctuation(',')
 
     @property
-    def PARA(self): return self.operator('§')
+    def SEMI(self): return self.punctuation(';')
 
-    def label(self, label: CFG.BlockLabel) -> str:
-        if self.active:
-            return f"\033[4m{label.label}\033[0m"
-        else:
-            return label.label
+    @property
+    def COLON(self): return self.punctuation(':')
 
-    def external(self, content: str) -> str:
-        if self.active:
-            return f"\033[2m{content}\033[0m"
-        else:
-            return content
+    @property
+    def LPAREN(self): return self.punctuation('(')
+
+    @property
+    def RPAREN(self): return self.punctuation(')')
+
+    @property
+    def LBRACK(self): return self.punctuation('[')
+
+    @property
+    def RBRACK(self): return self.punctuation(']')
+
+    @property
+    def LBRACE(self): return self.punctuation('{')
+
+    @property
+    def RBRACE(self): return self.punctuation('}')
+
+    @property
+    def LARROW(self): return self.punctuation('<-')
+
+    @property
+    def RARROW(self): return self.punctuation('->')
+
+    @property
+    def PARA(self): return self.punctuation('§')
 
 
-STYLE = Color()
+STYLE = Style()
 
 
-def pretty(node: CFG.Node) -> str:
+def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
     match node:
         case CFG.Graph(entry_label, _, blocks):
             blocks = (
@@ -122,8 +149,8 @@ def pretty(node: CFG.Node) -> str:
             )
 
             return dedent(f"""
-                {STYLE.ENTRYPOINT} {STYLE.label(entry_label)}
-                {STYLE.BLOCKS} {STYLE.LBRACE}{blocks}{STYLE.RBRACE}
+                {style.ENTRYPOINT} {style.label(entry_label)}
+                {style.BLOCKS} {style.LBRACE}{blocks}{style.RBRACE}
             """)[1:-1]
 
         case CFG.Block(block_label, statements, terminals):
@@ -131,47 +158,94 @@ def pretty(node: CFG.Node) -> str:
             terminals = _indent('\n'.join(map(pretty, terminals)), ' '*18)
 
             return dedent(f"""
-                {STYLE.BLOCK} {STYLE.label(block_label)} {STYLE.LBRACE}
+                {style.BLOCK} {style.label(block_label)} {style.LBRACE}
                   {statements}{('\n' + ' ' * 18) * bool(statements)}{terminals}
-                {STYLE.RBRACE}
+                {style.RBRACE}
             """)[1:-1]
 
-        case CFG.Assignment(variables, expression):
-            variables = ", ".join(
-                variable.identifier
-                for variable in variables
-            )
-            inputs = ", ".join(
-                variable.identifier
-                for variable in expression.free_variables
-            )
-            return (
-                f"{variables} {STYLE.LARROW} " +
-                STYLE.external(f"§{_indent(expression.source, ' ' * (len(variables) + 5))}§") +
-                f"[{inputs}]"
-            )
+        case CFG.Assignment(variables, expression) | grammar.Assignment(_, variables, expression):
+            variables = f"{style.COMMA} ".join(map(pretty, variables))
+            return f"{variables} {style.LARROW} {_indent(pretty(expression), ' ' * (len(variables) + 4))}"
 
         case CFG.Terminal(type, truthy_vars, falsey_vars):
-            predicate = f" {STYLE.AND} ".join(chain(
-                (                  var.identifier for var in truthy_vars),
-                (f"{STYLE.NOT} " + var.identifier for var in falsey_vars),
+            predicate = f" {style.AND} ".join(chain(
+                (                  pretty(var) for var in truthy_vars),
+                (f"{style.NOT} " + pretty(var) for var in falsey_vars),
             ))
             if predicate:
-                predicate = f" {STYLE.WHERE} {predicate}"
+                predicate = f" {style.WHERE} {predicate}"
             return pretty(type) + predicate
 
-        case CFG.Emit(to_emit):
-            variables = ", ".join(
-                variable.identifier
-                for variable in to_emit
-            )
-            return f"{STYLE.EMIT} {variables}"
+        case CFG.Emit(to_emit) | grammar.Emit(_, to_emit):
+            variables = f"{style.COMMA} ".join(map(pretty, to_emit))
+            return f"{style.EMIT} {variables}"
 
         case CFG.Jump(target):
-            return f"{STYLE.JUMP} {STYLE.label(target)}"
+            return f"{style.JUMP} {style.label(target)}"
 
         case CFG.GoTo(target):
-            return f"{STYLE.GOTO} {STYLE.label(target)}"
+            return f"{style.GOTO} {style.label(target)}"
+
+        case grammar.Type(_, source):
+            return style.external(f"§{_indent(source, ' ')}§")
+
+        case grammar.Expression(_, source, free_variables):
+            return (
+                f"{style.PARA}{style.external(_indent(source, ' '))}{style.PARA}"
+                f"{style.LBRACK}{f"{style.COMMA} ".join(map(pretty, free_variables))}{style.RBRACK}"
+            )
+
+        case grammar.Declaration(_, variables, type):
+            variables = f"{style.COMMA} ".join(map(pretty, variables))
+            return f"{variables} {style.COLON} {_indent(pretty(type), ' ' * (len(variables) + 3))}"
+
+        case grammar.Variable(_, identifier):
+            return identifier
+
+        case grammar.NoOp(_):
+            return style.NOOP
+
+        case grammar.Stop(_):
+            return style.STOP
+
+        case grammar.Continue(_, loop_label):
+            return f"{style.CONTINUE} {pretty(loop_label)}"
+
+        case grammar.Break(_, loop_label):
+            return f"{style.BREAK} {pretty(loop_label)}"
+
+        case grammar.Block(_, statements):
+            if statements:
+                statements = f"{style.SEMI}\n  ".join(
+                    _indent(pretty(statement), '  ')
+                    for statement in statements
+                )
+                return f"{style.LBRACE}\n  {statements}\n{style.RBRACE}"
+            else:
+                return f"{style.LBRACE}{style.RBRACE}"
+
+        case grammar.If(_, condition, truthy, falsey):
+            return (
+                f"{style.IF} {pretty(condition)}\n"
+                f"{style.THEN} {pretty(truthy)}\n"
+                f"{style.ELSE} {pretty(falsey)}"
+            )
+
+        case grammar.Function(_, name, parameters, emits, body):
+            name = pretty(name)
+            parameters = f"{style.COMMA} ".join(
+                f"{pretty(parameter)}{style.COLON} {pretty(type)}"
+                for parameter, type in parameters.items()
+            )
+            emits = f"{style.COMMA} ".join(map(pretty, emits))
+            body = pretty(body)
+            return f"{style.FUN} {name}{style.LPAREN}{parameters}{style.RPAREN} {style.RARROW} {emits} {body}"
+
+        case grammar.Program(_, main_function_name, inputs, function_list):
+            main_function_name = pretty(main_function_name)
+            inputs = pretty(inputs) if inputs is not None else ""
+            function_list = "\n\n".join(map(pretty, function_list))
+            return f"{style.CALL} {main_function_name}{style.LPAREN}{inputs}{style.RPAREN} {style.IN}\n{function_list}"
 
         case _:
-            raise TypeError("Unknown CFG form.")
+            raise TypeError(f"Can't format {node!r}.")

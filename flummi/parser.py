@@ -37,7 +37,9 @@ class TokenType(Enum):
     EXTERNAL = r"[§][^§]+[§]"
     IF = r"IF"
     CALL = r"CALL"
+    INTO = r"INTO"
     IN = r"IN"
+    AS = r"AS"
     FUN = r"FUN"
     LOOP = r"LOOP"
     CONTINUE = r"CONTINUE"
@@ -46,7 +48,12 @@ class TokenType(Enum):
     ELSE = r"ELSE"
     EMIT = r"EMIT"
     STOP = r"STOP"
+    SPAWN = r"SPAWN"
+    JOIN = r"JOIN"
+    FETCH = r"FETCH"
     NOOP = r"NOOP"
+    VAR = r"VAR"
+    DONE = r"DONE"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -195,6 +202,7 @@ class Parser:
     def parse_program(self) -> grammar.Program:
         location = self.current.location
         self.expect(TokenType.CALL)
+        main_function_name = self.parse_variable()
         self.expect(TokenType.LEFT_PAREN)
         if self.match(TokenType.RIGHT_PAREN):
             inputs = None
@@ -202,16 +210,20 @@ class Parser:
             inputs = self.parse_expression()
             self.expect(TokenType.RIGHT_PAREN)
         self.expect(TokenType.IN)
-        function = self.parse_function()
+        function_list = [self.parse_function()]
+        while not self.done:
+            function_list.append(self.parse_function())
         return grammar.Program(
             location=location,
+            main_function_name=main_function_name,
             inputs=inputs,
-            function=function
+            function_list=function_list
         )
 
     def parse_function(self) -> grammar.Function:
         location = self.current.location
         self.expect(TokenType.FUN)
+        name = self.parse_variable()
         self.expect(TokenType.LEFT_PAREN)
         if self.match(TokenType.RIGHT_PAREN):
             parameters = {}
@@ -231,6 +243,7 @@ class Parser:
 
         return grammar.Function(
             location=location,
+            name=name,
             parameters=parameters,
             emits=emits,
             body=body

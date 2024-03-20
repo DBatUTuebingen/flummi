@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from functools import cached_property
 
 
 __all__ = (
@@ -53,12 +54,25 @@ class Type(Node):
 
 @dataclass
 class Program(Node):
+    main_function_name: Variable
     inputs: Expression | None
-    function: Function
+    function_list: list[Function]
+
+    @cached_property
+    def main_function(self) -> Function:
+        return self.functions[self.main_function_name]
+
+    @cached_property
+    def functions(self) -> dict[Variable, Function]:
+        return {
+            function.name: function
+            for function in self.function_list
+        }
 
 
 @dataclass
 class Function(Node):
+    name: Variable
     parameters: dict[Variable, Type]
     emits: list[Type]
     body: Statement
@@ -82,13 +96,6 @@ class Continue(Statement):
 @dataclass
 class Break(Statement):
     name: Variable
-
-
-@dataclass
-class If(Statement):
-    condition: Variable
-    truthy_branch: Statement
-    falsey_branch: Statement
 
 
 @dataclass
@@ -121,3 +128,10 @@ class Block(Statement):
 @dataclass
 class NoOp(Statement):
     ...
+
+
+@dataclass
+class If(Statement):
+    condition: Variable
+    truthy_branch: Statement
+    falsey_branch: Statement
