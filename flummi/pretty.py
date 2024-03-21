@@ -130,6 +130,9 @@ class Style:
     def LARROW(self): return self.punctuation('<-')
 
     @property
+    def DLARROW(self): return self.punctuation('<=')
+
+    @property
     def RARROW(self): return self.punctuation('->')
 
     @property
@@ -190,6 +193,12 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
         case CFG.GoTo(target):
             return f"{style.GOTO} {style.label(target)}"
 
+        case grammar.Call(_, variables, function, arguments):
+            variables = f"{style.COMMA} ".join(map(pretty, variables))
+            function = pretty(function)
+            arguments = f"{style.COMMA} ".join(map(pretty, arguments))
+            return f"{variables} {style.DLARROW} {function}{style.LPAREN}{arguments}{style.RPAREN}"
+
         case grammar.Type(_, source):
             return style.external(f"§{_indent(source, ' ')}§")
 
@@ -224,6 +233,9 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
                 return f"{style.LBRACE}\n  {statements}\n{style.RBRACE}"
             else:
                 return f"{style.LBRACE}{style.RBRACE}"
+
+        case grammar.Loop(_, label, body):
+            return f"{style.LOOP} {pretty(label)} {pretty(body)}"
 
         case grammar.If(_, condition, truthy, falsey):
             return (

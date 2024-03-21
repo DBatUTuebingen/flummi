@@ -19,6 +19,7 @@ __all__ = (
     "Assignment",
     "Block",
     "NoOp",
+    "Call",
 )
 
 
@@ -128,3 +129,10 @@ class If(Statement):
     condition: Variable
     truthy_branch: Statement
     falsey_branch: Statement
+
+
+@dataclass
+class Call(Statement):
+    variables: list[Variable]
+    function: Variable
+    arguments: list[Variable]

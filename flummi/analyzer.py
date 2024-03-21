@@ -169,6 +169,18 @@ class Analyzer:
                 for loop_label in self.loop_scope:
                     self.loop_stopped[loop_label] = True
 
+                function = self.program.functions[self.function_name]
+                delta = len(function.returns)- len(variables)
+                if delta != 0:
+                    raise AnalysisError(
+                        f"Found {["less", "more"][delta > 0]} "
+                        "returned values...",
+                        statement.location,
+                        "",
+                        "...than expected.",
+                        function.location
+                    )
+
                 for variable in variables:
                     self.analyze_variable_read(variable)
 
@@ -268,6 +280,34 @@ class Analyzer:
                     )
 
                 self.names.append(loop_label)
+
+                return statement, False, False
+
+            case grammar.Call(_, variables, function, arguments):
+                if function not in self.program.functions:
+                    raise AnalysisError(
+                        "Found call to unknown function "
+                        f"{function.identifier!r}.",
+                        statement.location
+                    )
+
+                function = self.program.functions[function]
+
+                delta = len(function.returns)- len(variables)
+                if delta != 0:
+                    raise AnalysisError(
+                        f"Found {["less", "more"][delta > 0]} "
+                        "returned values...",
+                        statement.location,
+                        "",
+                        "...than expected.",
+                        function.location
+                    )
+
+                for variable in variables:
+                    self.analyze_variable_write(variable)
+                for variable in arguments:
+                    self.analyze_variable_read(variable)
 
                 return statement, False, False
 

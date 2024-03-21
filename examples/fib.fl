@@ -1,0 +1,16 @@
+CALL fib(§SELECT 10§[]) IN
+FUN fib(n: §int§) -> §int§: {
+  k: §bool§;
+  m: §int§;
+  k <- §{0} <= 1§[n];
+  IF k
+  THEN RETURN n
+  ELSE {
+    n <- §{0} - 1§[n];
+    m <= fib(n);
+    n <- §{0} - 1§[n];
+    n <= fib(n);
+    n <- §{0} + {1}§[n, m];
+    RETURN n
+  }
+}

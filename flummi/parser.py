@@ -27,6 +27,7 @@ class TokenType(Enum):
     LEFT_BRACE = r"{"
     LEFT_BRACKET = r"\["
     LEFT_ARROW = r"<-"
+    DOUBLE_LEFT_ARROW = r"<="
     RIGHT_PAREN = r"\)"
     RIGHT_BRACE = r"}"
     RIGHT_BRACKET = r"\]"
@@ -254,7 +255,7 @@ class Parser:
         elif self.lookahead(TokenType.RETURN):
             return self.parse_return()
         elif self.lookahead(TokenType.IDENTIFIER):
-            return self.parse_declaration_or_assignment()
+            return self.parse_variable_bunch()
         elif self.lookahead(TokenType.LEFT_BRACE):
             return self.parse_block()
         elif self.lookahead(TokenType.NOOP):
@@ -317,7 +318,7 @@ class Parser:
             variables=variables
         )
 
-    def parse_declaration_or_assignment(self) -> grammar.Declaration | grammar.Assignment:
+    def parse_variable_bunch(self) -> grammar.Declaration | grammar.Assignment | grammar.Call:
         location = self.current.location
         variables = [self.parse_variable()]
         while self.match(TokenType.COMMA):
@@ -328,6 +329,22 @@ class Parser:
                 location=location,
                 variables=variables,
                 expression=expression
+            )
+        elif self.match(TokenType.DOUBLE_LEFT_ARROW):
+            function = self.parse_variable()
+            self.expect(TokenType.LEFT_PAREN)
+            if self.match(TokenType.RIGHT_PAREN):
+                arguments = []
+            else:
+                arguments = [self.parse_variable()]
+                while self.match(TokenType.COMMA):
+                    arguments.append(self.parse_variable())
+                self.expect(TokenType.RIGHT_PAREN)
+            return grammar.Call(
+                location=location,
+                variables=variables,
+                function=function,
+                arguments=arguments
             )
         elif self.match(TokenType.COLON):
             type = self.parse_type()

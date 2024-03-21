@@ -1,0 +1,89 @@
+CALL mul(§SELECT 10, -10§[]) IN
+
+FUN increment(a: §int§) -> §int§: {
+  a <- §{0} + 1§[a];
+  RETURN a
+}
+
+FUN decrement(a: §int§) -> §int§: {
+  a <- §{0} - 1§[a];
+  RETURN a
+}
+
+FUN add(a: §int§, b: §int§) -> §int§: {
+  k: §bool§;
+
+  k <- §{0} > 0§[b];
+  IF k
+  THEN LOOP positive {
+    k <- §SELECT 0 = {0}§[b];
+    IF k
+    THEN RETURN a
+    ELSE {
+      a <= increment(a);
+      b <= decrement(b)
+    }
+  }
+  ELSE LOOP negative {
+    k <- §SELECT 0 = {0}§[b];
+    IF k
+    THEN RETURN a
+    ELSE {
+      a <= decrement(a);
+      b <= increment(b)
+    }
+  }
+}
+
+FUN sub(a: §int§, b: §int§) -> §int§: {
+  k: §bool§;
+
+  k <- §{0} > 0§[b];
+  IF k
+  THEN LOOP positive {
+    k <- §SELECT 0 = {0}§[b];
+    IF k
+    THEN RETURN a
+    ELSE {
+      a <= decrement(a);
+      b <= decrement(b)
+    }
+  }
+  ELSE LOOP negative {
+    k <- §SELECT 0 = {0}§[b];
+    IF k
+    THEN RETURN a
+    ELSE {
+      a <= increment(a);
+      b <= increment(b)
+    }
+  }
+}
+
+FUN mul(a: §int§, b: §int§) -> §int§: {
+  k: §bool§;
+  c: §int§;
+
+  c <- §0§[];
+
+  k <- §{0} > 0§[b];
+  IF k
+  THEN LOOP positive {
+    k <- §0 = {0}§[b];
+    IF k
+    THEN RETURN c
+    ELSE {
+      c <= add(c, a);
+      b <= decrement(b)
+    }
+  }
+  ELSE LOOP negative {
+    k <- §0 = {0}§[b];
+    IF k
+    THEN RETURN c
+    ELSE {
+      c <= sub(c, a);
+      b <= increment(b)
+    }
+  }
+}

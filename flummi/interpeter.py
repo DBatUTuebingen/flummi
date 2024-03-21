@@ -4,7 +4,7 @@ from typing import Any
 import duckdb
 
 from . import grammar, errors, sql
-from .utils import _indent
+from .pretty import pretty
 
 
 __all__ = (
@@ -18,26 +18,31 @@ class EvaluationError(errors.FlummiError, name="evaluation"):
 
 def interpret(
     program: grammar.Program,
-    symbol_table: dict[grammar.Variable, grammar.Type]
+    symbol_table: dict[grammar.Variable, grammar.Type],
+    statement: grammar.Statement | None = None,
+    environment: dict[str, Any] | None = None,
 ) -> tuple[Any, ...]:
-    if program.inputs is not None:
-        statement = grammar.Block(
-            program.location,
-            [
-                grammar.Assignment(
-                    program.inputs.location,
-                    list(program.main_function.parameters.keys()),
-                    program.inputs
-                ),
-                program.main_function.body
-            ]
-        )
-    else:
-        statement = program.main_function.body
+    environment = environment or {}
+
+
+    if statement is None:
+        if program.inputs is not None:
+            statement = grammar.Block(
+                program.location,
+                [
+                    grammar.Assignment(
+                        program.inputs.location,
+                        list(program.main_function.parameters.keys()),
+                        program.inputs
+                    ),
+                    program.main_function.body
+                ]
+            )
+        else:
+            statement = program.main_function.body
 
     query_cache: dict[grammar.Location, str] = {}
     stack: list[grammar.Statement] = [statement]
-    environment: dict[str, Any] = {}
 
     while stack:
         statement = stack.pop()
@@ -174,6 +179,29 @@ def interpret(
                             for variable, value in environment.items()
                         ),
                     )
+
+                environment.update(
+                    (variable.identifier, value)
+                    for variable, value in zip(variables, row)
+                )
+
+            case grammar.Call(location, variables, function, arguments):
+                function = program.functions[function]
+                arguments = {
+                    parameter.identifier:
+                    environment[argument.identifier]
+                    for parameter, argument in zip(
+                        function.parameters,
+                        arguments,
+                    )
+                }
+
+                row = interpret(
+                    program,
+                    symbol_table,
+                    statement=function.body,
+                    environment=arguments
+                )
 
                 environment.update(
                     (variable.identifier, value)
