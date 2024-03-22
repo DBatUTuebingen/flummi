@@ -40,7 +40,7 @@ def invert_label_graph(graph: LabelGraph) -> LabelGraph:
   return new
 
 
-def dependent_ordering(graph: LabelGraph, cyclic: bool) -> Iterator[CFG.BlockLabel]:
+def dependent_ordering(graph: LabelGraph) -> Iterator[CFG.BlockLabel]:
   predecessors = invert_label_graph(graph)
   stack = [*sorted(
     (
@@ -60,7 +60,7 @@ def dependent_ordering(graph: LabelGraph, cyclic: bool) -> Iterator[CFG.BlockLab
     yield label
     seen.add(label)
     for child in sorted_graph[label]:
-      if ((not cyclic) and seen.issuperset(predecessors[child])) or (cyclic and (child not in seen)):
+      if seen.issuperset(predecessors[child]):
         stack.append(child)
 
 

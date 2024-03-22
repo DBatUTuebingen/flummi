@@ -147,9 +147,16 @@ class CodeGen:
             ' ' * 19
         )
 
+        gotos = collect_gotos(graph)
+        labels = (
+            dependent_ordering(gotos)
+            if not self.has_mutual_recursion else
+            gotos
+        )
+
         blocks = _indent(',\n'.join(
             self.gen_block(graph.blocks[label], specify_column_types=is_with_mutually_recursive)
-            for label in dependent_ordering(collect_gotos(graph), cyclic=self.has_mutual_recursion)
+            for label in labels
         ), ' ' * 11)
 
         kind_column_sql = f'"%kind%"{" text" * is_with_mutually_recursive}'
