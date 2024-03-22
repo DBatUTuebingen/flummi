@@ -55,9 +55,6 @@ class Style:
     def RETURN(self): return self.keyword('RETURN')
 
     @property
-    def EMIT(self): return self.keyword('EMIT')
-
-    @property
     def JUMP(self): return self.keyword('JUMP')
 
     @property
@@ -98,6 +95,9 @@ class Style:
 
     @property
     def ELSE(self): return self.keyword('ELSE')
+
+    @property
+    def WAIT(self): return self.keyword('WAIT')
 
     @property
     def COMMA(self): return self.punctuation(',')
@@ -156,15 +156,25 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
                 {style.BLOCKS} {style.LBRACE}{blocks}{style.RBRACE}
             """)[1:-1]
 
-        case CFG.Block(block_label, statements, terminals):
-            statements = _indent(f'\n'.join(map(pretty, statements)), ' '*18)
+        case CFG.Block(block_label, action, terminals):
+            action = _indent(pretty(action), ' ' * 18)
             terminals = _indent('\n'.join(map(pretty, terminals)), ' '*18)
 
             return dedent(f"""
                 {style.BLOCK} {style.label(block_label)} {style.LBRACE}
-                  {statements}{('\n' + ' ' * 18) * bool(statements)}{terminals}
+                  {action}{('\n' + ' ' * 18) * bool(action)}{terminals}
                 {style.RBRACE}
             """)[1:-1]
+
+        case CFG.Nothing():
+            return ""
+
+        case CFG.Wait(variables):
+            variables = f'{style.COMMA} '.join(map(pretty, variables))
+            return f"{style.WAIT} {variables}"
+
+        case CFG.Assignments(assignments):
+            return '\n'.join(map(pretty, assignments))
 
         case CFG.Assignment(variables, expression) | grammar.Assignment(_, variables, expression):
             variables = f"{style.COMMA} ".join(map(pretty, variables))
@@ -179,9 +189,9 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
                 predicate = f" {style.WHERE} {predicate}"
             return pretty(type) + predicate
 
-        case CFG.Emit(to_emit):
-            variables = f"{style.COMMA} ".join(map(pretty, to_emit))
-            return f"{style.EMIT} {variables}"
+        case CFG.Return(variables):
+            variables = f"{style.COMMA} ".join(map(pretty, variables))
+            return f"{style.RETURN} {variables}"
 
         case grammar.Return(_, variables):
             variables = f"{style.COMMA} ".join(map(pretty, variables))
@@ -192,6 +202,10 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
 
         case CFG.GoTo(target):
             return f"{style.GOTO} {style.label(target)}"
+
+        case CFG.Call(target, arguments):
+            arguments = f"{style.COMMA} ".join(map(pretty, arguments))
+            return f"{style.CALL} {style.label(target)}{style.LPAREN}{arguments}{style.RPAREN}"
 
         case grammar.Call(_, variables, function, arguments):
             variables = f"{style.COMMA} ".join(map(pretty, variables))

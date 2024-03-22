@@ -1,8 +1,6 @@
-from dataclasses import dataclass
 from typing import ClassVar
 
 from .grammar import Location
-from .utils import _indent
 
 
 __all__ = (

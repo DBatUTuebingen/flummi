@@ -9,10 +9,15 @@ __all__ = (
     "BlockLabel",
     "Graph",
     "Block",
+    "Action",
+    "Assignments",
+    "Nothing",
+    "Wait",
     "Assignment",
     "Terminal",
     "TerminalType",
-    "Emit",
+    "Call",
+    "Return",
     "Jump",
     "GoTo",
 )
@@ -33,8 +38,27 @@ class Graph:
 @dataclass
 class Block:
     label: BlockLabel
-    assignments: list[Assignment]
+    action: Action
     terminals: list[Terminal]
+
+
+class Action(ABC):
+    ...
+
+
+@dataclass
+class Nothing(Action):
+    ...
+
+
+@dataclass
+class Wait(Action):
+    targets: list[grammar.Variable]
+
+
+@dataclass
+class Assignments(Action):
+    assignments: list[Assignment]
 
 
 @dataclass
@@ -54,8 +78,8 @@ class TerminalType(ABC):
     ...
 
 @dataclass
-class Emit(TerminalType):
-    to_emit: list[grammar.Variable]
+class Return(TerminalType):
+    variables: list[grammar.Variable]
 
 
 @dataclass
@@ -68,7 +92,13 @@ class GoTo(TerminalType):
     label: BlockLabel
 
 
-type Node = Graph | Block | Assignment | Emit | Terminal | TerminalType
+@dataclass
+class Call(TerminalType):
+    label: BlockLabel
+    arguments: list[grammar.Variable]
+
+
+type Node = Graph | Block | Action | Assignment | Terminal | TerminalType
 
 
 def successors(block: Block) -> set[BlockLabel]:
@@ -95,19 +125,27 @@ def gotos(block: Block) -> set[BlockLabel]:
     }
 
 
-def emits(block: Block) -> list[Emit]:
+def calls(block: Block) -> set[BlockLabel]:
+    return {
+        terminal.type.label
+        for terminal in block.terminals
+        if isinstance(terminal.type, Call)
+    }
+
+
+def returns(block: Block) -> list[Return]:
     return [
         terminal.type
         for terminal in block.terminals
-        if isinstance(terminal.type, Emit)
+        if isinstance(terminal.type, Return)
     ]
 
 
 def emited_variables(block: Block) -> list[grammar.Variable]:
     return sum(
         (
-            emit.to_emit
-            for emit in emits(block)
+            emit.variables
+            for emit in returns(block)
         ),
         start=[]
     )
@@ -118,17 +156,14 @@ def contains_jumps(block: Block) -> bool:
 
 
 def contains_emits(block: Block) -> bool:
-    return bool(emits(block))
+    return bool(returns(block))
 
 
 def free_variables(node: Node) -> set[grammar.Variable]:
     match node:
-        case Block(_, assignments, terminals):
-            assigned, vars = set(), set()
-
-            for assignment in assignments:
-                assigned.update(assignment.variables)
-                vars |= free_variables(assignment)
+        case Block(_, action, terminals):
+            assigned = bound_variables(node)
+            vars = free_variables(action)
 
             for terminal in terminals:
                 vars |= free_variables(terminal) - assigned
@@ -138,11 +173,17 @@ def free_variables(node: Node) -> set[grammar.Variable]:
         case Terminal(type, truthy, falsey):
             return {*truthy, *falsey} | free_variables(type)
 
-        case Emit(to_emit):
-            return set(to_emit)
+        case Return(variables):
+            return set(variables)
 
         case Assignment(_, expression):
             return set(expression.free_variables)
+
+        case Assignments(assignments):
+            vars = set()
+            for assignment in assignments:
+                vars |= free_variables(assignment)
+            return vars
 
         case _:
             return set()
@@ -157,7 +198,10 @@ def condition_variables(terminal: Terminal) -> set[grammar.Variable]:
 
 
 def bound_variables(block: Block) -> set[grammar.Variable]:
-    return union(
-        assignment.variables
-        for assignment in block.assignments
-    )
+    if isinstance(block.action, Assignments):
+        return union(
+            assignment.variables
+            for assignment in block.action.assignments
+        )
+    else:
+        return set()

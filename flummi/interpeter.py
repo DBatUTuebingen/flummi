@@ -24,7 +24,6 @@ def interpret(
 ) -> tuple[Any, ...]:
     environment = environment or {}
 
-
     if statement is None:
         if program.inputs is not None:
             statement = grammar.Block(

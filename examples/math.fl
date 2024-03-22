@@ -1,4 +1,4 @@
-CALL mul(§SELECT 10, -10§[]) IN
+CALL fib(§SELECT 10§[]) IN
 
 FUN increment(a: §int§) -> §int§: {
   a <- §{0} + 1§[a];
@@ -85,5 +85,35 @@ FUN mul(a: §int§, b: §int§) -> §int§: {
       c <= sub(c, a);
       b <= increment(b)
     }
+  }
+}
+
+FUN fac(n: §int§) -> §int§: {
+  k: §bool§;
+  m: §int§;
+  k <- §{0} <= 1§[n];
+  IF k
+  THEN RETURN n
+  ELSE {
+    m <= decrement(n);
+    m <= fac(m);
+    m <= mul(m, n);
+    RETURN m
+  }
+}
+
+FUN fib(n: §int§) -> §int§: {
+  k: §bool§;
+  m: §int§;
+  k <- §{0} <= 1§[n];
+  IF k
+  THEN RETURN n
+  ELSE {
+    n <= decrement(n);
+    m <= fib(n);
+    n <= decrement(n);
+    n <= fib(n);
+    n <= add(n, m);
+    RETURN n
   }
 }

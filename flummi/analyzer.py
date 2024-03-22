@@ -246,8 +246,6 @@ class Analyzer:
                         location,
                     )
 
-                self.names.append(loop_label)
-
                 return (
                     statement,
                     self.loop_stopped[loop_label],
@@ -267,8 +265,6 @@ class Analyzer:
                     if loop_label == _loop_label:
                         break
 
-                self.names.append(loop_label)
-
                 return statement, False, False
 
             case grammar.Continue(_, loop_label):
@@ -278,8 +274,6 @@ class Analyzer:
                         f"{loop_label.identifier!r}.",
                         loop_label.location
                     )
-
-                self.names.append(loop_label)
 
                 return statement, False, False
 

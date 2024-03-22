@@ -1,0 +1,25 @@
+CALL binom(§SELECT 10, 2§[]) IN
+FUN fac(n: §int§) -> §int§: {
+  k: §bool§;
+  m: §int§;
+  k <- §{0} <= 1§[n];
+  IF k
+  THEN RETURN n
+  ELSE {
+    m <- §{0} - 1§[n];
+    m <= fac(m);
+    m <- §{0} * {1}§[m, n];
+    RETURN m
+  }
+}
+
+FUN binom(n: §int§, k: §int§) -> §float§: {
+  num: §int§;
+  num <= fac(n);
+  k <= fac(k);
+  n <- §{0} - {1}§[n, k];
+  n <= fac(n);
+  k <- §{0} * {1}§[n, k];
+  k <- §{0} / {1}§[num, k];
+  RETURN k
+}
