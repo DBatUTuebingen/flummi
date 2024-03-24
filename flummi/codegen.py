@@ -280,10 +280,18 @@ class CodeGen:
             if CFG.contains_emits(block)
         ]
 
-        working_table_columns_sql = (
+        working_table_columns_head_sql = (
             ', ' * (0 < len(self.jump_variables)) +
             ', '.join(
                 self.gen_variable(variable, include_type=self.materializedb_flavor)
+                for variable in self.jump_variables
+            )
+        )
+
+        working_table_columns_sql = (
+            ', ' * (0 < len(self.jump_variables)) +
+            ', '.join(
+                self.gen_variable(variable)
                 for variable in self.jump_variables
             )
         )
@@ -377,7 +385,7 @@ class CodeGen:
 
         return dedent(f"""
         {with_sql}
-          "%loop%"({kind_column_sql}, {label_column_sql}{working_table_columns_sql}, {result_column_sql}{trace_column_head_sql}{step_column_head_sql}{ordinaltiy_column_head_sql}) AS (
+          "%loop%"({kind_column_sql}, {label_column_sql}{working_table_columns_head_sql}, {result_column_sql}{trace_column_head_sql}{step_column_head_sql}{ordinaltiy_column_head_sql}) AS (
             (SELECT 'jump' AS "%kind%",
                     '{graph.entry_label.label}' AS "%label%",
                     {initial_row_sql}{(',\n' + ' ' * 20) * bool(initial_row_sql)}CAST(NULL AS {self.emit_type_sql}) AS "%result%"{(',\n' + ' ' * 20) * (self.include_trace or self.include_emit_order)}{trace_null_column_sql}{(',\n' + ' ' * 20) * self.include_trace}{step_zero_column_sql}{', ' * (self.include_trace and self.include_emit_order)}{ordinaltiy_zero_column_sql})
@@ -387,7 +395,7 @@ class CodeGen:
                 _indent(
                     dedent(
                         f"""
-                        "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}{ordinaltiy_column_sql}) AS{" MATERIALIZED" * self.explicit_materialized} (
+                        "%loop%"("%kind%", "%label%"{working_table_columns_head_sql}, "%result%"{trace_column_sql}{ordinaltiy_column_sql}) AS{" MATERIALIZED" * self.explicit_materialized} (
                           SELECT * FROM "%loop%"
                         ),
                         """[1:]
