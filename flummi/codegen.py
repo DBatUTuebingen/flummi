@@ -306,7 +306,7 @@ class CodeGen:
 
         blocks = _indent(',\n'.join(
             self.gen_block(graph.blocks[label])
-            for label in dependent_ordering(collect_gotos(graph), False)
+            for label in dependent_ordering(collect_gotos(graph))
         ), ' ' * 14)
 
         kind_column_sql = f'"%kind%"{" text" * self.materializedb_flavor}'
