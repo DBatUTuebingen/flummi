@@ -413,7 +413,7 @@ class CodeGen:
                             (
                                 dedent(
                                     f"""
-                                    SELECT 'emit', NULL{working_table_nulls_sql}, "%result%"{', ' * self.include_trace}{trace_null_column_sql}{', ' * self.include_trace}{step_null_column_sql}{ordinaltiy_column_sql}
+                                    SELECT 'emit', CAST(NULL AS text){working_table_nulls_sql}, "%result%"{', ' * self.include_trace}{trace_null_column_sql}{', ' * self.include_trace}{step_null_column_sql}{ordinaltiy_column_sql}
                                     FROM   "{label.label}"
                                     WHERE  "%kind%"='emit'
                                     """
@@ -645,7 +645,7 @@ class CodeGen:
                         (
                             dedent(
                                 f"""
-                                SELECT 'emit', NULL{output_nulls_sql},
+                                SELECT 'emit', CAST(NULL AS text){output_nulls_sql},
                                        CAST({_indent(self.gen_expression(emit.to_emit), ' ' * 45)} AS {self.emit_type_sql}){trace_null_column_sql}{step_null_column_sql}{ordinality_column_sql}
                                 FROM   "%inputs%"
                                 """
