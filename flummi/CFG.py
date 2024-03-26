@@ -53,6 +53,7 @@ class Nothing(Action):
 
 @dataclass
 class Wait(Action):
+    handle: Label
     targets: list[grammar.Variable]
 
 
@@ -84,17 +85,18 @@ class Return(TerminalType):
 
 @dataclass
 class Jump(TerminalType):
-    label: Label
+    target: Label
 
 
 @dataclass
 class GoTo(TerminalType):
-    label: Label
+    target: Label
 
 
 @dataclass
 class Call(TerminalType):
-    label: Label
+    handle: Label
+    target: Label
     arguments: list[grammar.Variable]
 
 
@@ -103,7 +105,7 @@ type Node = Graph | Block | Action | Assignment | Terminal | TerminalType
 
 def successors(block: Block) -> set[Label]:
     return {
-        terminal.type.label
+        terminal.type.target
         for terminal in block.terminals
         if isinstance(terminal.type, (Jump, GoTo))
     }
@@ -111,7 +113,7 @@ def successors(block: Block) -> set[Label]:
 
 def jumps(block: Block) -> set[Label]:
     return {
-        terminal.type.label
+        terminal.type.target
         for terminal in block.terminals
         if isinstance(terminal.type, Jump)
     }
@@ -119,7 +121,7 @@ def jumps(block: Block) -> set[Label]:
 
 def gotos(block: Block) -> set[Label]:
     return {
-        terminal.type.label
+        terminal.type.target
         for terminal in block.terminals
         if isinstance(terminal.type, GoTo)
     }
@@ -127,7 +129,7 @@ def gotos(block: Block) -> set[Label]:
 
 def calls(block: Block) -> set[Label]:
     return {
-        terminal.type.label
+        terminal.type.target
         for terminal in block.terminals
         if isinstance(terminal.type, Call)
     }

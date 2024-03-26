@@ -88,6 +88,9 @@ class Style:
     def CALL(self): return self.keyword('CALL')
 
     @property
+    def AS(self): return self.keyword('AS')
+
+    @property
     def IF(self): return self.keyword('IF')
 
     @property
@@ -98,6 +101,9 @@ class Style:
 
     @property
     def WAIT(self): return self.keyword('WAIT')
+
+    @property
+    def ON(self): return self.keyword('ON')
 
     @property
     def COMMA(self): return self.punctuation(',')
@@ -169,9 +175,9 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
         case CFG.Nothing():
             return ""
 
-        case CFG.Wait(variables):
+        case CFG.Wait(handle, variables):
             variables = f'{style.COMMA} '.join(map(pretty, variables))
-            return f"{style.WAIT} {variables}"
+            return f"{style.WAIT} {handle.label} {style.ON} {variables}"
 
         case CFG.Assignments(assignments):
             return '\n'.join(map(pretty, assignments))
@@ -203,9 +209,9 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
         case CFG.GoTo(target):
             return f"{style.GOTO} {style.label(target)}"
 
-        case CFG.Call(target, arguments):
+        case CFG.Call(handle, target, arguments):
             arguments = f"{style.COMMA} ".join(map(pretty, arguments))
-            return f"{style.CALL} {style.label(target)}{style.LPAREN}{arguments}{style.RPAREN}"
+            return f"{style.CALL} {style.label(target)}{style.LPAREN}{arguments}{style.RPAREN} {style.AS} {handle.label}"
 
         case grammar.Call(_, variables, function, arguments):
             variables = f"{style.COMMA} ".join(map(pretty, variables))

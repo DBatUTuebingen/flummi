@@ -1,8 +1,5 @@
 from collections import defaultdict
-from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Generator
-from warnings import warn
 
 from . import CFG, grammar, errors
 
@@ -98,9 +95,10 @@ class Lowering:
     def add_wait(
         self,
         label: CFG.Label,
+        handle: CFG.Label,
         variables: list[grammar.Variable],
     ) -> CFG.Label:
-        wait = CFG.Wait(variables)
+        wait = CFG.Wait(handle, variables)
         match self._blocks.get(label):
             case None:
                 self.new_block(
@@ -182,12 +180,13 @@ class Lowering:
     def add_call(
         self,
         label: CFG.Label,
+        handle: CFG.Label,
         target: CFG.Label,
         arguments: list[grammar.Variable]
     ):
         self.add_terminal(
             label,
-            CFG.Call(target, arguments)
+            CFG.Call(handle, target, arguments)
         )
 
     def _get_loop_labels(self, name: grammar.Variable) -> tuple[CFG.Label, CFG.Label]:
@@ -291,14 +290,16 @@ class Lowering:
                 return dead_label
 
             case grammar.Call(_, variables, target, arguments):
+                handle = self.make_label("call")
                 self.add_call(
                     label,
+                    handle,
                     self.function_entry_labels[target],
                     arguments
                 )
                 wait_label = self.make_label("wait")
                 self.add_goto(label, wait_label)
-                return self.add_wait(wait_label, variables)
+                return self.add_wait(wait_label, handle, variables)
 
             case _:
                 raise LoweringError(
