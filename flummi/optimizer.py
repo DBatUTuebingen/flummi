@@ -44,14 +44,14 @@ def optimize(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
   )
 
 
-type Trace = list[CFG.BlockLabel]
+type Trace = list[CFG.Label]
 
 
 def find_traces(graph: CFG.Graph) -> list[Trace]:
   successors = collect_successors(graph)
   predecessors = invert_label_graph(successors)
 
-  stack: list[tuple[int, CFG.BlockLabel]] = [(0, graph.entry_label)]
+  stack: list[tuple[int, CFG.Label]] = [(0, graph.entry_label)]
   traces = [[]]
   visited = set()
 

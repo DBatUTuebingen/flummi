@@ -5,7 +5,7 @@ import operator as op
 from . import CFG
 
 
-type LabelGraph = dict[CFG.BlockLabel, set[CFG.BlockLabel]]
+type LabelGraph = dict[CFG.Label, set[CFG.Label]]
 
 
 def collect_successors(graph: CFG.Graph) -> LabelGraph:
@@ -40,7 +40,7 @@ def invert_label_graph(graph: LabelGraph) -> LabelGraph:
   return new
 
 
-def dependent_ordering(graph: LabelGraph) -> Iterator[CFG.BlockLabel]:
+def dependent_ordering(graph: LabelGraph) -> Iterator[CFG.Label]:
   predecessors = invert_label_graph(graph)
   stack = [*sorted(
     (
@@ -64,7 +64,7 @@ def dependent_ordering(graph: LabelGraph) -> Iterator[CFG.BlockLabel]:
         stack.append(child)
 
 
-def compute_dominator_tree(successors: LabelGraph, entry_labels: set[CFG.BlockLabel]) -> LabelGraph:
+def compute_dominator_tree(successors: LabelGraph, entry_labels: set[CFG.Label]) -> LabelGraph:
     predecessors = invert_label_graph(successors)
 
     dom = {
@@ -90,7 +90,7 @@ def compute_dominator_tree(successors: LabelGraph, entry_labels: set[CFG.BlockLa
     return dom
 
 
-def loop_heads(successors: LabelGraph) -> set[CFG.BlockLabel]:
+def loop_heads(successors: LabelGraph) -> set[CFG.Label]:
     predecessors = invert_label_graph(successors)
 
     entry_labels = {

@@ -50,8 +50,8 @@ class CodeGen:
     include_emit_order: bool
     force_with_recursive: bool
 
-    entry_label: CFG.BlockLabel = field(init=False)
-    inputs: dict[CFG.BlockLabel, list[grammar.Variable]] = field(init=False)
+    entry_label: CFG.Label = field(init=False)
+    inputs: dict[CFG.Label, list[grammar.Variable]] = field(init=False)
     jump_predecessors: LabelGraph = field(init=False)
     goto_predecessors: LabelGraph = field(init=False)
     jump_variables: list[grammar.Variable] = field(init=False)

@@ -6,7 +6,7 @@ from . import grammar
 from .utils import *
 
 __all__ = (
-    "BlockLabel",
+    "Label",
     "Graph",
     "Block",
     "Action",
@@ -24,20 +24,20 @@ __all__ = (
 
 
 @dataclass(unsafe_hash=True)
-class BlockLabel:
+class Label:
     label: str
 
 
 @dataclass
 class Graph:
-    entry_label: BlockLabel
+    entry_label: Label
     initialising_assignment: Assignment | None
-    blocks: dict[BlockLabel, Block]
+    blocks: dict[Label, Block]
 
 
 @dataclass
 class Block:
-    label: BlockLabel
+    label: Label
     action: Action
     terminals: list[Terminal]
 
@@ -84,24 +84,24 @@ class Return(TerminalType):
 
 @dataclass
 class Jump(TerminalType):
-    label: BlockLabel
+    label: Label
 
 
 @dataclass
 class GoTo(TerminalType):
-    label: BlockLabel
+    label: Label
 
 
 @dataclass
 class Call(TerminalType):
-    label: BlockLabel
+    label: Label
     arguments: list[grammar.Variable]
 
 
 type Node = Graph | Block | Action | Assignment | Terminal | TerminalType
 
 
-def successors(block: Block) -> set[BlockLabel]:
+def successors(block: Block) -> set[Label]:
     return {
         terminal.type.label
         for terminal in block.terminals
@@ -109,7 +109,7 @@ def successors(block: Block) -> set[BlockLabel]:
     }
 
 
-def jumps(block: Block) -> set[BlockLabel]:
+def jumps(block: Block) -> set[Label]:
     return {
         terminal.type.label
         for terminal in block.terminals
@@ -117,7 +117,7 @@ def jumps(block: Block) -> set[BlockLabel]:
     }
 
 
-def gotos(block: Block) -> set[BlockLabel]:
+def gotos(block: Block) -> set[Label]:
     return {
         terminal.type.label
         for terminal in block.terminals
@@ -125,7 +125,7 @@ def gotos(block: Block) -> set[BlockLabel]:
     }
 
 
-def calls(block: Block) -> set[BlockLabel]:
+def calls(block: Block) -> set[Label]:
     return {
         terminal.type.label
         for terminal in block.terminals

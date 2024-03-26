@@ -33,7 +33,7 @@ class Style:
     def punctuation(self, op: str) -> str:
         return self._style(self.punctuation_style, op)
 
-    def label(self, label: CFG.BlockLabel) -> str:
+    def label(self, label: CFG.Label) -> str:
         return self._style(self.label_style, label.label)
 
     def external(self, content: str) -> str:

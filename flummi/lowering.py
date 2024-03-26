@@ -23,14 +23,14 @@ def lower(program: grammar.Program) -> CFG.Graph:
 @dataclass
 class Lowering:
     _label_prefix: str | None = field(init=False, default=None)
-    _current_label: CFG.BlockLabel = field(init=False)
-    _blocks: dict[CFG.BlockLabel, CFG.Block] = field(init=False, default_factory=dict)
-    _loop_labels: dict[grammar.Variable, tuple[CFG.BlockLabel, CFG.BlockLabel]] = field(init=False, default_factory=dict)
+    _current_label: CFG.Label = field(init=False)
+    _blocks: dict[CFG.Label, CFG.Block] = field(init=False, default_factory=dict)
+    _loop_labels: dict[grammar.Variable, tuple[CFG.Label, CFG.Label]] = field(init=False, default_factory=dict)
     _variable_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
     _label_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
-    _function_entry_labels: dict[grammar.Variable, CFG.BlockLabel] = field(init=False, default_factory=dict)
+    _function_entry_labels: dict[grammar.Variable, CFG.Label] = field(init=False, default_factory=dict)
 
-    def make_label(self, suffix: str, prefix: str | None = None) -> CFG.BlockLabel:
+    def make_label(self, suffix: str, prefix: str | None = None) -> CFG.Label:
         name = (
             f"{prefix}%{suffix}"
             if prefix is not None else
@@ -39,9 +39,9 @@ class Lowering:
             suffix
         )
         self._label_counters[name] += 1
-        return CFG.BlockLabel(f"{name}%{self._label_counters[name]}")
+        return CFG.Label(f"{name}%{self._label_counters[name]}")
 
-    def make_loop_labels(self, name: grammar.Variable) -> tuple[CFG.BlockLabel, CFG.BlockLabel]:
+    def make_loop_labels(self, name: grammar.Variable) -> tuple[CFG.Label, CFG.Label]:
         head_label = self.make_label(name.identifier + "_head")
         exit_label = self.make_label(name.identifier + "_exit")
         self._loop_labels[name] = (head_label, exit_label)
@@ -49,7 +49,7 @@ class Lowering:
 
     def new_block(
         self,
-        label: CFG.BlockLabel,
+        label: CFG.Label,
         action: CFG.Action | None = None,
         terminals: list[CFG.Terminal] | None = None
     ):
@@ -66,10 +66,10 @@ class Lowering:
 
     def add_assignment(
         self,
-        label: CFG.BlockLabel,
+        label: CFG.Label,
         variables: list[grammar.Variable],
         expression: grammar.Expression
-    ) -> CFG.BlockLabel:
+    ) -> CFG.Label:
         assignment = CFG.Assignment(variables, expression)
         match self._blocks.get(label):
             case None:
@@ -97,9 +97,9 @@ class Lowering:
 
     def add_wait(
         self,
-        label: CFG.BlockLabel,
+        label: CFG.Label,
         variables: list[grammar.Variable],
-    ) -> CFG.BlockLabel:
+    ) -> CFG.Label:
         wait = CFG.Wait(variables)
         match self._blocks.get(label):
             case None:
@@ -124,7 +124,7 @@ class Lowering:
 
     def add_terminal(
         self,
-        label: CFG.BlockLabel,
+        label: CFG.Label,
         type: CFG.TerminalType,
         where: list[grammar.Variable] | None = None,
         where_not: list[grammar.Variable] | None = None
@@ -143,7 +143,7 @@ class Lowering:
 
     def add_return(
         self,
-        label: CFG.BlockLabel,
+        label: CFG.Label,
         variables: list[grammar.Variable],
     ):
         self.add_terminal(
@@ -153,8 +153,8 @@ class Lowering:
 
     def add_goto(
         self,
-        label: CFG.BlockLabel,
-        target: CFG.BlockLabel,
+        label: CFG.Label,
+        target: CFG.Label,
         where: list[grammar.Variable] | None = None,
         where_not: list[grammar.Variable] | None = None
     ):
@@ -167,8 +167,8 @@ class Lowering:
 
     def add_jump(
         self,
-        label: CFG.BlockLabel,
-        target: CFG.BlockLabel,
+        label: CFG.Label,
+        target: CFG.Label,
         where: list[grammar.Variable] | None = None,
         where_not: list[grammar.Variable] | None = None
     ):
@@ -181,8 +181,8 @@ class Lowering:
 
     def add_call(
         self,
-        label: CFG.BlockLabel,
-        target: CFG.BlockLabel,
+        label: CFG.Label,
+        target: CFG.Label,
         arguments: list[grammar.Variable]
     ):
         self.add_terminal(
@@ -190,7 +190,7 @@ class Lowering:
             CFG.Call(target, arguments)
         )
 
-    def _get_loop_labels(self, name: grammar.Variable) -> tuple[CFG.BlockLabel, CFG.BlockLabel]:
+    def _get_loop_labels(self, name: grammar.Variable) -> tuple[CFG.Label, CFG.Label]:
         return self._loop_labels[name]
 
     def lower_program(self, program: grammar.Program) -> CFG.Graph:
@@ -221,9 +221,9 @@ class Lowering:
 
     def lower_statement(
         self,
-        label: CFG.BlockLabel,
+        label: CFG.Label,
         statement: grammar.Statement
-    ) -> CFG.BlockLabel | None:
+    ) -> CFG.Label | None:
         match statement:
             case grammar.NoOp():
                 return label
@@ -235,7 +235,7 @@ class Lowering:
                 return self.add_assignment(label, variables, expression)
 
             case grammar.Block(_, statements):
-                next_label: CFG.BlockLabel | None = label
+                next_label: CFG.Label | None = label
                 for statement in statements:
                     if next_label is not None:
                         next_label = self.lower_statement(next_label, statement)

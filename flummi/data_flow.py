@@ -47,7 +47,7 @@ def materialize_data_flow(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
     )
 
 
-def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.BlockLabel, set[CFG.grammar.Variable]], set[CFG.grammar.Variable]]:
+def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.Label, set[CFG.grammar.Variable]], set[CFG.grammar.Variable]]:
     jump_targets = {graph.entry_label} | union(
         CFG.jumps(block)
         for block in graph.blocks.values()
@@ -78,7 +78,7 @@ def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.BlockLabel, set[CFG.gra
     return inputs, jump_set
 
 
-def compute_outputs(successors: LabelGraph, inputs: dict[CFG.BlockLabel, set[CFG.grammar.Variable]]) -> dict[CFG.BlockLabel, set[CFG.grammar.Variable]]:
+def compute_outputs(successors: LabelGraph, inputs: dict[CFG.Label, set[CFG.grammar.Variable]]) -> dict[CFG.Label, set[CFG.grammar.Variable]]:
   return {
       label: union(inputs[child] for child in children)
       for label, children in successors.items()
