@@ -2,8 +2,8 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass, field
 
-from . import grammar
-from .utils import *
+from . import AST
+from ..utils import *
 
 __all__ = (
     "Label",
@@ -54,7 +54,7 @@ class Nothing(Action):
 @dataclass
 class Wait(Action):
     handle: Label
-    targets: list[grammar.Variable]
+    targets: list[AST.Variable]
 
 
 @dataclass
@@ -64,15 +64,15 @@ class Assignments(Action):
 
 @dataclass
 class Assignment:
-    variables: list[grammar.Variable]
-    expression: grammar.Expression
+    variables: list[AST.Variable]
+    expression: AST.Expression
 
 
 @dataclass
 class Terminal[T]:
     type: T
-    truthy: list[grammar.Variable] = field(default_factory=list)
-    falsey: list[grammar.Variable] = field(default_factory=list)
+    truthy: list[AST.Variable] = field(default_factory=list)
+    falsey: list[AST.Variable] = field(default_factory=list)
 
 
 class TerminalType(ABC):
@@ -80,7 +80,7 @@ class TerminalType(ABC):
 
 @dataclass
 class Return(TerminalType):
-    variables: list[grammar.Variable]
+    variables: list[AST.Variable]
 
 
 @dataclass
@@ -97,7 +97,7 @@ class GoTo(TerminalType):
 class Call(TerminalType):
     handle: Label
     target: Label
-    arguments: list[grammar.Variable]
+    arguments: list[AST.Variable]
 
 
 type Node = Graph | Block | Action | Assignment | Terminal | TerminalType
@@ -143,7 +143,7 @@ def returns(block: Block) -> list[Return]:
     ]
 
 
-def emited_variables(block: Block) -> list[grammar.Variable]:
+def emited_variables(block: Block) -> list[AST.Variable]:
     return sum(
         (
             emit.variables
@@ -161,7 +161,7 @@ def contains_emits(block: Block) -> bool:
     return bool(returns(block))
 
 
-def free_variables(node: Node) -> set[grammar.Variable]:
+def free_variables(node: Node) -> set[AST.Variable]:
     match node:
         case Block(_, action, terminals):
             assigned = bound_variables(node)
@@ -191,7 +191,7 @@ def free_variables(node: Node) -> set[grammar.Variable]:
             return set()
 
 
-def condition_variables(terminal: Terminal) -> set[grammar.Variable]:
+def condition_variables(terminal: Terminal) -> set[AST.Variable]:
     match terminal:
         case Terminal(_, truthy, falsey):
             return {*truthy, *falsey}
@@ -199,7 +199,7 @@ def condition_variables(terminal: Terminal) -> set[grammar.Variable]:
             return set()
 
 
-def bound_variables(block: Block) -> set[grammar.Variable]:
+def bound_variables(block: Block) -> set[AST.Variable]:
     if isinstance(block.action, Assignments):
         return union(
             assignment.variables

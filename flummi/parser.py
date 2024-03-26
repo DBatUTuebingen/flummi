@@ -4,7 +4,9 @@ import re
 from textwrap import dedent
 from typing import Callable, Iterator
 
-from . import grammar, errors
+from .IR import AST
+
+from . import errors
 
 
 __all__ = (
@@ -16,7 +18,7 @@ class ParserError(errors.FlummiError, name="parsing"):
     ...
 
 
-def parse(source: str) -> grammar.Program:
+def parse(source: str) -> AST.Program:
     token_stream = tokenize(source)
     return Parser(token_stream).parse_program()
 
@@ -61,8 +63,8 @@ class Token:
     column: int
 
     @property
-    def location(self) -> grammar.Location:
-        return grammar.Location(self.line, self.column)
+    def location(self) -> AST.Location:
+        return AST.Location(self.line, self.column)
 
 
 def tokenize(code: str) -> Iterator[Token]:
@@ -162,7 +164,7 @@ class Parser:
             if not self.match(separator_type):
                 return
 
-    def parse_expression(self) -> grammar.Expression:
+    def parse_expression(self) -> AST.Expression:
         location = self.current.location
         value = self.expectv(TokenType.EXTERNAL)[1:-1]
         self.expect(TokenType.LEFT_BRACKET)
@@ -171,29 +173,29 @@ class Parser:
         else:
             free_variables = list(self.sequence(TokenType.COMMA, self.parse_variable))
             self.expect(TokenType.RIGHT_BRACKET)
-        return grammar.Expression(
+        return AST.Expression(
             location=location,
             source=dedent(value).strip(),
             free_variables=free_variables
         )
 
-    def parse_variable(self) -> grammar.Variable:
+    def parse_variable(self) -> AST.Variable:
         location = self.current.location
         identifier = self.expectv(TokenType.IDENTIFIER)
-        return grammar.Variable(
+        return AST.Variable(
             location=location,
             identifier=identifier
         )
 
-    def parse_type(self) -> grammar.Type:
+    def parse_type(self) -> AST.Type:
         location = self.current.location
         value = self.expectv(TokenType.EXTERNAL)[1:-1]
-        return grammar.Type(
+        return AST.Type(
             location=location,
             source=value
         )
 
-    def parse_program(self) -> grammar.Program:
+    def parse_program(self) -> AST.Program:
         location = self.current.location
         self.expect(TokenType.CALL)
         main_function_name = self.parse_variable()
@@ -207,14 +209,14 @@ class Parser:
         function_list = [self.parse_function()]
         while not self.done:
             function_list.append(self.parse_function())
-        return grammar.Program(
+        return AST.Program(
             location=location,
             main_function_name=main_function_name,
             inputs=inputs,
             function_list=function_list
         )
 
-    def parse_function(self) -> grammar.Function:
+    def parse_function(self) -> AST.Function:
         location = self.current.location
         self.expect(TokenType.FUN)
         name = self.parse_variable()
@@ -235,7 +237,7 @@ class Parser:
         self.expect(TokenType.COLON)
         body = self.parse_statement()
 
-        return grammar.Function(
+        return AST.Function(
             location=location,
             name=name,
             parameters=parameters,
@@ -243,7 +245,7 @@ class Parser:
             body=body
         )
 
-    def parse_statement(self) -> grammar.Statement:
+    def parse_statement(self) -> AST.Statement:
         if self.lookahead(TokenType.LOOP):
             return self.parse_loop()
         elif self.lookahead(TokenType.CONTINUE):
@@ -263,36 +265,36 @@ class Parser:
         else:
             raise self.error("Expected statement.")
 
-    def parse_loop(self) -> grammar.Loop:
+    def parse_loop(self) -> AST.Loop:
         location = self.current.location
         self.expect(TokenType.LOOP)
         name = self.parse_variable()
         body = self.parse_statement()
-        return grammar.Loop(
+        return AST.Loop(
             location=location,
             name=name,
             body=body
         )
 
-    def parse_continue(self) -> grammar.Continue:
+    def parse_continue(self) -> AST.Continue:
         location = self.current.location
         self.expect(TokenType.CONTINUE)
         name = self.parse_variable()
-        return grammar.Continue(
+        return AST.Continue(
             location=location,
             name=name
         )
 
-    def parse_break(self) -> grammar.Break:
+    def parse_break(self) -> AST.Break:
         location = self.current.location
         self.expect(TokenType.BREAK)
         name = self.parse_variable()
-        return grammar.Break(
+        return AST.Break(
             location=location,
             name=name
         )
 
-    def parse_if(self) -> grammar.If:
+    def parse_if(self) -> AST.If:
         location = self.current.location
         self.expect(TokenType.IF)
         condition = self.parse_variable()
@@ -300,32 +302,32 @@ class Parser:
         truthy_branch = self.parse_statement()
         self.expect(TokenType.ELSE)
         falsey_branch = self.parse_statement()
-        return grammar.If(
+        return AST.If(
             location=location,
             condition=condition,
             truthy_branch=truthy_branch,
             falsey_branch=falsey_branch
         )
 
-    def parse_return(self) -> grammar.Return:
+    def parse_return(self) -> AST.Return:
         location = self.current.location
         self.expect(TokenType.RETURN)
         variables = [self.parse_variable()]
         while self.match(TokenType.COMMA):
             variables.append(self.parse_variable())
-        return grammar.Return(
+        return AST.Return(
             location=location,
             variables=variables
         )
 
-    def parse_variable_bunch(self) -> grammar.Declaration | grammar.Assignment | grammar.Call:
+    def parse_variable_bunch(self) -> AST.Declaration | AST.Assignment | AST.Call:
         location = self.current.location
         variables = [self.parse_variable()]
         while self.match(TokenType.COMMA):
             variables.append(self.parse_variable())
         if self.match(TokenType.LEFT_ARROW):
             expression = self.parse_expression()
-            return grammar.Assignment(
+            return AST.Assignment(
                 location=location,
                 variables=variables,
                 expression=expression
@@ -340,7 +342,7 @@ class Parser:
                 while self.match(TokenType.COMMA):
                     arguments.append(self.parse_variable())
                 self.expect(TokenType.RIGHT_PAREN)
-            return grammar.Call(
+            return AST.Call(
                 location=location,
                 variables=variables,
                 function=function,
@@ -348,7 +350,7 @@ class Parser:
             )
         elif self.match(TokenType.COLON):
             type = self.parse_type()
-            return grammar.Declaration(
+            return AST.Declaration(
                 location=location,
                 variables=variables,
                 type=type
@@ -356,34 +358,34 @@ class Parser:
         else:
             raise self.error("Expected either LEFT_ARROW or COLON.")
 
-    def parse_declaration(self) -> grammar.Declaration:
+    def parse_declaration(self) -> AST.Declaration:
         location = self.current.location
         variables = [self.parse_variable()]
         while self.match(TokenType.COMMA):
             variables.append(self.parse_variable())
         self.expect(TokenType.COLON)
         type = self.parse_type()
-        return grammar.Declaration(
+        return AST.Declaration(
             location=location,
             variables=variables,
             type=type
         )
 
-    def parse_block(self) -> grammar.Block:
+    def parse_block(self) -> AST.Block:
         location = self.current.location
         self.expect(TokenType.LEFT_BRACE)
         statements = [self.parse_statement()]
         while self.match(TokenType.SEMICOLON):
             statements.append(self.parse_statement())
         self.expect(TokenType.RIGHT_BRACE)
-        return grammar.Block(
+        return AST.Block(
             location=location,
             statements=statements
         )
 
-    def parse_noop(self) -> grammar.NoOp:
+    def parse_noop(self) -> AST.NoOp:
         location = self.current.location
         self.expect(TokenType.NOOP)
-        return grammar.NoOp(
+        return AST.NoOp(
             location=location
         )

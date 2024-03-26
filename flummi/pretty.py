@@ -2,7 +2,9 @@ from dataclasses import dataclass
 from itertools import chain
 from textwrap import indent, dedent
 
-from . import CFG, grammar
+from .IR import CFG
+
+from .IR import AST
 from .utils import _indent
 
 
@@ -148,7 +150,7 @@ class Style:
 STYLE = Style()
 
 
-def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
+def pretty(node: CFG.Node | AST.Node, *, style: Style = STYLE) -> str:
     match node:
         case CFG.Graph(entry_label, _, blocks):
             blocks = (
@@ -182,7 +184,7 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
         case CFG.Assignments(assignments):
             return '\n'.join(map(pretty, assignments))
 
-        case CFG.Assignment(variables, expression) | grammar.Assignment(_, variables, expression):
+        case CFG.Assignment(variables, expression) | AST.Assignment(_, variables, expression):
             variables = f"{style.COMMA} ".join(map(pretty, variables))
             return f"{variables} {style.LARROW} {_indent(pretty(expression), ' ' * (len(variables) + 4))}"
 
@@ -199,7 +201,7 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
             variables = f"{style.COMMA} ".join(map(pretty, variables))
             return f"{style.RETURN} {variables}"
 
-        case grammar.Return(_, variables):
+        case AST.Return(_, variables):
             variables = f"{style.COMMA} ".join(map(pretty, variables))
             return f"{style.RETURN} {variables}"
 
@@ -213,38 +215,38 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
             arguments = f"{style.COMMA} ".join(map(pretty, arguments))
             return f"{style.CALL} {style.label(target)}{style.LPAREN}{arguments}{style.RPAREN} {style.AS} {handle.label}"
 
-        case grammar.Call(_, variables, function, arguments):
+        case AST.Call(_, variables, function, arguments):
             variables = f"{style.COMMA} ".join(map(pretty, variables))
             function = pretty(function)
             arguments = f"{style.COMMA} ".join(map(pretty, arguments))
             return f"{variables} {style.DLARROW} {function}{style.LPAREN}{arguments}{style.RPAREN}"
 
-        case grammar.Type(_, source):
+        case AST.Type(_, source):
             return style.external(f"§{_indent(source, ' ')}§")
 
-        case grammar.Expression(_, source, free_variables):
+        case AST.Expression(_, source, free_variables):
             return (
                 f"{style.PARA}{style.external(_indent(source, ' '))}{style.PARA}"
                 f"{style.LBRACK}{f"{style.COMMA} ".join(map(pretty, free_variables))}{style.RBRACK}"
             )
 
-        case grammar.Declaration(_, variables, type):
+        case AST.Declaration(_, variables, type):
             variables = f"{style.COMMA} ".join(map(pretty, variables))
             return f"{variables} {style.COLON} {_indent(pretty(type), ' ' * (len(variables) + 3))}"
 
-        case grammar.Variable(_, identifier):
+        case AST.Variable(_, identifier):
             return identifier
 
-        case grammar.NoOp(_):
+        case AST.NoOp(_):
             return style.NOOP
 
-        case grammar.Continue(_, loop_label):
+        case AST.Continue(_, loop_label):
             return f"{style.CONTINUE} {pretty(loop_label)}"
 
-        case grammar.Break(_, loop_label):
+        case AST.Break(_, loop_label):
             return f"{style.BREAK} {pretty(loop_label)}"
 
-        case grammar.Block(_, statements):
+        case AST.Block(_, statements):
             if statements:
                 statements = f"{style.SEMI}\n  ".join(
                     _indent(pretty(statement), '  ')
@@ -254,17 +256,17 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
             else:
                 return f"{style.LBRACE}{style.RBRACE}"
 
-        case grammar.Loop(_, label, body):
+        case AST.Loop(_, label, body):
             return f"{style.LOOP} {pretty(label)} {pretty(body)}"
 
-        case grammar.If(_, condition, truthy, falsey):
+        case AST.If(_, condition, truthy, falsey):
             return (
                 f"{style.IF} {pretty(condition)}\n"
                 f"{style.THEN} {pretty(truthy)}\n"
                 f"{style.ELSE} {pretty(falsey)}"
             )
 
-        case grammar.Function(_, name, parameters, returns, body):
+        case AST.Function(_, name, parameters, returns, body):
             name = pretty(name)
             parameters = f"{style.COMMA} ".join(
                 f"{pretty(parameter)}{style.COLON} {pretty(type)}"
@@ -274,7 +276,7 @@ def pretty(node: CFG.Node | grammar.Node, *, style: Style = STYLE) -> str:
             body = pretty(body)
             return f"{style.FUN} {name}{style.LPAREN}{parameters}{style.RPAREN} {style.RARROW} {returns} {body}"
 
-        case grammar.Program(_, main_function_name, inputs, function_list):
+        case AST.Program(_, main_function_name, inputs, function_list):
             main_function_name = pretty(main_function_name)
             inputs = pretty(inputs) if inputs is not None else ""
             function_list = "\n\n".join(map(pretty, function_list))

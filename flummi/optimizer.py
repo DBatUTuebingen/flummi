@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from . import CFG, grammar
+from .IR import CFG, AST
 from .label_graph import *
 from .utils import *
 
@@ -96,8 +96,8 @@ type DependenceGraph = dict[int, set[int]]
 
 
 def build_dependence_graph(statements: list[Statement]) -> DependenceGraph:
-  writes: dict[int, set[grammar.Variable]] = {}
-  reads: dict[int, set[grammar.Variable]] = {}
+  writes: dict[int, set[AST.Variable]] = {}
+  reads: dict[int, set[AST.Variable]] = {}
 
   for i, statement in enumerate(statements):
     match statement:

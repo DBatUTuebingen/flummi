@@ -2,7 +2,7 @@ import argparse, sys
 from enum import Enum, unique, auto
 from pathlib import Path
 
-from . import CFG
+from .IR import CFG
 
 from .parser import parse
 from .analyzer import analyze

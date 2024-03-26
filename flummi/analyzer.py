@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field, replace
 from itertools import chain
 
-from . import grammar, errors
+from .IR import AST
+
+from . import errors
 
 __all__ = (
     "analyze",
@@ -13,12 +15,12 @@ class AnalysisError(errors.FlummiError, name="analysis"):
     ...
 
 
-type SymbolTable = dict[grammar.Variable, grammar.Type]
+type SymbolTable = dict[AST.Variable, AST.Type]
 
 
 def analyze(
-    program: grammar.Program
-) -> tuple[grammar.Program, SymbolTable]:
+    program: AST.Program
+) -> tuple[AST.Program, SymbolTable]:
     for i, function in enumerate(program.function_list):
         for other_function in program.function_list[i+1:]:
             if function.name.identifier == other_function.name.identifier:
@@ -57,23 +59,23 @@ def analyze(
 
 @dataclass
 class Analyzer:
-    program          : grammar.Program
+    program          : AST.Program
 
-    function_name    : grammar.Variable = field(init=False)
+    function_name    : AST.Variable = field(init=False)
 
     symbol_table     : SymbolTable            = field(init=False, default_factory=dict)
-    bound_symbols    : set[grammar.Variable]  = field(init=False, default_factory=set)
-    names            : list[grammar.Variable] = field(init=False, default_factory=list)
+    bound_symbols    : set[AST.Variable]  = field(init=False, default_factory=set)
+    names            : list[AST.Variable] = field(init=False, default_factory=list)
 
-    loop_names       : set[grammar.Variable]        = field(init=False, default_factory=set)
-    loop_scope       : list[grammar.Variable]       = field(init=False, default_factory=list)
-    loop_broken      : dict[grammar.Variable, bool] = field(init=False, default_factory=dict)
-    loop_stopped     : dict[grammar.Variable, bool] = field(init=False, default_factory=dict)
+    loop_names       : set[AST.Variable]        = field(init=False, default_factory=set)
+    loop_scope       : list[AST.Variable]       = field(init=False, default_factory=list)
+    loop_broken      : dict[AST.Variable, bool] = field(init=False, default_factory=dict)
+    loop_stopped     : dict[AST.Variable, bool] = field(init=False, default_factory=dict)
 
     def analyze(
         self,
-        function: grammar.Function
-    ) -> tuple[grammar.Function, SymbolTable]:
+        function: AST.Function
+    ) -> tuple[AST.Function, SymbolTable]:
         self.symbol_table.update(function.parameters)
         self.bound_symbols.update(function.parameters.keys())
         self.names.extend(function.parameters.keys())
@@ -99,10 +101,10 @@ class Analyzer:
 
     def analyze_statement(
         self,
-        statement: grammar.Statement
-    ) -> tuple[grammar.Statement, bool, bool]:
+        statement: AST.Statement
+    ) -> tuple[AST.Statement, bool, bool]:
         match statement:
-            case grammar.Block(location, statements):
+            case AST.Block(location, statements):
                 if not statements:
                     raise AnalysisError(
                         "Found empty block.",
@@ -132,10 +134,10 @@ class Analyzer:
                         len(new_statements) == 0
                     )
 
-            case grammar.NoOp(_):
+            case AST.NoOp(_):
                 return statement, False, True
 
-            case grammar.Declaration(_, variables, type):
+            case AST.Declaration(_, variables, type):
                 for variable in variables:
                     if variable in self.symbol_table:
                         original_declaration = next(
@@ -157,7 +159,7 @@ class Analyzer:
 
                 return statement, False, True
 
-            case grammar.Assignment(_, variables, expression):
+            case AST.Assignment(_, variables, expression):
                 self.analyze_expression(expression)
 
                 for variable in variables:
@@ -165,7 +167,7 @@ class Analyzer:
 
                 return statement, False, False
 
-            case grammar.Return(_, variables):
+            case AST.Return(_, variables):
                 for loop_label in self.loop_scope:
                     self.loop_stopped[loop_label] = True
 
@@ -187,7 +189,7 @@ class Analyzer:
                 return statement, True, False
 
 
-            case grammar.If(_, condition, truthy_branch, falsey_branch):
+            case AST.If(_, condition, truthy_branch, falsey_branch):
                 self.analyze_variable_read(condition)
 
                 truthy_branch, truthy_stopped, elide_truthy =\
@@ -200,17 +202,17 @@ class Analyzer:
                     replace(
                         statement,
                         truthy_branch=
-                            grammar.NoOp(truthy_branch.location)
+                            AST.NoOp(truthy_branch.location)
                             if elide_truthy else truthy_branch,
                         falsey_branch=
-                            grammar.NoOp(falsey_branch.location)
+                            AST.NoOp(falsey_branch.location)
                             if elide_falsey else falsey_branch
                     ),
                     truthy_stopped and falsey_stopped,
                     elide_truthy and elide_falsey
                 )
 
-            case grammar.Loop(location, loop_label, body):
+            case AST.Loop(location, loop_label, body):
                 if loop_label in self.loop_names:
                     original_introduction = next(
                         variable
@@ -252,7 +254,7 @@ class Analyzer:
                     elide_body
                 )
 
-            case grammar.Break(_, loop_label):
+            case AST.Break(_, loop_label):
                 if loop_label not in self.loop_scope:
                     raise AnalysisError(
                         "Found break to unintroduced loop label "
@@ -267,7 +269,7 @@ class Analyzer:
 
                 return statement, False, False
 
-            case grammar.Continue(_, loop_label):
+            case AST.Continue(_, loop_label):
                 if loop_label not in self.loop_scope:
                     raise AnalysisError(
                         "Found continue to unintroduced loop label "
@@ -277,7 +279,7 @@ class Analyzer:
 
                 return statement, False, False
 
-            case grammar.Call(_, variables, function, arguments):
+            case AST.Call(_, variables, function, arguments):
                 if function not in self.program.functions:
                     raise AnalysisError(
                         "Found call to unknown function "
@@ -311,11 +313,11 @@ class Analyzer:
                     statement.location
                 )
 
-    def analyze_expression(self, expression: grammar.Expression):
+    def analyze_expression(self, expression: AST.Expression):
         for variable in expression.free_variables:
             self.analyze_variable_read(variable)
 
-    def analyze_variable_read(self, variable: grammar.Variable):
+    def analyze_variable_read(self, variable: AST.Variable):
         if variable not in self.bound_symbols:
             raise AnalysisError(
                 "Found read from uninitialised variable "
@@ -324,7 +326,7 @@ class Analyzer:
             )
         self.names.append(variable)
 
-    def analyze_variable_write(self, variable: grammar.Variable):
+    def analyze_variable_write(self, variable: AST.Variable):
         if variable not in self.bound_symbols:
             if variable not in self.symbol_table:
                 raise AnalysisError(

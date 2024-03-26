@@ -1,6 +1,6 @@
 from itertools import chain
 
-from . import CFG
+from .IR import CFG
 from .pretty import pretty, STYLE
 
 

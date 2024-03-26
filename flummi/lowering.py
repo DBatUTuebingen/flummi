@@ -1,7 +1,9 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from . import CFG, grammar, errors
+from .IR import AST, CFG
+
+from . import errors
 
 
 __all__ = (
@@ -13,7 +15,7 @@ class LoweringError(errors.FlummiError, name="lowering"):
     ...
 
 
-def lower(program: grammar.Program) -> CFG.Graph:
+def lower(program: AST.Program) -> CFG.Graph:
     return Lowering().lower_program(program)
 
 
@@ -22,10 +24,10 @@ class Lowering:
     _label_prefix: str | None = field(init=False, default=None)
     _current_label: CFG.Label = field(init=False)
     _blocks: dict[CFG.Label, CFG.Block] = field(init=False, default_factory=dict)
-    _loop_labels: dict[grammar.Variable, tuple[CFG.Label, CFG.Label]] = field(init=False, default_factory=dict)
+    _loop_labels: dict[AST.Variable, tuple[CFG.Label, CFG.Label]] = field(init=False, default_factory=dict)
     _variable_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
     _label_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
-    _function_entry_labels: dict[grammar.Variable, CFG.Label] = field(init=False, default_factory=dict)
+    _function_entry_labels: dict[AST.Variable, CFG.Label] = field(init=False, default_factory=dict)
 
     def make_label(self, suffix: str, prefix: str | None = None) -> CFG.Label:
         name = (
@@ -38,7 +40,7 @@ class Lowering:
         self._label_counters[name] += 1
         return CFG.Label(f"{name}%{self._label_counters[name]}")
 
-    def make_loop_labels(self, name: grammar.Variable) -> tuple[CFG.Label, CFG.Label]:
+    def make_loop_labels(self, name: AST.Variable) -> tuple[CFG.Label, CFG.Label]:
         head_label = self.make_label(name.identifier + "_head")
         exit_label = self.make_label(name.identifier + "_exit")
         self._loop_labels[name] = (head_label, exit_label)
@@ -64,8 +66,8 @@ class Lowering:
     def add_assignment(
         self,
         label: CFG.Label,
-        variables: list[grammar.Variable],
-        expression: grammar.Expression
+        variables: list[AST.Variable],
+        expression: AST.Expression
     ) -> CFG.Label:
         assignment = CFG.Assignment(variables, expression)
         match self._blocks.get(label):
@@ -96,7 +98,7 @@ class Lowering:
         self,
         label: CFG.Label,
         handle: CFG.Label,
-        variables: list[grammar.Variable],
+        variables: list[AST.Variable],
     ) -> CFG.Label:
         wait = CFG.Wait(handle, variables)
         match self._blocks.get(label):
@@ -124,8 +126,8 @@ class Lowering:
         self,
         label: CFG.Label,
         type: CFG.TerminalType,
-        where: list[grammar.Variable] | None = None,
-        where_not: list[grammar.Variable] | None = None
+        where: list[AST.Variable] | None = None,
+        where_not: list[AST.Variable] | None = None
     ):
         block = self._blocks.get(label)
         if block is None:
@@ -142,7 +144,7 @@ class Lowering:
     def add_return(
         self,
         label: CFG.Label,
-        variables: list[grammar.Variable],
+        variables: list[AST.Variable],
     ):
         self.add_terminal(
             label,
@@ -153,8 +155,8 @@ class Lowering:
         self,
         label: CFG.Label,
         target: CFG.Label,
-        where: list[grammar.Variable] | None = None,
-        where_not: list[grammar.Variable] | None = None
+        where: list[AST.Variable] | None = None,
+        where_not: list[AST.Variable] | None = None
     ):
         self.add_terminal(
             label,
@@ -167,8 +169,8 @@ class Lowering:
         self,
         label: CFG.Label,
         target: CFG.Label,
-        where: list[grammar.Variable] | None = None,
-        where_not: list[grammar.Variable] | None = None
+        where: list[AST.Variable] | None = None,
+        where_not: list[AST.Variable] | None = None
     ):
         self.add_terminal(
             label,
@@ -182,17 +184,17 @@ class Lowering:
         label: CFG.Label,
         handle: CFG.Label,
         target: CFG.Label,
-        arguments: list[grammar.Variable]
+        arguments: list[AST.Variable]
     ):
         self.add_terminal(
             label,
             CFG.Call(handle, target, arguments)
         )
 
-    def _get_loop_labels(self, name: grammar.Variable) -> tuple[CFG.Label, CFG.Label]:
+    def _get_loop_labels(self, name: AST.Variable) -> tuple[CFG.Label, CFG.Label]:
         return self._loop_labels[name]
 
-    def lower_program(self, program: grammar.Program) -> CFG.Graph:
+    def lower_program(self, program: AST.Program) -> CFG.Graph:
         self.function_entry_labels = {
             function.name:
             self.make_label("entry", prefix=function.name.identifier)
@@ -211,7 +213,7 @@ class Lowering:
             blocks=self._blocks,
         )
 
-    def lower_function(self, function: grammar.Function) -> None:
+    def lower_function(self, function: AST.Function) -> None:
         self._label_prefix = function.name.identifier
         self.lower_statement(
             self.function_entry_labels[function.name],
@@ -221,26 +223,26 @@ class Lowering:
     def lower_statement(
         self,
         label: CFG.Label,
-        statement: grammar.Statement
+        statement: AST.Statement
     ) -> CFG.Label | None:
         match statement:
-            case grammar.NoOp():
+            case AST.NoOp():
                 return label
 
-            case grammar.Return(_, variables):
+            case AST.Return(_, variables):
                 self.add_return(label, variables)
 
-            case grammar.Assignment(_, variables, expression):
+            case AST.Assignment(_, variables, expression):
                 return self.add_assignment(label, variables, expression)
 
-            case grammar.Block(_, statements):
+            case AST.Block(_, statements):
                 next_label: CFG.Label | None = label
                 for statement in statements:
                     if next_label is not None:
                         next_label = self.lower_statement(next_label, statement)
                 return next_label
 
-            case grammar.If(_, condition, truthy_branch, falsey_branch):
+            case AST.If(_, condition, truthy_branch, falsey_branch):
                 truthy_label = self.make_label("truthy")
                 self.add_goto(
                     label,
@@ -267,7 +269,7 @@ class Lowering:
 
                 return merge_label
 
-            case grammar.Loop(_, name, body):
+            case AST.Loop(_, name, body):
                 head_label, exit_label = self.make_loop_labels(name)
                 self.add_goto(label, head_label)
                 final_body_label = self.lower_statement(head_label, body)
@@ -275,21 +277,21 @@ class Lowering:
                     self.add_jump(final_body_label, head_label)
                 return exit_label
 
-            case grammar.Continue(_, name):
+            case AST.Continue(_, name):
                 head_label, _ = self._get_loop_labels(name)
                 self.add_jump(label, head_label)
                 dead_label = self.make_label("unreachable")
                 self.new_block(dead_label)
                 return dead_label
 
-            case grammar.Break(_, name):
+            case AST.Break(_, name):
                 _, exit_label = self._get_loop_labels(name)
                 self.add_goto(label, exit_label)
                 dead_label = self.make_label("unreachable")
                 self.new_block(dead_label)
                 return dead_label
 
-            case grammar.Call(_, variables, target, arguments):
+            case AST.Call(_, variables, target, arguments):
                 handle = self.make_label("call")
                 self.add_call(
                     label,

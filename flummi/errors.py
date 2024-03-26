@@ -1,6 +1,6 @@
 from typing import ClassVar
 
-from .grammar import Location
+from .IR.AST import Location
 
 
 __all__ = (

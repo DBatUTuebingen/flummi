@@ -2,8 +2,10 @@ from dataclasses import dataclass, field
 from functools import partial
 from itertools import chain
 
+from .IR import AST, CFG
 
-from . import CFG, grammar, sql, errors
+
+from . import sql, errors
 from .utils import *
 from .analyzer import SymbolTable
 from .label_graph import *
@@ -18,7 +20,7 @@ __all__ = (
 def codegen(
     graph: CFG.Graph,
     symbol_table: SymbolTable,
-    emit_types: list[grammar.Type],
+    emit_types: list[AST.Type],
     include_trace: bool = False,
     explicit_materialized: bool = False,
     avoid_multiple_recursive_references: bool = False,
@@ -43,7 +45,7 @@ class CodeGenError(errors.FlummiError, name="code generation"):
 @dataclass
 class CodeGen:
     symbol_table: SymbolTable
-    emit_types: list[grammar.Type]
+    emit_types: list[AST.Type]
     include_trace: bool
     explicit_materialized: bool
     avoid_multiple_recursive_references: bool
@@ -51,14 +53,14 @@ class CodeGen:
     force_with_recursive: bool
 
     entry_label: CFG.Label = field(init=False)
-    inputs: dict[CFG.Label, list[grammar.Variable]] = field(init=False)
+    inputs: dict[CFG.Label, list[AST.Variable]] = field(init=False)
     jump_predecessors: LabelGraph = field(init=False)
     goto_predecessors: LabelGraph = field(init=False)
-    jump_variables: list[grammar.Variable] = field(init=False)
+    jump_variables: list[AST.Variable] = field(init=False)
     emit_type_sql: str = field(init=False)
     condition_variable_counter: int = field(init=False, default=0)
 
-    def gen_expression(self, expression: grammar.Expression) -> str:
+    def gen_expression(self, expression: AST.Expression) -> str:
         try:
             return expression.source.format(*(
                 f'({sql.variable(variable.identifier, "%input%")})'

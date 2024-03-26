@@ -2,7 +2,7 @@ from collections.abc import Iterator
 from functools import reduce
 import operator as op
 
-from . import CFG
+from .IR import CFG
 
 
 type LabelGraph = dict[CFG.Label, set[CFG.Label]]

@@ -3,7 +3,9 @@ from typing import Any
 
 import duckdb
 
-from . import grammar, errors, sql
+from .IR import AST
+
+from . import errors, sql
 from .pretty import pretty
 
 
@@ -17,19 +19,19 @@ class EvaluationError(errors.FlummiError, name="evaluation"):
 
 
 def interpret(
-    program: grammar.Program,
-    symbol_table: dict[grammar.Variable, grammar.Type],
-    statement: grammar.Statement | None = None,
+    program: AST.Program,
+    symbol_table: dict[AST.Variable, AST.Type],
+    statement: AST.Statement | None = None,
     environment: dict[str, Any] | None = None,
 ) -> tuple[Any, ...]:
     environment = environment or {}
 
     if statement is None:
         if program.inputs is not None:
-            statement = grammar.Block(
+            statement = AST.Block(
                 program.location,
                 [
-                    grammar.Assignment(
+                    AST.Assignment(
                         program.inputs.location,
                         list(program.main_function.parameters.keys()),
                         program.inputs
@@ -40,26 +42,26 @@ def interpret(
         else:
             statement = program.main_function.body
 
-    query_cache: dict[grammar.Location, str] = {}
-    stack: list[grammar.Statement] = [statement]
+    query_cache: dict[AST.Location, str] = {}
+    stack: list[AST.Statement] = [statement]
 
     while stack:
         statement = stack.pop()
 
         match statement:
-            case grammar.NoOp():
+            case AST.NoOp():
                 ...
 
-            case grammar.Block(_, statements):
+            case AST.Block(_, statements):
                 stack.extend(statements[::-1])
 
-            case grammar.Return(_, variables):
+            case AST.Return(_, variables):
                 return tuple(
                     environment[variable.identifier]
                     for variable in variables
                 )
 
-            case grammar.If(_, condition, t_branch, f_branch):
+            case AST.If(_, condition, t_branch, f_branch):
                 choice = environment[condition.identifier]
                 if not isinstance(choice, bool):
                     raise EvaluationError(
@@ -74,22 +76,22 @@ def interpret(
                     )
                 stack.append(t_branch if choice else f_branch)
 
-            case grammar.Loop(_, name, body):
+            case AST.Loop(_, name, body):
                 stack.append(statement)
                 stack.append(body)
 
-            case grammar.Continue(_, name) | grammar.Break(_, name):
+            case AST.Continue(_, name) | AST.Break(_, name):
                 while stack:
                     next = stack.pop()
                     match next:
-                        case grammar.Loop(_, _name, body) if name == _name:
-                            if isinstance(statement, grammar.Continue):
+                        case AST.Loop(_, _name, body) if name == _name:
+                            if isinstance(statement, AST.Continue):
                                 stack.append(next)
                             break
                 else:
                     ...
 
-            case grammar.Assignment(location, variables, expression):
+            case AST.Assignment(location, variables, expression):
                 if location not in query_cache:
                     try:
                         query = sql.select(
@@ -184,7 +186,7 @@ def interpret(
                     for variable, value in zip(variables, row)
                 )
 
-            case grammar.Call(location, variables, function, arguments):
+            case AST.Call(location, variables, function, arguments):
                 function = program.functions[function]
                 arguments = {
                     parameter.identifier:

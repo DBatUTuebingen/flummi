@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from collections.abc import Iterator
 
-from . import CFG, grammar
+from .IR import CFG
+
+from .IR import AST
 from .utils import *
 from .label_graph import LabelGraph, collect_successors
 
@@ -33,8 +35,8 @@ def materialize_data_flow(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
             block.assignments.append(
                 CFG.Assignment(
                     [binding],
-                    grammar.Expression(
-                        grammar.Location(-1,-1),
+                    AST.Expression(
+                        AST.Location(-1,-1),
                         "{0}",
                         [binding]
                     )
@@ -47,7 +49,7 @@ def materialize_data_flow(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
     )
 
 
-def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.Label, set[CFG.grammar.Variable]], set[CFG.grammar.Variable]]:
+def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.Label, set[CFG.AST.Variable]], set[CFG.AST.Variable]]:
     jump_targets = {graph.entry_label} | union(
         CFG.jumps(block)
         for block in graph.blocks.values()
@@ -78,7 +80,7 @@ def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.Label, set[CFG.grammar.
     return inputs, jump_set
 
 
-def compute_outputs(successors: LabelGraph, inputs: dict[CFG.Label, set[CFG.grammar.Variable]]) -> dict[CFG.Label, set[CFG.grammar.Variable]]:
+def compute_outputs(successors: LabelGraph, inputs: dict[CFG.Label, set[CFG.AST.Variable]]) -> dict[CFG.Label, set[CFG.AST.Variable]]:
   return {
       label: union(inputs[child] for child in children)
       for label, children in successors.items()
