@@ -1,11 +1,17 @@
+from dataclasses import dataclass
 from typing import ClassVar
-
-from .IR.AST import Location
 
 
 __all__ = (
-  "FlummiError",
+    "Location",
+    "FlummiError",
 )
+
+
+@dataclass(unsafe_hash=True, order=True)
+class Location:
+    line: int
+    column: int
 
 
 class FlummiError(Exception):

@@ -1,16 +1,13 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from functools import cached_property
+from abc import ABC
+from dataclasses import dataclass
 
+from . import common
 
 __all__ = (
-    "Location",
-    "Variable",
-    "Expression",
-    "Type",
+    "Statement",
     "Program",
     "Function",
-    "Statement",
     "If",
     "Loop",
     "Break",
@@ -23,116 +20,66 @@ __all__ = (
 )
 
 
-
-@dataclass(unsafe_hash=True, order=True)
-class Location:
-    line: int
-    column: int
+type Program[A] = common.Program[A, Statement[A]]
+type Function[A] = common.Function[A, Statement[A]]
 
 
-@dataclass
-class Node:
-    location: Location = field(hash=False, compare=False)
-
-
-@dataclass(unsafe_hash=True, order=True)
-class Variable(Node):
-    identifier: str
-
-
-@dataclass
-class Expression(Node):
-    source: str
-    free_variables: list[Variable]
-
-
-@dataclass
-class Type(Node):
-    source: str
-
-
-@dataclass
-class Program(Node):
-    main_function_name: Variable
-    inputs: Expression | None
-    function_list: list[Function]
-
-    @cached_property
-    def main_function(self) -> Function:
-        return self.functions[self.main_function_name]
-
-    @cached_property
-    def functions(self) -> dict[Variable, Function]:
-        return {
-            function.name: function
-            for function in self.function_list
-        }
-
-
-@dataclass
-class Function(Node):
-    name: Variable
-    parameters: dict[Variable, Type]
-    returns: list[Type]
-    body: Statement
-
-
-class Statement(Node):
+class Statement[A](common.Annotated[A], ABC):
     ...
 
 
 @dataclass
-class Loop(Statement):
-    name: Variable
-    body: Statement
+class Loop[A](Statement[A]):
+    name: common.Identifier[A]
+    body: Statement[A]
 
 
 @dataclass
-class Continue(Statement):
-    name: Variable
+class Continue[A](Statement[A]):
+    name: common.Identifier[A]
 
 
 @dataclass
-class Break(Statement):
-    name: Variable
+class Break[A](Statement[A]):
+    name: common.Identifier[A]
 
 
 @dataclass
-class Return(Statement):
-    variables: list[Variable]
+class Return[A](Statement[A]):
+    variables: list[common.Identifier[A]]
 
 
 @dataclass
-class Declaration(Statement):
-    variables: list[Variable]
-    type: Type
+class Declaration[A](Statement[A]):
+    variables: list[common.Identifier[A]]
+    type: common.Type[A]
 
 
 @dataclass
-class Assignment(Statement):
-    variables: list[Variable]
-    expression: Expression
+class Assignment[A](Statement[A]):
+    variables: list[common.Identifier[A]]
+    expression: common.Expression[A]
 
 
 @dataclass
-class Block(Statement):
+class Block[A](Statement[A]):
     statements: list[Statement]
 
 
 @dataclass
-class NoOp(Statement):
+class NoOp[A](Statement[A]):
     ...
 
 
 @dataclass
-class If(Statement):
-    condition: Variable
-    truthy_branch: Statement
-    falsey_branch: Statement
+class If[A](Statement[A]):
+    condition: common.Identifier[A]
+    truthy_branch: Statement[A]
+    falsey_branch: Statement[A]
 
 
 @dataclass
-class Call(Statement):
-    variables: list[Variable]
-    function: Variable
-    arguments: list[Variable]
+class Call[A](Statement[A]):
+    variables: list[common.Identifier[A]]
+    function: common.Identifier[A]
+    arguments: list[common.Identifier[A]]

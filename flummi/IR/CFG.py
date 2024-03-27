@@ -2,10 +2,13 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass, field
 
-from . import AST
+from . import common
 from ..utils import *
 
 __all__ = (
+    "Function",
+    "Program",
+    "Handle",
     "Label",
     "Graph",
     "Block",
@@ -23,87 +26,98 @@ __all__ = (
 )
 
 
-@dataclass(unsafe_hash=True)
-class Label:
-    label: str
+
+
+type Program[A] = common.Program[A, Graph[A]]
+type Function[A] = common.Function[A, Graph[A]]
+type Label[A] = common.Identifier[A]
+type Handle[A] = common.Identifier[A]
+
 
 
 @dataclass
-class Graph:
+class Graph[A](common.Annotated[A]):
     entry_label: Label
-    initialising_assignment: Assignment | None
     blocks: dict[Label, Block]
 
 
 @dataclass
-class Block:
+class Block[A](common.Annotated[A]):
     label: Label
     action: Action
     terminals: list[Terminal]
 
 
-class Action(ABC):
+class Action[A](common.Annotated[A], ABC):
     ...
 
 
 @dataclass
-class Nothing(Action):
+class Nothing[A](Action[A]):
     ...
 
 
 @dataclass
-class Wait(Action):
-    handle: Label
-    targets: list[AST.Variable]
+class Wait[A](Action[A]):
+    handle: Handle
+    targets: list[common.Identifier[A]]
 
 
 @dataclass
-class Assignments(Action):
+class Assignments[A](Action[A]):
     assignments: list[Assignment]
 
 
 @dataclass
-class Assignment:
-    variables: list[AST.Variable]
-    expression: AST.Expression
+class Assignment[A](common.Annotated[A]):
+    variables: list[common.Identifier[A]]
+    expression: common.Expression[A]
 
 
 @dataclass
-class Terminal[T]:
-    type: T
-    truthy: list[AST.Variable] = field(default_factory=list)
-    falsey: list[AST.Variable] = field(default_factory=list)
+class Terminal[A](common.Annotated[A]):
+    type: TerminalType[A]
+    truthy: list[common.Identifier[A]] = field(default_factory=list)
+    falsey: list[common.Identifier[A]] = field(default_factory=list)
 
 
-class TerminalType(ABC):
+class TerminalType[A](common.Annotated[A], ABC):
     ...
 
-@dataclass
-class Return(TerminalType):
-    variables: list[AST.Variable]
-
 
 @dataclass
-class Jump(TerminalType):
-    target: Label
+class Return[A](TerminalType[A]):
+    variables: list[common.Identifier[A]]
 
 
 @dataclass
-class GoTo(TerminalType):
-    target: Label
+class Jump[A](TerminalType[A]):
+    target: Label[A]
 
 
 @dataclass
-class Call(TerminalType):
-    handle: Label
-    target: Label
-    arguments: list[AST.Variable]
+class GoTo[A](TerminalType[A]):
+    target: Label[A]
 
 
-type Node = Graph | Block | Action | Assignment | Terminal | TerminalType
+@dataclass
+class Call[A](TerminalType[A]):
+    handle: Handle[A]
+    target: Label[A]
+    arguments: list[common.Identifier[A]]
 
 
-def successors(block: Block) -> set[Label]:
+type Node[A] = (
+    Graph[A] |
+    Block[A] |
+    Action[A] |
+    Assignment[A] |
+    Terminal[A] |
+    TerminalType[A]
+)
+
+
+def successors[A](block: Block[A]) -> set[Label[A]]:
     return {
         terminal.type.target
         for terminal in block.terminals
@@ -111,7 +125,7 @@ def successors(block: Block) -> set[Label]:
     }
 
 
-def jumps(block: Block) -> set[Label]:
+def jumps[A](block: Block[A]) -> set[Label[A]]:
     return {
         terminal.type.target
         for terminal in block.terminals
@@ -119,7 +133,7 @@ def jumps(block: Block) -> set[Label]:
     }
 
 
-def gotos(block: Block) -> set[Label]:
+def gotos[A](block: Block[A]) -> set[Label[A]]:
     return {
         terminal.type.target
         for terminal in block.terminals
@@ -127,7 +141,7 @@ def gotos(block: Block) -> set[Label]:
     }
 
 
-def calls(block: Block) -> set[Label]:
+def calls[A](block: Block[A]) -> set[Label[A]]:
     return {
         terminal.type.target
         for terminal in block.terminals
@@ -135,7 +149,7 @@ def calls(block: Block) -> set[Label]:
     }
 
 
-def returns(block: Block) -> list[Return]:
+def returns[A](block: Block[A]) -> list[Return[A]]:
     return [
         terminal.type
         for terminal in block.terminals
@@ -143,7 +157,7 @@ def returns(block: Block) -> list[Return]:
     ]
 
 
-def emited_variables(block: Block) -> list[AST.Variable]:
+def emited_variables[A](block: Block[A]) -> list[common.Identifier[A]]:
     return sum(
         (
             emit.variables
@@ -161,7 +175,7 @@ def contains_emits(block: Block) -> bool:
     return bool(returns(block))
 
 
-def free_variables(node: Node) -> set[AST.Variable]:
+def free_variables[A](node: Node[A]) -> set[common.Identifier[A]]:
     match node:
         case Block(_, action, terminals):
             assigned = bound_variables(node)
@@ -179,7 +193,7 @@ def free_variables(node: Node) -> set[AST.Variable]:
             return set(variables)
 
         case Assignment(_, expression):
-            return set(expression.free_variables)
+            return set(expression.arguments)
 
         case Assignments(assignments):
             vars = set()
@@ -191,7 +205,7 @@ def free_variables(node: Node) -> set[AST.Variable]:
             return set()
 
 
-def condition_variables(terminal: Terminal) -> set[AST.Variable]:
+def condition_variables[A](terminal: Terminal[A]) -> set[common.Identifier[A]]:
     match terminal:
         case Terminal(_, truthy, falsey):
             return {*truthy, *falsey}
@@ -199,7 +213,7 @@ def condition_variables(terminal: Terminal) -> set[AST.Variable]:
             return set()
 
 
-def bound_variables(block: Block) -> set[AST.Variable]:
+def bound_variables[A](block: Block[A]) -> set[common.Identifier[A]]:
     if isinstance(block.action, Assignments):
         return union(
             assignment.variables

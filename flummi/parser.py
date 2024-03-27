@@ -4,7 +4,7 @@ import re
 from textwrap import dedent
 from typing import Callable, Iterator
 
-from .IR import AST
+from .IR import AST, common
 
 from . import errors
 
@@ -14,11 +14,30 @@ __all__ = (
 )
 
 
+type Program     = AST.Program[errors.Location]
+type Function    = AST.Function[errors.Location]
+type Statement   = AST.Statement[errors.Location]
+type Loop        = AST.Loop[errors.Location]
+type Break       = AST.Break[errors.Location]
+type Continue    = AST.Continue[errors.Location]
+type Block       = AST.Block[errors.Location]
+type Return      = AST.Return[errors.Location]
+type If          = AST.If[errors.Location]
+type Assignment  = AST.Assignment[errors.Location]
+type Call        = AST.Call[errors.Location]
+type NoOp        = AST.NoOp[errors.Location]
+type Declaration = AST.Declaration[errors.Location]
+type Expression  = common.Expression[errors.Location]
+type Type        = common.Type[errors.Location]
+type Identifier  = common.Identifier[errors.Location]
+
+
 class ParserError(errors.FlummiError, name="parsing"):
     ...
 
 
-def parse(source: str) -> AST.Program:
+
+def parse(source: str) -> AST.Program[errors.Location]:
     token_stream = tokenize(source)
     return Parser(token_stream).parse_program()
 
@@ -59,12 +78,7 @@ class TokenType(Enum):
 class Token:
     token_type: TokenType
     value: str
-    line: int
-    column: int
-
-    @property
-    def location(self) -> AST.Location:
-        return AST.Location(self.line, self.column)
+    location: errors.Location
 
 
 def tokenize(code: str) -> Iterator[Token]:
@@ -81,7 +95,8 @@ def tokenize(code: str) -> Iterator[Token]:
         if token_type in {TokenType.WHITESPACE, TokenType.COMMENT}:
             continue
 
-        yield Token(token_type, value, line, column)
+        yield Token(token_type, value, errors.Location(line, column))
+
 
 
 @dataclass
@@ -164,7 +179,7 @@ class Parser:
             if not self.match(separator_type):
                 return
 
-    def parse_expression(self) -> AST.Expression:
+    def parse_expression(self) -> Expression:
         location = self.current.location
         value = self.expectv(TokenType.EXTERNAL)[1:-1]
         self.expect(TokenType.LEFT_BRACKET)
@@ -173,29 +188,29 @@ class Parser:
         else:
             free_variables = list(self.sequence(TokenType.COMMA, self.parse_variable))
             self.expect(TokenType.RIGHT_BRACKET)
-        return AST.Expression(
-            location=location,
+        return common.Expression(
+            annotation=location,
             source=dedent(value).strip(),
-            free_variables=free_variables
+            arguments=free_variables
         )
 
-    def parse_variable(self) -> AST.Variable:
+    def parse_variable(self) -> Identifier:
         location = self.current.location
         identifier = self.expectv(TokenType.IDENTIFIER)
-        return AST.Variable(
-            location=location,
+        return common.Identifier(
+            annotation=location,
             identifier=identifier
         )
 
-    def parse_type(self) -> AST.Type:
+    def parse_type(self) -> Type:
         location = self.current.location
         value = self.expectv(TokenType.EXTERNAL)[1:-1]
-        return AST.Type(
-            location=location,
+        return common.Type(
+            annotation=location,
             source=value
         )
 
-    def parse_program(self) -> AST.Program:
+    def parse_program(self) -> Program:
         location = self.current.location
         self.expect(TokenType.CALL)
         main_function_name = self.parse_variable()
@@ -209,14 +224,14 @@ class Parser:
         function_list = [self.parse_function()]
         while not self.done:
             function_list.append(self.parse_function())
-        return AST.Program(
-            location=location,
+        return common.Program(
+            annotation=location,
             main_function_name=main_function_name,
             inputs=inputs,
             function_list=function_list
         )
 
-    def parse_function(self) -> AST.Function:
+    def parse_function(self) -> Function:
         location = self.current.location
         self.expect(TokenType.FUN)
         name = self.parse_variable()
@@ -237,15 +252,15 @@ class Parser:
         self.expect(TokenType.COLON)
         body = self.parse_statement()
 
-        return AST.Function(
-            location=location,
+        return common.Function(
+            annotation=location,
             name=name,
             parameters=parameters,
-            returns=returns,
+            return_types=returns,
             body=body
         )
 
-    def parse_statement(self) -> AST.Statement:
+    def parse_statement(self) -> Statement:
         if self.lookahead(TokenType.LOOP):
             return self.parse_loop()
         elif self.lookahead(TokenType.CONTINUE):
@@ -265,36 +280,36 @@ class Parser:
         else:
             raise self.error("Expected statement.")
 
-    def parse_loop(self) -> AST.Loop:
+    def parse_loop(self) -> Loop:
         location = self.current.location
         self.expect(TokenType.LOOP)
         name = self.parse_variable()
         body = self.parse_statement()
         return AST.Loop(
-            location=location,
+            annotation=location,
             name=name,
             body=body
         )
 
-    def parse_continue(self) -> AST.Continue:
+    def parse_continue(self) -> Continue:
         location = self.current.location
         self.expect(TokenType.CONTINUE)
         name = self.parse_variable()
         return AST.Continue(
-            location=location,
+            annotation=location,
             name=name
         )
 
-    def parse_break(self) -> AST.Break:
+    def parse_break(self) -> Break:
         location = self.current.location
         self.expect(TokenType.BREAK)
         name = self.parse_variable()
         return AST.Break(
-            location=location,
+            annotation=location,
             name=name
         )
 
-    def parse_if(self) -> AST.If:
+    def parse_if(self) -> If:
         location = self.current.location
         self.expect(TokenType.IF)
         condition = self.parse_variable()
@@ -303,24 +318,24 @@ class Parser:
         self.expect(TokenType.ELSE)
         falsey_branch = self.parse_statement()
         return AST.If(
-            location=location,
+            annotation=location,
             condition=condition,
             truthy_branch=truthy_branch,
             falsey_branch=falsey_branch
         )
 
-    def parse_return(self) -> AST.Return:
+    def parse_return(self) -> Return:
         location = self.current.location
         self.expect(TokenType.RETURN)
         variables = [self.parse_variable()]
         while self.match(TokenType.COMMA):
             variables.append(self.parse_variable())
         return AST.Return(
-            location=location,
+            annotation=location,
             variables=variables
         )
 
-    def parse_variable_bunch(self) -> AST.Declaration | AST.Assignment | AST.Call:
+    def parse_variable_bunch(self) -> Declaration | Assignment | Call:
         location = self.current.location
         variables = [self.parse_variable()]
         while self.match(TokenType.COMMA):
@@ -328,7 +343,7 @@ class Parser:
         if self.match(TokenType.LEFT_ARROW):
             expression = self.parse_expression()
             return AST.Assignment(
-                location=location,
+                annotation=location,
                 variables=variables,
                 expression=expression
             )
@@ -343,7 +358,7 @@ class Parser:
                     arguments.append(self.parse_variable())
                 self.expect(TokenType.RIGHT_PAREN)
             return AST.Call(
-                location=location,
+                annotation=location,
                 variables=variables,
                 function=function,
                 arguments=arguments
@@ -351,14 +366,14 @@ class Parser:
         elif self.match(TokenType.COLON):
             type = self.parse_type()
             return AST.Declaration(
-                location=location,
+                annotation=location,
                 variables=variables,
                 type=type
             )
         else:
             raise self.error("Expected either LEFT_ARROW or COLON.")
 
-    def parse_declaration(self) -> AST.Declaration:
+    def parse_declaration(self) -> Declaration:
         location = self.current.location
         variables = [self.parse_variable()]
         while self.match(TokenType.COMMA):
@@ -366,12 +381,12 @@ class Parser:
         self.expect(TokenType.COLON)
         type = self.parse_type()
         return AST.Declaration(
-            location=location,
+            annotation=location,
             variables=variables,
             type=type
         )
 
-    def parse_block(self) -> AST.Block:
+    def parse_block(self) -> Block:
         location = self.current.location
         self.expect(TokenType.LEFT_BRACE)
         statements = [self.parse_statement()]
@@ -379,13 +394,13 @@ class Parser:
             statements.append(self.parse_statement())
         self.expect(TokenType.RIGHT_BRACE)
         return AST.Block(
-            location=location,
+            annotation=location,
             statements=statements
         )
 
-    def parse_noop(self) -> AST.NoOp:
+    def parse_noop(self) -> NoOp:
         location = self.current.location
         self.expect(TokenType.NOOP)
         return AST.NoOp(
-            location=location
+            annotation=location
         )

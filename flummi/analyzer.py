@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field, replace
-from itertools import chain
 
-from .IR import AST
+from .IR import AST, common
 
-from . import errors
+from . import errors, parser
 
 __all__ = (
     "analyze",
@@ -15,22 +14,22 @@ class AnalysisError(errors.FlummiError, name="analysis"):
     ...
 
 
-type SymbolTable = dict[AST.Variable, AST.Type]
+type SymbolTable[A] = dict[common.Identifier[A], common.Type[A]]
 
 
 def analyze(
-    program: AST.Program
-) -> tuple[AST.Program, SymbolTable]:
+    program: parser.Program
+) -> tuple[parser.Program, SymbolTable[errors.Location]]:
     for i, function in enumerate(program.function_list):
         for other_function in program.function_list[i+1:]:
             if function.name.identifier == other_function.name.identifier:
                 raise AnalysisError(
                     "Found definition of function "
                     f"{other_function.name.identifier!r}",
-                    other_function.location,
+                    other_function.annotation,
                     "",
                     "...that was already definied.",
-                    function.location
+                    function.annotation
                 )
 
     if (
@@ -39,10 +38,10 @@ def analyze(
     ):
         raise AnalysisError(
             "Program supplies an input expression...",
-            program.inputs.location,
+            program.inputs.annotation,
             "",
             "...but the defined function did not expect one.",
-            next(iter(program.main_function.parameters)).location
+            next(iter(program.main_function.parameters)).annotation
         )
 
     symbol_table = {}
@@ -61,16 +60,16 @@ def analyze(
 class Analyzer:
     program          : AST.Program
 
-    function_name    : AST.Variable = field(init=False)
+    function_name    : parser.Identifier = field(init=False)
 
-    symbol_table     : SymbolTable            = field(init=False, default_factory=dict)
-    bound_symbols    : set[AST.Variable]  = field(init=False, default_factory=set)
-    names            : list[AST.Variable] = field(init=False, default_factory=list)
+    symbol_table     : SymbolTable             = field(init=False, default_factory=dict)
+    bound_symbols    : set[parser.Identifier]  = field(init=False, default_factory=set)
+    names            : list[parser.Identifier] = field(init=False, default_factory=list)
 
-    loop_names       : set[AST.Variable]        = field(init=False, default_factory=set)
-    loop_scope       : list[AST.Variable]       = field(init=False, default_factory=list)
-    loop_broken      : dict[AST.Variable, bool] = field(init=False, default_factory=dict)
-    loop_stopped     : dict[AST.Variable, bool] = field(init=False, default_factory=dict)
+    loop_names       : set[parser.Identifier]        = field(init=False, default_factory=set)
+    loop_scope       : list[parser.Identifier]       = field(init=False, default_factory=list)
+    loop_broken      : dict[parser.Identifier, bool] = field(init=False, default_factory=dict)
+    loop_stopped     : dict[parser.Identifier, bool] = field(init=False, default_factory=dict)
 
     def analyze(
         self,
@@ -87,7 +86,7 @@ class Analyzer:
             raise AnalysisError(
                 "Not all linear control paths in this function are termianted "
                 "by a STOP statement.",
-                function.location
+                function.annotation
             )
 
         for variable in self.names:
@@ -104,11 +103,11 @@ class Analyzer:
         statement: AST.Statement
     ) -> tuple[AST.Statement, bool, bool]:
         match statement:
-            case AST.Block(location, statements):
+            case AST.Block(statements):
                 if not statements:
                     raise AnalysisError(
                         "Found empty block.",
-                        location
+                        statement.annotation
                     )
 
                 new_statements = []
@@ -134,10 +133,10 @@ class Analyzer:
                         len(new_statements) == 0
                     )
 
-            case AST.NoOp(_):
+            case AST.NoOp():
                 return statement, False, True
 
-            case AST.Declaration(_, variables, type):
+            case AST.Declaration(variables, type):
                 for variable in variables:
                     if variable in self.symbol_table:
                         original_declaration = next(
@@ -148,10 +147,10 @@ class Analyzer:
                         raise AnalysisError(
                             "Found declaration of variable "
                             f"{variable.identifier!r}...",
-                            variable.location,
+                            variable.annotation,
                             "",
                             "...that was already declared at.",
-                            original_declaration.location
+                            original_declaration.annotation
                         )
                     else:
                         self.symbol_table[variable] = type
@@ -159,7 +158,7 @@ class Analyzer:
 
                 return statement, False, True
 
-            case AST.Assignment(_, variables, expression):
+            case AST.Assignment(variables, expression):
                 self.analyze_expression(expression)
 
                 for variable in variables:
@@ -167,20 +166,20 @@ class Analyzer:
 
                 return statement, False, False
 
-            case AST.Return(_, variables):
+            case AST.Return(variables):
                 for loop_label in self.loop_scope:
                     self.loop_stopped[loop_label] = True
 
                 function = self.program.functions[self.function_name]
-                delta = len(function.returns)- len(variables)
+                delta = len(function.return_types)- len(variables)
                 if delta != 0:
                     raise AnalysisError(
                         f"Found {["less", "more"][delta > 0]} "
                         "returned values...",
-                        statement.location,
+                        statement.annotation,
                         "",
                         "...than expected.",
-                        function.location
+                        function.annotation
                     )
 
                 for variable in variables:
@@ -189,7 +188,7 @@ class Analyzer:
                 return statement, True, False
 
 
-            case AST.If(_, condition, truthy_branch, falsey_branch):
+            case AST.If(condition, truthy_branch, falsey_branch):
                 self.analyze_variable_read(condition)
 
                 truthy_branch, truthy_stopped, elide_truthy =\
@@ -202,17 +201,17 @@ class Analyzer:
                     replace(
                         statement,
                         truthy_branch=
-                            AST.NoOp(truthy_branch.location)
+                            AST.NoOp(annotation=truthy_branch.annotation)
                             if elide_truthy else truthy_branch,
                         falsey_branch=
-                            AST.NoOp(falsey_branch.location)
+                            AST.NoOp(annotation=falsey_branch.annotation)
                             if elide_falsey else falsey_branch
                     ),
                     truthy_stopped and falsey_stopped,
                     elide_truthy and elide_falsey
                 )
 
-            case AST.Loop(location, loop_label, body):
+            case AST.Loop(loop_label, body):
                 if loop_label in self.loop_names:
                     original_introduction = next(
                         variable
@@ -222,10 +221,10 @@ class Analyzer:
                     raise AnalysisError(
                         "Found introduction of loop label "
                         f"{loop_label.identifier!r}...",
-                        loop_label.location,
+                        loop_label.annotation,
                         "",
                         "...that was already introduced at.",
-                        original_introduction.location
+                        original_introduction.annotation
                     )
 
                 self.loop_names.add(loop_label)
@@ -245,7 +244,7 @@ class Analyzer:
                         "Found loop containing neither a STOP statement nor "
                         "a BREAK statement referencing either this loop or "
                         "any of its parent loops.",
-                        location,
+                        statement.annotation,
                     )
 
                 return (
@@ -254,12 +253,12 @@ class Analyzer:
                     elide_body
                 )
 
-            case AST.Break(_, loop_label):
+            case AST.Break(loop_label):
                 if loop_label not in self.loop_scope:
                     raise AnalysisError(
                         "Found break to unintroduced loop label "
                         f"{loop_label.identifier!r}.",
-                        loop_label.location
+                        loop_label.annotation
                     )
 
                 for _loop_label in self.loop_scope[::-1]:
@@ -269,35 +268,35 @@ class Analyzer:
 
                 return statement, False, False
 
-            case AST.Continue(_, loop_label):
+            case AST.Continue(loop_label):
                 if loop_label not in self.loop_scope:
                     raise AnalysisError(
                         "Found continue to unintroduced loop label "
                         f"{loop_label.identifier!r}.",
-                        loop_label.location
+                        loop_label.annotation
                     )
 
                 return statement, False, False
 
-            case AST.Call(_, variables, function, arguments):
+            case AST.Call(variables, function, arguments):
                 if function not in self.program.functions:
                     raise AnalysisError(
                         "Found call to unknown function "
                         f"{function.identifier!r}.",
-                        statement.location
+                        statement.annotation
                     )
 
                 function = self.program.functions[function]
 
-                delta = len(function.returns)- len(variables)
+                delta = len(function.return_types)- len(variables)
                 if delta != 0:
                     raise AnalysisError(
                         f"Found {["less", "more"][delta > 0]} "
                         "returned values...",
-                        statement.location,
+                        statement.annotation,
                         "",
                         "...than expected.",
-                        function.location
+                        function.annotation
                     )
 
                 for variable in variables:
@@ -310,29 +309,29 @@ class Analyzer:
             case _:
                 raise AnalysisError(
                     "Found unknown statement.",
-                    statement.location
+                    statement.annotation
                 )
 
-    def analyze_expression(self, expression: AST.Expression):
-        for variable in expression.free_variables:
+    def analyze_expression(self, expression: parser.Expression):
+        for variable in expression.arguments:
             self.analyze_variable_read(variable)
 
-    def analyze_variable_read(self, variable: AST.Variable):
+    def analyze_variable_read(self, variable: parser.Identifier):
         if variable not in self.bound_symbols:
             raise AnalysisError(
                 "Found read from uninitialised variable "
                 f"{variable.identifier!r}.",
-                variable.location
+                variable.annotation
             )
         self.names.append(variable)
 
-    def analyze_variable_write(self, variable: AST.Variable):
+    def analyze_variable_write(self, variable: parser.Identifier):
         if variable not in self.bound_symbols:
             if variable not in self.symbol_table:
                 raise AnalysisError(
                     "Found write to undeclared variable "
                     f"{variable.identifier!r}.",
-                    variable.location
+                    variable.annotation
                 )
         self.bound_symbols.add(variable)
         self.names.append(variable)

@@ -13,7 +13,7 @@ from .codegen import codegen
 from .interpeter import interpret
 from .errors import FlummiError
 
-from .pretty import pretty, STYLE
+from .pretty import pretty, CLI_STYLE
 from .render import render
 
 import duckdb
@@ -107,39 +107,37 @@ def cli():
                     printer[1](f"\033[1;2m>> \033[0m{stats!r}")
 
 
-                def print_graph(graph: CFG.Graph, path: str):
+                def print_graph(graph: CFG.Program, path: str):
                     if arguments.graphs:
                         with open(arguments.graphs / path, "w+", encoding='utf-8') as f:
                             f.write(render(graph))
                         printer[1](f"\033[1;2m>> \033[0;2;4m{arguments.graphs / path}\033[0m")
 
-                def print_intermediate(graph: CFG.Graph, path: str):
+                def print_intermediate(graph: CFG.Program, path: str):
                     if arguments.intermediates:
                         with open(arguments.intermediates / path, "w+", encoding='utf-8') as f:
-                            STYLE.off()
                             f.write(pretty(graph))
-                            STYLE.on()
                         printer[1](f"\033[1;2m>> \033[0;2;4m{arguments.intermediates / path}\033[0m")
 
                 printer[1]("\033[1;2m[0]\033[0;36m lowering to CFG\033[0m")
                 cfg = lower(ast)
                 print_graph(cfg, "0_lowering.gv")
                 print_intermediate(cfg, "0_lowering.flir")
-                printer[2](pretty(cfg))
+                printer[2](pretty(cfg, style=CLI_STYLE))
 
                 printer[1]("\033[1;2m[1]\033[0;36m optimizing CFG\033[0m")
                 cfg, optimizer_statistics = optimize(cfg)
                 print_stats(optimizer_statistics)
                 print_graph(cfg, "1_optimize.gv")
                 print_intermediate(cfg, "1_optimize.flir")
-                printer[2](pretty(cfg))
+                printer[2](pretty(cfg, style=CLI_STYLE))
 
                 printer[1]("\033[1;2m[3]\033[0;36m materializing data flow\033[0m")
                 cfg, data_flow_statistics = materialize_data_flow(cfg)
                 print_stats(data_flow_statistics)
                 print_graph(cfg, "3_materialize_data_flow.gv")
                 print_intermediate(cfg, "3_materialize_data_flow.flir")
-                printer[2](pretty(cfg))
+                printer[2](pretty(cfg, style=CLI_STYLE))
 
                 printer[1]("\033[1;2m[4]\033[0;36m generating SQL code\033[0m")
                 sql = codegen(
@@ -165,6 +163,7 @@ def cli():
 
             case "analyze":
                 print("ok")
+
     except FlummiError as e:
         print(e.format(source), file=sys.stderr)
         sys.exit(1)
