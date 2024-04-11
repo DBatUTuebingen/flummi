@@ -1,60 +1,9 @@
-from dataclasses import dataclass
-from collections.abc import Iterator
-
-from .IR import CFG
-
-from .IR import AST
+from .IR import CFG, common
 from .utils import *
-from .label_graph import LabelGraph, collect_successors
+from .label_graph import LabelGraph
 
 
-
-@dataclass
-class Statistics:
-    number_of_variables: int
-    number_of_loop_carried_variables: int
-
-
-def materialize_data_flow(graph: CFG.Graph) -> tuple[CFG.Graph, Statistics]:
-    inputs, loop_carried_variables = get_block_inputs(graph)
-    outputs = compute_outputs(collect_successors(graph), inputs)
-
-    number_of_variables = len(union(iter(inputs.values())))
-    number_of_loop_carried_variables = len(loop_carried_variables)
-
-    for label, block in graph.blocks.items():
-        existing_bindings = CFG.bound_variables(block)
-        missing_bindings = (
-            (
-                outputs[label] |
-                union(map(CFG.free_variables, block.terminals))
-            ) -
-            existing_bindings
-        )
-        for binding in missing_bindings:
-            block.assignments.append(
-                CFG.Assignment(
-                    [binding],
-                    AST.Expression(
-                        AST.Location(-1,-1),
-                        "{0}",
-                        [binding]
-                    )
-                )
-            )
-
-    return graph, Statistics(
-        number_of_variables,
-        number_of_loop_carried_variables
-    )
-
-
-def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.Label, set[CFG.AST.Variable]], set[CFG.AST.Variable]]:
-    jump_targets = {graph.entry_label} | union(
-        CFG.jumps(block)
-        for block in graph.blocks.values()
-    )
-
+def get_block_inputs[A](graph: CFG.Graph[A]) -> dict[CFG.Label[A], set[common.Identifier[A]]]:
     inputs = {
         label: CFG.free_variables(block)
         for label, block in graph.blocks.items()
@@ -69,18 +18,16 @@ def get_block_inputs(graph: CFG.Graph) -> tuple[dict[CFG.Label, set[CFG.AST.Vari
             for label, block in graph.blocks.items()
         }
 
-        jump_set = union(inputs[jump_target] for jump_target in jump_targets)
-
-        for jump_target in jump_targets:
-            inputs[jump_target] = jump_set
-
         if old_inputs == inputs:
             break
 
-    return inputs, jump_set
+    return inputs
 
 
-def compute_outputs(successors: LabelGraph, inputs: dict[CFG.Label, set[CFG.AST.Variable]]) -> dict[CFG.Label, set[CFG.AST.Variable]]:
+def compute_outputs[A](
+    successors: LabelGraph[A],
+    inputs: dict[CFG.Label[A], set[common.Identifier[A]]]
+) -> dict[CFG.Label[A], set[common.Identifier[A]]]:
   return {
       label: union(inputs[child] for child in children)
       for label, children in successors.items()

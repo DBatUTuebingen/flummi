@@ -109,67 +109,6 @@ class Lowering:
             annotation=None
         )
 
-    def add_assignment(
-        self,
-        label: Label,
-        variables: list[Identifier],
-        expression: Expression,
-        annotation: Annotation = None
-    ) -> Label:
-        assignment: Assignment = CFG.Assignment(
-            variables,
-            expression,
-            annotation=annotation
-        )
-        action: Assignments = CFG.Assignments(
-            assignments=[assignment],
-            annotation=None
-        )
-        match self._blocks.get(label):
-            case None:
-                self.new_block(label=label, action=action)
-                return label
-            case block:
-                match block.action:
-                    case CFG.Assignments(assignments):
-                        assignments.append(assignment)
-                        return label
-                    case CFG.Nothing:
-                        block.action = action
-                        return label
-                    case _:
-                        new_label = self.make_label("assign")
-                        self.add_goto(label, new_label)
-                        self.new_block(label=new_label, action=action)
-                        return new_label
-
-    def add_wait(
-        self,
-        label: Label,
-        handle: Label,
-        variables: list[Identifier],
-        annotation: Annotation = None
-    ) -> CFG.Label:
-        wait: Wait = CFG.Wait(
-            handle,
-            variables,
-            annotation=annotation
-        )
-        match self._blocks.get(label):
-            case None:
-                self.new_block(label=label, action=wait)
-                return label
-            case block:
-                match block.action:
-                    case CFG.Assignments():
-                        new_label = self.make_label("wait")
-                        self.add_goto(label, new_label)
-                        self.new_block(label=new_label, action=wait)
-                        return new_label
-                    case _:
-                        block.action = wait
-                        return label
-
     def add_terminal(
         self,
         label: Label,
@@ -282,7 +221,20 @@ class Lowering:
                 self.add_return(label, variables)
 
             case AST.Assignment(variables, expression):
-                return self.add_assignment(label, variables, expression)
+                new_label = self.make_label("assign")
+                self.add_goto(label, new_label)
+                self.new_block(
+                    label=new_label,
+                    action=CFG.Assignments(
+                        assignments=[CFG.Assignment(
+                            variables=variables,
+                            expression=expression,
+                            annotation=statement.annotation
+                        )],
+                        annotation=None
+                    )
+                )
+                return new_label
 
             case AST.Block(statements):
                 next_label: CFG.Label | None = label
@@ -310,13 +262,16 @@ class Lowering:
                 final_falsey_label =\
                     self.lower_statement(falsey_label, falsey_branch)
 
-                merge_label = self.make_label("merge")
-                if final_truthy_label is not None:
-                    self.add_goto(final_truthy_label, merge_label)
-                if final_falsey_label is not None:
-                    self.add_goto(final_falsey_label, merge_label)
-
-                return merge_label
+                if (
+                    final_truthy_label is not None or
+                    final_falsey_label is not None
+                ):
+                    merge_label = self.make_label("merge")
+                    if final_truthy_label is not None:
+                        self.add_goto(final_truthy_label, merge_label)
+                    if final_falsey_label is not None:
+                        self.add_goto(final_falsey_label, merge_label)
+                    return merge_label
 
             case AST.Loop(name, body):
                 head_label, exit_label = self.make_loop_labels(name)
@@ -329,16 +284,10 @@ class Lowering:
             case AST.Continue(name):
                 head_label, _ = self._get_loop_labels(name)
                 self.add_jump(label, head_label)
-                dead_label = self.make_label("unreachable")
-                self.new_block(dead_label)
-                return dead_label
 
             case AST.Break(name):
                 _, exit_label = self._get_loop_labels(name)
                 self.add_goto(label, exit_label)
-                dead_label = self.make_label("unreachable")
-                self.new_block(dead_label)
-                return dead_label
 
             case AST.Call(variables, target, arguments):
                 handle = self.make_label("call")
@@ -348,9 +297,20 @@ class Lowering:
                     target,
                     arguments
                 )
-                wait_label = self.make_label("wait")
-                self.add_goto(label, wait_label)
-                return self.add_wait(wait_label, handle, variables)
+                new_label = self.make_label("wait")
+                self.add_goto(label, new_label)
+                self.new_block(
+                    label=new_label,
+                    action=CFG.Waits(
+                        waits=[CFG.Wait(
+                            handle=handle,
+                            targets=variables,
+                            annotation=statement.annotation
+                        )],
+                        annotation=None
+                    ),
+                )
+                return new_label
 
             case _:
                 raise LoweringError(

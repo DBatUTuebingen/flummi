@@ -1,12 +1,14 @@
-CALL (§SELECT 1, 10§[]) IN
-FUN (l: §int§, u: §int§) -> §int§: {
+CALL range(§SELECT 1, 10§[]) IN
+FUN range(l: §int§, u: §int§) -> §int[]§: {
   c: §bool§;
+  xs: §int[]§;
+  xs <- §ARRAY[]§[];
   LOOP loop {
-    EMIT l;
+    xs <- §list_append({0}, {1})§[xs, l];
     l <- §{0} + 1§[l];
     c <- §{0} >= {1}§[l,u];
     IF c
-    THEN STOP
+    THEN RETURN xs
     ELSE CONTINUE loop
   }
 }

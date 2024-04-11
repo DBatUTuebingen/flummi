@@ -5,31 +5,31 @@ import operator as op
 from .IR import CFG
 
 
-type LabelGraph = dict[CFG.Label, set[CFG.Label]]
+type LabelGraph[A] = dict[CFG.Label[A], set[CFG.Label[A]]]
 
 
-def collect_successors(graph: CFG.Graph) -> LabelGraph:
+def collect_successors[A](graph: CFG.Graph[A]) -> LabelGraph[A]:
   return {
     label: CFG.successors(block)
     for label, block in graph.blocks.items()
   }
 
 
-def collect_gotos(graph: CFG.Graph) -> LabelGraph:
+def collect_gotos[A](graph: CFG.Graph[A]) -> LabelGraph[A]:
   return {
     label: CFG.gotos(block)
     for label, block in graph.blocks.items()
   }
 
 
-def collect_jumps(graph: CFG.Graph) -> LabelGraph:
+def collect_jumps[A](graph: CFG.Graph[A]) -> LabelGraph[A]:
   return {
     label: CFG.jumps(block)
     for label, block in graph.blocks.items()
   }
 
 
-def invert_label_graph(graph: LabelGraph) -> LabelGraph:
+def invert_label_graph[A](graph: LabelGraph[A]) -> LabelGraph[A]:
   new = {
     label: set()
     for label in graph
@@ -40,18 +40,17 @@ def invert_label_graph(graph: LabelGraph) -> LabelGraph:
   return new
 
 
-def dependent_ordering(graph: LabelGraph) -> Iterator[CFG.Label]:
+def dependent_ordering[A](graph: LabelGraph[A]) -> Iterator[CFG.Label[A]]:
   predecessors = invert_label_graph(graph)
   stack = [*sorted(
     (
       label
       for label, parents in predecessors.items()
       if not parents
-    ),
-    key=op.attrgetter("label")
+    )
   )]
   sorted_graph = {
-    label: sorted(children, key=op.attrgetter("label"))
+    label: sorted(children)
     for label, children in graph.items()
   }
   seen = set()
@@ -64,7 +63,7 @@ def dependent_ordering(graph: LabelGraph) -> Iterator[CFG.Label]:
         stack.append(child)
 
 
-def compute_dominator_tree(successors: LabelGraph, entry_labels: set[CFG.Label]) -> LabelGraph:
+def compute_dominator_tree[A](successors: LabelGraph[A], entry_labels: set[CFG.Label[A]]) -> LabelGraph[A]:
     predecessors = invert_label_graph(successors)
 
     dom = {
@@ -90,7 +89,7 @@ def compute_dominator_tree(successors: LabelGraph, entry_labels: set[CFG.Label])
     return dom
 
 
-def loop_heads(successors: LabelGraph) -> set[CFG.Label]:
+def loop_heads[A](successors: LabelGraph[A]) -> set[CFG.Label[A]]:
     predecessors = invert_label_graph(successors)
 
     entry_labels = {

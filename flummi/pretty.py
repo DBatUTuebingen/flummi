@@ -92,7 +92,7 @@ class Style:
     def ELSE(self): return self.keyword('ELSE')
 
     @property
-    def WAIT(self): return self.keyword('WAIT')
+    def AWAIT(self): return self.keyword('AWAIT')
 
     @property
     def ON(self): return self.keyword('ON')
@@ -305,19 +305,19 @@ def pretty(node, *, style: Style = BLANK_STYLE) -> str:
         case CFG.Nothing():
             return ""
 
+        case CFG.Assignments(things) | CFG.Waits(things):
+            return '\n'.join(
+                pretty(thing, style=style)
+                for thing in things
+            )
+
         case CFG.Wait(handle, variables):
             handle = style.label(handle.identifier)
             variables = f"{style.COMMA} ".join(
                 pretty(variable, style=style)
                 for variable in variables
             )
-            return f"{style.WAIT} {handle} {style.ON} {variables}"
-
-        case CFG.Assignments(assignments):
-            return '\n'.join(
-                pretty(assignment, style=style)
-                for assignment in assignments
-            )
+            return f"{style.AWAIT} {variables} {style.ON} {handle}"
 
         case CFG.Terminal(type, truthy_vars, falsey_vars):
             predicate = f" {style.AND} ".join(chain(

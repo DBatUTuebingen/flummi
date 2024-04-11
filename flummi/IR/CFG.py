@@ -58,8 +58,13 @@ class Nothing[A](Action[A]):
 
 
 @dataclass
-class Wait[A](Action[A]):
-    handle: Handle
+class Waits[A](Action[A]):
+    waits: list[Wait[A]]
+
+
+@dataclass
+class Wait[A](common.Annotated[A]):
+    handle: common.Identifier[A]
     targets: list[common.Identifier[A]]
 
 

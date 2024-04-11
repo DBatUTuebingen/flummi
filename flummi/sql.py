@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from textwrap import indent, dedent
 from .utils import *
 
@@ -15,7 +16,8 @@ __all__ = (
     "with_ctes",
     "cast",
     "lateral",
-    "paren"
+    "paren",
+    "join",
 )
 
 
@@ -45,15 +47,24 @@ def paren(thing: SQL) -> SQL:
     return f"({_indent(dedent(thing), ' ')})"
 
 
-def union_all(subqueries: list[SQL]) -> SQL:
-    return "\n  UNION ALL\n".join(map(paren, map(dedent, subqueries)))
+def union_all(subqueries: Iterable[SQL]) -> SQL:
+    return "\n  UNION ALL\n".join(map(dedent, subqueries))
 
 
-def select(select_list: list[SQL], from_list: list[SQL], predicates: list[SQL] | None = None) -> SQL:
+def select(
+    select_list: Iterable[SQL],
+    from_list: Iterable[SQL],
+    join_list: Iterable[SQL] | None = None,
+    predicates: Iterable[SQL] | None = None
+) -> SQL:
+
     query = (
         f"SELECT {_indent(",\n".join(map(dedent, select_list)), ' ' * 7)}\n"
         f"FROM   {_indent(",\n".join(map(dedent, from_list)), ' ' * 7)}"
     )
+
+    if join_list:
+        query += "\n" + "\n".join(join_list)
 
     if predicates:
         query += "\nWHERE  " + "\nAND    ".join(
@@ -66,15 +77,17 @@ def select(select_list: list[SQL], from_list: list[SQL], predicates: list[SQL] |
 
 def cte(name: str, columns: list[str], body: SQL, materialize: bool = False) -> SQL:
     return (
-        f"{_name(name)}({", ".join(map(_name, columns))}) AS{" MATERIALIZE" * materialize} (\n" +
+        f"{_name(name)}(\n" +
+        f"{indent(",\n".join(map(_name, columns)), '  ')}\n" +
+        f") AS{" MATERIALIZE" * materialize} (\n" +
         indent(dedent(body), "  ") +
         "\n)"
     )
 
 
-def with_ctes(ctes: list[SQL], body: SQL, recursive: bool = False) -> SQL:
+def with_ctes(ctes: Iterable[SQL], body: SQL, recursive: bool = False) -> SQL:
     return (
-        f"WITH{" RECURISVE" * recursive}\n" +
+        f"WITH{" RECURSIVE" * recursive}\n" +
         indent(",\n".join(map(dedent, ctes)), "  ") +
         f"\n{dedent(body)}"
     )
@@ -94,3 +107,25 @@ def named(thing: SQL, name: str, columns: list[str] | None = None) -> SQL:
 
 def lateral(subquery: SQL) -> SQL:
     return f"LATERAL ({_indent(dedent(subquery), ' ' * 9)})"
+
+
+def join(
+    table: SQL,
+    type: str | None = None,
+    predicates: Iterable[SQL] | None = None
+) -> SQL:
+    join_expression = f"JOIN {table}"
+
+    if type is not None:
+        join_expression = f"{type} {join_expression}"
+
+    if predicates:
+        join_expression += (
+            "\nON  " +
+            "\nAND ".join(
+                _indent(dedent(predicate), ' ' * 4)
+                for predicate in predicates
+            )
+        )
+
+    return join_expression
