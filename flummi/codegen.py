@@ -15,6 +15,10 @@ __all__ = (
 )
 
 
+class CodeGenError(errors.FlummiError, name="code generation"):
+    ...
+
+
 def codegen(
     program: lowering.Program,
     symbol_table: SymbolTable
