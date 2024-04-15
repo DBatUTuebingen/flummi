@@ -47,7 +47,8 @@ RETURN_KIND = sql.string("return")
 
 def codegen(
     program: lowering.Program,
-    symbol_table: SymbolTable
+    symbol_table: SymbolTable,
+    avoid_multiple_recursive_references: bool = False,
 ) -> sql.SQL:
     constant_control_columns = [
         FUNCTION_COLUMN,
@@ -630,6 +631,25 @@ def codegen(
             for column, type in function_specfic_columns.items()
         }
     }
+
+    if avoid_multiple_recursive_references:
+        function_CTEs = [
+            sql.cte(
+                name=LOOP_CTE,
+                columns=list(program_CTE_schema),
+                body=sql.select(
+                    select_list=[
+                        sql.named(
+                            thing=sql.variable(column, LOOP_CTE),
+                            name=column
+                        )
+                        for column in program_CTE_schema
+                    ],
+                    from_list=[sql.name(LOOP_CTE)],
+                )
+            ),
+            *function_CTEs
+        ]
 
     program_collectors = [
         sql.select(

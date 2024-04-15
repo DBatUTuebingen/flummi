@@ -74,10 +74,13 @@ def render(
 
                 edges.append(f'"{block.label.identifier}":s -> "{target}":n [{style}];')
 
-            if isinstance(block.action, CFG.Wait):
+            if isinstance(block.action, CFG.Waits):
                 edges.append(
                     f'"{block.label.identifier}":s -> "{block.label.identifier}":n '
-                    f'[{WAIT_STYLE.format(handle=block.action.handle.identifier)}];'
+                    f'[{WAIT_STYLE.format(handle=",".join(
+                        wait.handle.identifier
+                        for wait in block.action.waits)
+                    )}];'
                 )
 
             nodes.append(
