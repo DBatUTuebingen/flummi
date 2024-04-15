@@ -2,7 +2,6 @@ from itertools import chain
 
 from .IR import CFG
 
-
 from . import sql, errors, lowering
 from .utils import *
 from .analyzer import SymbolTable
@@ -23,7 +22,6 @@ def codegen(
     program: lowering.Program,
     symbol_table: SymbolTable
 ) -> sql.SQL:
-
     constant_control_columns = [
         "%function%",
         "%caller%",

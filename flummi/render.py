@@ -1,4 +1,4 @@
-from itertools import chain
+from typing import Any
 
 from .IR import AST, CFG, common
 from .pretty import pretty
@@ -25,7 +25,8 @@ edge [
     fontname = "{font}",
     penwidth = 1.5,
 ];
-{functions}
+{subgraphs}
+{edges}
 }}
 """
 
@@ -45,42 +46,19 @@ CALL_STYLE = 'style="dashed",color="#86B300",label="{handle}"'
 WAIT_STYLE = 'style="dotted",color="#A37ACC",label="{handle}"'
 
 
-def render(thing, *, font: str = "monospace") -> str:
-    match thing:
-        case common.Program(main_function_name, inputs, function_list):
-            functions = "\n".join(
-                render(function, font=font)
-                for function in function_list
-            )
+def render(
+    program: common.Program[Any, CFG.Graph],
+    *,
+    font: str = "monospace"
+) -> str:
+    subgraphs = []
+    edges = []
 
-            return PRORGAM_TEMPLATE.format(functions=functions, font=font)
+    for function in program.function_list:
+        nodes = []
 
-        case common.Function(name, parameters, return_types, body):
-            body = render(body, font=font)
-
-            return FUNCTION_TEMPLATE.format(
-                name=name.identifier,
-                parameters=", ".join(
-                    f"{name.identifier}: {type.source}"
-                    for name, type in parameters.items()
-                ),
-                return_types=", ".join(
-                    type.source
-                    for type in return_types
-                ),
-                body=body
-            )
-
-        case CFG.Graph(_, blocks):
-            return "\n".join(
-                render(block, font=font)
-                for block in blocks.values()
-            )
-
-        case CFG.Block(label, action, terminals):
-            edges = []
-
-            for terminal in terminals:
+        for block in function.body.blocks.values():
+            for terminal in block.terminals:
                 match terminal.type:
                     case CFG.GoTo(target):
                         style = GOTO_STYLE
@@ -94,20 +72,38 @@ def render(thing, *, font: str = "monospace") -> str:
                     case _:
                         continue
 
-                edges.append(f'"{label.identifier}":s -> "{target}":n [{style}];')
+                edges.append(f'"{block.label.identifier}":s -> "{target}":n [{style}];')
 
-            if isinstance(action, CFG.Wait):
+            if isinstance(block.action, CFG.Wait):
                 edges.append(
-                    f'"{label.identifier}":s -> "{label.identifier}":n '
-                    f'[{WAIT_STYLE.format(handle=action.handle.identifier)}];'
+                    f'"{block.label.identifier}":s -> "{block.label.identifier}":n '
+                    f'[{WAIT_STYLE.format(handle=block.action.handle.identifier)}];'
                 )
 
-            return (
+            nodes.append(
                 NODE_TEMPLATE.format(
-                    label=label.identifier,
-                    body=pretty(thing).replace("\n", "\\l"),
-                ) + "\n" + "\n".join(edges)
+                    label=block.label.identifier,
+                    body=pretty(block).replace("\n", "\\l"),
+                )
             )
 
-        case _:
-            return ""
+        subgraphs.append(
+             FUNCTION_TEMPLATE.format(
+                name=function.name.identifier,
+                parameters=", ".join(
+                    f"{name.identifier}: {type.source}"
+                    for name, type in function.parameters.items()
+                ),
+                return_types=", ".join(
+                    type.source
+                    for type in function.return_types
+                ),
+                body="\n".join(nodes)
+            )
+        )
+
+    return PRORGAM_TEMPLATE.format(
+        subgraphs="\n".join(subgraphs),
+        edges="\n".join(edges),
+        font=font
+    )
