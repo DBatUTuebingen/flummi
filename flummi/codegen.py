@@ -49,6 +49,7 @@ def codegen(
     program: lowering.Program,
     symbol_table: SymbolTable,
     avoid_multiple_recursive_references: bool = False,
+    explicit_materialized: bool = False,
 ) -> sql.SQL:
     constant_control_columns = [
         FUNCTION_COLUMN,
@@ -89,7 +90,8 @@ def codegen(
         function_loop_carried_variables: set[lowering.Identifier] = set()
         calls_in_function = set()
 
-        block_goto_predecessors = invert_label_graph(collect_gotos(graph))
+        block_goto_successors = collect_gotos(graph)
+        block_goto_predecessors = invert_label_graph(block_goto_successors)
         block_jump_predecessors = invert_label_graph(collect_jumps(graph))
 
         block_calls = {
@@ -146,6 +148,11 @@ def codegen(
                             ]
                         )
                         for kind, table in sources
+                    ),
+                    materialize=(
+                        explicit_materialized and
+                        not isinstance(block.action, (CFG.Waits, CFG.Assignments)) and
+                        len(block.terminals) > 1
                     )
                 )
             )
@@ -243,6 +250,10 @@ def codegen(
                                     sql.name(collector_source),
                                     *lateral_joins
                                 ]
+                            ),
+                            materialize=(
+                                explicit_materialized and
+                                len(block.terminals) > 1
                             )
                         )
                     )
@@ -328,6 +339,10 @@ def codegen(
                                 ],
                                 from_list=[sql.name(collector_source)],
                                 join_list=left_outer_joins
+                            ),
+                            materialize=(
+                                explicit_materialized and
+                                len(block.terminals) > 0
                             )
                         )
                     )
@@ -517,6 +532,10 @@ def codegen(
                     body=sql.with_ctes(
                         ctes=step_ctes,
                         body=sql.union_all(block_collectors)
+                    ),
+                    materialize=(
+                        explicit_materialized and
+                        len(block_goto_successors[label]) > 0
                     )
                 )
             )
@@ -646,7 +665,8 @@ def codegen(
                         for column in program_CTE_schema
                     ],
                     from_list=[sql.name(LOOP_CTE)],
-                )
+                ),
+                materialize=explicit_materialized
             ),
             *function_CTEs
         ]

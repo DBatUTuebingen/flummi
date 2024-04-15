@@ -79,7 +79,7 @@ def cte(name: str, columns: list[str], body: SQL, materialize: bool = False) -> 
     return (
         f"{_name(name)}(\n" +
         f"{indent(",\n".join(map(_name, columns)), '  ')}\n" +
-        f") AS{" MATERIALIZE" * materialize} (\n" +
+        f") AS{" MATERIALIZED" * materialize} (\n" +
         indent(dedent(body), "  ") +
         "\n)"
     )

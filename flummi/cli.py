@@ -37,14 +37,8 @@ class Printer:
 
 @unique
 class Flag(Enum):
-    # SQL codegen tweaks
-    FORCE_WITH_RECURSIVE = auto()
     EXPLICIT_MATERIALIZED = auto()
     AVOID_MULTIPLE_RECURSIVE_REFERENCES = auto()
-
-    # additional features
-    INCLUDE_TRACE_GENERATION = auto()
-    INCLUDE_EMIT_ORDINALITY = auto()
 
 
 def cli():
@@ -143,12 +137,8 @@ def cli():
                 sql = codegen(
                     cfg,
                     symbol_table,
-                    ast.function.returns,
-                    include_trace=Flag.INCLUDE_TRACE_GENERATION in flags,
                     explicit_materialized=Flag.EXPLICIT_MATERIALIZED in flags,
                     avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCES in flags,
-                    include_emit_order=Flag.INCLUDE_EMIT_ORDINALITY in flags,
-                    force_with_recursive=Flag.FORCE_WITH_RECURSIVE in flags,
                 )
 
                 if arguments.output:
