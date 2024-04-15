@@ -1,12 +1,9 @@
-from collections.abc import Iterator
 from typing import Any
 
 import duckdb
 
 from .IR import AST
-
-from . import errors, sql
-from .pretty import pretty
+from . import errors, sql, parser
 
 
 __all__ = (
@@ -19,9 +16,9 @@ class EvaluationError(errors.FlummiError, name="evaluation"):
 
 
 def interpret(
-    program: AST.Program,
-    symbol_table: dict[AST.Variable, AST.Type],
-    statement: AST.Statement | None = None,
+    program: parser.Program,
+    symbol_table: dict[parser.Identifier, parser.Type],
+    statement: parser.Statement | None = None,
     environment: dict[str, Any] | None = None,
 ) -> tuple[Any, ...]:
     environment = environment or {}
@@ -29,20 +26,20 @@ def interpret(
     if statement is None:
         if program.inputs is not None:
             statement = AST.Block(
-                program.location,
                 [
                     AST.Assignment(
-                        program.inputs.location,
                         list(program.main_function.parameters.keys()),
-                        program.inputs
+                        program.inputs,
+                        annotation=program.inputs.annotation,
                     ),
                     program.main_function.body
-                ]
+                ],
+                annotation=program.annotation,
             )
         else:
             statement = program.main_function.body
 
-    query_cache: dict[AST.Location, str] = {}
+    query_cache: dict[errors.Location, str] = {}
     stack: list[AST.Statement] = [statement]
 
     while stack:
@@ -52,21 +49,21 @@ def interpret(
             case AST.NoOp():
                 ...
 
-            case AST.Block(_, statements):
+            case AST.Block(statements):
                 stack.extend(statements[::-1])
 
-            case AST.Return(_, variables):
+            case AST.Return(variables):
                 return tuple(
                     environment[variable.identifier]
                     for variable in variables
                 )
 
-            case AST.If(_, condition, t_branch, f_branch):
+            case AST.If(condition, t_branch, f_branch):
                 choice = environment[condition.identifier]
                 if not isinstance(choice, bool):
                     raise EvaluationError(
                         "Condition is non-boolean.",
-                        condition.location,
+                        condition.annotation,
                         "",
                         "Current scope:",
                         *(
@@ -76,23 +73,23 @@ def interpret(
                     )
                 stack.append(t_branch if choice else f_branch)
 
-            case AST.Loop(_, name, body):
+            case AST.Loop(name, body):
                 stack.append(statement)
                 stack.append(body)
 
-            case AST.Continue(_, name) | AST.Break(_, name):
+            case AST.Continue(name) | AST.Break(name):
                 while stack:
                     next = stack.pop()
                     match next:
-                        case AST.Loop(_, _name, body) if name == _name:
+                        case AST.Loop(_name, body) if name == _name:
                             if isinstance(statement, AST.Continue):
                                 stack.append(next)
                             break
                 else:
                     ...
 
-            case AST.Assignment(location, variables, expression):
-                if location not in query_cache:
+            case AST.Assignment(variables, expression):
+                if expression.annotation not in query_cache:
                     try:
                         query = sql.select(
                             select_list=[
@@ -111,7 +108,7 @@ def interpret(
                                             f"SELECT ({expression.source})"
                                         ).format(*(
                                             f"(${i+1} :: {symbol_table[free_variable].source})"
-                                            for i, free_variable in enumerate(expression.free_variables)
+                                            for i, free_variable in enumerate(expression.arguments)
                                         ))
                                     ),
                                     name = "_",
@@ -126,7 +123,7 @@ def interpret(
                         raise EvaluationError(
                             "Encountered an error during formatting of an "
                             "embedded SQL expression.",
-                            expression.location,
+                            expression.annotation,
                             "",
                             "Given Query:",
                             expression.source,
@@ -141,12 +138,12 @@ def interpret(
                             repr(e)
                         ) from e
 
-                    query_cache[location] = query
+                    query_cache[expression.annotation] = query
                 else:
-                    query = query_cache[location]
+                    query = query_cache[expression.annotation]
                 parameters = [
                     environment[free_variable.identifier]
-                    for free_variable in expression.free_variables
+                    for free_variable in expression.arguments
                 ]
                 try:
                     row = duckdb.execute(query, parameters).fetchone()
@@ -154,7 +151,7 @@ def interpret(
                     raise EvaluationError(
                         "Encountered an error during evaluation of an "
                         "embedded SQL expression.",
-                        expression.location,
+                        expression.annotation,
                         "",
                         "Executed Query:",
                         query,
@@ -172,7 +169,7 @@ def interpret(
                 if row is None:
                     raise EvaluationError(
                         "Embedded SQL expression produced no output.",
-                        expression.location,
+                        expression.annotation,
                         "",
                         "Current scope:",
                         *(
@@ -186,7 +183,7 @@ def interpret(
                     for variable, value in zip(variables, row)
                 )
 
-            case AST.Call(location, variables, function, arguments):
+            case AST.Call(variables, function, arguments):
                 function = program.functions[function]
                 arguments = {
                     parameter.identifier:
@@ -212,9 +209,9 @@ def interpret(
             case _:
                 raise EvaluationError(
                     "Encountered unsupported statement.",
-                    statement.location
+                    statement.annotation
                 )
     raise EvaluationError(
         "Ran out of things to do before expecting it...",
-        program.location,
+        program.annotation,
     )
