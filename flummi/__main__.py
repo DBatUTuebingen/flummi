@@ -39,6 +39,7 @@ class Flag(Enum):
     FORCE_WITH_RECURSIVE = auto()
     EXPLICIT_MATERIALIZED = auto()
     AVOID_MULTIPLE_RECURSIVE_REFERENCE = auto()
+    UMBRA_TRAMPOLINE = auto()
 
     # additional features
     INCLUDE_TRACE_GENERATION = auto()
@@ -82,7 +83,8 @@ def main():
                     })
                 case 'umbra':
                     flags.update({
-
+                        Flag.UMBRA_TRAMPOLINE,
+                        Flag.JUMPS_ONLY
                     })
 
             if arguments.graphs and not arguments.graphs.exists():
@@ -167,6 +169,7 @@ def main():
                 avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCE in flags,
                 include_emit_order=Flag.INCLUDE_EMIT_ORDINALITY in flags,
                 force_with_recursive=Flag.FORCE_WITH_RECURSIVE in flags,
+                umbra_trampoline=Flag.UMBRA_TRAMPOLINE in flags,
             )
 
             if arguments.output:
