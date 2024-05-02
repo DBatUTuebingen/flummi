@@ -1,3 +1,4 @@
+from cProfile import label
 from dataclasses import dataclass, field, InitVar
 from itertools import chain
 from textwrap import dedent, indent
@@ -33,6 +34,7 @@ def codegen(
     avoid_multiple_recursive_references: bool = False,
     include_emit_order: bool = False,
     force_with_recursive: bool = False,
+    umbra_trampoline: bool = False,
 ) -> str:
     return CodeGen(
         symbol_table,
@@ -43,6 +45,7 @@ def codegen(
         avoid_multiple_recursive_references,
         include_emit_order,
         force_with_recursive,
+        umbra_trampoline
     ).gen_program(graph)
 
 
@@ -60,6 +63,7 @@ class CodeGen:
     avoid_multiple_recursive_references: bool
     include_emit_order: bool
     force_with_recursive: bool
+    umbra_trampoline: bool
 
     entry_label: CFG.BlockLabel = field(init=False)
     inputs: dict[CFG.BlockLabel, list[grammar.Variable]] = field(init=False)
@@ -80,10 +84,24 @@ class CodeGen:
             f'("%inputs%".{self.gen_variable(variable)})'
             for variable in expression.free_variables
         )), ' ')})"""
+    
+    def gen_umbra_expression(self, expression: grammar.Expression) -> str:
+        return f"""({_indent(expression.source.format(*(
+            f'({self.gen_variable(variable)})'
+            for variable in expression.free_variables
+        )), ' ')})"""      
 
     def gen_variable(self, variable: grammar.Variable) -> str:
         return f'"{variable.identifier}"'
-
+    
+    def pos_label(self, graph: CFG.Graph) -> dict:
+        label_index = {}
+        label_list = reversed(list(dependent_ordering(collect_gotos(graph))))
+        
+        for idx, blocklabel in enumerate(label_list):
+            label_index[blocklabel.label] = idx
+        return label_index
+    
     def gen_label(self, label: CFG.BlockLabel) -> str:
         return f'"{label.label}"'
 
@@ -99,7 +117,9 @@ class CodeGen:
             for label, inputs in unsorted_inputs.items()
         }
 
-        if self.force_with_recursive or any(pred for pred in self.jump_predecessors.values()):
+        if self.umbra_trampoline:
+            return self.gen_program_umbra_trampoline(graph)
+        elif self.force_with_recursive or any(pred for pred in self.jump_predecessors.values()):
             return self.gen_program_with_jumps(graph)
         else:
             return self.gen_program_without_jumps(graph)
@@ -110,6 +130,7 @@ class CodeGen:
             for label, block in graph.blocks.items()
             if CFG.contains_emits(block)
         ]
+
 
         working_table_columns_sql = (
             ', ' * (0 < len(self.jump_variables)) +
@@ -183,7 +204,7 @@ class CodeGen:
         )
 
         return dedent(f"""
-        WITH
+        WITH 
           "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}) AS (
             SELECT 'jump' AS "%kind%",
                    '{graph.entry_label.label}' AS "%label%",
@@ -307,7 +328,7 @@ class CodeGen:
         )
 
         return dedent(f"""
-        WITH RECURSIVE
+        WITH RECURSIVE 
           "%loop%"("%kind%", "%label%"{working_table_columns_sql}, "%result%"{trace_column_sql}{step_column_sql}{ordinaltiy_column_sql}) AS (
             (SELECT 'jump' AS "%kind%",
                     '{graph.entry_label.label}' AS "%label%",
@@ -371,6 +392,45 @@ class CodeGen:
           )
 
         SELECT "%result%"{', "%ordinality%"' * self.include_emit_order} FROM "%loop%" WHERE "%kind%"='emit';
+        """)[1:-1]
+    
+    def gen_program_umbra_trampoline(self, graph: CFG.Graph) -> str:
+
+        index_dict = self.pos_label(graph)
+
+        initial_row_sql = _indent(
+            ',\n'.join(
+                f"CAST({self.gen_expression(self.variable_bindings[variable]) if variable in self.variable_bindings else "NULL"} AS {self.gen_type(self.symbol_table[variable])}) AS \"{variable.identifier}\""
+                for variable in self.jump_variables
+            ),
+            ' ' * 20
+        )
+
+        depend_orderung_list = list(dependent_ordering(collect_gotos(graph)))
+
+        trampolines = _indent(',\n'.join(
+            self.gen_trampoline(graph.blocks[label],graph)
+            for label in reversed(depend_orderung_list)
+        ), ' ' * 10)
+
+
+        source_select = ', '.join(
+            't.'+ label.identifier
+            for label in self.variable_bindings
+        ) + ', '
+                        
+        
+        return dedent(f"""
+          SELECT  {source_select * bool(self.variable_bindings)}t."%result%"
+          FROM umbra.trampoline(
+          --0  initialize
+            TABLE(SELECT {index_dict[self.entry_label.label] + 1},
+                    {initial_row_sql},
+                    CAST(NULL AS {self.emit_type_sql}) AS "%result%"       
+                  )
+          ,
+            {trampolines}
+          )AS t; 
         """)[1:-1]
 
     def gen_block(self, block: CFG.Block) -> str:
@@ -582,6 +642,106 @@ class CodeGen:
           }
         )
         """)[1:-1]
+     
+    def gen_trampoline(self, block: CFG.Block, graph: CFG.Graph) -> str:
+        inputs = self.inputs[block.label]
+
+        unsorted_successor_info, conditional_variable_bindings = self.destructure_terminal_umbra(block.terminal)
+        successor_info = list(sorted(unsorted_successor_info))
+
+        input_columns_sql = (_indent(
+            ', \n'.join(
+                self.gen_variable(variable)
+                for variable in inputs
+            )
+        , ' ' * 27))
+
+        index_dict = self.pos_label(graph)
+
+        assignments = list(sorted(
+            (
+                statement
+                for statement in block.statements
+                if isinstance(statement, CFG.Assignment)
+            ),
+            key=lambda assignment: assignment.variable.identifier
+        ))
+
+        emits = list(sorted(
+            (
+                statement
+                for statement in block.statements
+                if isinstance(statement, CFG.Emit)
+            ),
+            key=lambda emit: emit.to_emit.free_variables
+        ))
+   
+        return dedent(f"""
+            {_indent(
+            f""" 
+    ---Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1}
+    TABLE({ "\n\n     UNION ALL\n\n".join(f"""{'SELECT '+ str((index_dict[(successor[1][1:-1])] + 1))}, 
+          {dedent(_indent(
+                         ",\n".join(
+                        f'CAST({self.gen_umbra_expression(assignment.expression)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
+                         for assignment in assignments
+                                      ),
+                                  ' ' * 10
+                              ))
+                           },
+          CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
+    FROM trampoline 
+    WHERE {str(successor[2])}"""for successor in successor_info)}
+                      )
+                    """[1:-1],
+                    ' ' * 15
+                ) * (bool(assignments)  and not bool(emits))
+            }
+            {   _indent(
+                    f"""
+        ---Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1}
+                   TABLE(SELECT 0,
+                           {input_columns_sql},
+                            {_indent(
+                                ",\n".join(
+                                    f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 5)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 16)}
+                   FROM   trampoline
+                 )                    
+                 """[1:-1]                   
+                        , ' ' * 3
+                        ) * ((bool(emits)) and not bool(conditional_variable_bindings) and not bool(assignments))
+            } 
+            { dedent(  _indent(
+             f"""
+             ---Label:{block.label.label}  ergergTablenumber: {index_dict[block.label.label] + 1}
+            TABLE(SELECT 0,
+                     {input_columns_sql},
+                     {_indent(
+                         ",\n".join(
+                             f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 5)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 33)}
+             FROM trampoline
+             UNION ALL
+             
+    {_indent( "\n\n UNION ALL \n".join(f"""
+  {'SELECT '+ str((index_dict[(successor[1][1:-1])] + 1))}, 
+          {_indent(
+          ",\n".join(
+          f'CAST({_indent(self.gen_umbra_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
+          for assignment in assignments
+                  ),
+              ' ' * 10
+          )
+       },
+          CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
+  FROM trampoline 
+  WHERE {str(successor[2])}
+    """for successor in successor_info),' ' * 12)})                    
+    """[1:-1]                  
+             , ' ' * 12
+             ) * (bool(emits) and (bool(conditional_variable_bindings) or (bool(assignments))))
+        )}                   
+        """)[3:-3]
+    
 
     def destructure_terminal(self, terminal: CFG.Terminal, predicate: str = "TRUE") -> tuple[set[tuple[str,str,str]], list[CFG.Assignment]]:
         match terminal:
@@ -600,3 +760,22 @@ class CodeGen:
                 return truthy_branches | falsey_branches, [CFG.Assignment(grammar.Variable(var), expression), *truthy_bindings, *falsey_bindings]
             case _:
                 raise TypeError(f"Unexpected kind of terminal: {terminal}")
+            
+    def destructure_terminal_umbra(self, terminal: CFG.Terminal, predicate: str = "TRUE") -> tuple[set[tuple[str,str,str]], list[CFG.Assignment]]:
+        match terminal:
+            case CFG.Stop():
+                return set(), []
+            case CFG.GoTo(label):
+                return {("'goto'",f"'{label.label}'",predicate)}, []
+            case CFG.Jump(label):
+                return {("'jump'",f"'{label.label}'",predicate)}, []
+            case CFG.If(expression, truthy, falsey):
+                var = self.gen_umbra_expression(terminal.condition)
+                self.symbol_table[grammar.Variable(var)] = grammar.Type("bool")
+                self.condition_variable_counter += 1
+                truthy_branches, truthy_bindings = self.destructure_terminal_umbra(truthy, f'{predicate} AND {var}')
+                falsey_branches, falsey_bindings = self.destructure_terminal_umbra(falsey, f'{predicate} AND NOT {var}')
+                return truthy_branches | falsey_branches, [CFG.Assignment(grammar.Variable(var), expression), *truthy_bindings, *falsey_bindings]
+            case _:
+                raise TypeError(f"Unexpected kind of terminal: {terminal}")
+
