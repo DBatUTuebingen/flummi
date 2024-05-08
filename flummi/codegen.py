@@ -427,8 +427,7 @@ class CodeGen:
             TABLE(SELECT {index_dict[self.entry_label.label] + 1},
                     {initial_row_sql},
                     CAST(NULL AS {self.emit_type_sql}) AS "%result%"       
-                  )
-          ,
+            ),
             {trampolines}
           )AS t; 
         """)[1:-1]
@@ -654,9 +653,23 @@ class CodeGen:
                 self.gen_variable(variable)
                 for variable in inputs
             )
-        , ' ' * 27))
+        , ' ' * 20))
+
+        input_columns_sql_2 = (_indent(
+            ', \n'.join(
+                self.gen_variable(variable)
+                for variable in inputs
+            )
+        , ' ' * 11))
 
         index_dict = self.pos_label(graph)
+
+        assign_columns_sql = (
+            ', '.join(
+                self.gen_variable(variable)
+                for variable in inputs
+            )+ ', "%result%"'
+        )
 
         assignments = list(sorted(
             (
@@ -675,71 +688,104 @@ class CodeGen:
             ),
             key=lambda emit: emit.to_emit.free_variables
         ))
+
+        target = ((successor_info[0][1]) if len(successor_info) > 0 else "")[1:-1]
+
    
         return dedent(f"""
-            {_indent(
+    {_indent(
+            dedent(
+                f"""
+                ----Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1} 
+                TABLE(SELECT {(index_dict[target] + 1) if len(successor_info) else ""},
+                         {_indent(
+                        ",\n".join(
+                            f'CAST({_indent(self.gen_umbra_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
+                            for assignment in assignments
+                        ),
+                        ' ' * 25
+                            )
+                         },
+                         CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
+                      FROM trampoline
+                ) 
+                """[1:-1]
+            ),
+            ' ' * 6
+                ) * (bool(assignments) and not bool(conditional_variable_bindings) and not bool(emits))   
+            }{_indent(
             f""" 
-    ---Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1}
-    TABLE({ "\n\n     UNION ALL\n\n".join(f"""{'SELECT '+ str((index_dict[(successor[1][1:-1])] + 1))}, 
-          {dedent(_indent(
+    ---Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1}  
+      TABLE({f"""SELECT 0,
+                    {input_columns_sql},
+                    {_indent(
+                     ",\n".join(
+                         f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 5)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 33)}
+            FROM trampoline
+            UNION ALL
+            SELECT *
+            FROM ( """ * bool(emits)}{f'\n            WITH "%assign%"({assign_columns_sql}) AS'}   
+             (SELECT {dedent(_indent(
                          ",\n".join(
                         f'CAST({self.gen_umbra_expression(assignment.expression)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
                          for assignment in assignments
                                       ),
-                                  ' ' * 10
+                                  ' ' * 21
                               ))
                            },
-          CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
-    FROM trampoline 
-    WHERE {str(successor[2])}"""for successor in successor_info)}
-                      )
+                     CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
+              FROM trampoline 
+            ){ "\n               UNION ALL".join(f""" 
+            SELECT {str((index_dict[(successor[1][1:-1])] + 1))}, {assign_columns_sql}
+            FROM "%assign%"
+            WHERE {str(successor[2])}"""for successor in successor_info)}
+      ){f')' * bool(emits)}{f')' * bool(conditional_variable_bindings)}
                     """[1:-1],
                     ' ' * 15
-                ) * (bool(assignments)  and not bool(emits))
-            }
-            {   _indent(
+                ) * bool(conditional_variable_bindings)
+            }{   _indent(
                     f"""
-        ---Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1}
-                   TABLE(SELECT 0,
-                           {input_columns_sql},
-                            {_indent(
-                                ",\n".join(
-                                    f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 5)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 16)}
-                   FROM   trampoline
-                 )                    
-                 """[1:-1]                   
-                        , ' ' * 3
-                        ) * ((bool(emits)) and not bool(conditional_variable_bindings) and not bool(assignments))
-            } 
-            { dedent(  _indent(
-             f"""
-             ---Label:{block.label.label}  ergergTablenumber: {index_dict[block.label.label] + 1}
-            TABLE(SELECT 0,
-                     {input_columns_sql},
+        ----Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1}  
+           TABLE(SELECT 0,
+                    {input_columns_sql},
                      {_indent(
                          ",\n".join(
-                             f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 5)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 33)}
-             FROM trampoline
+                         f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 5)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 16)}
+                 FROM   trampoline
+           ) 
+           """[1:-1]                   
+                    , ' ' * 3
+                    ) * ((bool(emits)) and not bool(conditional_variable_bindings) and not bool(assignments))
+            }{_indent(
+         f"""
+----Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1} 
+  TABLE(SELECT 0,
+           {input_columns_sql_2},
+           {_indent(
+                ",\n".join(
+            f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 4)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 21)}
+        FROM trampoline
              UNION ALL
-             
-    {_indent( "\n\n UNION ALL \n".join(f"""
-  {'SELECT '+ str((index_dict[(successor[1][1:-1])] + 1))}, 
-          {_indent(
+  {
+  f"""
+      SELECT {(index_dict[target] + 1) if len(successor_info) else ""},
+           {_indent(
           ",\n".join(
-          f'CAST({_indent(self.gen_umbra_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
-          for assignment in assignments
-                  ),
-              ' ' * 10
-          )
-       },
-          CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
-  FROM trampoline 
-  WHERE {str(successor[2])}
-    """for successor in successor_info),' ' * 12)})                    
-    """[1:-1]                  
-             , ' ' * 12
-             ) * (bool(emits) and (bool(conditional_variable_bindings) or (bool(assignments))))
-        )}                   
+              f'CAST({_indent(self.gen_umbra_expression(assignment.expression), ' ' * 5)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
+              for assignment in assignments
+          ),
+          ' ' * 11
+              )
+           },
+           CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
+        FROM trampoline
+  ) 
+  """[1:-1]
+            }
+         """[1:-1]                  
+         , ' ' * 4
+         ) * ((bool(assignments) and bool(emits) and not bool(conditional_variable_bindings)))
+            }                   
         """)[3:-3]
     
 
