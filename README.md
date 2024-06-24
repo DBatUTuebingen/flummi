@@ -39,8 +39,8 @@ options:
 | `AVOID_MULTIPLE_RECURSIVE_REFERENCE` | Add the "_classic hack_" to avoid multiple recursive references by aliasing the working table through a CTE. |
 | `INCLUDE_TRACE_GENERATION`           | Add JSON based program trace generation to the compiled query.                                               |
 | `INCLUDE_EMIT_ORDINALITY`            | Add `WITH ORDINALITY`-style column to the compiled query.                                                    |
-| `UMBRA_TRAMPOLINE`                   | Use umbra.trampoline instead of `WITH_RECURSIVE`                                                             |
-
+| `UMBRA_TRAMPOLINE`                   | Use umbra.trampoline instead of WITH_RECURSIVE. Only in combination with umbra.                              |
+ 
 
 ### DBMS Specific Flag Sets
 
@@ -48,7 +48,7 @@ options:
 | :--------- | :----------------------------------- |
 | `duckdb`   | `EXPLICIT_MATERIALIZED`              |
 | `postgres` | `AVOID_MULTIPLE_RECURSIVE_REFERENCE` |
-| `umbra`    | `UMBRA_TRAMPOLINE`                   |
+| `umbra`    | `UMBRA_USE`                          |
 
 ## Usage: `interpret`
 

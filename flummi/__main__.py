@@ -39,11 +39,13 @@ class Flag(Enum):
     FORCE_WITH_RECURSIVE = auto()
     EXPLICIT_MATERIALIZED = auto()
     AVOID_MULTIPLE_RECURSIVE_REFERENCE = auto()
-    UMBRA_TRAMPOLINE = auto()
+    UMBRA_USE = auto()
 
     # additional features
     INCLUDE_TRACE_GENERATION = auto()
     INCLUDE_EMIT_ORDINALITY = auto()
+    UMBRA_TRAMPOLINE = auto()
+    
 
 
 def main():
@@ -83,8 +85,7 @@ def main():
                     })
                 case 'umbra':
                     flags.update({
-                        Flag.UMBRA_TRAMPOLINE,
-                        Flag.JUMPS_ONLY
+                        Flag.UMBRA_USE
                     })
 
             if arguments.graphs and not arguments.graphs.exists():
@@ -132,7 +133,11 @@ def main():
             printer[2](pretty(cfg))
 
             printer[1](f"\033[1;2m[2]\033[0;36m placing additional JUMPs\033[0m")
-            if Flag.JUMPS_ONLY in flags:
+            if (Flag.UMBRA_TRAMPOLINE and Flag.UMBRA_USE) in flags:
+                for block in cfg.blocks.values():
+                    for label in cfg.blocks.keys():
+                        block.terminal = CFG.jumpify(block.terminal, label)
+            elif Flag.JUMPS_ONLY in flags:
                 for block in cfg.blocks.values():
                     for label in cfg.blocks.keys():
                         block.terminal = CFG.jumpify(block.terminal, label)
@@ -170,6 +175,7 @@ def main():
                 include_emit_order=Flag.INCLUDE_EMIT_ORDINALITY in flags,
                 force_with_recursive=Flag.FORCE_WITH_RECURSIVE in flags,
                 umbra_trampoline=Flag.UMBRA_TRAMPOLINE in flags,
+                umbra_use=Flag.UMBRA_USE in flags,
             )
 
             if arguments.output:

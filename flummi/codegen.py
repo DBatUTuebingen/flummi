@@ -35,6 +35,7 @@ def codegen(
     include_emit_order: bool = False,
     force_with_recursive: bool = False,
     umbra_trampoline: bool = False,
+    umbra_use: bool = False,
 ) -> str:
     return CodeGen(
         symbol_table,
@@ -45,7 +46,8 @@ def codegen(
         avoid_multiple_recursive_references,
         include_emit_order,
         force_with_recursive,
-        umbra_trampoline
+        umbra_trampoline,
+        umbra_use
     ).gen_program(graph)
 
 
@@ -64,6 +66,7 @@ class CodeGen:
     include_emit_order: bool
     force_with_recursive: bool
     umbra_trampoline: bool
+    umbra_use: bool
 
     entry_label: CFG.BlockLabel = field(init=False)
     inputs: dict[CFG.BlockLabel, list[grammar.Variable]] = field(init=False)
@@ -117,7 +120,7 @@ class CodeGen:
             for label, inputs in unsorted_inputs.items()
         }
 
-        if self.umbra_trampoline:
+        if self.umbra_trampoline and self.umbra_use:
             return self.gen_program_umbra_trampoline(graph)
         elif self.force_with_recursive or any(pred for pred in self.jump_predecessors.values()):
             return self.gen_program_with_jumps(graph)
@@ -423,7 +426,7 @@ class CodeGen:
         return dedent(f"""
           SELECT  {source_select * bool(self.variable_bindings)}t."%result%"
           FROM umbra.trampoline(
-          --0  initialize
+          --Label:Initialize  Tablenumber: 0
             TABLE(SELECT {index_dict[self.entry_label.label] + 1},
                     {initial_row_sql},
                     CAST(NULL AS {self.emit_type_sql}) AS "%result%"       
@@ -644,9 +647,20 @@ class CodeGen:
      
     def gen_trampoline(self, block: CFG.Block, graph: CFG.Graph) -> str:
         inputs = self.inputs[block.label]
+        
 
         unsorted_successor_info, conditional_variable_bindings = self.destructure_terminal_umbra(block.terminal)
         successor_info = list(sorted(unsorted_successor_info))
+
+        index_dict = self.pos_label(graph)
+
+        target_list = [(tup[1][1:-1]) for tup in successor_info]
+
+        pos_list = [index_dict[key] + 1 for key in target_list if key in index_dict]
+
+        condition_list = [(tup[2]) for tup in successor_info]
+
+        case_list = list(zip(pos_list,condition_list))
 
         input_columns_sql = (_indent(
             ', \n'.join(
@@ -661,15 +675,6 @@ class CodeGen:
                 for variable in inputs
             )
         , ' ' * 11))
-
-        index_dict = self.pos_label(graph)
-
-        assign_columns_sql = (
-            ', '.join(
-                self.gen_variable(variable)
-                for variable in inputs
-            )+ ', "%result%"'
-        )
 
         assignments = list(sorted(
             (
@@ -723,22 +728,33 @@ class CodeGen:
                          f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 5)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 33)}
             FROM trampoline
             UNION ALL
-            SELECT *
-            FROM ( """ * bool(emits)}{f'\n            WITH "%assign%"({assign_columns_sql}) AS'}   
-             (SELECT {dedent(_indent(
+         ( """ * bool(emits)}SELECT CASE {dedent(_indent(
+                         "\n".join(
+                        f'WHEN ({succsessors[1]}) THEN {succsessors[0]}'
+                         for succsessors in case_list
+                                      ),
+                                  ' ' * 24
+                              ))
+                           }
+                        ELSE 0 END,
+                   {dedent(_indent(
                          ",\n".join(
                         f'CAST({self.gen_umbra_expression(assignment.expression)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
                          for assignment in assignments
                                       ),
-                                  ' ' * 21
+                                  ' ' * 19
                               ))
                            },
-                     CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
-              FROM trampoline 
-            ){ "\n               UNION ALL".join(f""" 
-            SELECT {str((index_dict[(successor[1][1:-1])] + 1))}, {assign_columns_sql}
-            FROM "%assign%"
-            WHERE {str(successor[2])}"""for successor in successor_info)}
+                   CAST((("%result%")) AS {self.emit_type_sql}) AS "%result%"
+            FROM trampoline
+            WHERE    {dedent(_indent(
+                         "\n OR ".join(
+                        f'({succsessors[1]})'
+                         for succsessors in case_list
+                                      ),
+                                  ' ' * 17
+                              ))
+                           } 
       ){f')' * bool(emits)}{f')' * bool(conditional_variable_bindings)}
                     """[1:-1],
                     ' ' * 15
@@ -824,4 +840,3 @@ class CodeGen:
                 return truthy_branches | falsey_branches, [CFG.Assignment(grammar.Variable(var), expression), *truthy_bindings, *falsey_bindings]
             case _:
                 raise TypeError(f"Unexpected kind of terminal: {terminal}")
-
