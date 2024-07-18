@@ -2,34 +2,11 @@ from collections.abc import Iterator
 from functools import reduce
 import operator as op
 
-from . import CFG
+
+type Graph[A] = dict[A, set[A]]
 
 
-type LabelGraph = dict[CFG.BlockLabel, set[CFG.BlockLabel]]
-
-
-def collect_successors(graph: CFG.Graph) -> LabelGraph:
-  return {
-    label: CFG.successors(block)
-    for label, block in graph.blocks.items()
-  }
-
-
-def collect_gotos(graph: CFG.Graph) -> LabelGraph:
-  return {
-    label: CFG.gotos(block)
-    for label, block in graph.blocks.items()
-  }
-
-
-def collect_jumps(graph: CFG.Graph) -> LabelGraph:
-  return {
-    label: CFG.jumps(block)
-    for label, block in graph.blocks.items()
-  }
-
-
-def invert_label_graph(graph: LabelGraph) -> LabelGraph:
+def invert[A](graph: Graph[A]) -> Graph[A]:
   new = {
     label: set()
     for label in graph
@@ -40,32 +17,28 @@ def invert_label_graph(graph: LabelGraph) -> LabelGraph:
   return new
 
 
-def dependent_ordering(graph: LabelGraph) -> Iterator[CFG.BlockLabel]:
-  predecessors = invert_label_graph(graph)
-  stack = [*sorted(
-    (
+def dependent_ordering[A](successors: Graph[A]) -> Iterator[A]:
+  predecessors = invert(successors)
+  stack = [
       label
       for label, parents in predecessors.items()
       if not parents
-    ),
-    key=op.attrgetter("label")
-  )]
-  sorted_graph = {
-    label: sorted(children, key=op.attrgetter("label"))
-    for label, children in graph.items()
-  }
+  ]
   seen = set()
   while stack:
-    label = stack.pop()
-    yield label
-    seen.add(label)
-    for child in sorted_graph[label]:
-      if seen.issuperset(predecessors[child]):
-        stack.append(child)
+    yield from sorted(stack)  # type: ignore
+    new_stack = []
+    while stack:
+      label = stack.pop()
+      seen.add(label)
+      for child in successors[label]:
+        if seen.issuperset(predecessors[child]):
+          new_stack.append(child)
+    stack = new_stack
 
 
-def compute_dominator_tree(successors: LabelGraph, entry_labels: set[CFG.BlockLabel]) -> LabelGraph:
-    predecessors = invert_label_graph(successors)
+def compute_dominator_tree[A](successors: Graph[A], entry_labels: set[A]) -> Graph[A]:
+    predecessors = invert(successors)
 
     dom = {
       label: (
@@ -90,8 +63,8 @@ def compute_dominator_tree(successors: LabelGraph, entry_labels: set[CFG.BlockLa
     return dom
 
 
-def loop_heads(successors: LabelGraph) -> set[CFG.BlockLabel]:
-    predecessors = invert_label_graph(successors)
+def loop_heads[A](successors: Graph[A]) -> set[A]:
+    predecessors = invert(successors)
 
     entry_labels = {
       label
