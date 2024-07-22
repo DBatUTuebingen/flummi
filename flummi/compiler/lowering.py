@@ -184,7 +184,7 @@ class Lowering:
                 return self._loop_exits[name]
 
             case AST.Continue(name):
-                this_label = self._make_label("jump")
+                this_label = self._make_label("sink")
                 self._nodes[this_label] = CFG.Sink(name)
                 self._edges[this_label] = set()
                 self._edges[previous_label].add(this_label)

@@ -5,10 +5,10 @@ from ..library import utils
 
 
 def get_block_inputs[A](cfg: CFG.Graph) -> tuple[dict[CFG.Label, set[common.Identifier[A]]], set[common.Identifier[A]]]:
-    jump_targets = {
+    loop_readers = {
         label
         for label, node in cfg.nodes.items()
-        if isinstance(node, CFG.Source)
+        if isinstance(node, (CFG.Source, CFG.Wait))
     }
 
     inputs = {
@@ -16,7 +16,7 @@ def get_block_inputs[A](cfg: CFG.Graph) -> tuple[dict[CFG.Label, set[common.Iden
         for label, node in cfg.nodes.items()
     }
 
-    jump_set = set()
+    loop_carried_variables = set()
 
     while True:
         old_inputs = inputs
@@ -25,19 +25,19 @@ def get_block_inputs[A](cfg: CFG.Graph) -> tuple[dict[CFG.Label, set[common.Iden
             label: inputs[label] | utils.union(
                 inputs[successor] - bound_variables(node)
                 for successor in cfg.edges[label]
-            ) if not isinstance(node, CFG.Sink) else jump_set
+            ) if not isinstance(node, (CFG.Sink, CFG.Wait)) else loop_carried_variables
             for label, node in cfg.nodes.items()
         }
 
-        jump_set = utils.union(inputs[jump_target] for jump_target in jump_targets)
+        loop_carried_variables = utils.union(inputs[loop_reader] for loop_reader in loop_readers)
 
-        for jump_target in jump_targets:
-            inputs[jump_target] = jump_set
+        for loop_reader in loop_readers:
+            inputs[loop_reader] = loop_carried_variables
 
         if old_inputs == inputs:
             break
 
-    return inputs, jump_set
+    return inputs, loop_carried_variables
 
 
 def free_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:

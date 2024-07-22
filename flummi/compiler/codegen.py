@@ -35,12 +35,17 @@ class CodeGenerator:
             sql.named(
                 sql.string(program.main_function_name.identifier),
                 name=".label"
+            ),
+            sql.named(
+                sql.cast("0", type="INT"),
+                name=".mark"
             )
         ]
         loop_column_prefix: list[sql.SQL] = []
         loop_schema: list[str] = [
             ".function",
             ".label",
+            ".mark",
         ]
 
         for function in program.function_list:
@@ -81,9 +86,13 @@ class CodeGenerator:
                         ctes.append(
                             sql.cte(
                                 name=cte_name,
-                                columns=columns,
+                                columns=[
+                                    ".mark",
+                                ] + columns,
                                 body=sql.select(
                                     select_list=[
+                                        sql.variable(row="input", column=".mark"),
+                                    ] + [
                                         sql.variable(
                                             row="input",
                                             column=f"{function.name.identifier}.{column}"
@@ -97,12 +106,10 @@ class CodeGenerator:
                                         )
                                     ],
                                     predicates=[
-                                        sql.variable(row="input", column=".label") +
-                                        " = " +
+                                        sql.variable(row="input", column=".function") + " = " +
+                                        sql.string(function.name.identifier),
+                                        sql.variable(row="input", column=".label") + " = " +
                                         sql.string(name.identifier),
-                                        sql.variable(row="input", column=".function") +
-                                        " = " +
-                                        sql.string(function.name.identifier)
                                     ]
                                 )
                             )
@@ -121,13 +128,17 @@ class CodeGenerator:
                         ctes.append(
                             sql.cte(
                                 name=cte_name,
-                                columns=[".label"] + columns,
+                                columns=[
+                                    ".label",
+                                    ".mark",
+                                ] + columns,
                                 body=sql.select(
                                     select_list=[
                                         sql.named(
                                             sql.string(name.identifier),
                                             name=".label"
-                                        )
+                                        ),
+                                        sql.variable(row="input", column=".mark"),
                                     ] + [
                                         sql.variable(row="input", column=column)
                                         for column in columns
@@ -158,9 +169,13 @@ class CodeGenerator:
                         ctes.append(
                             sql.cte(
                                 name=cte_name,
-                                columns=columns,
+                                columns=[
+                                    ".mark",
+                                ] + columns,
                                 body=sql.select(
                                     select_list=[
+                                        sql.variable(row="input", column=".mark"),
+                                    ] + [
                                         sql.variable(row="input", column=column)
                                         for column in columns
                                     ],
@@ -191,26 +206,29 @@ class CodeGenerator:
                             variable.identifier
                             for variable in outputs[label]
                         ]
-                        subqueries = [
-                            sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=column)
-                                    for column in columns
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
-                                        name="input",
-                                    )
-                                ]
-                            )
-                            for predecessor in these_predecessors
-                        ]
                         ctes.append(
                             sql.cte(
                                 name=cte_name,
-                                columns=columns,
-                                body=sql.union_all(subqueries)
+                                columns=[
+                                    ".mark",
+                                ] + columns,
+                                body=sql.union_all([
+                                    sql.select(
+                                        select_list=[
+                                            sql.variable(row="input", column=".mark"),
+                                        ] + [
+                                            sql.variable(row="input", column=column)
+                                            for column in columns
+                                        ],
+                                        from_list=[
+                                            sql.named(
+                                                sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                                name="input",
+                                            )
+                                        ]
+                                    )
+                                    for predecessor in these_predecessors
+                                ])
                             )
                         )
 
@@ -222,6 +240,8 @@ class CodeGenerator:
                         subqueries = [
                             sql.select(
                                 select_list=[
+                                    sql.variable(row="input", column=".mark"),
+                                ] + [
                                     sql.cast(
                                         sql.variable(row="input", column=variable.identifier),
                                         type.source
@@ -242,6 +262,8 @@ class CodeGenerator:
                             sql.cte(
                                 name=cte_name,
                                 columns=[
+                                    ".mark",
+                                ] + [
                                     f".result.{i}"
                                     for i in range(len(function.return_types))
                                 ],
@@ -315,11 +337,15 @@ class CodeGenerator:
                             sql.cte(
                                 name=cte_name,
                                 columns=[
+                                    ".mark",
+                                ] + [
                                     variable.identifier
                                     for variable in outputs[label]
                                 ],
                                 body=sql.select(
                                     select_list=[
+                                        sql.variable(row="input", column=".mark"),
+                                    ] + [
                                         column_expressions.get(
                                             variable,
                                             sql.variable(row="input", column=variable.identifier)
@@ -327,6 +353,330 @@ class CodeGenerator:
                                         for variable in outputs[label]
                                     ],
                                     from_list=from_list
+                                )
+                            )
+                        )
+
+                    case CFG.Fork(variables, expression):
+                        ctes.append(
+                            sql.cte(
+                                name=cte_name,
+                                columns=[
+                                    ".mark"
+                                ] + [
+                                    variable.identifier
+                                    for variable in outputs[label]
+                                ],
+                                body=sql.select(
+                                    select_list=[
+                                        sql.variable(row="input", column=".mark"),
+                                    ] + [
+                                        sql.cast(
+                                            sql.variable(
+                                                row="fork",
+                                                column=sql.name(variable.identifier),
+                                            ),
+                                            type=symbol_table[variable].source
+                                        )
+                                        if variable in variables else
+                                        sql.variable(
+                                            row="input",
+                                            column=sql.name(f"{function.name.identifier}.{variable.identifier}"),
+                                        )
+                                        for variable in outputs[label]
+                                    ],
+                                    from_list=[
+                                        sql.named(
+                                            sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                            name="input",
+                                        ),
+                                        sql.named(
+                                            sql.lateral(
+                                                expression.source.format(*(
+                                                    sql.variable(row="input", column=variable.identifier)
+                                                    for variable in assignment.expression.arguments
+                                                ))
+                                            ),
+                                            name="fork",
+                                            columns=[
+                                                variable.identifier
+                                                for variable in variables
+                                            ]
+                                        )
+                                    ]
+                                )
+                            )
+                        )
+
+                    case CFG.Aggregate(aggregates):
+                        ctes.append(
+                            sql.cte(
+                                name=cte_name,
+                                columns=[
+                                    ".mark"
+                                ] + [
+                                    variable.identifier
+                                    for variable in outputs[label]
+                                ],
+                                body=sql.select(
+                                    select_list=[
+                                        f"MIN({sql.variable(row="input", column=".mark")})"
+                                    ] + [
+                                        sql.named(
+                                            expression.source.format(*(
+                                                f"{function.name.identifier}.{argument.identifier}"
+                                                for argument in expression.arguments
+                                            )),
+                                            name=variable.identifier
+                                        )
+                                        if (expression := aggregates.get(variable)) is not None else
+                                        sql.variable(
+                                            row="input",
+                                            column=f"{function.name.identifier}.{variable.identifier}"
+                                        )
+                                        for variable in outputs[label]
+                                    ],
+                                    from_list=[
+                                        sql.named(
+                                            sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                            name="input",
+                                        ),
+                                    ],
+                                    group_keys=[
+                                        variable.identifier
+                                        for variable in outputs[label]
+                                        if variable not in aggregates
+                                    ]
+                                )
+                            )
+                        )
+
+                    case CFG.Mark():
+                        ctes.append(
+                            sql.cte(
+                                name=cte_name,
+                                columns=[
+                                    ".mark",
+                                ] + [
+                                    variable.identifier
+                                    for variable in outputs[label]
+                                ],
+                                body=sql.select(
+                                    select_list=[
+                                        sql.named(
+                                            sql.variable(row="input", column=".mark") + " + 1",
+                                            name=".mark"
+                                        )
+                                    ] + [
+                                        sql.variable(
+                                            row="input",
+                                            column=f"{function.name.identifier}.{variable.identifier}"
+                                        )
+                                        for variable in outputs
+                                    ],
+                                    from_list=[
+                                        sql.named(
+                                            sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                            name="input",
+                                        ),
+                                    ]
+                                )
+                            ),
+                        )
+
+                    case CFG.Wait():
+                        gather_cte_name = cte_name + ".gather"
+                        ctes.append(
+                            sql.cte(
+                                name=gather_cte_name,
+                                columns=[
+                                    ".mark",
+                                    ".done",
+                                ] + [
+                                    variable.identifier
+                                    for variable in outputs[label]
+                                ],
+                                body=sql.union_all([
+                                    sql.select(
+                                        select_list=[
+                                            sql.named(
+                                                sql.variable(row="input", column=".mark") + " - 1",
+                                                name=".mark"
+                                            ),
+                                            sql.named(
+                                                sql.prefix_token(
+                                                    prefix="NOT",
+                                                    content=sql.call(
+                                                        function="EXISTS",
+                                                        arguments=[sql.select(
+                                                            select_list=[sql.named("1", name="dummy")],
+                                                            from_list=[sql.name("loop")],
+                                                            predicates=[
+                                                                sql.variable(row="loop", column=".function") + " = " +
+                                                                sql.string(function.name.identifier),
+                                                                sql.variable(row="loop", column=".mark") + " >= " +
+                                                                sql.variable(row="input", column=".mark"),
+                                                            ]
+                                                        )]
+                                                    )
+                                                ),
+                                                name=".done"
+                                            )
+                                        ] + [
+                                            sql.variable(
+                                                row="input",
+                                                column=f"{function.name.identifier}.{variable.identifier}"
+                                            )
+                                            for variable in outputs
+                                        ],
+                                        from_list=[
+                                            sql.named(
+                                                sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                                name="input",
+                                            ),
+                                        ],
+                                    ),
+                                    sql.select(
+                                        select_list=[
+                                            sql.variable(row="input", column=".mark"),
+                                            sql.named("true", name=".done")
+                                        ] + [
+                                            sql.variable(
+                                                row="input",
+                                                column=f"{function.name.identifier}.{variable.identifier}"
+                                            )
+                                            for variable in outputs
+                                        ],
+                                        from_list=[
+                                            sql.named(
+                                                sql.name("loop"),
+                                                name="input",
+                                            ),
+                                        ],
+                                        predicates=[
+                                            sql.variable(row="input", column=".function") + " = " +
+                                            sql.string(function.name.identifier),
+                                            sql.variable(row="input", column=".label") + " = " +
+                                            sql.string(label.identifier),
+                                        ]
+                                    ),
+                                ])
+                            )
+                        )
+                        decide_cte_name = cte_name + ".decide"
+                        ctes.append(
+                            sql.cte(
+                                name=decide_cte_name,
+                                columns=[
+                                    ".mark",
+                                    ".all done",
+                                ] + [
+                                    variable.identifier
+                                    for variable in outputs[label]
+                                ],
+                                body=sql.select(
+                                    select_list=[
+                                            sql.variable(row="input", column=".mark"),
+                                            sql.named(
+                                                sql.window(
+                                                    sql.call(
+                                                        function="BOOL_AND",
+                                                        arguments=[
+                                                            sql.variable(row="input", column=".done")
+                                                        ]
+                                                    ),
+                                                    partition_by=[
+                                                        sql.variable(row="input", column=".mark"),
+                                                    ],
+                                                    rows=(
+                                                        "UNBOUNDED PRECEDING",
+                                                        "UNBOUNDED FOLLOWING",
+                                                    )
+                                                ),
+                                                name=".all done"
+                                            )
+                                        ] + [
+                                            sql.variable(
+                                                row="input",
+                                                column=f"{function.name.identifier}.{variable.identifier}"
+                                            )
+                                            for variable in outputs
+                                        ],
+                                    from_list=[
+                                        sql.named(
+                                            gather_cte_name,
+                                            name="input"
+                                        )
+                                    ]
+                                )
+                            )
+                        )
+                        wait_cte_name = cte_name + ".wait"
+                        ctes.append(
+                            sql.cte(
+                                name=wait_cte_name,
+                                columns=[
+                                    ".mark",
+                                    ".label",
+                                ] + [
+                                    variable.identifier
+                                    for variable in outputs[label]
+                                ],
+                                body=sql.select(
+                                    select_list=[
+                                            sql.variable(row="input", column=".mark"),
+                                            sql.named(
+                                                sql.string(label.identifier),
+                                                name=".label"
+                                            )
+                                        ] + [
+                                            sql.variable(
+                                                row="input",
+                                                column=f"{function.name.identifier}.{variable.identifier}"
+                                            )
+                                            for variable in outputs
+                                        ],
+                                    from_list=[
+                                        sql.named(
+                                            sql.name(wait_cte_name),
+                                            name="input"
+                                        )
+                                    ],
+                                    predicates=[
+                                        "NOT + " + sql.variable(row="input", column=".all done")
+                                    ]
+                                )
+                            )
+                        )
+                        sink_names.append(wait_cte_name)
+                        ctes.append(
+                            sql.cte(
+                                name=cte_name,
+                                columns=[
+                                    ".mark",
+                                ] + [
+                                    variable.identifier
+                                    for variable in outputs[label]
+                                ],
+                                body=sql.select(
+                                    select_list=[
+                                            sql.variable(row="input", column=".mark")
+                                        ] + [
+                                            sql.variable(
+                                                row="input",
+                                                column=f"{function.name.identifier}.{variable.identifier}"
+                                            )
+                                            for variable in outputs
+                                        ],
+                                    from_list=[
+                                        sql.named(
+                                            sql.name(wait_cte_name),
+                                            name="input"
+                                        )
+                                    ],
+                                    predicates=[
+                                        sql.variable(row="input", column=".all done")
+                                    ]
                                 )
                             )
                         )
@@ -408,7 +758,8 @@ class CodeGenerator:
                             sql.string(function.name.identifier),
                             name=".function"
                         ),
-                        sql.variable(".label")
+                        sql.variable(".label"),
+                        sql.variable(".mark"),
                     ] +
                     loop_column_prefix +
                     [
@@ -444,7 +795,8 @@ class CodeGenerator:
                                 "TEXT"
                             ),
                             name=".label"
-                        )
+                        ),
+                        sql.variable(".mark"),
                     ] +
                     loop_column_prefix +
                     [

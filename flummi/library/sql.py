@@ -33,6 +33,9 @@ def name(name: str) -> SQL:
     return f'"{name}"'
 
 
+def prefix_token(prefix: SQL, content: SQL) -> SQL:
+    return f"{prefix} {_indent(dedent(content), ' ' * (1 + len(prefix)))}\n"
+
 _name = name
 
 
@@ -49,17 +52,42 @@ def union_all(subqueries: list[SQL]) -> SQL:
     return "\n  UNION ALL\n".join(map(paren, map(dedent, subqueries)))
 
 
-def select(select_list: list[SQL], from_list: list[SQL], predicates: list[SQL] | None = None) -> SQL:
+def select(
+    select_list: list[SQL],
+    from_list: list[SQL],
+    joins: list[SQL] | None = None,
+    predicates: list[SQL] | None = None,
+    group_keys: list[SQL] | None = None,
+    having: list[SQL] | None = None
+) -> SQL:
     query = (
         f"SELECT {_indent(",\n".join(map(dedent, select_list)), ' ' * 7)}\n"
         f"FROM   {_indent(",\n".join(map(dedent, from_list)), ' ' * 7)}"
     )
+
+    if joins:
+        query += "\n".join(
+            dedent(join)
+            for join in joins
+        )
 
     if predicates:
         query += "\nWHERE  " + "\nAND    ".join(
             _indent(dedent(predicate), ' ' * 7)
             for predicate in predicates
         )
+
+    if group_keys:
+        query += "\nGROUP  BY " + "\n, ".join(
+            _indent(dedent(key), ' ' * 10)
+            for key in group_keys
+        )
+
+        if having:
+            query += "\nHAVING " + "\n, ".join(
+                _indent(dedent(predicate), ' ' * 7)
+                for predicate in having
+            )
 
     return query
 
@@ -94,3 +122,62 @@ def named(thing: SQL, name: str, columns: list[str] | None = None) -> SQL:
 
 def lateral(subquery: SQL) -> SQL:
     return f"LATERAL ({_indent(dedent(subquery), ' ' * 9)})"
+
+
+def join(type: SQL, relation: SQL, predicates: list[SQL] | None = None) -> SQL:
+    type += " JOIN"
+    join = f"{type} {_indent(dedent(relation), ' ' * (1 + len(type)))}"
+
+    if predicates:
+        join += "\nON  " + "\nAND ".join(
+            _indent(dedent(predicate), ' ' * 4)
+            for predicate in predicates
+        )
+
+    return join
+
+
+def call(function: str, arguments: list[SQL]) -> SQL:
+    return f"{function}(" + "\n,".join(
+        _indent(dedent(argument), ' ' * (1 + len(function)))
+        for argument in arguments
+    ) + ")"
+
+
+def window(
+    expression: SQL,
+    partition_by: list[SQL] | None = None,
+    order_by: list[SQL] | None = None,
+    rows: SQL | tuple[SQL, SQL] | None = None,
+    range: SQL | tuple[SQL, SQL] | None = None,
+) -> SQL:
+    window = ""
+
+    if partition_by:
+        window += "\nPARTITION BY " + "\n, ".join(
+            _indent(dedent(key), ' ' * 13)
+            for key in partition_by
+        )
+
+    if order_by:
+        window += "\nORDER BY " + "\n, ".join(
+            _indent(dedent(key), ' ' * 9)
+            for key in order_by
+        )
+
+    if rows:
+        if isinstance(rows, tuple):
+            preceding, following = rows
+            window += "\nROWS BETWEEN " + preceding + "\n"
+            window +=   "     AND     " + following
+        else:
+            window += "\nROWS " + _indent(dedent(rows), ' ' * 5)
+    elif range:
+        if isinstance(range, tuple):
+            preceding, following = range
+            window += "\nRANGE BETWEEN " + preceding + "\n"
+            window +=   "      AND     " + following
+        else:
+            window += "\nRANGE " + _indent(dedent(range), ' ' * 6)
+
+    return expression + "OVER (" + _indent(window, '  ') + ")"

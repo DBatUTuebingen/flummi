@@ -60,3 +60,24 @@ class Source[A](Node[A]):
 @dataclass
 class Sink[A](Node[A]):
     label: common.Identifier[A]
+
+
+@dataclass
+class Fork[A](Node[A]):
+    variables: list[common.Identifier[A]]
+    expression: common.Expression[A]
+
+
+@dataclass
+class Aggregate[A](Node[A]):
+    aggregates: dict[common.Identifier[A], common.Expression[A]]
+
+
+@dataclass
+class Mark[A](Node[A]):
+    ...
+
+
+@dataclass
+class Wait[A](Node[A]):
+    ...
