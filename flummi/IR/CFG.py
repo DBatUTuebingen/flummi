@@ -69,8 +69,9 @@ class Fork[A](Node[A]):
 
 
 @dataclass
-class Aggregate[A](Node[A]):
-    aggregates: dict[common.Identifier[A], common.Expression[A]]
+class Join[A](Node[A]):
+    variables: list[common.Identifier[A]]
+    expression: common.Expression[A]
 
 
 @dataclass

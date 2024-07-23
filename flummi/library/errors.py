@@ -24,7 +24,7 @@ class PrettyError(Exception):
         self.reasoning = reasoning
 
     def format(self, source: str) -> str:
-        formatted_reasons = []
+        formatted_reasons = [f"{type(self).__name__}:"]
         for reason in self.reasoning:
             if isinstance(reason, Location):
                 formatted_reasons.append(

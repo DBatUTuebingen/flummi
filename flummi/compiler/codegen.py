@@ -401,9 +401,86 @@ class CodeGenerator:
                             )
                         )
 
-                    case CFG.Aggregate(aggregates):
+                    case CFG.Join(variables, expression):
                         assert len(these_predecessors) == 1
                         predecessor = these_predecessors.pop()
+
+                        group_keys = [
+                            variable
+                            for variable in outputs[label]
+                            if variable not in variables
+                        ]
+
+                        group_key_query = sql.named(
+                            sql.paren(
+                                sql.select(
+                                    select_list=[
+                                        sql.named(
+                                            sql.call(
+                                                function="MIN",
+                                                arguments=[sql.variable(row="key", column=".mark")]
+                                            ),
+                                            name=".mark"
+                                        )
+                                    ] + [
+                                        sql.variable(row="key", column=variable.identifier)
+                                        for variable in group_keys
+                                    ],
+                                    from_list=[
+                                        sql.named(
+                                            sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                            name="key"
+                                        )
+                                    ],
+                                    group_keys=[
+                                        sql.variable(row="key", column=variable.identifier)
+                                        for variable in group_keys
+                                    ],
+                                )
+                            ),
+                            name="key",
+                            columns=[".mark"] + [
+                                variable.identifier
+                                for variable in group_keys
+                            ]
+                        )
+
+                        aggregate_query = sql.named(
+                            sql.lateral(
+                                expression.source.format(*(
+                                    sql.variable(row="input", column=argument.identifier)
+                                    for argument in expression.arguments
+                                )).format(
+                                    sql.named(
+                                        sql.paren(
+                                            sql.select(
+                                                select_list=[
+                                                    sql.variable(row="input", column=argument.identifier)
+                                                    for argument in expression.arguments
+                                                ],
+                                                from_list=[
+                                                    sql.named(
+                                                        sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                                        name="input"
+                                                    )
+                                                ],
+                                                predicates=[
+                                                    sql.variable(row="key", column=variable.identifier)  + " = " +
+                                                    sql.variable(row="input", column=variable.identifier)
+                                                    for variable in group_keys
+                                                ]
+                                            )
+                                        ),
+                                        name="input"
+                                    )
+                                )
+                            ),
+                            name="aggregate",
+                            columns=[
+                                variable.identifier
+                                for variable in variables
+                            ]
+                        )
 
                         ctes.append(
                             sql.cte(
@@ -416,29 +493,28 @@ class CodeGenerator:
                                 ],
                                 body=sql.select(
                                     select_list=[
-                                        f"MIN({sql.variable(row="input", column=".mark")})"
+                                        sql.variable(row="key", column=".mark")
                                     ] + [
-                                        sql.named(
-                                            expression.source.format(*(
-                                                f"{function.name.identifier}.{argument.identifier}"
-                                                for argument in expression.arguments
-                                            )),
-                                            name=variable.identifier
+                                        sql.cast(
+                                            sql.variable(
+                                                row="aggregate",
+                                                column=variable.identifier
+                                            ),
+                                            type=symbol_table[variable].source
                                         )
-                                        if (expression := aggregates.get(variable)) is not None else
-                                        sql.variable(row="input", column=variable.identifier)
+                                        if variable in variables else
+                                        sql.variable(
+                                            row="key",
+                                            column=variable.identifier
+                                        )
                                         for variable in outputs[label]
                                     ],
                                     from_list=[
-                                        sql.named(
-                                            sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
-                                            name="input",
-                                        ),
+                                        group_key_query,
+                                        aggregate_query,
                                     ],
-                                    group_keys=[
-                                        variable.identifier
-                                        for variable in outputs[label]
-                                        if variable not in aggregates
+                                    predicates=[
+                                        sql.variable(row="key", column=".mark") + " IS NOT NULL"
                                     ]
                                 )
                             )
@@ -777,14 +853,14 @@ class CodeGenerator:
 
             collector_data = [
                 (
-                    name,
+                    sql.name(name),
                     columns + nulls
                 )
                 for name, columns in collector_data
             ]
             collector_data.extend(
                 (
-                    name,
+                    sql.named(sql.name(name), name="sink"),
                     [
                         sql.named(
                             sql.string(function.name.identifier),
@@ -797,7 +873,7 @@ class CodeGenerator:
                     [
                         *(
                             sql.named(
-                                sql.variable(row=name, column=variable.identifier),
+                                sql.variable(row="sink", column=variable.identifier),
                                 name=f"{function.name.identifier}.{variable.identifier}"
                             )
                             if variable in variables else
@@ -826,7 +902,7 @@ class CodeGenerator:
             )
             collector_data.extend(
                 (
-                    name,
+                    sql.named(sql.name(name), name="emit"),
                     [
                         sql.named(
                             sql.string(function.name.identifier),
@@ -854,7 +930,7 @@ class CodeGenerator:
                             for variable in loop_carried_variables
                         ),
                         *(
-                            sql.variable(f".result.{i}")
+                            sql.variable(row="emit", column=f".result.{i}")
                             for i in range(len(function.return_types))
                         )
                     ]
@@ -889,9 +965,9 @@ class CodeGenerator:
                         body=sql.union_all([
                             sql.select(
                                 select_list=columns,
-                                from_list=[sql.name(name)]
+                                from_list=[relation]
                             )
-                            for name, columns in collector_data
+                            for relation, columns in collector_data
                         ])
                     )
                 ])

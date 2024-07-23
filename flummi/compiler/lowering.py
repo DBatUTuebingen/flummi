@@ -290,6 +290,20 @@ class Lowering:
 
                 return [fork_label]
 
+            case AST.Join(variables, expression):
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                join_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Join(
+                        variables,
+                        expression,
+                        annotation=statement.annotation
+                    )
+                )
+
+                return [join_label]
+
             case _:
                 raise LoweringError(
                     "Encounted unexpected statement during lowering.",

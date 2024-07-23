@@ -67,6 +67,13 @@ class Fork[A](Statement[A]):
     variables: list[common.Identifier[A]]
     expression: common.Expression[A]
 
+
+@dataclass
+class Join[A](Statement[A]):
+    variables: list[common.Identifier[A]]
+    expression: common.Expression[A]
+
+
 @dataclass
 class Block[A](Statement[A]):
     statements: list[Statement]

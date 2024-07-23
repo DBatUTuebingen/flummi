@@ -149,7 +149,7 @@ class Analyzer:
 
                 return statement, False, True
 
-            case AST.Assignment(variables, expression) | AST.Fork(variables, expression):
+            case AST.Assignment(variables, expression) | AST.Fork(variables, expression) | AST.Join(variables, expression):
                 self.analyze_expression(expression)
 
                 for variable in variables:
@@ -273,6 +273,8 @@ class Analyzer:
                     )
 
                 return statement, False, False
+
+
 
             case _:
                 raise AnalysisError(

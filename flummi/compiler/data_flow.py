@@ -57,7 +57,7 @@ def free_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
                 for assignment in assignments
             ))
 
-        case CFG.Fork(_, expression):
+        case CFG.Fork(_, expression) | CFG.Join(_, expression):
             return set(expression.arguments)
 
         case CFG.Emits(emits):
@@ -78,7 +78,7 @@ def bound_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
                 for assignment in assignments
             ))
 
-        case CFG.Fork(variables, _):
+        case CFG.Fork(variables, _) | CFG.Join(variables, _):
             return set(variables)
 
         case _:
