@@ -149,7 +149,7 @@ class Analyzer:
 
                 return statement, False, True
 
-            case AST.Assignment(variables, expression):
+            case AST.Assignment(variables, expression) | AST.Fork(variables, expression):
                 self.analyze_expression(expression)
 
                 for variable in variables:
@@ -180,6 +180,9 @@ class Analyzer:
                     self.loop_stopped[loop_label] = True
 
                 return statement, True, False
+
+            case AST.Sync():
+                return statement, False, False
 
             case AST.If(condition, truthy_branch, falsey_branch):
                 self.analyze_variable_read(condition)

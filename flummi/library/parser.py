@@ -1,14 +1,24 @@
 from collections.abc import Iterator
 from dataclasses import dataclass, field
-from enum import StrEnum
+from enum import StrEnum, unique, EnumMeta
 import re
 from typing import Callable
 
 from .errors import PrettyError, Location
 
 
+
+class TokensMeta(EnumMeta):
+  def __new__(metacls, cls, bases, classdict):
+    return unique(super().__new__(metacls, cls, bases, classdict))
+
+
+class Tokens(StrEnum, metaclass=TokensMeta):
+  ...
+
+
 @dataclass
-class Token[T]:
+class Token[T: Tokens]:
   type: T
   value: str
   row: int
@@ -19,10 +29,10 @@ class Token[T]:
     return Location(self.row, self.column)
 
 
-type Lexer[T] = Callable[[str], Iterator[Token[T]]]
+type Lexer[T: Tokens] = Callable[[str], Iterator[Token[T]]]
 
 
-def make_lexer[T: StrEnum](types: type[T], skip: set[T] = set()) -> Lexer[T]:
+def make_lexer[T: Tokens](types: type[T], skip: set[T] = set()) -> Lexer[T]:
   """Build a lexer for a given enum of token types.
 
   :param types: The enum to build the lexer for.
@@ -56,7 +66,7 @@ class ParseError(PrettyError, SyntaxError):
   ...
 
 
-class Parser[T: StrEnum]:
+class Parser[T: Tokens]:
   __slots__ = ("source", "tokens", "current", "done", "prefetched")
 
   source: str

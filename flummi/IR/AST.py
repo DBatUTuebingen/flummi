@@ -63,8 +63,17 @@ class Assignment[A](Statement[A]):
 
 
 @dataclass
+class Fork[A](Statement[A]):
+    variables: list[common.Identifier[A]]
+    expression: common.Expression[A]
+
+@dataclass
 class Block[A](Statement[A]):
     statements: list[Statement]
+
+
+class Sync[A](Statement[A]):
+    ...
 
 
 @dataclass

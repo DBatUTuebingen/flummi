@@ -1,9 +1,22 @@
 from collections.abc import Iterator
 from functools import reduce
-import operator as op
 
 
 type Graph[A] = dict[A, set[A]]
+
+
+def merge[A, B](a: Graph[A], b: Graph[B]) -> Graph[A|B]:
+  new: Graph[A|B] = {}
+
+  for label in a.keys() | b.keys():
+    new[label] = (
+      a.get(label, default=set()) |  # type: ignore
+      b.get(label, default=set())    # type: ignore
+    )
+    #! [note] We ignore the type here since PyLance is to weak to
+    #!        detect implicit subtyping...
+
+  return new
 
 
 def invert[A](graph: Graph[A]) -> Graph[A]:

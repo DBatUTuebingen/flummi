@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import itertools
 
 from .analyzer import SymbolTable
-from .data_flow import get_block_inputs
+from .data_flow import get_block_inputs, get_block_outputs
 from ..IR import CFG, common
 from ..library import sql, graph, utils
 
@@ -52,18 +52,20 @@ class CodeGenerator:
             symbol_table = symbol_tables[function.name]
             successors = function.body.edges
             predecessors = graph.invert(successors)
-            inputs, loop_caried_variables = get_block_inputs(function.body)
-            loop_caried_variables = list(sorted(loop_caried_variables))
+            inputs = get_block_inputs(function.body)
             outputs = {
-                label: sorted(utils.union(
-                    inputs[successor]
-                    for successor in successors[label]
-                ))
-                for label in inputs
+                label: list(sorted(variables))
+                for label, variables in get_block_outputs(function.body, inputs).items()
             }
 
-            sink_names: list[str] = []
-            emit_names: list[str] = []
+            loop_carried_variables = list(sorted(utils.union(
+                outputs[label]
+                for label, node in function.body.nodes.items()
+                if isinstance(node, (CFG.Source, CFG.Wait))
+            )))
+
+            emits: list[str] = []
+            sinks: list[tuple[str, set[common.Identifier]]] = []
 
             for label in graph.dependent_ordering(successors):
                 cte_name = f"{function.name.identifier}.{label.identifier}"
@@ -73,11 +75,6 @@ class CodeGenerator:
                 node = function.body.nodes[label]
                 match node:
                     case CFG.Source(name):
-                        assert len(these_predecessors) == 0
-                        #! [warn] This a hack to dodge nodes that where unnessarily generated.
-                        if len(these_successors) == 0:
-                            continue
-
                         columns = [
                             variable.identifier
                             for variable in outputs[label]
@@ -117,12 +114,11 @@ class CodeGenerator:
 
                     case CFG.Sink(name):
                         assert len(these_predecessors) == 1
-                        assert len(these_successors) == 0
                         predecessor = these_predecessors.pop()
 
                         columns = [
                             variable.identifier
-                            for variable in loop_caried_variables
+                            for variable in outputs[label]
                         ]
 
                         ctes.append(
@@ -152,13 +148,13 @@ class CodeGenerator:
                                 )
                             )
                         )
-                        sink_names.append(cte_name)
+                        sinks.append((
+                            cte_name,
+                            set(outputs[label])
+                        ))
 
                     case CFG.Conditional(truthy, falsey):
                         assert len(these_predecessors) == 1
-                        #! [warn] This a hack to dodge nodes that where unnessarily generated.
-                        if len(these_successors) == 0:
-                            continue
                         predecessor = these_predecessors.pop()
 
                         columns = [
@@ -232,7 +228,7 @@ class CodeGenerator:
                             )
                         )
 
-                    case CFG.Emits(emits):
+                    case CFG.Emits(these_emits):
                         assert len(these_predecessors) == 1
                         assert len(these_successors) == 0
                         predecessor = these_predecessors.pop()
@@ -255,7 +251,7 @@ class CodeGenerator:
                                     )
                                 ]
                             )
-                            for emit in emits
+                            for emit in these_emits
                         ]
 
                         ctes.append(
@@ -271,13 +267,10 @@ class CodeGenerator:
                             )
                         )
 
-                        emit_names.append(cte_name)
+                        emits.append(cte_name)
 
                     case CFG.Assignments(assignments):
                         assert len(these_predecessors) == 1
-                        #! [warn] This a hack to dodge nodes that where unnessarily generated.
-                        if len(these_successors) == 0:
-                            continue
                         predecessor = these_predecessors.pop()
 
                         scalar_assignments, multi_assignments =\
@@ -358,6 +351,9 @@ class CodeGenerator:
                         )
 
                     case CFG.Fork(variables, expression):
+                        assert len(these_predecessors) == 1
+                        predecessor = these_predecessors.pop()
+
                         ctes.append(
                             sql.cte(
                                 name=cte_name,
@@ -374,15 +370,12 @@ class CodeGenerator:
                                         sql.cast(
                                             sql.variable(
                                                 row="fork",
-                                                column=sql.name(variable.identifier),
+                                                column=variable.identifier,
                                             ),
                                             type=symbol_table[variable].source
                                         )
                                         if variable in variables else
-                                        sql.variable(
-                                            row="input",
-                                            column=sql.name(f"{function.name.identifier}.{variable.identifier}"),
-                                        )
+                                        sql.variable(row="input", column=variable.identifier)
                                         for variable in outputs[label]
                                     ],
                                     from_list=[
@@ -394,7 +387,7 @@ class CodeGenerator:
                                             sql.lateral(
                                                 expression.source.format(*(
                                                     sql.variable(row="input", column=variable.identifier)
-                                                    for variable in assignment.expression.arguments
+                                                    for variable in expression.arguments
                                                 ))
                                             ),
                                             name="fork",
@@ -409,6 +402,9 @@ class CodeGenerator:
                         )
 
                     case CFG.Aggregate(aggregates):
+                        assert len(these_predecessors) == 1
+                        predecessor = these_predecessors.pop()
+
                         ctes.append(
                             sql.cte(
                                 name=cte_name,
@@ -430,10 +426,7 @@ class CodeGenerator:
                                             name=variable.identifier
                                         )
                                         if (expression := aggregates.get(variable)) is not None else
-                                        sql.variable(
-                                            row="input",
-                                            column=f"{function.name.identifier}.{variable.identifier}"
-                                        )
+                                        sql.variable(row="input", column=variable.identifier)
                                         for variable in outputs[label]
                                     ],
                                     from_list=[
@@ -452,6 +445,9 @@ class CodeGenerator:
                         )
 
                     case CFG.Mark():
+                        assert len(these_predecessors) == 1
+                        predecessor = these_predecessors.pop()
+
                         ctes.append(
                             sql.cte(
                                 name=cte_name,
@@ -468,11 +464,8 @@ class CodeGenerator:
                                             name=".mark"
                                         )
                                     ] + [
-                                        sql.variable(
-                                            row="input",
-                                            column=f"{function.name.identifier}.{variable.identifier}"
-                                        )
-                                        for variable in outputs
+                                        sql.variable(row="input", column=variable.identifier)
+                                        for variable in outputs[label]
                                     ],
                                     from_list=[
                                         sql.named(
@@ -485,6 +478,9 @@ class CodeGenerator:
                         )
 
                     case CFG.Wait():
+                        assert len(these_predecessors) == 1
+                        predecessor = these_predecessors.pop()
+
                         gather_cte_name = cte_name + ".gather"
                         ctes.append(
                             sql.cte(
@@ -523,11 +519,8 @@ class CodeGenerator:
                                                 name=".done"
                                             )
                                         ] + [
-                                            sql.variable(
-                                                row="input",
-                                                column=f"{function.name.identifier}.{variable.identifier}"
-                                            )
-                                            for variable in outputs
+                                            sql.variable(row="input", column=variable.identifier)
+                                            for variable in outputs[label]
                                         ],
                                         from_list=[
                                             sql.named(
@@ -545,7 +538,7 @@ class CodeGenerator:
                                                 row="input",
                                                 column=f"{function.name.identifier}.{variable.identifier}"
                                             )
-                                            for variable in outputs
+                                            for variable in outputs[label]
                                         ],
                                         from_list=[
                                             sql.named(
@@ -596,15 +589,12 @@ class CodeGenerator:
                                                 name=".all done"
                                             )
                                         ] + [
-                                            sql.variable(
-                                                row="input",
-                                                column=f"{function.name.identifier}.{variable.identifier}"
-                                            )
-                                            for variable in outputs
+                                            sql.variable(row="input", column=variable.identifier)
+                                            for variable in outputs[label]
                                         ],
                                     from_list=[
                                         sql.named(
-                                            gather_cte_name,
+                                            sql.name(gather_cte_name),
                                             name="input"
                                         )
                                     ]
@@ -630,25 +620,25 @@ class CodeGenerator:
                                                 name=".label"
                                             )
                                         ] + [
-                                            sql.variable(
-                                                row="input",
-                                                column=f"{function.name.identifier}.{variable.identifier}"
-                                            )
-                                            for variable in outputs
+                                            sql.variable(row="input", column=variable.identifier)
+                                            for variable in outputs[label]
                                         ],
                                     from_list=[
                                         sql.named(
-                                            sql.name(wait_cte_name),
+                                            sql.name(decide_cte_name),
                                             name="input"
                                         )
                                     ],
                                     predicates=[
-                                        "NOT + " + sql.variable(row="input", column=".all done")
+                                        "NOT " + sql.variable(row="input", column=".all done")
                                     ]
                                 )
                             )
                         )
-                        sink_names.append(wait_cte_name)
+                        sinks.append((
+                            wait_cte_name,
+                            set(outputs[label])
+                        ))
                         ctes.append(
                             sql.cte(
                                 name=cte_name,
@@ -662,15 +652,12 @@ class CodeGenerator:
                                     select_list=[
                                             sql.variable(row="input", column=".mark")
                                         ] + [
-                                            sql.variable(
-                                                row="input",
-                                                column=f"{function.name.identifier}.{variable.identifier}"
-                                            )
-                                            for variable in outputs
+                                            sql.variable(row="input", column=variable.identifier)
+                                            for variable in outputs[label]
                                         ],
                                     from_list=[
                                         sql.named(
-                                            sql.name(wait_cte_name),
+                                            sql.name(decide_cte_name),
                                             name="input"
                                         )
                                     ],
@@ -687,7 +674,7 @@ class CodeGenerator:
                         f"{function.name.identifier}.{variable.identifier}",
                         symbol_table[variable]
                     )
-                    for variable in loop_caried_variables
+                    for variable in loop_carried_variables
                 ),
                 *(
                     (
@@ -728,7 +715,7 @@ class CodeGenerator:
                         ),
                         name=f"{function.name.identifier}.{variable.identifier}",
                     )
-                    for variable in loop_caried_variables
+                    for variable in loop_carried_variables
                 )
                 init_list.extend(
                     sql.named(
@@ -764,8 +751,19 @@ class CodeGenerator:
                     loop_column_prefix +
                     [
                         *(
-                            sql.variable(variable.identifier)
-                            for variable in loop_caried_variables
+                            sql.named(
+                                sql.variable(row=name, column=variable.identifier),
+                                name=f"{function.name.identifier}.{variable.identifier}"
+                            )
+                            if variable in variables else
+                            sql.named(
+                                sql.cast(
+                                    "NULL",
+                                    symbol_table[variable].source
+                                ),
+                                name=f"{function.name.identifier}.{variable.identifier}"
+                            )
+                            for variable in loop_carried_variables
                         ),
                         *(
                             sql.named(
@@ -779,7 +777,7 @@ class CodeGenerator:
                         )
                     ]
                 )
-                for name in sink_names
+                for name, variables in sinks
             )
             collector_data.extend(
                 (
@@ -808,7 +806,7 @@ class CodeGenerator:
                                 ),
                                 name=f"{function.name.identifier}.{variable.identifier}"
                             )
-                            for variable in loop_caried_variables
+                            for variable in loop_carried_variables
                         ),
                         *(
                             sql.variable(f".result.{i}")
@@ -816,7 +814,7 @@ class CodeGenerator:
                         )
                     ]
                 )
-                for name in emit_names
+                for name in emits
             )
             loop_column_prefix += nulls
 

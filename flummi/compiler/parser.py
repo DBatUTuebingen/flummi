@@ -22,6 +22,8 @@ type Emit        = AST.Emit[errors.Location]
 type Stop        = AST.Stop[errors.Location]
 type If          = AST.If[errors.Location]
 type Assignment  = AST.Assignment[errors.Location]
+type Sync        = AST.Sync[errors.Location]
+type Fork        = AST.Fork[errors.Location]
 type NoOp        = AST.NoOp[errors.Location]
 type Declaration = AST.Declaration[errors.Location]
 type Expression  = common.Expression[errors.Location]
@@ -33,18 +35,14 @@ class ParserError(errors.PrettyError):
     ...
 
 
-
 def parse(source: str) -> AST.Program[errors.Location]:
     return Parser(source, lex).parse_program()
 
 
-@unique
-class Tokens(StrEnum):
+class Tokens(parser.Tokens):
     LEFT_PAREN = r"\("
     LEFT_BRACE = r"{"
     LEFT_BRACKET = r"\["
-    LEFT_ARROW = r"<-"
-    DOUBLE_LEFT_ARROW = r"<="
     RIGHT_PAREN = r"\)"
     RIGHT_BRACE = r"}"
     RIGHT_BRACKET = r"\]"
@@ -52,12 +50,15 @@ class Tokens(StrEnum):
     COLON = r":"
     SEMICOLON = r";"
     COMMA = r","
-    EXTERNAL = r"[§][^§]+[§]"
+    SQL = r"[§][^§]+[§]"
+    EQUALS = r"="
     IF = r"IF"
     CALL = r"CALL"
     IN = r"IN"
     AS = r"AS"
     FUN = r"FUN"
+    LET = r"LET"
+    DECLARE = r"DECLARE"
     LOOP = r"LOOP"
     CONTINUE = r"CONTINUE"
     BREAK = r"BREAK"
@@ -66,6 +67,8 @@ class Tokens(StrEnum):
     ELSE = r"ELSE"
     EMIT = r"EMIT"
     NOOP = r"NOOP"
+    SYNC = r"SYNC"
+    FORK = r"FORK"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -77,7 +80,7 @@ lex = parser.make_lexer(Tokens, {Tokens.WHITESPACE, Tokens.COMMENT})
 class Parser(parser.Parser[Tokens]):
     def parse_expression(self) -> Expression:
         location = self.current.location
-        value = self.expectv(Tokens.EXTERNAL)[1:-1]
+        value = self.expectv(Tokens.SQL)[1:-1]
         self.expect(Tokens.LEFT_BRACKET)
         if self.match(Tokens.RIGHT_BRACKET):
             free_variables = []
@@ -100,7 +103,7 @@ class Parser(parser.Parser[Tokens]):
 
     def parse_type(self) -> Type:
         location = self.current.location
-        value = self.expectv(Tokens.EXTERNAL)[1:-1]
+        value = self.expectv(Tokens.SQL)[1:-1]
         return common.Type(
             annotation=location,
             source=value
@@ -136,9 +139,19 @@ class Parser(parser.Parser[Tokens]):
             parameters = {}
         else:
             parameters = {
-                variable: declaration.type
-                for declaration in self.sequence(self.parse_declaration, Tokens.COMMA)
-                for variable in declaration.variables
+                variable: type
+                for variables, type in self.sequence(
+                    lambda: (
+                        tuple(self.sequence(
+                            self.parse_variable,
+                            Tokens.COMMA
+                        )),
+                        self.expect(Tokens.COLON) or
+                        self.parse_type()
+                    ),
+                    Tokens.COMMA
+                )
+                for variable in variables
             }
             self.expect(Tokens.RIGHT_PAREN)
         self.expect(Tokens.RIGHT_ARROW)
@@ -167,14 +180,20 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_if()
         elif self.lookahead(Tokens.EMIT):
             return self.parse_emit()
-        elif self.lookahead(Tokens.IDENTIFIER):
-            return self.parse_variable_bunch()
         elif self.lookahead(Tokens.LEFT_BRACE):
             return self.parse_block()
         elif self.lookahead(Tokens.NOOP):
             return self.parse_noop()
         elif self.lookahead(Tokens.STOP):
             return self.parse_stop()
+        elif self.lookahead(Tokens.SYNC):
+            return self.parse_sync()
+        elif self.lookahead(Tokens.LET):
+            return self.parse_assignment()
+        elif self.lookahead(Tokens.DECLARE):
+            return self.parse_declaration()
+        elif self.lookahead(Tokens.FORK):
+            return self.parse_fork()
         else:
             raise self.error("Expected statement.")
 
@@ -231,41 +250,6 @@ class Parser(parser.Parser[Tokens]):
             variables=variables
         )
 
-    def parse_variable_bunch(self) -> Declaration | Assignment:
-        location = self.current.location
-        variables = [self.parse_variable()]
-        while self.match(Tokens.COMMA):
-            variables.append(self.parse_variable())
-        if self.match(Tokens.LEFT_ARROW):
-            expression = self.parse_expression()
-            return AST.Assignment(
-                annotation=location,
-                variables=variables,
-                expression=expression
-            )
-        elif self.match(Tokens.COLON):
-            type = self.parse_type()
-            return AST.Declaration(
-                annotation=location,
-                variables=variables,
-                type=type
-            )
-        else:
-            raise self.error("Expected either LEFT_ARROW or COLON.")
-
-    def parse_declaration(self) -> Declaration:
-        location = self.current.location
-        variables = [self.parse_variable()]
-        while self.match(Tokens.COMMA):
-            variables.append(self.parse_variable())
-        self.expect(Tokens.COLON)
-        type = self.parse_type()
-        return AST.Declaration(
-            annotation=location,
-            variables=variables,
-            type=type
-        )
-
     def parse_block(self) -> Block:
         location = self.current.location
         self.expect(Tokens.LEFT_BRACE)
@@ -290,4 +274,53 @@ class Parser(parser.Parser[Tokens]):
         self.expect(Tokens.STOP)
         return AST.Stop(
             annotation=location
+        )
+
+    def parse_sync(self) -> Sync:
+        location = self.current.location
+        self.expect(Tokens.SYNC)
+        return AST.Sync(
+            annotation=location
+        )
+
+    def parse_assignment(self) -> Assignment:
+        location = self.current.location
+        self.expect(Tokens.LET)
+        variables = [self.parse_variable()]
+        while self.match(Tokens.COMMA):
+            variables.append(self.parse_variable())
+        self.expect(Tokens.EQUALS)
+        expression = self.parse_expression()
+        return AST.Assignment(
+            annotation=location,
+            variables=variables,
+            expression=expression
+        )
+
+    def parse_declaration(self) -> Declaration:
+        location = self.current.location
+        self.expect(Tokens.DECLARE)
+        variables = [self.parse_variable()]
+        while self.match(Tokens.COMMA):
+            variables.append(self.parse_variable())
+        self.expect(Tokens.COLON)
+        type = self.parse_type()
+        return AST.Declaration(
+            annotation=location,
+            variables=variables,
+            type=type
+        )
+
+    def parse_fork(self) -> Fork:
+        location = self.current.location
+        self.expect(Tokens.FORK)
+        variables = [self.parse_variable()]
+        while self.match(Tokens.COMMA):
+            variables.append(self.parse_variable())
+        self.expect(Tokens.EQUALS)
+        expression = self.parse_expression()
+        return AST.Fork(
+            annotation=location,
+            variables=variables,
+            expression=expression
         )

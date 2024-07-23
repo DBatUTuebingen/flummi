@@ -15,7 +15,7 @@ __all__ = (
 type Annotation   = errors.Location
 type Program      = CFG.Program[Annotation]
 type Function     = CFG.Function[Annotation]
-type Label        = CFG.Label
+type Label        = CFG.Label[Annotation]
 type Graph        = CFG.Graph[Annotation]
 type Node         = CFG.Node[Annotation]
 type Assignment   = CFG.Assignments[Annotation]
@@ -52,20 +52,24 @@ class Lowering:
     _loop_exits: dict[Identifier, list[Label]] = field(init=False, default_factory=lambda: defaultdict(list))
     _label_counters: dict[str, int] = field(init=False, default_factory=lambda: defaultdict(int))
 
-    def _make_label(self, name: str) -> Label:
+    def _make_label[A](self, name: str, annotation: A) -> common.Identifier[A]:
         self._label_counters[name] += 1
         return common.Identifier(
             f"{name}.{self._label_counters[name]}",
-            annotation=None
+            annotation=annotation
         )
 
     def lower_function(self, function: parser.Function) -> Function:
-        entry_label = self._make_label("entry")
-        self._nodes[entry_label] = CFG.Source(function.name)
-        self._edges[entry_label] = set()
+        entry_label = self.make_node(
+            node=CFG.Source(
+                function.name,
+                annotation=function.annotation
+            ),
+            name="entry"
+        )
 
         self.lower_statement(
-            previous_labels=[entry_label],
+            predecessors=[entry_label],
             statement=function.body
         )
 
@@ -84,21 +88,68 @@ class Lowering:
             annotation=function.annotation
         )
 
+    def make_node(
+        self,
+        node: Node,
+        predecessors: list[Label] | None = None,
+        name: str | None = None
+    ) -> Label:
+        label = self._make_label(
+            name or type(node).__name__.lower(),
+            annotation=node.annotation
+        )
+        self._nodes[label] = node
+        self._edges[label] = set()
+        if predecessors:
+            for predecessor in predecessors:
+                self._edges[predecessor].add(label)
+        return label
+
+    def make_merge(self, predecessors: list[Label], location: errors.Location) -> Label:
+        if len(predecessors) > 1:
+            return self.make_node(
+                predecessors=predecessors,
+                node=CFG.Merge(
+                    annotation=location
+                )
+            )
+        elif len(predecessors) == 1:
+            return predecessors[0]
+        else:
+            raise LoweringError(
+                "Tried to create a merge node with no predecessors.",
+                location
+            )
+
+    def make_mark(self, predecessor: Label, location: errors.Location) -> Label:
+        mark_label = self.make_node(
+            predecessors=[predecessor],
+            node=CFG.Mark(
+                annotation=location
+            )
+        )
+        snapshot_name = self._make_label("snapshot", annotation=location)
+        self.make_node(
+            predecessors=[mark_label],
+            node=CFG.Sink(
+                label=snapshot_name,
+                annotation=location
+            )
+        )
+        return self.make_node(
+            node=CFG.Source(
+                label=snapshot_name,
+                annotation=location
+            )
+        )
+
+
     def lower_statement(
         self,
-        previous_labels: list[Label],
+        predecessors: list[Label],
         statement: parser.Statement
     ) -> list[Label]:
-        if len(previous_labels) > 1:
-            merge_label = self._make_label("merge")
-            self._nodes[merge_label] = CFG.Merge()
-            self._edges[merge_label] = set()
-            for label in previous_labels:
-                self._edges[label].add(merge_label)
-            previous_label = merge_label
-        elif len(previous_labels) == 1:
-            previous_label = previous_labels[0]
-        else:
+        if len(predecessors) == 0:
             raise LoweringError(
                 "Tried to lower statement without any predecessors.",
                 statement.annotation
@@ -106,55 +157,73 @@ class Lowering:
 
         match statement:
             case AST.NoOp():
-                return previous_labels
+                return predecessors
 
             case AST.Stop():
                 return []
 
             case AST.Assignment():
-                this_label = self._make_label("assignment")
-                self._nodes[this_label] = CFG.Assignments([statement])
-                self._edges[this_label] = set()
-                self._edges[previous_label].add(this_label)
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                this_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Assignments(
+                        [statement],
+                        annotation=statement.annotation
+                    )
+                )
+
                 return [this_label]
 
             case AST.Emit():
-                this_label = self._make_label("emit")
-                self._nodes[this_label] = CFG.Emits([statement])
-                self._edges[this_label] = set()
-                self._edges[previous_label].add(this_label)
-                return [previous_label]
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                this_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Emits(
+                        [statement],
+                        annotation=statement.annotation
+                    )
+                )
+
+                return [predecessor]
 
             case AST.Block(statements):
-                _previous_labels: list[Label] = previous_labels
                 for statement in statements:
-                    if _previous_labels:
-                        _previous_labels = self.lower_statement(
-                            _previous_labels,
+                    if predecessors:
+                        predecessors = self.lower_statement(
+                            predecessors,
                             statement
                         )
-                return _previous_labels
+
+                return predecessors
 
             case AST.If(condition, truthy_branch, falsey_branch):
-                truthy_label = self._make_label("truthy")
-                self._nodes[truthy_label] = CFG.Conditional(
-                    truthy=[condition],
-                    falsey=[]
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                truthy_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Conditional(
+                        truthy=[condition],
+                        falsey=[],
+                        annotation=statement.annotation
+                    ),
+                    name="truthy"
                 )
-                self._edges[truthy_label] = set()
-                self._edges[previous_label].add(truthy_label)
                 final_truthy_label = self.lower_statement(
                     [truthy_label],
                     truthy_branch
                 )
 
-                falsey_label = self._make_label("falsey")
-                self._nodes[falsey_label] = CFG.Conditional(
-                    truthy=[],
-                    falsey=[condition]
+                falsey_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Conditional(
+                        truthy=[],
+                        falsey=[condition],
+                        annotation=statement.annotation
+                    ),
+                    name="falsey"
                 )
-                self._edges[falsey_label] = set()
-                self._edges[previous_label].add(falsey_label)
                 final_falsey_label = self.lower_statement(
                     [falsey_label],
                     falsey_branch
@@ -163,36 +232,78 @@ class Lowering:
                 return final_truthy_label + final_falsey_label
 
             case AST.Loop(name, body):
-                loop_label = self._make_label(name.identifier)
-                self._nodes[loop_label] = CFG.Source(name)
-                self._edges[loop_label] = set()
+                predecessor = self.make_merge(predecessors, statement.annotation)
+                mark_label = self.make_mark(predecessor, statement.annotation)
 
-                loopback_labels = self.lower_statement(
-                    previous_labels + [loop_label],
+                source_label = self.make_node(
+                    node=CFG.Source(
+                        name,
+                        annotation=statement.annotation
+                    ),
+                    name=name.identifier
+                )
+
+                loop_labels = self.lower_statement(
+                    [mark_label, source_label],
                     body
                 )
 
-                if loopback_labels:
-                    self.lower_statement(
-                        loopback_labels,
-                        AST.Continue(
+                for loop_label in loop_labels:
+                    self.make_node(
+                        predecessors=[loop_label],
+                        node=CFG.Sink(
                             name,
                             annotation=statement.annotation
-                        )
+                        ),
+                        name="loop"
                     )
 
                 return self._loop_exits[name]
 
             case AST.Continue(name):
-                this_label = self._make_label("sink")
-                self._nodes[this_label] = CFG.Sink(name)
-                self._edges[this_label] = set()
-                self._edges[previous_label].add(this_label)
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Sink(
+                        name,
+                        annotation=statement.annotation
+                    ),
+                    name="continue"
+                )
+
                 return []
 
             case AST.Break(name):
-                self._loop_exits[name].extend(previous_labels)
+                self._loop_exits[name].extend(predecessors)
+
                 return []
+
+            case AST.Sync():
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                wait_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Wait(
+                        annotation=statement.annotation
+                    )
+                )
+
+                return [wait_label]
+
+            case AST.Fork(variables, expression):
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                fork_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Fork(
+                        variables,
+                        expression,
+                        annotation=statement.annotation
+                    )
+                )
+
+                return [fork_label]
 
             case _:
                 raise LoweringError(

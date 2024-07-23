@@ -4,40 +4,46 @@ from ..IR import CFG, common
 from ..library import utils
 
 
-def get_block_inputs[A](cfg: CFG.Graph) -> tuple[dict[CFG.Label, set[common.Identifier[A]]], set[common.Identifier[A]]]:
-    loop_readers = {
-        label
-        for label, node in cfg.nodes.items()
-        if isinstance(node, (CFG.Source, CFG.Wait))
-    }
-
+def get_block_inputs[A](cfg: CFG.Graph[A]) -> dict[CFG.Label, set[common.Identifier[A]]]:
     inputs = {
         label: free_variables(node)
         for label, node in cfg.nodes.items()
     }
 
-    loop_carried_variables = set()
-
     while True:
         old_inputs = inputs
+        outputs = get_block_outputs(cfg, inputs)
 
         inputs = {
-            label: inputs[label] | utils.union(
-                inputs[successor] - bound_variables(node)
-                for successor in cfg.edges[label]
-            ) if not isinstance(node, (CFG.Sink, CFG.Wait)) else loop_carried_variables
+            label: inputs[label] | outputs[label] - bound_variables(node)
             for label, node in cfg.nodes.items()
         }
-
-        loop_carried_variables = utils.union(inputs[loop_reader] for loop_reader in loop_readers)
-
-        for loop_reader in loop_readers:
-            inputs[loop_reader] = loop_carried_variables
 
         if old_inputs == inputs:
             break
 
-    return inputs, loop_carried_variables
+    return inputs
+
+
+def get_block_outputs[A](
+    cfg: CFG.Graph[A],
+    inputs: dict[CFG.Label, set[common.Identifier[A]]],
+) -> dict[CFG.Label, set[common.Identifier[A]]]:
+    return {
+        label: utils.union(
+            inputs[successor]
+            for successor in itertools.chain(
+                cfg.edges[label],
+                (
+                    label
+                    for label, successor in cfg.nodes.items()
+                    if isinstance(successor, CFG.Source)
+                    and successor.label == node.label
+                ) if isinstance(node, CFG.Sink) else ()
+            )
+        )
+        for label, node in cfg.nodes.items()
+    }
 
 
 def free_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
@@ -50,6 +56,9 @@ def free_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
                 assignment.expression.arguments
                 for assignment in assignments
             ))
+
+        case CFG.Fork(_, expression):
+            return set(expression.arguments)
 
         case CFG.Emits(emits):
             return set(itertools.chain.from_iterable(
@@ -68,6 +77,9 @@ def bound_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
                 assignment.variables
                 for assignment in assignments
             ))
+
+        case CFG.Fork(variables, _):
+            return set(variables)
 
         case _:
             return set()

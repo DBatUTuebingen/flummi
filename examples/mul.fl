@@ -1,21 +1,24 @@
 CALL mul(§SELECT 4, 5§[]) IN
 FUN mul(a: §int§, b: §int§) -> §int§: {
-  c: §int§;
-  K: §bool§;
+  DECLARE c: §int§;
+  DECLARE x: §int§;
+  DECLARE K: §bool§;
 
-  c <- §0§[];
+  FORK x = §SELECT x FROM generate_series(1, {0}) AS _(x)§[b];
+  LET c = §{0}§[a];
 
   LOOP multiplication_loop {
-    c <- §{0} + {1}§[a, c];
-
-    EMIT c;
-
-    b <- §{0} - 1§[b];
-    K <- §0 = {0}§[b];
+    LET x = §{0} - 1§[x];
+    LET K = §0 >= {0}§[x];
     IF K
       THEN BREAK multiplication_loop
-      ELSE CONTINUE multiplication_loop
+      ELSE NOOP;
+    LET c = §{0} + {1}§[a, c]
   };
+
+  SYNC;
+
+  EMIT c;
 
   STOP
 }

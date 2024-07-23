@@ -180,4 +180,4 @@ def window(
         else:
             window += "\nRANGE " + _indent(dedent(range), ' ' * 6)
 
-    return expression + "OVER (" + _indent(window, '  ') + ")"
+    return expression + " OVER (" + _indent(window, '  ') + ")"

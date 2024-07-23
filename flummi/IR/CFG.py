@@ -16,18 +16,18 @@ __all__ = (
 
 type Program[A] = common.Program[A, Graph[A]]
 type Function[A] = common.Function[A, Graph[A]]
-type Label = common.Identifier[None]
+type Label[A] = common.Identifier[A]
 
 
 @dataclass
 class Graph[A](common.Annotated[A]):
-    entry_label: Label
-    nodes: dict[Label, Node[A]]
-    edges: graph.Graph[Label]
+    entry_label: Label[A]
+    nodes: dict[Label[A], Node[A]]
+    edges: graph.Graph[Label[A]]
 
 
 @dataclass
-class Node[A](ABC):
+class Node[A](common.Annotated[A], ABC):
     ...
 
 
