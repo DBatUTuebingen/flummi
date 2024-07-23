@@ -122,27 +122,12 @@ class Lowering:
             )
 
     def make_mark(self, predecessor: Label, location: errors.Location) -> Label:
-        mark_label = self.make_node(
+        return self.make_node(
             predecessors=[predecessor],
             node=CFG.Mark(
                 annotation=location
             )
         )
-        snapshot_name = self._make_label("snapshot", annotation=location)
-        self.make_node(
-            predecessors=[mark_label],
-            node=CFG.Sink(
-                label=snapshot_name,
-                annotation=location
-            )
-        )
-        return self.make_node(
-            node=CFG.Source(
-                label=snapshot_name,
-                annotation=location
-            )
-        )
-
 
     def lower_statement(
         self,

@@ -448,10 +448,12 @@ class CodeGenerator:
                         assert len(these_predecessors) == 1
                         predecessor = these_predecessors.pop()
 
+                        snapshot_cte_name = cte_name + ".snapshot"
                         ctes.append(
                             sql.cte(
-                                name=cte_name,
+                                name=snapshot_cte_name,
                                 columns=[
+                                    ".label",
                                     ".mark",
                                 ] + [
                                     variable.identifier
@@ -459,6 +461,10 @@ class CodeGenerator:
                                 ],
                                 body=sql.select(
                                     select_list=[
+                                        sql.named(
+                                            sql.string(label.identifier),
+                                            name=".label"
+                                        ),
                                         sql.named(
                                             sql.variable(row="input", column=".mark") + " + 1",
                                             name=".mark"
@@ -475,6 +481,45 @@ class CodeGenerator:
                                     ]
                                 )
                             ),
+                        )
+                        sinks.append((
+                            snapshot_cte_name,
+                            set(outputs[label])
+                        ))
+
+                        ctes.append(
+                            sql.cte(
+                                name=cte_name,
+                                columns=[
+                                    ".mark",
+                                ] + [
+                                    variable.identifier
+                                    for variable in outputs[label]
+                                ],
+                                body=sql.select(
+                                    select_list=[
+                                        sql.variable(row="input", column=".mark"),
+                                    ] + [
+                                        sql.variable(
+                                            row="input",
+                                            column=f"{function.name.identifier}.{variable.identifier}"
+                                        )
+                                        for variable in outputs[label]
+                                    ],
+                                    from_list=[
+                                        sql.named(
+                                            sql.name("loop"),
+                                            name="input"
+                                        )
+                                    ],
+                                    predicates=[
+                                        sql.variable(row="input", column=".function") + " = " +
+                                        sql.string(function.name.identifier),
+                                        sql.variable(row="input", column=".label") + " = " +
+                                        sql.string(label.identifier),
+                                    ]
+                                )
+                            )
                         )
 
                     case CFG.Wait():
