@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 
 from .IR.common import Program
-from .IR.pretty.dot import render
+from .IR.pretty.render import render
 
 from .compiler.parser import parse
 from .compiler.analyzer import analyze
@@ -77,7 +77,7 @@ def cli():
         choices=['duckdb','postgres','umbra'],
     )
     compiler_parser.add_argument(
-        "-d", "--dot",
+        "--dot",
         help="GraphVis dot-command to use for rendering. (default: dot)",
         metavar="DOT",
         type=str,
