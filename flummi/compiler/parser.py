@@ -142,24 +142,18 @@ class Parser(parser.Parser[Tokens]):
         else:
             parameters = {
                 variable: type
-                for variables, type in self.sequence(
+                for variable, type in self.sequence(
                     lambda: (
-                        tuple(self.sequence(
-                            self.parse_variable,
-                            Tokens.COMMA
-                        )),
+                        self.parse_variable(),
                         self.expect(Tokens.COLON) or
                         self.parse_type()
                     ),
                     Tokens.COMMA
                 )
-                for variable in variables
             }
             self.expect(Tokens.RIGHT_PAREN)
         self.expect(Tokens.RIGHT_ARROW)
-        returns = [self.parse_type()]
-        while self.match(Tokens.COMMA):
-            returns.append(self.parse_type())
+        returns = list(self.sequence(self.parse_type, Tokens.COMMA))
         self.expect(Tokens.COLON)
         body = self.parse_statement()
 
@@ -257,9 +251,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_block(self) -> Block:
         location = self.current.location
         self.expect(Tokens.LEFT_BRACE)
-        statements = [self.parse_statement()]
-        while self.match(Tokens.SEMICOLON):
-            statements.append(self.parse_statement())
+        statements = list(self.sequence(self.parse_statement, Tokens.SEMICOLON))
         self.expect(Tokens.RIGHT_BRACE)
         return AST.Block(
             annotation=location,
@@ -290,9 +282,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_assignment(self) -> Assignment:
         location = self.current.location
         self.expect(Tokens.LET)
-        variables = [self.parse_variable()]
-        while self.match(Tokens.COMMA):
-            variables.append(self.parse_variable())
+        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
         return AST.Assignment(
@@ -304,9 +294,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_declaration(self) -> Declaration:
         location = self.current.location
         self.expect(Tokens.DECLARE)
-        variables = [self.parse_variable()]
-        while self.match(Tokens.COMMA):
-            variables.append(self.parse_variable())
+        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
         self.expect(Tokens.COLON)
         type = self.parse_type()
         return AST.Declaration(
@@ -318,9 +306,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_fork(self) -> Fork:
         location = self.current.location
         self.expect(Tokens.FORK)
-        variables = [self.parse_variable()]
-        while self.match(Tokens.COMMA):
-            variables.append(self.parse_variable())
+        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
         return AST.Fork(
@@ -332,9 +318,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_join(self) -> Join:
         location = self.current.location
         self.expect(Tokens.JOIN)
-        variables = [self.parse_variable()]
-        while self.match(Tokens.COMMA):
-            variables.append(self.parse_variable())
+        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
         return AST.Join(

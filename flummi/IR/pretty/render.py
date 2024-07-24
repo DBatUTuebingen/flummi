@@ -22,7 +22,6 @@ graph [
 ];
 edge [
     fontname = "{font}",
-    penwidth = 1.5,
 ];
 {subgraphs}
 {edges}
@@ -40,16 +39,16 @@ label="{name}({parameters}) -> {return_types}"
 NODE_TEMPLATE = '"{label}" [label="{body}",{style}];'
 
 NODE_STYLES: dict[type[CFG.Node], str] = {
-    CFG.Source: 'color = forestgreen, fontcolor = forestgreen',
-    CFG.Sink: 'color = firebrick, fontcolor = firebrick',
-    CFG.Join: 'color = goldenrod, fontcolor = goldenrod',
-    CFG.Fork: 'color = purple, fontcolor = purple',
-    CFG.Wait: 'color = orange, fontcolor = orange',
-    CFG.Mark: 'color = royalblue, fontcolor = royalblue',
+    CFG.Source:      'color = forestgreen    , fontcolor = forestgreen    ',
+    CFG.Sink:        'color = firebrick      , fontcolor = firebrick      ',
+    CFG.Join:        'color = goldenrod      , fontcolor = goldenrod      ',
+    CFG.Fork:        'color = purple         , fontcolor = purple         ',
+    CFG.Wait:        'color = orange         , fontcolor = orange         ',
+    CFG.Mark:        'color = royalblue      , fontcolor = royalblue      ',
     CFG.Conditional: 'color = mediumvioletred, fontcolor = mediumvioletred',
-    CFG.Emit: 'color = darkcyan, fontcolor = darkcyan',
-    CFG.Merge: 'color = darkcyan, fontcolor = darkcyan',
-    CFG.Assignment: 'color = darkcyan, fontcolor = darkcyan',
+    CFG.Emit:        'color = darkcyan       , fontcolor = darkcyan       ',
+    CFG.Merge:       'color = darkcyan       , fontcolor = darkcyan       ',
+    CFG.Assignment:  'color = darkcyan       , fontcolor = darkcyan       ',
 }
 
 def render(
@@ -87,7 +86,7 @@ def render(
         )
 
         edges.extend(
-            f'"{sink.identifier}":s -> "{source.identifier}":n [style="dotted"];'
+            f'"{sink.identifier}":s -> "{source.identifier}":n [style="dashed"];'
             for sink, sink_node in function.body.nodes.items()
             if isinstance(sink_node, CFG.Sink)
             for source, source_node in function.body.nodes.items()

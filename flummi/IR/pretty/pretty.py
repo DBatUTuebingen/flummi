@@ -23,12 +23,11 @@ def pretty(node: CFG.Node) -> str:
             this += ",".join(
                 variable.identifier
                 for variable in variables
-            ) + " = (\n"
-            this += indent(dedent(expression.source), ' ' * 2)
-            this += f"\n)[{", ".join(
-                argument.identifier
+            ) + " = "
+            this += utils._indent(dedent(expression.source.format(*(
+                f"{{{argument.identifier}}}"
                 for argument in  expression.arguments
-            )}]"
+            ))), ' ' * len(this))
             return this
 
         case CFG.Source(label):
