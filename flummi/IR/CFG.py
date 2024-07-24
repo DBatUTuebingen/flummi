@@ -43,13 +43,14 @@ class Merge[A](Node[A]):
 
 
 @dataclass
-class Assignments[A](Node[A]):
-    assignments: list[AST.Assignment[A]]
+class Assignment[A](Node[A]):
+    variables: list[common.Identifier[A]]
+    expression: common.Expression[A]
 
 
 @dataclass
-class Emits[A](Node[A]):
-    emits: list[AST.Emit[A]]
+class Emit[A](Node[A]):
+    variables: list[common.Identifier[A]]
 
 
 @dataclass

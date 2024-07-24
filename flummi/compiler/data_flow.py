@@ -51,20 +51,14 @@ def free_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
         case CFG.Conditional(truthy, falsey):
             return set(itertools.chain(truthy, falsey))
 
-        case CFG.Assignments(assignments):
-            return set(itertools.chain.from_iterable(
-                assignment.expression.arguments
-                for assignment in assignments
-            ))
-
-        case CFG.Fork(_, expression) | CFG.Join(_, expression):
+        case CFG.Assignment(_, expression):
             return set(expression.arguments)
 
-        case CFG.Emits(emits):
-            return set(itertools.chain.from_iterable(
-                emit.variables
-                for emit in emits
-            ))
+        case CFG.Assignment(_, expression) | CFG.Fork(_, expression) | CFG.Join(_, expression):
+            return set(expression.arguments)
+
+        case CFG.Emit(variables):
+            return set(variables)
 
         case _:
             return set()
@@ -72,13 +66,7 @@ def free_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
 
 def bound_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
     match node:
-        case CFG.Assignments(assignments):
-            return set(itertools.chain.from_iterable(
-                assignment.variables
-                for assignment in assignments
-            ))
-
-        case CFG.Fork(variables, _) | CFG.Join(variables, _):
+        case CFG.Assignment(variables, _)| CFG.Fork(variables, _) | CFG.Join(variables, _):
             return set(variables)
 
         case _:

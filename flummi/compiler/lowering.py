@@ -18,9 +18,9 @@ type Function     = CFG.Function[Annotation]
 type Label        = CFG.Label[Annotation]
 type Graph        = CFG.Graph[Annotation]
 type Node         = CFG.Node[Annotation]
-type Assignment   = CFG.Assignments[Annotation]
+type Assignment   = CFG.Assignment[Annotation]
 type Conditional  = CFG.Conditional[Annotation]
-type Emit         = CFG.Emits[Annotation]
+type Emit         = CFG.Emit[Annotation]
 type Expression   = common.Expression[Annotation]
 type Type         = common.Type[Annotation]
 type Identifier   = common.Identifier[Annotation]
@@ -147,26 +147,27 @@ class Lowering:
             case AST.Stop():
                 return []
 
-            case AST.Assignment():
+            case AST.Assignment(variables, expression):
                 predecessor = self.make_merge(predecessors, statement.annotation)
 
                 this_label = self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Assignments(
-                        [statement],
+                    node=CFG.Assignment(
+                        variables=variables,
+                        expression=expression,
                         annotation=statement.annotation
                     )
                 )
 
                 return [this_label]
 
-            case AST.Emit():
+            case AST.Emit(variables):
                 predecessor = self.make_merge(predecessors, statement.annotation)
 
                 this_label = self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Emits(
-                        [statement],
+                    node=CFG.Emit(
+                        variables=variables,
                         annotation=statement.annotation
                     )
                 )

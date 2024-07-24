@@ -6,37 +6,20 @@ from ...library import utils
 
 def pretty(node: CFG.Node) -> str:
     match node:
-        case CFG.Emits(emits):
-            return "\n".join(
-                f"EMIT {",".join(
-                    variable.identifier
-                    for variable in emit.variables
-                )}"
-                for emit in emits
-            )
+        case CFG.Emit(variables):
+            return f"EMIT {",".join(
+                variable.identifier
+                for variable in variables
+            )}"
 
-        case CFG.Assignments(assignments):
-            formatted = []
-            for assignment in assignments:
-                this = "LET "
-                this += ",".join(
-                    variable.identifier
-                    for variable in assignment.variables
-                ) + " = (\n"
-                this += indent(dedent(assignment.expression.source), ' ' * 2)
-                this += f"\n)[{", ".join(
-                    argument.identifier
-                    for argument in  assignment.expression.arguments
-                )}]"
-                formatted.append(this)
-            return "\n".join(formatted)
-
-        case CFG.Join(variables, expression) | CFG.Fork(variables, expression):
+        case CFG.Join(variables, expression) | CFG.Fork(variables, expression) | CFG.Assignment(variables, expression):
             match node:
                 case CFG.Join():
                     this = "JOIN "
                 case CFG.Fork():
                     this = "FORK "
+                case CFG.Assignment():
+                    this = "LET "
             this += ",".join(
                 variable.identifier
                 for variable in variables
@@ -63,7 +46,7 @@ def pretty(node: CFG.Node) -> str:
                 for variable in falsey
             ]
 
-            return f"FILTER (\n{indent("\n".join(conjuncts), ' ' * 2)}\n)"
+            return f"FILTER {utils._indent("\nAND".join(conjuncts), ' ' * 7)}"
 
         case _:
             return type(node).__name__.upper()

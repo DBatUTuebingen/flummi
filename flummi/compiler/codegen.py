@@ -225,31 +225,10 @@ def codegen(
                         )
                     )
 
-                case CFG.Emits(these_emits):
+                case CFG.Emit(variables):
                     assert len(these_predecessors) == 1
                     assert len(these_successors) == 0
                     predecessor = these_predecessors.pop()
-
-                    subqueries = [
-                        sql.select(
-                            select_list=[
-                                sql.variable(row="input", column=".mark"),
-                            ] + [
-                                sql.cast(
-                                    sql.variable(row="input", column=variable.identifier),
-                                    type.source
-                                )
-                                for variable, type in zip(emit.variables, function.return_types)
-                            ],
-                            from_list=[
-                                sql.named(
-                                    sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
-                                    name="input",
-                                )
-                            ]
-                        )
-                        for emit in these_emits
-                    ]
 
                     ctes.append(
                         sql.cte(
@@ -260,68 +239,31 @@ def codegen(
                                 f".result.{i}"
                                 for i in range(len(function.return_types))
                             ],
-                            body=sql.union_all(subqueries)
+                            body=sql.select(
+                                select_list=[
+                                    sql.variable(row="input", column=".mark"),
+                                ] + [
+                                    sql.cast(
+                                        sql.variable(row="input", column=variable.identifier),
+                                        type.source
+                                    )
+                                    for variable, type in zip(variables, function.return_types)
+                                ],
+                                from_list=[
+                                    sql.named(
+                                        sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                        name="input",
+                                    )
+                                ]
+                            )
                         )
                     )
 
                     emits.append(cte_name)
 
-                case CFG.Assignments(assignments):
+                case CFG.Assignment([variable], expression):
                     assert len(these_predecessors) == 1
                     predecessor = these_predecessors.pop()
-
-                    scalar_assignments, multi_assignments =\
-                        utils.partition(
-                            assignments,
-                            choice=lambda assignment: len(assignment.variables) == 1
-                        )
-
-                    column_expressions = {
-                        assignment.variables[0]: sql.named(
-                            sql.cast(
-                                assignment.expression.source.format(*(
-                                    sql.variable(row="input", column=variable.identifier)
-                                    for variable in assignment.expression.arguments
-                                )),
-                                symbol_table[assignment.variables[0]].source
-                            ),
-                            name=f"{assignment.variables[0].identifier}"
-                        )
-
-                        for assignment in scalar_assignments
-                    }
-
-                    from_list = [
-                        sql.named(
-                            sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
-                            name="input",
-                        )
-                    ]
-
-                    for i, assignment in enumerate(multi_assignments):
-                        row_variable = f"assignment.{i}"
-                        column_expressions.update({
-                            variable: sql.cast(
-                                sql.variable(row=row_variable, column=variable.identifier),
-                                symbol_table[variable].source
-                            )
-                            for variable in assignment.variables
-                        })
-                        from_list.append(
-                            sql.named(
-                                sql.lateral(
-                                    assignment.expression.source.format(*(
-                                        sql.variable(row="input", column=variable.identifier)
-                                        for variable in assignment.expression.arguments
-                                    ))
-                                ),
-                                name=row_variable,
-                                columns=[
-                                    variable.identifier
-                                    for variable in assignment.variables
-                                ]
-                            )
-                        )
 
                     ctes.append(
                         sql.cte(
@@ -337,13 +279,67 @@ def codegen(
                                 select_list=[
                                     sql.variable(row="input", column=".mark"),
                                 ] + [
-                                    column_expressions.get(
-                                        variable,
+                                    expression.source.format(*(
                                         sql.variable(row="input", column=variable.identifier)
-                                    )
-                                    for variable in outputs[label]
+                                        for variable in expression.arguments
+                                    ))
+                                    if output == variable else
+                                    sql.variable(row="input", column=variable.identifier)
+                                    for output in outputs[label]
                                 ],
-                                from_list=from_list
+                                from_list=[
+                                    sql.named(
+                                        sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                        name="input",
+                                    )
+                                ]
+                            )
+                        )
+                    )
+
+                case CFG.Assignment(variables, expression):
+                    assert len(these_predecessors) == 1
+                    predecessor = these_predecessors.pop()
+
+                    ctes.append(
+                        sql.cte(
+                            name=cte_name,
+                            materialize=explicit_materialized and len(these_successors) > 1,
+                            columns=[
+                                ".mark",
+                            ] + [
+                                variable.identifier
+                                for variable in outputs[label]
+                            ],
+                            body=sql.select(
+                                select_list=[
+                                    sql.variable(row="input", column=".mark"),
+                                ] + [
+                                    sql.variable(
+                                        row="assign" if output in variables else "input",
+                                        column=variable.identifier
+                                    )
+                                    for output in outputs[label]
+                                ],
+                                from_list=[
+                                    sql.named(
+                                        sql.name(f"{function.name.identifier}.{predecessor.identifier}"),
+                                        name="input",
+                                    ),
+                                    sql.named(
+                                        sql.lateral(
+                                            expression.source.format(*(
+                                                sql.variable(row="input", column=variable.identifier)
+                                                for variable in expression.arguments
+                                            ))
+                                        ),
+                                        name="assign",
+                                        columns=[
+                                            variable.identifier
+                                            for variable in variables
+                                        ]
+                                    )
+                                ]
                             )
                         )
                     )
