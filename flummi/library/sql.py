@@ -54,22 +54,22 @@ def union_all(subqueries: list[SQL]) -> SQL:
 
 def select(
     select_list: list[SQL],
-    from_list: list[SQL],
+    from_list: list[SQL] | None = None,
     joins: list[SQL] | None = None,
     predicates: list[SQL] | None = None,
     group_keys: list[SQL] | None = None,
     having: list[SQL] | None = None
 ) -> SQL:
-    query = (
-        f"SELECT {_indent(",\n".join(map(dedent, select_list)), ' ' * 7)}\n"
-        f"FROM   {_indent(",\n".join(map(dedent, from_list)), ' ' * 7)}"
-    )
+    query = f"SELECT {_indent(",\n".join(map(dedent, select_list)), ' ' * 7)}"
 
-    if joins:
-        query += "\n".join(
-            dedent(join)
-            for join in joins
-        )
+    if from_list:
+        query += f"\nFROM   {_indent(",\n".join(map(dedent, from_list)), ' ' * 7)}"
+
+        if joins:
+            query += "\n".join(
+                dedent(join)
+                for join in joins
+            )
 
     if predicates:
         query += "\nWHERE  " + "\nAND    ".join(
@@ -77,24 +77,25 @@ def select(
             for predicate in predicates
         )
 
-    if group_keys:
-        query += "\nGROUP  BY " + "\n, ".join(
-            _indent(dedent(key), ' ' * 10)
-            for key in group_keys
-        )
-
-        if having:
-            query += "\nHAVING " + "\n, ".join(
-                _indent(dedent(predicate), ' ' * 7)
-                for predicate in having
+    if from_list:
+        if group_keys:
+            query += "\nGROUP  BY " + "\n, ".join(
+                _indent(dedent(key), ' ' * 10)
+                for key in group_keys
             )
+
+            if having:
+                query += "\nHAVING " + "\n, ".join(
+                    _indent(dedent(predicate), ' ' * 7)
+                    for predicate in having
+                )
 
     return query
 
 
 def cte(name: str, columns: list[str], body: SQL, materialize: bool = False) -> SQL:
     return (
-        f"{_name(name)}({", ".join(map(_name, columns))}) AS{" MATERIALIZE" * materialize} (\n" +
+        f"{_name(name)}({", ".join(map(_name, columns))}) AS{" MATERIALIZED" * materialize} (\n" +
         indent(dedent(body), "  ") +
         "\n)"
     )
