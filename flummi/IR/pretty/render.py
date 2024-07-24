@@ -13,11 +13,9 @@ __all__ = (
 PRORGAM_TEMPLATE= """\
 digraph "program" {{
 node [
-    shape = box,
+    shape = Mrecord,
     nojustify = true,
     fontname = "{font}",
-    fontcolor = "#000",
-    color = "#000",
 ];
 graph [
     fontname = "{font}"
@@ -39,8 +37,20 @@ label="{name}({parameters}) -> {return_types}"
 }}
 """
 
-NODE_TEMPLATE = '"{label}" [label="{body}\\l"];'
+NODE_TEMPLATE = '"{label}" [label="{body}",{style}];'
 
+NODE_STYLES: dict[type[CFG.Node], str] = {
+    CFG.Source: 'color = forestgreen, fontcolor = forestgreen',
+    CFG.Sink: 'color = firebrick, fontcolor = firebrick',
+    CFG.Join: 'color = goldenrod, fontcolor = goldenrod',
+    CFG.Fork: 'color = purple, fontcolor = purple',
+    CFG.Wait: 'color = orange, fontcolor = orange',
+    CFG.Mark: 'color = royalblue, fontcolor = royalblue',
+    CFG.Conditional: 'color = mediumvioletred, fontcolor = mediumvioletred',
+    CFG.Emit: 'color = darkcyan, fontcolor = darkcyan',
+    CFG.Merge: 'color = darkcyan, fontcolor = darkcyan',
+    CFG.Assignment: 'color = darkcyan, fontcolor = darkcyan',
+}
 
 def render(
     program: common.Program[Any, CFG.Graph[errors.Location]],
@@ -54,18 +64,35 @@ def render(
         nodes = (
             NODE_TEMPLATE.format(
                 label=label.identifier,
-                body="\\l".join((
-                    pretty(node).replace("\n", "\\l"),
-                    f"@{label.annotation.column}:{label.annotation.line}"
-                ))
+                body=(
+                    f"{{{
+                        pretty(node)
+                        .replace("\n", "\\l")
+                        .replace(" ", "\\ ")
+                        .replace("{", "\\{")
+                        .replace("}", "\\}")
+                        .replace("<", "\\<")
+                        .replace(">", "\\>")
+                    }\\l|@{label.annotation.column}:{label.annotation.line}}}"
+                ),
+                style=NODE_STYLES.get(type(node), '')
             )
             for label, node in function.body.nodes.items()
         )
 
-        edges = (
+        edges.extend(
             f'"{source.identifier}":s -> "{target.identifier}":n;'
             for source, targets in function.body.edges.items()
             for target in targets
+        )
+
+        edges.extend(
+            f'"{sink.identifier}":s -> "{source.identifier}":n [style="dotted"];'
+            for sink, sink_node in function.body.nodes.items()
+            if isinstance(sink_node, CFG.Sink)
+            for source, source_node in function.body.nodes.items()
+            if isinstance(source_node, CFG.Source)
+            and sink_node.label == source_node.label
         )
 
         subgraphs.append(
