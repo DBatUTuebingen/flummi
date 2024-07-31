@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass
 
-from . import common, AST
+from . import common
 from ..library import graph
 
 
@@ -11,6 +11,17 @@ __all__ = (
     "Program",
     "Label",
     "Graph",
+    "Conditional",
+    "Merge",
+    "Assignment",
+    "Emit",
+    "Source",
+    "Sink",
+    "Fork",
+    "Join",
+    "Mark",
+    "Wait",
+    "Call",
 )
 
 
@@ -83,3 +94,10 @@ class Mark[A](Node[A]):
 @dataclass
 class Wait[A](Node[A]):
     ...
+
+
+@dataclass
+class Call[A](Node[A]):
+    variables: list[common.Identifier[A]]
+    function: common.Identifier[A]
+    arguments: list[common.Identifier[A]]

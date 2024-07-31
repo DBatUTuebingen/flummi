@@ -5,19 +5,22 @@ from dataclasses import dataclass
 from . import common
 
 __all__ = (
-    "Statement",
     "Program",
     "Function",
+    "Statement",
     "If",
     "Loop",
     "Break",
     "Continue",
     "Declaration",
     "Assignment",
-    "Block",
+    "Emit",
     "NoOp",
     "Stop",
-    "Emit",
+    "Fork",
+    "Join",
+    "Sync",
+    "Call",
 )
 
 
@@ -72,6 +75,13 @@ class Fork[A](Statement[A]):
 class Join[A](Statement[A]):
     variables: list[common.Identifier[A]]
     expression: common.Expression[A]
+
+
+@dataclass
+class Call[A](Statement[A]):
+    variables: list[common.Identifier[A]]
+    function: common.Identifier[A]
+    arguments: list[common.Identifier[A]]
 
 
 @dataclass

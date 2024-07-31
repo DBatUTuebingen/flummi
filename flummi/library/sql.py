@@ -79,13 +79,13 @@ def select(
 
     if from_list:
         if group_keys:
-            query += "\nGROUP  BY " + "\n, ".join(
+            query += "\nGROUP  BY " + ",\n          ".join(
                 _indent(dedent(key), ' ' * 10)
                 for key in group_keys
             )
 
             if having:
-                query += "\nHAVING " + "\n, ".join(
+                query += "\nHAVING " + "\nAND    ".join(
                     _indent(dedent(predicate), ' ' * 7)
                     for predicate in having
                 )
@@ -138,11 +138,11 @@ def join(type: SQL, relation: SQL, predicates: list[SQL] | None = None) -> SQL:
     return join
 
 
-def call(function: str, arguments: list[SQL]) -> SQL:
-    return f"{function}(" + "\n,".join(
-        _indent(dedent(argument), ' ' * (1 + len(function)))
-        for argument in arguments
-    ) + ")"
+def call(function: str, arguments: list[SQL] | None = None) -> SQL:
+    return f"{function}(" + _indent(",\n".join(
+        dedent(argument)
+        for argument in arguments or []
+    ), ' ' * (1 + len(function))) + ")"
 
 
 def window(
@@ -155,13 +155,13 @@ def window(
     window = ""
 
     if partition_by:
-        window += "\nPARTITION BY " + "\n, ".join(
+        window += "\nPARTITION BY " + ",\n             ".join(
             _indent(dedent(key), ' ' * 13)
             for key in partition_by
         )
 
     if order_by:
-        window += "\nORDER BY " + "\n, ".join(
+        window += "\nORDER BY " + ",\n         ".join(
             _indent(dedent(key), ' ' * 9)
             for key in order_by
         )

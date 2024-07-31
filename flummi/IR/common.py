@@ -40,11 +40,11 @@ class Program[A, B](Annotated[A]):
   inputs: Expression[A] | None
   function_list: list[Function[A, B]]
 
-  @cached_property
+  @property
   def main_function(self) -> Function[A, B]:
     return self.functions[self.main_function_name]
 
-  @cached_property
+  @property
   def functions(self) -> dict[Identifier[A], Function[A, B]]:
     return {
         function.name: function

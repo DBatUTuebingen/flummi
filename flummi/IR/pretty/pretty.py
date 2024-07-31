@@ -1,4 +1,4 @@
-from textwrap import indent, dedent
+from textwrap import dedent
 
 from .. import CFG
 from ...library import utils
@@ -20,7 +20,7 @@ def pretty(node: CFG.Node) -> str:
                     this = "FORK "
                 case CFG.Assignment():
                     this = "LET "
-            this += ",".join(
+            this += ", ".join(
                 variable.identifier
                 for variable in variables
             ) + " = "
@@ -29,6 +29,17 @@ def pretty(node: CFG.Node) -> str:
                 for argument in  expression.arguments
             ))), ' ' * len(this))
             return this
+
+        case CFG.Call(variables, function, arguments):
+            variables = ", ".join(
+                variable.identifier
+                for variable in variables
+            )
+            arguments = ", ".join(
+                argument.identifier
+                for argument in arguments
+            )
+            return f"CALL {variables} = {function.identifier}({arguments})"
 
         case CFG.Source(label):
             return f"SOURCE {label.identifier}"

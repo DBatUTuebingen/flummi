@@ -18,7 +18,7 @@ node [
     fontname = "{font}",
 ];
 graph [
-    fontname = "{font}"
+    fontname = "{font}",
 ];
 edge [
     fontname = "{font}",
@@ -49,6 +49,7 @@ NODE_STYLES: dict[type[CFG.Node], str] = {
     CFG.Emit:        'color = darkcyan       , fontcolor = darkcyan       ',
     CFG.Merge:       'color = darkcyan       , fontcolor = darkcyan       ',
     CFG.Assignment:  'color = darkcyan       , fontcolor = darkcyan       ',
+    CFG.Call:        'color = navy           , fontcolor = navy           ',
 }
 
 def render(
@@ -92,6 +93,12 @@ def render(
             for source, source_node in function.body.nodes.items()
             if isinstance(source_node, CFG.Source)
             and sink_node.label == source_node.label
+        )
+
+        edges.extend(
+            f'"{label.identifier}":s -> "{program.functions[node.function].body.entry_label.identifier}":n [style="dotted"];'
+            for label, node in function.body.nodes.items()
+            if isinstance(node, CFG.Call)
         )
 
         subgraphs.append(

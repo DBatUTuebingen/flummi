@@ -51,9 +51,6 @@ def analyze(
             Analyzer(program).analyze(function)
         symbol_tables[function.name] = symbol_table
 
-    del program.functions
-    del program.main_function
-
     return program, symbol_tables
 
 
@@ -274,7 +271,37 @@ class Analyzer:
 
                 return statement, False, False
 
+            case AST.Call(variables, function, arguments):
+                if function not in self.program.functions:
+                    raise AnalysisError(
+                        "Found call to unknown function ",
+                        f"{function.identifier!r}.",
+                        function.annotation,
+                    )
 
+                function = self.program.functions[function]
+
+                if len(arguments) != len(function.parameters):
+                    raise AnalysisError(
+                        "Found mismatch between number of arguments...",
+                        arguments[-1].annotation,
+                        "...and the number expected.",
+                        function.annotation
+                    )
+                for argument in arguments:
+                    self.analyze_variable_read(argument)
+
+                if len(variables) != len(function.return_types):
+                    raise AnalysisError(
+                        "Found mismatch between number of bound variables...",
+                        variables[-1].annotation,
+                        "...and the number expected.",
+                        function.return_types[-1].annotation
+                    )
+                for variable in variables:
+                    self.analyze_variable_write(variable)
+
+                return statement, False, False
 
             case _:
                 raise AnalysisError(

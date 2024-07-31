@@ -26,6 +26,7 @@ type Sync        = AST.Sync[errors.Location]
 type Fork        = AST.Fork[errors.Location]
 type Join        = AST.Join[errors.Location]
 type NoOp        = AST.NoOp[errors.Location]
+type Call        = AST.Call[errors.Location]
 type Declaration = AST.Declaration[errors.Location]
 type Expression  = common.Expression[errors.Location]
 type Type        = common.Type[errors.Location]
@@ -192,6 +193,8 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_fork()
         elif self.lookahead(Tokens.JOIN):
             return self.parse_join()
+        elif self.lookahead(Tokens.CALL):
+            return self.parse_call()
         else:
             raise self.error("Expected statement.")
 
@@ -325,4 +328,20 @@ class Parser(parser.Parser[Tokens]):
             annotation=location,
             variables=variables,
             expression=expression
+        )
+
+    def parse_call(self) -> Call:
+        location = self.current.location
+        self.expect(Tokens.CALL)
+        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        self.expect(Tokens.EQUALS)
+        function = self.parse_variable()
+        self.expect(Tokens.LEFT_PAREN)
+        arguments = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        self.expect(Tokens.RIGHT_PAREN)
+        return AST.Call(
+            annotation=location,
+            variables=variables,
+            function=function,
+            arguments=arguments,
         )

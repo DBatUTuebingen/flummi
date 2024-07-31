@@ -46,7 +46,7 @@ class LoweringError(errors.PrettyError, ValueError):
 
 @dataclass
 class Lowering:
-    _label_prefix: str | None = field(init=False, default=None)
+    _label_prefix: str = field(init=False)
     _nodes: dict[Label, Node] = field(init=False, default_factory=dict)
     _edges: dict[Label, set[Label]] = field(init=False, default_factory=lambda: defaultdict(set))
     _loop_exits: dict[Identifier, list[Label]] = field(init=False, default_factory=lambda: defaultdict(list))
@@ -55,11 +55,13 @@ class Lowering:
     def _make_label[A](self, name: str, annotation: A) -> common.Identifier[A]:
         self._label_counters[name] += 1
         return common.Identifier(
-            f"{name}.{self._label_counters[name]}",
+            f"{self._label_prefix}.{name}.{self._label_counters[name]}",
             annotation=annotation
         )
 
     def lower_function(self, function: parser.Function) -> Function:
+        self._label_prefix = function.name.identifier
+
         entry_label = self.make_node(
             node=CFG.Source(
                 function.name,
@@ -279,9 +281,10 @@ class Lowering:
 
             case AST.Fork(variables, expression):
                 predecessor = self.make_merge(predecessors, statement.annotation)
+                mark_label = self.make_mark(predecessor, statement.annotation)
 
                 fork_label = self.make_node(
-                    predecessors=[predecessor],
+                    predecessors=[mark_label],
                     node=CFG.Fork(
                         variables,
                         expression,
@@ -290,6 +293,21 @@ class Lowering:
                 )
 
                 return [fork_label]
+
+            case AST.Call(variables, function, arguments):
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                call_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Call(
+                        variables,
+                        function,
+                        arguments,
+                        annotation=statement.annotation
+                    )
+                )
+
+                return [call_label]
 
             case AST.Join(variables, expression):
                 predecessor = self.make_merge(predecessors, statement.annotation)
