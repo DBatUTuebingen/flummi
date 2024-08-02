@@ -133,7 +133,7 @@ def main():
             printer[2](pretty(cfg))
 
             printer[1](f"\033[1;2m[2]\033[0;36m placing additional JUMPs\033[0m")
-            if (Flag.UMBRA_TRAMPOLINE and Flag.UMBRA_USE) in flags:
+            if Flag.UMBRA_TRAMPOLINE in flags:
                 for block in cfg.blocks.values():
                     for label in cfg.blocks.keys():
                         block.terminal = CFG.jumpify(block.terminal, label)
