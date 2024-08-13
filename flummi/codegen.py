@@ -736,7 +736,7 @@ class CodeGen:
                                   ' ' * 24
                               ))
                            }
-                        ELSE 0 END,
+                        END,
                    {dedent(_indent(
                          ",\n".join(
                         f'CAST({self.gen_umbra_expression(assignment.expression)} AS {self.gen_type(self.symbol_table[assignment.variable])}) AS {self.gen_variable(assignment.variable)}'
