@@ -426,7 +426,7 @@ class CodeGen:
         return dedent(f"""
           SELECT  {source_select * bool(self.variable_bindings)}t."%result%"
           FROM umbra.trampoline(
-          --Label:Initialize  Tablenumber: 0
+          --Label:Initialize  Table number: 0
             TABLE(SELECT {index_dict[self.entry_label.label] + 1},
                     {initial_row_sql},
                     CAST(NULL AS {self.emit_type_sql}) AS "%result%"       
@@ -761,7 +761,7 @@ class CodeGen:
                 ) * bool(conditional_variable_bindings)
             }{   _indent(
                     f"""
-        ----Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1}  
+        ----Label:{block.label.label}  Table number: {index_dict[block.label.label] + 1}  
            TABLE(SELECT 0,
                     {input_columns_sql},
                      {_indent(
@@ -774,7 +774,7 @@ class CodeGen:
                     ) * ((bool(emits)) and not bool(conditional_variable_bindings) and not bool(assignments))
             }{_indent(
          f"""
-----Label:{block.label.label}  Tablenumber: {index_dict[block.label.label] + 1} 
+----Label:{block.label.label}  Table number: {index_dict[block.label.label] + 1} 
   TABLE(SELECT 0,
            {input_columns_sql_2},
            {_indent(
