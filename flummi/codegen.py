@@ -728,7 +728,7 @@ class CodeGen:
                          f'CAST({_indent(self.gen_umbra_expression(emit.to_emit), ' ' * 5)} AS {self.emit_type_sql}) AS "%result%"' for emit in emits ),' ' * 33)}
             FROM trampoline
             UNION ALL
-         ( """ * bool(emits)}SELECT CASE {dedent(_indent(
+           """ * bool(emits)} SELECT CASE {dedent(_indent(
                          "\n".join(
                         f'WHEN ({succsessors[1]}) THEN {succsessors[0]}'
                          for succsessors in case_list
@@ -755,7 +755,7 @@ class CodeGen:
                                   ' ' * 17
                               ))
                            } 
-      ){f')' * bool(emits)}{f')' * bool(conditional_variable_bindings)}
+      {f')' * bool(emits)}{f')' * bool(conditional_variable_bindings)}
                     """[1:-1],
                     ' ' * 15
                 ) * bool(conditional_variable_bindings)
