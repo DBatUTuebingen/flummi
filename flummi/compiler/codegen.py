@@ -404,7 +404,6 @@ def codegen(
     if keep_stackframes_alive:
         keep_alives.append(
             sql.select(
-                distinct=True,
                 select_list=[
                     sql.variable(column, "c") + " + 1"
                     if column == names.iteration else
@@ -422,8 +421,8 @@ def codegen(
                     sql.variable(names.kind, "o"),
                     sql.variable(names.return_label, "o") + " = " +
                     sql.variable(names.label, "c"),
-                    sql.variable(names.depth, "o") + " + 1 = " +
-                    sql.variable(names.depth, "c"),
+                    sql.variable(names.depth, "o") + " - " +
+                    sql.variable(names.depth, "c") + " = 1",
                 ]
             )
         )

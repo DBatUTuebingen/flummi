@@ -1,0 +1,112 @@
+{
+  DECLARE ins: §instruction§;
+  DECLARE regs: §int[]§;
+  LET ins  = §__.ins§[];
+  LET regs = §__.regs§[];
+  TAIL run(ins: ins, regs: regs)
+}
+
+FUN run(ins: §instruction§, regs: §int[]§) -> §int§: {
+  DECLARE k: §boolean§;
+  DECLARE loc, res: §int§;
+
+  LET k = §{0}.opc = 'lod'§[ins];
+  IF k THEN {
+    LET regs = §
+      {1}[:{0}.reg1-1] ||
+      [{0}.reg2] ||
+      {1}[{0}.reg1+1:]
+    §[ins,regs];
+    LET loc = §{0}.loc+1§[ins];
+    LET ins = §(SELECT p FROM program AS p WHERE p.loc = {0})§[loc];
+    TAIL run(ins: ins, regs: regs)
+  } ELSE {
+    LET k = §{0}.opc = 'mov'§[ins];
+    IF k THEN {
+      LET regs = §
+        {1}[:{0}.reg1-1] ||
+        [{1}[{0}.reg2]] ||
+        {1}[{0}.reg1+1:]
+      §[ins,regs];
+      LET loc = §{0}.loc+1§[ins];
+      LET ins = §(SELECT p FROM program AS p WHERE p.loc = {0})§[loc];
+      TAIL run(ins: ins, regs: regs)
+    } ELSE {
+      LET k = §{0}.opc = 'jeq'§[ins];
+      IF k THEN {
+        LET loc = §
+          CASE WHEN {1}[{0}.reg1] = {1}[{0}.reg2]
+               THEN {0}.reg3
+               ELSE {0}.loc + 1
+          END
+        §[ins,regs];
+        LET ins = §(SELECT p FROM program AS p WHERE p.loc = {0})§[loc];
+        TAIL run(ins: ins, regs: regs)
+      } ELSE {
+        LET k = §{0}.opc = 'jmp'§[ins];
+        IF k THEN {
+          LET loc = §{0}.reg1§[ins];
+          LET ins = §(SELECT p FROM program AS p WHERE p.loc = {0})§[loc];
+          TAIL run(ins: ins, regs: regs)
+        } ELSE {
+          LET k = §{0}.opc = 'add'§[ins];
+          IF k THEN {
+            LET regs = §
+              {1}[:{0}.reg1-1] ||
+              [{1}[{0}.reg2] + {1}[{0}.reg3]] ||
+              {1}[{0}.reg1+1:]
+            §[ins,regs];
+            LET loc = §{0}.loc+1§[ins];
+            LET ins = §(SELECT p FROM program AS p WHERE p.loc = {0})§[loc];
+            TAIL run(ins: ins, regs: regs)
+          } ELSE {
+            LET k = §{0}.opc = 'mul'§[ins];
+            IF k THEN {
+              LET regs = §
+                {1}[:{0}.reg1-1] ||
+                [{1}[{0}.reg2] * {1}[{0}.reg3]] ||
+                {1}[{0}.reg1+1:]
+              §[ins,regs];
+              LET loc = §{0}.loc+1§[ins];
+              LET ins = §(SELECT p FROM program AS p WHERE p.loc = {0})§[loc];
+              TAIL run(ins: ins, regs: regs)
+            } ELSE {
+              LET k = §{0}.opc = 'div'§[ins];
+              IF k THEN {
+                LET regs = §
+                  {1}[:{0}.reg1-1] ||
+                  [{1}[{0}.reg2] / {1}[{0}.reg3]] ||
+                  {1}[{0}.reg1+1:]
+                §[ins,regs];
+                LET loc = §{0}.loc+1§[ins];
+                LET ins = §(SELECT p FROM program AS p WHERE p.loc = {0})§[loc];
+                TAIL run(ins: ins, regs: regs)
+              } ELSE {
+                LET k = §{0}.opc = 'mod'§[ins];
+                IF k THEN {
+                  LET regs = §
+                    {1}[:{0}.reg1-1] ||
+                    [{1}[{0}.reg2] % {1}[{0}.reg3]] ||
+                    {1}[{0}.reg1+1:]
+                  §[ins,regs];
+                  LET loc = §{0}.loc+1§[ins];
+                  LET ins = §(SELECT p FROM program AS p WHERE p.loc = {0})§[loc];
+                  TAIL run(ins: ins, regs: regs)
+                } ELSE {
+                  LET k = §{0}.opc = 'hlt'§[ins];
+                  IF k THEN {
+                    LET res = §{1}[{0}.reg1]§[ins,regs];
+                    RETURN res
+                  } ELSE {
+                    LET res = §NULL§[];
+                    RETURN res
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

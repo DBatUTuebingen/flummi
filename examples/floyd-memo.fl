@@ -1,0 +1,52 @@
+{
+  DECLARE nodes, s, e: §int§;
+  LET nodes = §input_nodes§[];
+  LET s     = §input_here§[];
+  LET e     = §input_there§[];
+  TAIL shortestpath(nodes: nodes, s: s, e: e)
+}
+
+FUN shortestpath(nodes: §int§, s: §int§, e: §int§) -> §int§: {
+  DECLARE k, hit: §boolean§;
+  DECLARE ret, a, b, c, _nodes: §int§;
+
+  LET k = §{0} = 0§[nodes];
+  IF k THEN {
+    LET ret = §
+      SELECT edge.weight
+      FROM   edges AS edge
+      WHERE  edge.here = {0}
+      AND    edge.there = {1}
+    §[s,e];
+    RETURN ret
+  } ELSE {
+    LET _nodes = §{0} - 1§[nodes];
+
+    LOOKUP a, hit = shortestpath(nodes: _nodes, s: s, e: e);
+    IF hit THEN {
+      NOOP
+    } ELSE {
+      CALL a = shortestpath(nodes: _nodes, s: s, e: e);
+      MEMOIZE shortestpath(nodes: _nodes, s: s, e: e) = a
+    };
+
+    LOOKUP b, hit = shortestpath(nodes: _nodes, s: s, e: nodes);
+    IF hit THEN {
+      NOOP
+    } ELSE {
+      CALL b = shortestpath(nodes: _nodes, s: s, e: nodes);
+      MEMOIZE shortestpath(nodes: _nodes, s: s, e: nodes) = b
+    };
+
+    LOOKUP c, hit = shortestpath(nodes: _nodes, s: nodes, e: e);
+    IF hit THEN {
+      NOOP
+    } ELSE {
+      CALL c = shortestpath(nodes: _nodes, s: nodes, e: e);
+      MEMOIZE shortestpath(nodes: _nodes, s: nodes, e: e) = c
+    };
+
+    LET ret = §least({0}, {1} + {2})§[a,b,c];
+    RETURN ret
+  }
+}

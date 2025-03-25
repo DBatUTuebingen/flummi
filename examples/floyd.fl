@@ -1,0 +1,30 @@
+{
+  DECLARE nodes, s, e: §int§;
+  LET nodes = §input_nodes§[];
+  LET s     = §input_here§[];
+  LET e     = §input_there§[];
+  TAIL shortestpath(nodes: nodes, s: s, e: e)
+}
+
+FUN shortestpath(nodes: §int§, s: §int§, e: §int§) -> §int§: {
+  DECLARE k: §boolean§;
+  DECLARE ret, a, b, c, _nodes: §int§;
+
+  LET k = §{0} = 0§[nodes];
+  IF k THEN {
+    LET ret = §
+      SELECT edge.weight
+      FROM   edges AS edge
+      WHERE  edge.here = {0}
+      AND    edge.there = {1}
+    §[s,e];
+    RETURN ret
+  } ELSE {
+    LET _nodes = §{0} - 1§[nodes];
+    CALL a = shortestpath(nodes: _nodes, s: s    , e: e    );
+    CALL b = shortestpath(nodes: _nodes, s: s    , e: nodes);
+    CALL c = shortestpath(nodes: _nodes, s: nodes, e: e    );
+    LET ret = §least({0}, {1} + {2})§[a,b,c];
+    RETURN ret
+  }
+}

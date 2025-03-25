@@ -53,6 +53,7 @@ def render(
                 f"{{{
                     pretty(node)
                     .replace("\n", "\\l")
+                    .replace("|", "\\|")
                     .replace(" ", "\\ ")
                     .replace("{", "\\{")
                     .replace("}", "\\}")
