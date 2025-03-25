@@ -3,13 +3,13 @@ from enum import Enum, unique, auto
 from pathlib import Path
 import subprocess
 
-from .IR.common import Program
+from .IR.CFG import Graph
 from .IR.pretty.render import render
 
 from .compiler.parser import parse
 from .compiler.analyzer import analyze
 from .compiler.lowering import lower
-# from .optimizer import optimize
+from .compiler.data_flow import plan_data_flow
 from .compiler.codegen import codegen
 from .interpeter import interpret
 
@@ -99,7 +99,6 @@ def cli():
         default=None,
     )
 
-
     analyzer_parser = subparsers.add_parser('analyze')
     analyzer_parser.add_argument(
         'source',
@@ -114,7 +113,7 @@ def cli():
 
     try:
         ast = parse(source)
-        ast, symbol_tables = analyze(ast)
+        ast, symbol_table = analyze(ast)
 
         match arguments.command:
             case "compile":
@@ -147,16 +146,21 @@ def cli():
                     )
                     print(f"\033[1;2m>> \033[0;2;4m{arguments.graph}\033[0m")
 
-                sql = codegen(cfg, symbol_tables)
-
-                #! [info] apply possible optimizations here!
+                outputs, registers, variable_allocations, register_allocations, result_allocation =\
+                    plan_data_flow(ast, cfg, symbol_table)
 
                 print("\033[1;2m[2]\033[0;36m generating SQL code\033[0m")
                 sql = codegen(
                     cfg,
-                    symbol_tables,
+                    outputs,
+                    registers,
+                    register_allocations,
+                    variable_allocations,
+                    result_allocation,
                     explicit_materialized=Flag.EXPLICIT_MATERIALIZED in flags,
                     avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCES in flags,
+                    keep_memos_alive=True,
+                    keep_stackframes_alive=True
                 )
 
                 if arguments.output:
@@ -167,7 +171,7 @@ def cli():
                 if arguments.setup is not None:
                     duckdb.sql(arguments.setup.read())
 
-                for row in interpret(ast, symbol_tables):
+                for row in interpret(ast, symbol_table):
                     print(*row)
 
             case "analyze":
@@ -178,8 +182,8 @@ def cli():
         sys.exit(1)
 
 
-def render_to_file(root: Program, path: Path, command: str = "dot"):
+def render_to_file(graph: Graph, path: Path, command: str = "dot"):
   subprocess.run(
     args=[command, "-T", path.suffix[1:] or "png", "-o", path.absolute()],
-    input=render(root).encode()
+    input=render(graph).encode()
   )

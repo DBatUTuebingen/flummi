@@ -10,7 +10,7 @@ from .errors import PrettyError, Location
 
 class TokensMeta(EnumMeta):
   def __new__(metacls, cls, bases, classdict):
-    return unique(super().__new__(metacls, cls, bases, classdict))
+    return unique(super().__new__(metacls, cls, bases, classdict)) # type: ignore
 
 
 class Tokens(StrEnum, metaclass=TokensMeta):

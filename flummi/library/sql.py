@@ -58,9 +58,15 @@ def select(
     joins: list[SQL] | None = None,
     predicates: list[SQL] | None = None,
     group_keys: list[SQL] | None = None,
-    having: list[SQL] | None = None
+    having: list[SQL] | None = None,
+    distinct: bool = False
 ) -> SQL:
-    query = f"SELECT {_indent(",\n".join(map(dedent, select_list)), ' ' * 7)}"
+    query = "SELECT "
+
+    if distinct:
+        query += "DISTINCT \n" + ' ' * 7
+
+    query += _indent(",\n".join(map(dedent, select_list)), ' ' * 7)
 
     if from_list:
         query += f"\nFROM   {_indent(",\n".join(map(dedent, from_list)), ' ' * 7)}"

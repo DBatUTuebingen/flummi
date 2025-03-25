@@ -6,57 +6,51 @@ from ...library import utils
 
 def pretty(node: CFG.Node) -> str:
     match node:
-        case CFG.Emit(variables):
-            return f"EMIT {",".join(
-                variable.identifier
-                for variable in variables
-            )}"
+        case CFG.Return(function, variable):
+            return f"RETURN {variable.identifier} FROM {function.identifier}"
 
-        case CFG.Join(variables, expression) | CFG.Fork(variables, expression) | CFG.Assignment(variables, expression):
-            match node:
-                case CFG.Join():
-                    this = "JOIN "
-                case CFG.Fork():
-                    this = "FORK "
-                case CFG.Assignment():
-                    this = "LET "
-            this += ", ".join(
-                variable.identifier
-                for variable in variables
-            ) + " = "
+        case CFG.Let(variable, expression):
+            this = f"LET {variable.identifier} = "
             this += utils._indent(dedent(expression.source.format(*(
                 f"{{{argument.identifier}}}"
                 for argument in  expression.arguments
             ))), ' ' * len(this))
             return this
 
-        case CFG.Call(variables, function, arguments):
-            variables = ", ".join(
-                variable.identifier
-                for variable in variables
+        case CFG.Pop(label):
+            return f"POP {label.identifier}"
+
+        case CFG.Push(label):
+            return f"PUSH {label.identifier}"
+
+        case CFG.Where(variable):
+            return f"WHERE {variable.identifier}"
+
+        case CFG.WhereNot(variable):
+            return f"WHERE NOT {variable.identifier}"
+
+        case CFG.Merge():
+            return "MERGE"
+
+        case CFG.Link(label):
+            return f"LINK {label.identifier}"
+
+        case CFG.Resume(function, variable):
+            return f"RESUME {function.identifier} AS {variable.identifier}"
+
+        case CFG.Lookup(result, hit, function, arguments):
+            pretty_arguments = ", ".join(
+                f"{parameter.identifier}: {argument.identifier}"
+                for parameter, argument in arguments.items()
             )
-            arguments = ", ".join(
-                argument.identifier
-                for argument in arguments
+            return f"LOOKUP {result.identifier}, {hit.identifier} = {function.identifier}({pretty_arguments})"
+
+        case CFG.Memoize(function, arguments, result):
+            pretty_arguments = ", ".join(
+                f"{parameter.identifier}: {argument.identifier}"
+                for parameter, argument in arguments.items()
             )
-            return f"CALL {variables} = {function.identifier}({arguments})"
-
-        case CFG.Source(label):
-            return f"SOURCE {label.identifier}"
-
-        case CFG.Sink(label):
-            return f"SINK {label.identifier}"
-
-        case CFG.Conditional(truthy, falsey):
-            conjuncts = [
-                variable.identifier
-                for variable in truthy
-            ] + [
-                f"NOT {variable.identifier}"
-                for variable in falsey
-            ]
-
-            return f"FILTER {utils._indent("\nAND".join(conjuncts), ' ' * 7)}"
+            return f"MEMOIZE {function.identifier}({pretty_arguments}) = {result.identifier}"
 
         case _:
             return type(node).__name__.upper()

@@ -1,0 +1,37 @@
+{
+  DECLARE e: §expression§;
+  LET e = §expr§[];
+  TAIL eval(e: e)
+}
+
+FUN eval(e: §expression§) -> §numeric§: {
+  DECLARE k: §boolean§;
+  DECLARE res, left, right: §numeric§;
+  DECLARE child: §expression§;
+
+  LET k = §{0}.op = 'ℓ'§[e];
+  IF k THEN {
+    LET res = §{0}.lit§[e];
+    RETURN res
+  } ELSE {
+    LET  child = §select e from expression as e where {0}.arg1 = e.node§[e];
+    CALL left  = eval(e: child);
+    LET  child = §select e from expression as e where {0}.arg2 = e.node§[e];
+    CALL right = eval(e: child);
+
+    LET k = §{0}.op = '+'§[e];
+    IF k THEN {
+      LET res = §{0} + {1}§[left, right];
+      RETURN res
+    } ELSE {
+      LET k = §{0}.op = '*'§[e];
+      IF k THEN {
+        LET res = §{0} * {1}§[left, right];
+        RETURN res
+      } ELSE {
+        LET res = §NULL§[];
+        RETURN res
+      }
+    }
+  }
+}

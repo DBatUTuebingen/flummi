@@ -1,10 +1,6 @@
-from dataclasses import dataclass
-import itertools
-
-from .analyzer import SymbolTable
-from .data_flow import get_block_inputs, get_block_outputs
+from . import names
 from ..IR import CFG, common
-from ..library import sql, graph, utils
+from ..library import sql, graph
 
 
 __all__ = (
@@ -12,1486 +8,475 @@ __all__ = (
 )
 
 
+class Kind:
+    DATA = sql.string("data")
+    MEMO = sql.string("memo")
+    STACK_FRAME = sql.string("frame")
+
 
 def codegen(
-    program: CFG.Program,
-    symbol_tables: dict[common.Identifier, SymbolTable],
+    cfg: CFG.Graph,
+    #? [info] data flow
+    outputs: dict[common.Identifier, set[common.Identifier]],
+    #? [info] allocation
+    registers: dict[str, common.Type],
+    register_allocations: dict[common.Identifier, dict[str, common.Identifier]],
+    variable_allocations: dict[common.Identifier, dict[common.Identifier, str]],
+    result_allocation: dict[common.Identifier|None, str],
+    #? [info] config
     explicit_materialized: bool = False,
     avoid_multiple_recursive_references: bool = False,
+    keep_stackframes_alive: bool = True,
+    keep_memos_alive: bool = True,
 ) -> str:
-    ctes: list[sql.SQL] = []
-    collector_data: list[tuple[str, list[sql.SQL]]] = []
+    predecessors = graph.invert(cfg.edges)
 
-    init_list: list[sql.SQL] = [
-        sql.named(
-            sql.cast("0", type="INT"),
-            name=".iteration"
-        ),
-        sql.named(
-            sql.cast("0", type="INT"),
-            name=".mark"
-        ),
-        sql.named(
-            sql.cast("0", type="INT"),
-            name=".thread.this"
-        ),
-        sql.named(
-            sql.string(program.main_function_name.identifier),
-            name=".label.this"
-        ),
-        sql.named(
-            sql.cast(sql.NULL, type="INT"),
-            name=".thread.parent"
-        ),
-        sql.named(
-            sql.cast(sql.NULL, type="TEXT"),
-            name=".label.parent"
-        ),
-    ]
-    loop_column_prefix: list[sql.SQL] = []
-    loop_schema: list[str] = [
-        ".iteration",
-        ".mark",
-        ".thread.this",
-        ".label.this",
-        ".thread.parent",
-        ".label.parent",
-    ]
+    working_table_writers = []
+    ctes = []
 
-    calls: list[tuple[str, common.Identifier]] = []
+    working_table_schema: dict[str, str] = {
+        names.iteration: "INT",
+        names.kind: "TEXT",
+        names.label: "TEXT",
+    }
 
-    for function in program.function_list:
-        symbol_table = symbol_tables[function.name]
-        successors = function.body.edges
-        predecessors = graph.invert(successors)
-        inputs = get_block_inputs(function.body)
-        outputs = {
-            label: list(sorted(variables))
-            for label, variables in get_block_outputs(function.body, inputs).items()
+    if keep_stackframes_alive:
+        working_table_schema |= {
+            names.return_label: "TEXT",
+            names.depth: "INT",
         }
 
-        loop_carried_variables = list(sorted(utils.union(
-            outputs[label]
-            for label, node in function.body.nodes.items()
-            if isinstance(node, (CFG.Source, CFG.Wait, CFG.Call, CFG.Mark))
-        )))
-
-        emits: list[str] = []
-        sinks: list[tuple[str, set[common.Identifier]]] = []
-
-        for label in graph.dependent_ordering(successors):
-            cte_name = label.identifier
-            these_successors = successors[label]
-            these_predecessors = predecessors[label]
-
-            node = function.body.nodes[label]
-            match node:
-                case CFG.Source(name):
-                    columns = [
-                        variable.identifier
-                        for variable in outputs[label]
-                    ]
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + columns,
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.variable(
-                                        row="input",
-                                        column=f"{function.name.identifier}.{column}"
-                                    )
-                                    for column in columns
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name("loop"),
-                                        name="input"
-                                    )
-                                ],
-                                predicates=[
-                                    sql.variable(row="input", column=".label.this") + " IS NOT DISTINCT FROM " +
-                                    sql.string(name.identifier),
-                                ]
-                            )
-                        )
-                    )
-
-                case CFG.Sink(name):
-                    assert len(these_successors) == 0
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-
-                    columns = [
-                        variable.identifier
-                        for variable in outputs[label]
-                    ]
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".label.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + columns,
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.named(
-                                        sql.string(name.identifier),
-                                        name=".label.this"
-                                    ),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.variable(row="input", column=column)
-                                    for column in columns
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="input"
-                                    )
-                                ]
-                            )
-                        )
-                    )
-                    sinks.append((
-                        cte_name,
-                        set(outputs[label])
-                    ))
-
-                case CFG.Conditional(truthy, falsey):
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-
-                    columns = [
-                        variable.identifier
-                        for variable in outputs[label]
-                    ]
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + columns,
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.variable(row="input", column=column)
-                                    for column in columns
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="input",
-                                    )
-                                ],
-                                predicates=[
-                                    *(
-                                        sql.variable(row="input", column=variable.identifier)
-                                        for variable in truthy
-                                    ),
-                                    *(
-                                        "NOT " + sql.variable(row="input", column=variable.identifier)
-                                        for variable in falsey
-                                    ),
-                                ]
-                            )
-                        )
-                    )
-
-                case CFG.Merge():
-                    if len(these_successors) == 0:
-                        continue
-                    columns = [
-                        variable.identifier
-                        for variable in outputs[label]
-                    ]
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            materialize=explicit_materialized and len(these_successors) > 1,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + columns,
-                            body=sql.union_all([
-                                sql.select(
-                                    select_list=[
-                                        sql.variable(row="input", column=".iteration"),
-                                        sql.variable(row="input", column=".mark"),
-                                        sql.variable(row="input", column=".thread.this"),
-                                        sql.variable(row="input", column=".thread.parent"),
-                                        sql.variable(row="input", column=".label.parent"),
-                                    ] + [
-                                        sql.variable(row="input", column=column)
-                                        for column in columns
-                                    ],
-                                    from_list=[
-                                        sql.named(
-                                            sql.name(predecessor.identifier),
-                                            name="input",
-                                        )
-                                    ]
-                                )
-                                for predecessor in these_predecessors
-                            ])
-                        )
-                    )
-
-                case CFG.Emit(variables):
-                    assert len(these_predecessors) == 1
-                    assert len(these_successors) == 0
-                    predecessor = these_predecessors.pop()
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                f".result.{i}"
-                                for i in range(len(function.return_types))
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.cast(
-                                        sql.variable(row="input", column=variable.identifier),
-                                        type.source
-                                    )
-                                    for variable, type in zip(variables, function.return_types)
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="input",
-                                    )
-                                ]
-                            )
-                        )
-                    )
-
-                    emits.append(cte_name)
-
-                case CFG.Assignment([variable], expression):
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            materialize=explicit_materialized and len(these_successors) > 1,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.named(
-                                        sql.cast(
-                                            expression.source.format(*(
-                                                sql.variable(row="input", column=variable.identifier)
-                                                for variable in expression.arguments
-                                            )),
-                                            type=symbol_table[output].source
-                                        ),
-                                        name=output.identifier
-                                    )
-                                    if output == variable else
-                                    sql.variable(row="input", column=output.identifier)
-                                    for output in outputs[label]
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="input",
-                                    )
-                                ]
-                            )
-                        )
-                    )
-
-                case CFG.Assignment(variables, expression):
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            materialize=explicit_materialized and len(these_successors) > 1,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.variable(
-                                        row="assign" if output in variables else "input",
-                                        column=variable.identifier
-                                    )
-                                    for output in outputs[label]
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="input",
-                                    ),
-                                    sql.named(
-                                        sql.lateral(
-                                            expression.source.format(*(
-                                                sql.variable(row="input", column=variable.identifier)
-                                                for variable in expression.arguments
-                                            ))
-                                        ),
-                                        name="assign",
-                                        columns=[
-                                            variable.identifier
-                                            for variable in variables
-                                        ]
-                                    )
-                                ]
-                            )
-                        )
-                    )
-
-                case CFG.Fork(variables, expression):
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            materialize=explicit_materialized and len(these_successors) > 1,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.cast(
-                                        sql.variable(
-                                            row="fork",
-                                            column=variable.identifier,
-                                        ),
-                                        type=symbol_table[variable].source
-                                    )
-                                    if variable in variables else
-                                    sql.variable(row="input", column=variable.identifier)
-                                    for variable in outputs[label]
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="input",
-                                    ),
-                                    sql.named(
-                                        sql.lateral(
-                                            expression.source.format(*(
-                                                sql.variable(row="input", column=variable.identifier)
-                                                for variable in expression.arguments
-                                            ))
-                                        ),
-                                        name="fork",
-                                        columns=[
-                                            variable.identifier
-                                            for variable in variables
-                                        ]
-                                    )
-                                ]
-                            )
-                        )
-                    )
-
-                case CFG.Join(variables, expression):
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-
-                    group_keys = [
-                        ".iteration",
-                        ".thread.this",
-                        ".thread.parent",
-                        ".label.parent",
-                    ] + [
-                        variable.identifier
-                        for variable in outputs[label]
-                        if variable not in variables
-                    ]
-
-                    group_key_query = sql.named(
-                        sql.paren(
-                            sql.select(
-                                select_list=[
-                                    sql.named(
-                                        sql.call(
-                                            function="MIN",
-                                            arguments=[sql.variable(row="key", column=".mark")]
-                                        ),
-                                        name=".mark"
-                                    ),
-                                ] + [
-                                    sql.variable(row="key", column=variable)
-                                    for variable in group_keys
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="key"
-                                    )
-                                ],
-                                group_keys=[
-                                    sql.variable(row="key", column=variable)
-                                    for variable in group_keys
-                                ],
-                            )
-                        ),
-                        name="key",
-                        columns=[
-                            ".mark",
-                        ] + [
-                            variable
-                            for variable in group_keys
-                        ]
-                    )
-
-                    aggregate_query = sql.named(
-                        sql.lateral(
-                            expression.source.format(*(
-                                sql.variable(row="input", column=argument.identifier)
-                                for argument in expression.arguments
-                            )).format(
-                                sql.named(
-                                    sql.paren(
-                                        sql.select(
-                                            select_list=[
-                                                sql.cast(
-                                                    sql.variable(row="input", column=argument.identifier),
-                                                    type=symbol_table[argument].source
-                                                )
-                                                for argument in expression.arguments
-                                            ],
-                                            from_list=[
-                                                sql.named(
-                                                    sql.name(predecessor.identifier),
-                                                    name="input"
-                                                )
-                                            ],
-                                            predicates=[
-                                                sql.variable(row="key", column=variable)  + " IS NOT DISTINCT FROM " +
-                                                sql.variable(row="input", column=variable)
-                                                for variable in group_keys
-                                            ]
-                                        )
-                                    ),
-                                    name="input",
-                                    columns=[
-                                        argument.identifier
-                                        for argument in expression.arguments
-                                    ]
-                                )
-                            )
-                        ),
-                        name="aggregate",
-                        columns=[
-                            variable.identifier
-                            for variable in variables
-                        ]
-                    )
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            materialize=explicit_materialized and len(these_successors) > 1,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="key", column=".iteration"),
-                                    sql.variable(row="key", column=".mark"),
-                                    sql.variable(row="key", column=".thread.this"),
-                                    sql.variable(row="key", column=".thread.parent"),
-                                    sql.variable(row="key", column=".label.parent"),
-                                ] + [
-                                    sql.cast(
-                                        sql.variable(
-                                            row="aggregate",
-                                            column=variable.identifier
-                                        ),
-                                        type=symbol_table[variable].source
-                                    )
-                                    if variable in variables else
-                                    sql.variable(
-                                        row="key",
-                                        column=variable.identifier
-                                    )
-                                    for variable in outputs[label]
-                                ],
-                                from_list=[
-                                    group_key_query,
-                                    aggregate_query,
-                                ],
-                                predicates=[
-                                    sql.variable(row="key", column=".mark") + " IS NOT NULL"
-                                ]
-                            )
-                        )
-                    )
-
-                case CFG.Mark():
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-
-                    snapshot_cte_name = cte_name + ".snapshot"
-                    ctes.append(
-                        sql.cte(
-                            name=snapshot_cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".label.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.named(
-                                        sql.variable(row="input", column=".mark") + " + 1",
-                                        name=".mark"
-                                    ),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.named(
-                                        sql.string(label.identifier),
-                                        name=".label.this"
-                                    ),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.variable(row="input", column=variable.identifier)
-                                    for variable in outputs[label]
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="input",
-                                    ),
-                                ]
-                            )
-                        ),
-                    )
-                    sinks.append((
-                        snapshot_cte_name,
-                        set(outputs[label])
-                    ))
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.variable(
-                                        row="input",
-                                        column=f"{function.name.identifier}.{variable.identifier}"
-                                    )
-                                    for variable in outputs[label]
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name("loop"),
-                                        name="input"
-                                    )
-                                ],
-                                predicates=[
-                                    sql.variable(row="input", column=".label.this") + " IS NOT DISTINCT FROM " +
-                                    sql.string(label.identifier),
-                                ]
-                            )
-                        )
-                    )
-
-                case CFG.Wait():
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-
-                    gather_cte_name = cte_name + ".gather"
-                    ctes.append(
-                        sql.cte(
-                            name=gather_cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.union_all([
-                                sql.select(
-                                    select_list=[
-                                        sql.variable(row="input", column=".iteration"),
-                                        sql.named(
-                                            sql.variable(row="input", column=".mark") + " - 1",
-                                            name=".mark"
-                                        ),
-                                        sql.variable(row="input", column=".thread.this"),
-                                        sql.variable(row="input", column=".thread.parent"),
-                                        sql.variable(row="input", column=".label.parent"),
-                                    ] + [
-                                        sql.variable(row="input", column=variable.identifier)
-                                        for variable in outputs[label]
-                                    ],
-                                    from_list=[
-                                        sql.named(
-                                            sql.name(predecessor.identifier),
-                                            name="input",
-                                        ),
-                                    ],
-                                ),
-                                sql.select(
-                                    select_list=[
-                                        sql.variable(row="input", column=".iteration"),
-                                        sql.variable(row="input", column=".mark"),
-                                        sql.variable(row="input", column=".thread.this"),
-                                        sql.variable(row="input", column=".thread.parent"),
-                                        sql.variable(row="input", column=".label.parent"),
-                                    ] + [
-                                        sql.variable(
-                                            row="input",
-                                            column=f"{function.name.identifier}.{variable.identifier}"
-                                        )
-                                        for variable in outputs[label]
-                                    ],
-                                    from_list=[
-                                        sql.named(
-                                            sql.name("loop"),
-                                            name="input",
-                                        ),
-                                    ],
-                                    predicates=[
-                                        sql.variable(row="input", column=".label.this") + " IS NOT DISTINCT FROM " +
-                                        sql.string(label.identifier),
-                                    ]
-                                ),
-                            ])
-                        )
-                    )
-
-                    decide_cte_name = cte_name + ".decide"
-                    ctes.append(
-                        sql.cte(
-                            name=decide_cte_name,
-                            materialize=explicit_materialized,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                                ".done",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                        sql.variable(row="input", column=".iteration"),
-                                        sql.named(
-                                            sql.window(
-                                                sql.call(
-                                                    function="MIN",
-                                                    arguments=[
-                                                        sql.variable(row="input", column=".mark")
-                                                    ]
-                                                ),
-                                                partition_by=[
-                                                    sql.variable(row="input", column=".iteration"),
-                                                    sql.variable(row="input", column=".thread.this"),
-                                                ],
-                                                rows=(
-                                                    "UNBOUNDED PRECEDING",
-                                                    "UNBOUNDED FOLLOWING"
-                                                )
-                                            ),
-                                            name=".mark"
-                                        ),
-                                        sql.variable(row="input", column=".thread.this"),
-                                        sql.variable(row="input", column=".thread.parent"),
-                                        sql.variable(row="input", column=".label.parent"),
-                                        sql.named(
-                                            sql.prefix_token(
-                                                prefix="NOT",
-                                                content=sql.call(
-                                                    function="EXISTS",
-                                                    arguments=[sql.select(
-                                                        select_list=[sql.named("1", name="dummy")],
-                                                        from_list=[sql.name("loop")],
-                                                        predicates=[
-                                                            sql.variable(row="loop", column=".mark") + " > " +
-                                                            sql.variable(row="input", column=".mark"),
-                                                            sql.paren(
-                                                                sql.variable(row="loop", column=".thread.this") + " IS NOT DISTINCT FROM " +
-                                                                sql.variable(row="input", column=".thread.this") + " OR\n" +
-                                                                sql.variable(row="loop", column=".thread.parent") + " IS NOT DISTINCT FROM " +
-                                                                sql.variable(row="input", column=".thread.this")
-                                                            )
-                                                        ]
-                                                    )]
-                                                )
-                                            ),
-                                            name=".done"
-                                        )
-                                    ] + [
-                                        sql.variable(row="input", column=variable.identifier)
-                                        for variable in outputs[label]
-                                    ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(gather_cte_name),
-                                        name="input"
-                                    )
-                                ]
-                            )
-                        )
-                    )
-
-                    wait_cte_name = cte_name + ".wait"
-                    ctes.append(
-                        sql.cte(
-                            name=wait_cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".label.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                        sql.variable(row="input", column=".iteration"),
-                                        sql.variable(row="input", column=".mark"),
-                                        sql.variable(row="input", column=".thread.this"),
-                                        sql.named(
-                                            sql.string(label.identifier),
-                                            name=".label.this"
-                                        ),
-                                        sql.variable(row="input", column=".thread.parent"),
-                                        sql.variable(row="input", column=".label.parent"),
-                                    ] + [
-                                        sql.variable(row="input", column=variable.identifier)
-                                        for variable in outputs[label]
-                                    ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(decide_cte_name),
-                                        name="input"
-                                    )
-                                ],
-                                predicates=[
-                                    "NOT " + sql.variable(row="input", column=".done")
-                                ]
-                            )
-                        )
-                    )
-                    sinks.append((
-                        wait_cte_name,
-                        set(outputs[label])
-                    ))
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                        sql.variable(row="input", column=".iteration"),
-                                        sql.variable(row="input", column=".mark"),
-                                        sql.variable(row="input", column=".thread.this"),
-                                        sql.variable(row="input", column=".thread.parent"),
-                                        sql.variable(row="input", column=".label.parent"),
-                                    ] + [
-                                        sql.variable(row="input", column=variable.identifier)
-                                        for variable in outputs[label]
-                                    ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(decide_cte_name),
-                                        name="input"
-                                    )
-                                ],
-                                predicates=[
-                                    sql.variable(row="input", column=".done")
-                                ]
-                            )
-                        )
-                    )
-
-                case CFG.Call(variables, callee, arguments):
-                    assert len(these_predecessors) == 1
-                    predecessor = these_predecessors.pop()
-                    callee = program.functions[callee]
-
-                    prepare_cte_name = cte_name + ".prepare"
-                    ctes.append(
-                        sql.cte(
-                            name=prepare_cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".label.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                                if variable not in variables
-                            ] + [
-                                f"argument.{i}"
-                                for i in range(len(arguments))
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.named(
-                                        sql.paren(
-                                            sql.select(
-                                                select_list=[
-                                                    sql.call(
-                                                        function="COALESCE",
-                                                        arguments=[
-                                                            sql.call(
-                                                                function="MAX",
-                                                                arguments=[
-                                                                    sql.variable(row="loop", column=".thread.this"),
-                                                                ]
-                                                            ),
-                                                            "0"
-                                                        ]
-                                                    )
-                                                ],
-                                                from_list=[
-                                                    sql.name("loop")
-                                                ],
-                                                predicates=[
-                                                    sql.paren(
-                                                        sql.variable(row="loop", column=".label.parent") + " IS NOT DISTINCT FROM " +
-                                                        sql.variable(row="input", column=".label.parent") + " OR\n" +
-                                                        sql.variable(row="loop", column=".label.this") + " IS NOT DISTINCT FROM " +
-                                                        sql.string(label.identifier)
-                                                    )
-                                                ]
-                                            )
-                                        )
-                                        + " + " +
-                                        sql.window(sql.call(function="ROW_NUMBER")),
-                                        name=".thread.this"
-                                    ),
-                                    sql.named(
-                                        sql.string(label.identifier),
-                                        name=".label.this"
-                                    ),
-                                    sql.named(
-                                        sql.variable(row="input", column=".thread.this"),
-                                        name=".thread.parent"
-                                    ),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.variable(row="input", column=variable.identifier)
-                                    for variable in outputs[label]
-                                    if variable not in variables
-                                ] + [
-                                    sql.named(
-                                        sql.variable(row="input", column=variable.identifier),
-                                        name=f"argument.{i}"
-                                    )
-                                    for i, variable in enumerate(arguments)
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(predecessor.identifier),
-                                        name="input"
-                                    )
-                                ]
-                            )
-                        )
-                    )
-                    sinks.append((
-                        prepare_cte_name,
-                        set(outputs[label]) - set(variables)
-                    ))
-
-                    call_cte_name = cte_name + ".call"
-                    ctes.append(
-                        sql.cte(
-                            name=call_cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".label.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                f"argument.{i}"
-                                for i in range(len(arguments))
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.named(
-                                        sql.string(callee.name.identifier),
-                                        name=".label.this"
-                                    ),
-                                    sql.named(
-                                        sql.variable(row="input", column=".thread.this"),
-                                        name=".thread.parent"
-                                    ),
-                                    sql.named(
-                                        sql.string(label.identifier),
-                                        name=".label.parent"
-                                    ),
-                                ] + [
-                                    sql.variable(row="input", column=f"argument.{i}")
-                                    for i in range(len(arguments))
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name(prepare_cte_name),
-                                        name="input"
-                                    )
-                                ]
-                            )
-                        )
-                    )
-                    calls.append((
-                        call_cte_name,
-                        callee.name
-                    ))
-
-                    wait_cte_name = cte_name + ".wait"
-                    ctes.append(
-                        sql.cte(
-                            name=wait_cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".label.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                                if variable not in variables
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.this"),
-                                    sql.variable(row="input", column=".label.this"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.named(
-                                        sql.variable(row="input", column=f"{function.name.identifier}.{variable.identifier}"),
-                                        name=variable.identifier
-                                    )
-                                    for variable in outputs[label]
-                                    if variable not in variables
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name("loop"),
-                                        name="input"
-                                    )
-                                ],
-                                predicates=[
-                                    sql.variable(row="input", column=".label.this") + " IS NOT DISTINCT FROM " +
-                                    sql.string(label.identifier),
-                                    sql.call(
-                                        function="EXISTS",
-                                        arguments=[sql.select(
-                                            select_list=[
-                                                sql.named("1", name="dummy")
-                                            ],
-                                            from_list=[
-                                                sql.name("loop"),
-                                            ],
-                                            predicates=[
-                                                sql.variable(row="loop", column=".label.this") + " IS NOT NULL",
-                                                sql.variable(row="loop", column=".label.parent") + " IS NOT DISTINCT FROM " +
-                                                sql.string(label.identifier),
-                                                sql.paren(
-                                                    sql.variable(row="loop", column=".thread.this") + " IS NOT DISTINCT FROM " +
-                                                    sql.variable(row="input", column=".thread.this") + " AND\n" +
-                                                    sql.variable(row="loop", column=".thread.parent") + " IS NULL OR\n" +
-                                                    sql.variable(row="loop", column=".thread.parent") + " IS NOT DISTINCT FROM " +
-                                                    sql.variable(row="input", column=".thread.this")
-                                                )
-                                            ]
-                                        )]
-                                    )
-                                ]
-                            )
-                        )
-                    )
-                    sinks.append((
-                        wait_cte_name,
-                        set(outputs[label]) - set(variables)
-                    ))
-
-                    ctes.append(
-                        sql.cte(
-                            name=cte_name,
-                            columns=[
-                                ".iteration",
-                                ".mark",
-                                ".thread.this",
-                                ".thread.parent",
-                                ".label.parent",
-                            ] + [
-                                variable.identifier
-                                for variable in outputs[label]
-                            ],
-                            body=sql.select(
-                                select_list=[
-                                    sql.variable(row="input", column=".iteration"),
-                                    sql.variable(row="input", column=".mark"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".thread.parent"),
-                                    sql.variable(row="input", column=".label.parent"),
-                                ] + [
-                                    sql.named(
-                                        (
-                                            sql.variable(
-                                                row="return",
-                                                column=f"{callee.name.identifier}.result.{variables.index(variable)}"
-                                            )
-                                            if variable in variables else
-                                            sql.variable(
-                                                row="input",
-                                                column=f"{function.name.identifier}.{variable.identifier}"
-                                            )
-                                        ),
-                                        name=variable.identifier
-                                    )
-                                    for variable in outputs[label]
-                                ],
-                                from_list=[
-                                    sql.named(
-                                        sql.name("loop"),
-                                        name="input"
-                                    ),
-                                    sql.named(
-                                        sql.name("loop"),
-                                        name="return"
-                                    )
-                                ],
-                                predicates=[
-                                    sql.variable(row="input", column=".label.this") + " IS NOT DISTINCT FROM " +
-                                    sql.string(label.identifier),
-                                    sql.variable(row="return", column=".label.this") + " IS NULL",
-                                    sql.variable(row="return", column=".label.parent") + " IS NOT DISTINCT FROM " +
-                                    sql.string(label.identifier),
-                                    sql.variable(row="return", column=".thread.parent") + " IS NOT DISTINCT FROM " +
-                                    sql.variable(row="input", column=".thread.this"),
-                                ]
-                            )
-                        )
-                    )
-
-
-
-        schema = [
-            *(
-                (
-                    f"{function.name.identifier}.{variable.identifier}",
-                    symbol_table[variable]
-                )
-                for variable in loop_carried_variables
-            ),
-            *(
-                (
-                    f"{function.name.identifier}.result.{i}",
-                    type
-                )
-                for i, type in enumerate(function.return_types)
-            )
-        ]
-
-        loop_schema.extend(
-            column
-            for column, _ in schema
-        )
-
-        nulls = [
-            sql.named(
-                sql.cast(
-                    sql.NULL,
-                    type.source
-                ),
-                name=column
-            )
-            for column, type in schema
-        ]
-
-        if function.name == program.main_function_name:
-            init_list.extend(
-                sql.named(
-                    sql.cast(
-                        sql.variable(
-                            row="input",
-                            column=variable.identifier
-                        )
-                        if variable in function.parameters else
-                        sql.NULL,
-                        symbol_table[variable].source
-                    ),
-                    name=f"{function.name.identifier}.{variable.identifier}",
-                )
-                for variable in loop_carried_variables
-            )
-            init_list.extend(
-                sql.named(
-                    sql.cast(
-                        sql.NULL,
-                        type.source
-                    ),
-                    name=f"{function.name.identifier}.result.{i}",
-                )
-                for i, type in enumerate(function.return_types)
-            )
-        else:
-            init_list.extend(nulls)
-
-        collector_data = [
-            (
-                name,
-                columns + nulls
-            )
-            for name, columns in collector_data
-        ]
-        collector_data.extend(
-            (
-                sql.named(sql.name(name), name="sink"),
-                [
-                    sql.variable(row="sink", column=".iteration") + " + 1",
-                    sql.variable(row="sink", column=".mark"),
-                    sql.variable(row="sink", column=".thread.this"),
-                    sql.variable(row="sink", column=".label.this"),
-                    sql.variable(row="sink", column=".thread.parent"),
-                    sql.variable(row="sink", column=".label.parent"),
-                ] +
-                loop_column_prefix +
-                [
-                    *(
-                        sql.named(
-                            sql.variable(row="sink", column=variable.identifier),
-                            name=f"{function.name.identifier}.{variable.identifier}"
-                        )
-                        if variable in variables else
-                        sql.named(
-                            sql.cast(
-                                sql.NULL,
-                                symbol_table[variable].source
-                            ),
-                            name=f"{function.name.identifier}.{variable.identifier}"
-                        )
-                        for variable in loop_carried_variables
-                    ),
-                    *(
-                        sql.named(
-                            sql.cast(
-                                sql.NULL,
-                                type.source
-                            ),
-                            name=f"{function.name.identifier}.result.{i}"
-                        )
-                        for i, type in enumerate(function.return_types)
-                    )
-                ]
-            )
-            for name, variables in sinks
-        )
-        collector_data.extend(
-            (
-                sql.named(sql.name(name), name="emit"),
-                [
-                    sql.variable(row="emit", column=".iteration") + " + 1",
-                    sql.variable(row="emit", column=".mark"),
-                    sql.named(
-                        sql.cast(sql.NULL, "INT"),
-                        name=".thread.this"
-                    ),
-                    sql.named(
-                        sql.cast(sql.NULL, "TEXT"),
-                        name=".label.this"
-                    ),
-                    sql.variable(row="emit", column=".thread.parent"),
-                    sql.variable(row="emit", column=".label.parent"),
-                ] +
-                loop_column_prefix +
-                [
-                    *(
-                        sql.named(
-                            sql.cast(
-                                sql.NULL,
-                                symbol_table[variable].source
-                            ),
-                            name=f"{function.name.identifier}.{variable.identifier}"
-                        )
-                        for variable in loop_carried_variables
-                    ),
-                    *(
-                        sql.variable(row="emit", column=f".result.{i}")
-                        for i in range(len(function.return_types))
-                    )
-                ]
-            )
-            for name in emits
-        )
-        loop_column_prefix += nulls
-
-    for caller, callee in calls:
-        called_function = program.functions[callee]
-        symbol_table = symbol_tables[callee]
-
-        data_columns = []
-        for column in loop_schema[6:]:
-            origin_function, variable_name = column.split(".", maxsplit=1)
-            variable = common.Identifier(variable_name, annotation=None)
-            origin_function = program.functions[common.Identifier(origin_function, annotation=None)]
-
-            data_columns.append(
-                sql.named(
-                    sql.variable(
-                        row="caller",
-                        column=f"argument.{list(called_function.parameters.keys()).index(variable)}"
-                    )
-                    if origin_function.name == called_function.name and variable in origin_function.parameters else
-                    sql.cast(
-                        sql.NULL,
-                        type=symbol_tables[origin_function.name][
-                            common.Identifier(variable_name, annotation=None)
-                        ].source,
-                    )
-                    if not variable_name.startswith("result.") else
-                    sql.cast(
-                        sql.NULL,
-                        type=origin_function.return_types[int(variable_name[7:])].source,
-                    )
-                    ,
-                    name=column
-                )
-            )
-
-        collector_data.append(
-            (
-                sql.named(sql.name(caller), name="caller"),
-                [
-                    sql.variable(row="caller", column=".iteration") + " + 1",
-                    sql.variable(row="caller", column=".mark"),
-                    sql.variable(row="caller", column=".thread.this"),
-                    sql.variable(row="caller", column=".label.this"),
-                    sql.variable(row="caller", column=".thread.parent"),
-                    sql.variable(row="caller", column=".label.parent"),
-                ] + data_columns
-            )
-        )
+    working_table_schema |= {
+        register: type.source
+        for register, type in registers.items()
+    }
 
     if avoid_multiple_recursive_references:
-        ctes = [
+        ctes.append(
             sql.cte(
-                name="loop",
-                columns=loop_schema,
+                name=names.working_table,
+                columns=list(working_table_schema),
                 body=sql.select(
-                    select_list=["*"],
-                    from_list=[sql.name("loop")],
+                    select_list=list(working_table_schema),
+                    from_list=[sql.name(names.working_table)]
                 )
             )
-        ] + ctes
-
-    whole_program = sql.with_ctes(
-        ctes=[sql.cte(
-            name="loop",
-            columns=loop_schema,
-            body=sql.union_all([
-                sql.select(
-                    select_list=init_list
-                ),
-                sql.with_ctes(
-                    ctes,
-                    body=sql.union_all([
-                        sql.select(
-                            select_list=columns,
-                            from_list=[relation]
-                        )
-                        for relation, columns in collector_data
-                    ])
-                )
-            ])
-        )],
-        recursive=True,
-        body=sql.select(
-            select_list=[
-                sql.variable(
-                    row="loop",
-                    column=f"{program.main_function_name.identifier}.result.{i}"
-                )
-                for i in range(len(program.main_function.return_types))
-            ],
-            from_list=[sql.name("loop")],
-            predicates=[
-                sql.variable(row="loop", column=".thread.this") + " IS NULL",
-                sql.variable(row="loop", column=".label.this") + " IS NULL",
-                sql.variable(row="loop", column=".thread.parent") + " = 0",
-                sql.variable(row="loop", column=".label.parent") + " IS NULL",
-            ]
         )
-    )
 
-    if program.inputs:
-        return sql.select(
-            select_list=['"input".*', '"result".*'],
-            from_list=[
-                sql.named(
-                    sql.paren(program.inputs.source),
-                    name="input",
-                    columns=[
-                        parameter.identifier
-                        for parameter in program.main_function.parameters
+    for name, node in cfg.nodes.items():
+        match node:
+            case CFG.Let(variable, expression):
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.paren(
+                                expression.source.format(*(
+                                    sql.paren(sql.variable(argument.identifier, "p"))
+                                    for argument in expression.arguments
+                                ))
+                            )
+                            if output == variable else
+                            sql.variable(output.identifier, "p"),
+                            output.identifier
+                        )
+                        for output in outputs[name]
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p")
+                    ]
+                )
+
+            case CFG.Return(function, variable):
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                working_table_writers.append(name)
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            Kind.DATA
+                            if column == names.kind else
+                            sql.variable(column,"p")
+                            if column in {names.iteration, names.depth, names.return_label} else
+                            sql.variable(variable.identifier,"p")
+                            if column == result_allocation[function] else
+                            sql.cast("NULL", type),
+                            column
+                        )
+                        for column, type in working_table_schema.items()
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p")
+                    ],
+                )
+
+            case CFG.Where(variable):
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.variable(output.identifier, "p")
+                        for output in outputs[name]
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p")
+                    ],
+                    predicates=[
+                        sql.variable(variable.identifier, "p")
+                    ]
+                )
+
+            case CFG.WhereNot(variable):
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.variable(output.identifier, "p")
+                        for output in outputs[name]
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p")
+                    ],
+                    predicates=[
+                        "NOT " + sql.variable(variable.identifier, "p")
+                    ]
+                )
+
+            case CFG.Merge():
+                body = sql.union_all([
+                    sql.select(
+                        select_list=[
+                            sql.variable(output.identifier, "p")
+                            for output in outputs[name]
+                        ],
+                        from_list=[
+                            sql.named(sql.name(predecessor.identifier), "p")
+                        ],
+                    )
+                    for predecessor in predecessors[name]
+                ])
+
+            case CFG.Push(label):
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                working_table_writers.append(name)
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            Kind.STACK_FRAME
+                            if column == names.kind else
+                            sql.string(label.identifier)
+                            if column == names.label else
+                            sql.variable(variable.identifier, "p")
+                            if (variable := register_allocations[label].get(column)) is not None else
+                            sql.cast("NULL", type),
+                            column
+                        )
+                        for column, type in working_table_schema.items()
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p")
+                    ],
+                )
+
+            case CFG.Pop(label):
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 0
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.variable(variable_allocations[label][output], "p"),
+                            output.identifier
+                        )
+                        for output in outputs[name]
+                    ],
+                    from_list=[
+                        sql.named(sql.name(names.working_table), "p")
+                    ],
+                    predicates=[
+                        sql.string(label.identifier) + " = " +
+                        sql.variable(names.label, "p"),
+                        Kind.STACK_FRAME + " = " +
+                        sql.variable(names.kind, "p"),
+                    ]
+                )
+
+            case CFG.Link(label):
+                assert keep_stackframes_alive
+
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.string(label.identifier)
+                            if output.identifier == names.return_label else
+                            sql.variable(output.identifier, "p") + " + 1"
+                            if output.identifier == names.depth else
+                            sql.variable(output.identifier, "p"),
+                            output.identifier
+                        )
+                        for output in outputs[name]
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p")
+                    ],
+                )
+
+            case CFG.Resume(function, variable):
+                assert keep_stackframes_alive
+
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.variable(result_allocation[function], "d")
+                            if variable == output else
+                            sql.variable(output.identifier, "p"),
+                            output.identifier
+                        )
+                        for output in outputs[name]
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p"),
+                        sql.named(sql.name(names.working_table), "d"),
+                    ],
+                    predicates=[
+                        Kind.DATA + " = " +
+                        sql.variable(names.kind, "d"),
+                        sql.variable(names.return_label, "d") + " = " +
+                        sql.variable(names.label, "p"),
+                        sql.variable(names.depth, "d") + " - 1 = " +
+                        sql.variable(names.depth, "p"),
+                    ]
+                )
+
+            case CFG.Lookup(result, hit, function, arguments):
+                assert keep_memos_alive
+
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.variable(result_allocation[function], "m")
+                            if output == result else
+                            sql.variable(names.kind, "m") + " IS NOT NULL"
+                            if output == hit else
+                            sql.variable(output.identifier, "p"),
+                            output.identifier
+                        )
+                        for output in outputs[name]
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p") +
+                        sql.join(
+                            "LEFT OUTER",
+                            sql.named(sql.name(names.working_table), "m"),
+                            [
+                                Kind.MEMO + " = " +
+                                sql.variable(names.kind, "m"),
+                            ] + [
+                                sql.variable(parameter.identifier, "m") + " = " +
+                                sql.variable(argument.identifier, "p")
+                                for parameter, argument in arguments.items()
+                            ]
+                        )
+                    ],
+                )
+
+            case CFG.Memoize(function, arguments, value):
+                assert keep_memos_alive
+
+                these_predecessors = predecessors[name]
+                assert len(these_predecessors) == 1
+                predecessor = list(these_predecessors)[0]
+
+                working_table_writers.append(name)
+
+                #! [warn] For some reason dictionary lookups using the
+                #!        Identifier objects is simply broken; same hash, same
+                #!        value, everything, but stil...
+                arguments = {
+                    p.identifier: a.identifier
+                    for p, a in arguments.items()
+                }
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.variable(names.iteration, "p")
+                            if column == names.iteration else
+                            Kind.MEMO
+                            if column == names.kind else
+                            sql.variable(value.identifier, "p")
+                            if column == result_allocation[function] else
+                            sql.variable(argument, "p")
+                            if (parameter := register_allocations[function].get(column)) and
+                               (argument := arguments.get(parameter.identifier)) else
+                            sql.cast("NULL", type),
+                            column
+                        )
+                        for column, type in working_table_schema.items()
+                    ],
+                    from_list=[
+                        sql.named(sql.name(predecessor.identifier), "p")
+                    ],
+                )
+
+            case _:
+                raise NotImplementedError()
+
+        ctes.append(
+            sql.cte(
+                name=name.identifier,
+                columns=(
+                    list(working_table_schema)
+                    if name in working_table_writers else
+                    [
+                        output.identifier
+                        for output in outputs[name]
                     ]
                 ),
-                sql.named(
-                    sql.lateral(whole_program),
-                    name="result"
-                )
-            ]
+                body=body,
+                materialize=explicit_materialized and len(cfg.edges[name]) > 1
+            )
         )
-    else:
-        return whole_program
+
+    working_table_writes = [
+        sql.select(
+            select_list=[
+                sql.variable(column, "w") + " + 1"
+                if column == names.iteration else
+                sql.variable(column, "w")
+                for column in working_table_schema
+            ],
+            from_list=[sql.named(sql.name(writer.identifier), "w")]
+        )
+        for writer in working_table_writers
+    ]
+
+    keep_alives = []
+
+    if keep_memos_alive:
+        keep_alives.append(
+            sql.select(
+                distinct=True,
+                select_list=[
+                    sql.variable(column, "m") + " + 1"
+                    if column == names.iteration else
+                    sql.variable(column, "m")
+                    for column in working_table_schema
+                ],
+                from_list=[
+                    sql.named(sql.name(names.working_table), "m"),
+                    sql.named(sql.name(names.working_table), "f"),
+                ],
+                predicates=[
+                    Kind.MEMO + " = " +
+                    sql.variable(names.kind, "m"),
+                    sql.variable(names.label, "f") + " IS NOT NULL",
+                ]
+            )
+        )
+
+    if keep_stackframes_alive:
+        keep_alives.append(
+            sql.select(
+                distinct=True,
+                select_list=[
+                    sql.variable(column, "c") + " + 1"
+                    if column == names.iteration else
+                    sql.variable(column, "c")
+                    for column in working_table_schema
+                ],
+                from_list=[
+                    sql.named(sql.name(names.working_table), "c"),
+                    sql.named(sql.name(names.working_table), "o"),
+                ],
+                predicates=[
+                    Kind.STACK_FRAME + " = " +
+                    sql.variable(names.kind, "c"),
+                    Kind.STACK_FRAME + " = " +
+                    sql.variable(names.kind, "o"),
+                    sql.variable(names.return_label, "o") + " = " +
+                    sql.variable(names.label, "c"),
+                    sql.variable(names.depth, "o") + " + 1 = " +
+                    sql.variable(names.depth, "c"),
+                ]
+            )
+        )
+
+    recursive_anchor = sql.with_ctes(
+        ctes=ctes,
+        body=sql.union_all(working_table_writes + keep_alives)
+    )
+
+    base_anchor = sql.select(
+        select_list=[
+            sql.named(
+                sql.cast('0', "INT")
+                if column == names.iteration else
+                Kind.STACK_FRAME
+                if column == names.kind else
+                sql.string(cfg.entry_label.identifier)
+                if column == names.label else
+                sql.cast("NULL", "TEXT")
+                if column == names.return_label else
+                "0"
+                if column == names.depth else
+                sql.variable(variable.identifier)
+                if (variable := register_allocations[cfg.entry_label].get(column)) is not None else
+                sql.cast("NULL", type),
+                column
+            )
+            for column, type in working_table_schema.items()
+        ]
+    )
+
+    recursive_cte = sql.cte(
+        name=names.working_table,
+        columns=list(working_table_schema),
+        body=sql.union_all([base_anchor, recursive_anchor])
+    )
+
+    extract_results = sql.select(
+        select_list=[
+            sql.variable(result_allocation[None], "p")
+        ],
+        from_list=[
+            sql.named(sql.name(names.working_table), "p")
+        ],
+        predicates=[
+            sql.variable(names.kind, "p") + " = " + Kind.DATA,
+            sql.variable(names.label, "p") + " IS NULL",
+            sql.variable(names.depth, "p") + " = 0"
+        ]
+    )
+
+    return sql.with_ctes(
+        recursive=True,
+        ctes=[recursive_cte],
+        body=extract_results
+    )

@@ -18,15 +18,14 @@ type Loop        = AST.Loop[errors.Location]
 type Break       = AST.Break[errors.Location]
 type Continue    = AST.Continue[errors.Location]
 type Block       = AST.Block[errors.Location]
-type Emit        = AST.Emit[errors.Location]
-type Stop        = AST.Stop[errors.Location]
-type If          = AST.If[errors.Location]
-type Assignment  = AST.Assignment[errors.Location]
-type Sync        = AST.Sync[errors.Location]
-type Fork        = AST.Fork[errors.Location]
-type Join        = AST.Join[errors.Location]
 type NoOp        = AST.NoOp[errors.Location]
+type Return      = AST.Return[errors.Location]
+type If          = AST.If[errors.Location]
+type Let         = AST.Let[errors.Location]
+type TailCall    = AST.TailCall[errors.Location]
 type Call        = AST.Call[errors.Location]
+type Lookup      = AST.Lookup[errors.Location]
+type Memoize     = AST.Memoize[errors.Location]
 type Declaration = AST.Declaration[errors.Location]
 type Expression  = common.Expression[errors.Location]
 type Type        = common.Type[errors.Location]
@@ -55,6 +54,7 @@ class Tokens(parser.Tokens):
     SQL = r"[§][^§]+[§]"
     EQUALS = r"="
     IF = r"IF"
+    TAIL = r"TAIL"
     CALL = r"CALL"
     IN = r"IN"
     AS = r"AS"
@@ -64,14 +64,12 @@ class Tokens(parser.Tokens):
     LOOP = r"LOOP"
     CONTINUE = r"CONTINUE"
     BREAK = r"BREAK"
-    STOP = r"STOP"
+    RETURN = r"RETURN"
     THEN = r"THEN"
     ELSE = r"ELSE"
-    EMIT = r"EMIT"
     NOOP = r"NOOP"
-    SYNC = r"SYNC"
-    FORK = r"FORK"
-    JOIN = r"JOIN"
+    LOOKUP = r"LOOKUP"
+    MEMOIZE = r"MEMOIZE"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -114,22 +112,13 @@ class Parser(parser.Parser[Tokens]):
 
     def parse_program(self) -> Program:
         location = self.current.location
-        self.expect(Tokens.CALL)
-        main_function_name = self.parse_variable()
-        self.expect(Tokens.LEFT_PAREN)
-        if self.match(Tokens.RIGHT_PAREN):
-            inputs = None
-        else:
-            inputs = self.parse_expression()
-            self.expect(Tokens.RIGHT_PAREN)
-        self.expect(Tokens.IN)
-        function_list = [self.parse_function()]
+        statement = self.parse_statement()
+        function_list = []
         while not self.done:
             function_list.append(self.parse_function())
         return common.Program(
             annotation=location,
-            main_function_name=main_function_name,
-            inputs=inputs,
+            statement=statement,
             function_list=function_list
         )
 
@@ -154,7 +143,7 @@ class Parser(parser.Parser[Tokens]):
             }
             self.expect(Tokens.RIGHT_PAREN)
         self.expect(Tokens.RIGHT_ARROW)
-        returns = list(self.sequence(self.parse_type, Tokens.COMMA))
+        return_type = self.parse_type()
         self.expect(Tokens.COLON)
         body = self.parse_statement()
 
@@ -162,7 +151,7 @@ class Parser(parser.Parser[Tokens]):
             annotation=location,
             name=name,
             parameters=parameters,
-            return_types=returns,
+            return_type=return_type,
             body=body
         )
 
@@ -175,26 +164,24 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_break()
         elif self.lookahead(Tokens.IF):
             return self.parse_if()
-        elif self.lookahead(Tokens.EMIT):
-            return self.parse_emit()
+        elif self.lookahead(Tokens.RETURN):
+            return self.parse_return()
         elif self.lookahead(Tokens.LEFT_BRACE):
             return self.parse_block()
         elif self.lookahead(Tokens.NOOP):
             return self.parse_noop()
-        elif self.lookahead(Tokens.STOP):
-            return self.parse_stop()
-        elif self.lookahead(Tokens.SYNC):
-            return self.parse_sync()
         elif self.lookahead(Tokens.LET):
-            return self.parse_assignment()
+            return self.parse_let()
         elif self.lookahead(Tokens.DECLARE):
             return self.parse_declaration()
-        elif self.lookahead(Tokens.FORK):
-            return self.parse_fork()
-        elif self.lookahead(Tokens.JOIN):
-            return self.parse_join()
+        elif self.lookahead(Tokens.TAIL):
+            return self.parse_tail_call()
         elif self.lookahead(Tokens.CALL):
             return self.parse_call()
+        elif self.lookahead(Tokens.LOOKUP):
+            return self.parse_lookup()
+        elif self.lookahead(Tokens.MEMOIZE):
+            return self.parse_memoize()
         else:
             raise self.error("Expected statement.")
 
@@ -242,13 +229,13 @@ class Parser(parser.Parser[Tokens]):
             falsey_branch=falsey_branch
         )
 
-    def parse_emit(self) -> Emit:
+    def parse_return(self) -> Return:
         location = self.current.location
-        self.expect(Tokens.EMIT)
-        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
-        return AST.Emit(
+        self.expect(Tokens.RETURN)
+        variable = self.parse_variable()
+        return AST.Return(
             annotation=location,
-            variables=variables
+            variable=variable
         )
 
     def parse_block(self) -> Block:
@@ -268,29 +255,15 @@ class Parser(parser.Parser[Tokens]):
             annotation=location
         )
 
-    def parse_stop(self) -> Stop:
-        location = self.current.location
-        self.expect(Tokens.STOP)
-        return AST.Stop(
-            annotation=location
-        )
-
-    def parse_sync(self) -> Sync:
-        location = self.current.location
-        self.expect(Tokens.SYNC)
-        return AST.Sync(
-            annotation=location
-        )
-
-    def parse_assignment(self) -> Assignment:
+    def parse_let(self) -> Let:
         location = self.current.location
         self.expect(Tokens.LET)
-        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        variable = self.parse_variable()
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
-        return AST.Assignment(
+        return AST.Let(
             annotation=location,
-            variables=variables,
+            variable=variable,
             expression=expression
         )
 
@@ -306,42 +279,72 @@ class Parser(parser.Parser[Tokens]):
             type=type
         )
 
-    def parse_fork(self) -> Fork:
-        location = self.current.location
-        self.expect(Tokens.FORK)
-        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
-        self.expect(Tokens.EQUALS)
-        expression = self.parse_expression()
-        return AST.Fork(
-            annotation=location,
-            variables=variables,
-            expression=expression
-        )
+    def parse_argument(self) -> tuple[Identifier, Identifier]:
+        parameter = self.parse_variable()
+        self.expect(Tokens.COLON)
+        argument = self.parse_variable()
+        return parameter, argument
 
-    def parse_join(self) -> Join:
+    def parse_tail_call(self) ->TailCall:
         location = self.current.location
-        self.expect(Tokens.JOIN)
-        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
-        self.expect(Tokens.EQUALS)
-        expression = self.parse_expression()
-        return AST.Join(
+        self.expect(Tokens.TAIL)
+        function = self.parse_variable()
+        self.expect(Tokens.LEFT_PAREN)
+        arguments = dict(self.sequence(self.parse_argument, Tokens.COMMA))
+        self.expect(Tokens.RIGHT_PAREN)
+        return AST.TailCall(
             annotation=location,
-            variables=variables,
-            expression=expression
+            function=function,
+            arguments=arguments,
         )
 
     def parse_call(self) -> Call:
         location = self.current.location
         self.expect(Tokens.CALL)
-        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        variable = self.parse_variable()
         self.expect(Tokens.EQUALS)
         function = self.parse_variable()
         self.expect(Tokens.LEFT_PAREN)
-        arguments = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        arguments = dict(self.sequence(self.parse_argument, Tokens.COMMA))
         self.expect(Tokens.RIGHT_PAREN)
         return AST.Call(
             annotation=location,
-            variables=variables,
+            variable=variable,
             function=function,
             arguments=arguments,
+        )
+
+    def parse_lookup(self) -> Lookup:
+        location = self.current.location
+        self.expect(Tokens.LOOKUP)
+        result = self.parse_variable()
+        self.expect(Tokens.COMMA)
+        hit = self.parse_variable()
+        self.expect(Tokens.EQUALS)
+        function = self.parse_variable()
+        self.expect(Tokens.LEFT_PAREN)
+        arguments = dict(self.sequence(self.parse_argument, Tokens.COMMA))
+        self.expect(Tokens.RIGHT_PAREN)
+        return AST.Lookup(
+            annotation=location,
+            result=result,
+            hit=hit,
+            function=function,
+            arguments=arguments,
+        )
+
+    def parse_memoize(self) -> Memoize:
+        location = self.current.location
+        self.expect(Tokens.MEMOIZE)
+        function = self.parse_variable()
+        self.expect(Tokens.LEFT_PAREN)
+        arguments = dict(self.sequence(self.parse_argument, Tokens.COMMA))
+        self.expect(Tokens.RIGHT_PAREN)
+        self.expect(Tokens.EQUALS)
+        variable = self.parse_variable()
+        return AST.Memoize(
+            annotation=location,
+            function=function,
+            arguments=arguments,
+            value=variable,
         )

@@ -11,17 +11,17 @@ __all__ = (
     "Program",
     "Label",
     "Graph",
-    "Conditional",
+    "Let",
+    "Return",
+    "Where",
+    "WhereNot",
     "Merge",
-    "Assignment",
-    "Emit",
-    "Source",
-    "Sink",
-    "Fork",
-    "Join",
-    "Mark",
-    "Wait",
-    "Call",
+    "Push",
+    "Pop",
+    "Link",
+    "Resume",
+    "Lookup",
+    "Memoize",
 )
 
 
@@ -43,9 +43,25 @@ class Node[A](common.Annotated[A], ABC):
 
 
 @dataclass
-class Conditional[A](Node[A]):
-    truthy: list[common.Identifier[A]]
-    falsey: list[common.Identifier[A]]
+class Let[A](Node[A]):
+    variable: common.Identifier[A]
+    expression: common.Expression[A]
+
+
+@dataclass
+class Return[A](Node[A]):
+    function: common.Identifier[A]
+    variable: common.Identifier[A]
+
+
+@dataclass
+class Where[A](Node[A]):
+    variable: common.Identifier[A]
+
+
+@dataclass
+class WhereNot[A](Node[A]):
+    variable: common.Identifier[A]
 
 
 @dataclass
@@ -54,50 +70,36 @@ class Merge[A](Node[A]):
 
 
 @dataclass
-class Assignment[A](Node[A]):
-    variables: list[common.Identifier[A]]
-    expression: common.Expression[A]
-
-
-@dataclass
-class Emit[A](Node[A]):
-    variables: list[common.Identifier[A]]
-
-
-@dataclass
-class Source[A](Node[A]):
+class Push[A](Node[A]):
     label: common.Identifier[A]
 
 
 @dataclass
-class Sink[A](Node[A]):
+class Pop[A](Node[A]):
     label: common.Identifier[A]
 
 
 @dataclass
-class Fork[A](Node[A]):
-    variables: list[common.Identifier[A]]
-    expression: common.Expression[A]
+class Link[A](Node[A]):
+    label: common.Identifier[A]
 
 
 @dataclass
-class Join[A](Node[A]):
-    variables: list[common.Identifier[A]]
-    expression: common.Expression[A]
-
-
-@dataclass
-class Mark[A](Node[A]):
-    ...
-
-
-@dataclass
-class Wait[A](Node[A]):
-    ...
-
-
-@dataclass
-class Call[A](Node[A]):
-    variables: list[common.Identifier[A]]
+class Resume[A](Node[A]):
     function: common.Identifier[A]
-    arguments: list[common.Identifier[A]]
+    variable: common.Identifier[A]
+
+
+@dataclass
+class Lookup[A](Node[A]):
+    result: common.Identifier[A]
+    hit: common.Identifier[A]
+    function: common.Identifier[A]
+    arguments: dict[common.Identifier[A], common.Identifier[A]]
+
+
+@dataclass
+class Memoize[A](Node[A]):
+    function: common.Identifier[A]
+    arguments: dict[common.Identifier[A], common.Identifier[A]]
+    value: common.Identifier[A]

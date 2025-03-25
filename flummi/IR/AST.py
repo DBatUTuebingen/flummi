@@ -13,14 +13,13 @@ __all__ = (
     "Break",
     "Continue",
     "Declaration",
-    "Assignment",
-    "Emit",
+    "Let",
+    "Return",
     "NoOp",
-    "Stop",
-    "Fork",
-    "Join",
-    "Sync",
+    "TailCall",
     "Call",
+    "Lookup",
+    "Memoize",
 )
 
 
@@ -49,8 +48,8 @@ class Break[A](Statement[A]):
 
 
 @dataclass
-class Emit[A](Statement[A]):
-    variables: list[common.Identifier[A]]
+class Return[A](Statement[A]):
+    variable: common.Identifier[A]
 
 
 @dataclass
@@ -60,42 +59,25 @@ class Declaration[A](Statement[A]):
 
 
 @dataclass
-class Assignment[A](Statement[A]):
-    variables: list[common.Identifier[A]]
+class Let[A](Statement[A]):
+    variable: common.Identifier[A]
     expression: common.Expression[A]
 
 
 @dataclass
-class Fork[A](Statement[A]):
-    variables: list[common.Identifier[A]]
-    expression: common.Expression[A]
-
-
-@dataclass
-class Join[A](Statement[A]):
-    variables: list[common.Identifier[A]]
-    expression: common.Expression[A]
-
-
-@dataclass
-class Call[A](Statement[A]):
-    variables: list[common.Identifier[A]]
+class TailCall[A](Statement[A]):
     function: common.Identifier[A]
-    arguments: list[common.Identifier[A]]
+    arguments: dict[common.Identifier[A], common.Identifier[A]]
+
+
+@dataclass
+class Call[A](TailCall[A]):
+    variable: common.Identifier[A]
 
 
 @dataclass
 class Block[A](Statement[A]):
     statements: list[Statement]
-
-
-class Sync[A](Statement[A]):
-    ...
-
-
-@dataclass
-class Stop[A](Statement[A]):
-    ...
 
 
 @dataclass
@@ -108,3 +90,18 @@ class If[A](Statement[A]):
     condition: common.Identifier[A]
     truthy_branch: Statement[A]
     falsey_branch: Statement[A]
+
+
+@dataclass
+class Lookup[A](Statement[A]):
+    result: common.Identifier[A]
+    hit: common.Identifier[A]
+    function: common.Identifier[A]
+    arguments: dict[common.Identifier[A], common.Identifier[A]]
+
+
+@dataclass
+class Memoize[A](Statement[A]):
+    function: common.Identifier[A]
+    arguments: dict[common.Identifier[A], common.Identifier[A]]
+    value: common.Identifier[A]

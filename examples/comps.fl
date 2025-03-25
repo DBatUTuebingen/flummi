@@ -1,0 +1,41 @@
+{
+  DECLARE x, y: §int§;
+  LET x = §here§[];
+  LET y = §there§[];
+  TAIL comps(node: x, target: y)
+}
+
+FUN comps(node: §int§, target: §int§) -> §boolean§: {
+  DECLARE k: §boolean§;
+  DECLARE child: §int§;
+  DECLARE children: §int[]§;
+
+  LET k = §{0} = {1}§[node, target];
+  IF k THEN {
+    LET k = §true§[];
+    RETURN k
+  } ELSE {
+    LET children = §select array_agg(next) from nodes where id = {0}§[node];
+    LET k = §{0} is null§[children];
+    IF k THEN {
+      LET k = §false§[];
+      RETURN k
+    } ELSE {
+      LOOP l {
+        LET node = §{0}[1]§[children];
+        LET k = §len({0}) = 1§[children];
+        IF k THEN {
+          TAIL comps(node: node, target: target)
+        } ELSE {
+          LET children = §{0}[2:]§[children];
+          CALL k = comps(node: node, target: target);
+          IF k THEN {
+            RETURN k
+          } ELSE {
+            CONTINUE l
+          }
+        }
+      }
+    }
+  }
+}

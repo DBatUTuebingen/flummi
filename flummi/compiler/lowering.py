@@ -18,26 +18,23 @@ type Function     = CFG.Function[Annotation]
 type Label        = CFG.Label[Annotation]
 type Graph        = CFG.Graph[Annotation]
 type Node         = CFG.Node[Annotation]
-type Assignment   = CFG.Assignment[Annotation]
-type Conditional  = CFG.Conditional[Annotation]
-type Emit         = CFG.Emit[Annotation]
+type Let          = CFG.Let[Annotation]
+type Where        = CFG.Where[Annotation]
+type WhereNot     = CFG.WhereNot[Annotation]
+type Return       = CFG.Return[Annotation]
+type Push         = CFG.Push[Annotation]
+type Pop          = CFG.Pop[Annotation]
+type Link         = CFG.Link[Annotation]
+type Resume       = CFG.Resume[Annotation]
+type Lookup       = CFG.Lookup[Annotation]
+type Memoize      = CFG.Memoize[Annotation]
 type Expression   = common.Expression[Annotation]
 type Type         = common.Type[Annotation]
 type Identifier   = common.Identifier[Annotation]
 
 
-def lower(program: parser.Program) -> Program:
-    function_lists = [
-        Lowering().lower_function(function)
-        for function in program.function_list
-    ]
-
-    return common.Program(
-        program.main_function_name,
-        program.inputs,
-        function_lists,
-        annotation=program.annotation
-    )
+def lower(program: parser.Program) -> Graph:
+    return Lowering().lower_program(program)
 
 
 class LoweringError(errors.PrettyError, ValueError):
@@ -46,7 +43,8 @@ class LoweringError(errors.PrettyError, ValueError):
 
 @dataclass
 class Lowering:
-    _label_prefix: str = field(init=False)
+    _return_from: Identifier = field(init=False)
+    _label_prefix: str = field(init=False, default_factory=str)
     _nodes: dict[Label, Node] = field(init=False, default_factory=dict)
     _edges: dict[Label, set[Label]] = field(init=False, default_factory=lambda: defaultdict(set))
     _loop_exits: dict[Identifier, list[Label]] = field(init=False, default_factory=lambda: defaultdict(list))
@@ -59,35 +57,56 @@ class Lowering:
             annotation=annotation
         )
 
-    def lower_function(self, function: parser.Function) -> Function:
+    def lower_program(self, program: parser.Program) -> Graph:
+        entry_label = common.Identifier(
+            "@program",
+            annotation=program.annotation
+        )
+
+        start_node = self.make_node(
+            node=CFG.Pop(
+                common.Identifier(
+                    "@program",
+                    annotation=program.annotation
+                ),
+                annotation=program.annotation
+            ),
+            name="program"
+        )
+
+        self._return_from = common.Identifier(
+            "@program",
+            annotation=program.annotation
+        )
+
+        self.lower_statement([start_node], program.statement)
+
+        for function in program.function_list:
+            self.lower_function(function)
+
+        return CFG.Graph(
+            entry_label=entry_label,
+            nodes=self._nodes,
+            edges=self._edges,
+            annotation=program.annotation
+        )
+
+    def lower_function(self, function: parser.Function) -> None:
+        self._return_from = function.name
+
         self._label_prefix = function.name.identifier
 
         entry_label = self.make_node(
-            node=CFG.Source(
+            node=CFG.Pop(
                 function.name,
                 annotation=function.annotation
             ),
-            name="entry"
+            name="function"
         )
 
         self.lower_statement(
             predecessors=[entry_label],
             statement=function.body
-        )
-
-        graph: Graph = CFG.Graph(
-            entry_label=entry_label,
-            nodes=self._nodes,
-            edges=self._edges,
-            annotation=function.body.annotation
-        )
-
-        return common.Function(
-            name=function.name, # type: ignore
-            parameters=function.parameters,
-            return_types=function.return_types,
-            body=graph,
-            annotation=function.annotation
         )
 
     def make_node(
@@ -123,14 +142,6 @@ class Lowering:
                 location
             )
 
-    def make_mark(self, predecessor: Label, location: errors.Location) -> Label:
-        return self.make_node(
-            predecessors=[predecessor],
-            node=CFG.Mark(
-                annotation=location
-            )
-        )
-
     def lower_statement(
         self,
         predecessors: list[Label],
@@ -146,16 +157,13 @@ class Lowering:
             case AST.NoOp():
                 return predecessors
 
-            case AST.Stop():
-                return []
-
-            case AST.Assignment(variables, expression):
+            case AST.Let(variable, expression):
                 predecessor = self.make_merge(predecessors, statement.annotation)
 
                 this_label = self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Assignment(
-                        variables=variables,
+                    node=CFG.Let(
+                        variable=variable,
                         expression=expression,
                         annotation=statement.annotation
                     )
@@ -163,18 +171,19 @@ class Lowering:
 
                 return [this_label]
 
-            case AST.Emit(variables):
+            case AST.Return(variable):
                 predecessor = self.make_merge(predecessors, statement.annotation)
 
                 this_label = self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Emit(
-                        variables=variables,
+                    node=CFG.Return(
+                        function=self._return_from,
+                        variable=variable,
                         annotation=statement.annotation
                     )
                 )
 
-                return [predecessor]
+                return []
 
             case AST.Block(statements):
                 for statement in statements:
@@ -191,9 +200,8 @@ class Lowering:
 
                 truthy_label = self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Conditional(
-                        truthy=[condition],
-                        falsey=[],
+                    node=CFG.Where(
+                        variable=condition,
                         annotation=statement.annotation
                     ),
                     name="truthy"
@@ -205,9 +213,8 @@ class Lowering:
 
                 falsey_label = self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Conditional(
-                        truthy=[],
-                        falsey=[condition],
+                    node=CFG.WhereNot(
+                        variable=condition,
                         annotation=statement.annotation
                     ),
                     name="falsey"
@@ -220,30 +227,27 @@ class Lowering:
                 return final_truthy_label + final_falsey_label
 
             case AST.Loop(name, body):
-                predecessor = self.make_merge(predecessors, statement.annotation)
-                mark_label = self.make_mark(predecessor, statement.annotation)
-
-                source_label = self.make_node(
-                    node=CFG.Source(
+                pop_label = self.make_node(
+                    node=CFG.Pop(
                         name,
                         annotation=statement.annotation
                     ),
-                    name=name.identifier
+                    name="loop_head"
                 )
 
                 loop_labels = self.lower_statement(
-                    [mark_label, source_label],
+                    predecessors + [pop_label],
                     body
                 )
 
                 for loop_label in loop_labels:
                     self.make_node(
                         predecessors=[loop_label],
-                        node=CFG.Sink(
+                        node=CFG.Push(
                             name,
                             annotation=statement.annotation
                         ),
-                        name="loop"
+                        name="loop_back"
                     )
 
                 return self._loop_exits[name]
@@ -253,7 +257,7 @@ class Lowering:
 
                 self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Sink(
+                    node=CFG.Push(
                         name,
                         annotation=statement.annotation
                     ),
@@ -267,61 +271,121 @@ class Lowering:
 
                 return []
 
-            case AST.Sync():
+            case AST.Call(function, arguments, variable):
                 predecessor = self.make_merge(predecessors, statement.annotation)
 
-                wait_label = self.make_node(
+                callsite = self._make_label("@callsite", annotation=statement.annotation)
+
+                self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Wait(
+                    node=CFG.Push(
+                        callsite,
+                        annotation=statement.annotation
+                    ),
+                    name="suspend",
+                )
+
+                link_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Link(
+                        callsite,
                         annotation=statement.annotation
                     )
                 )
 
-                return [wait_label]
-
-            case AST.Fork(variables, expression):
-                predecessor = self.make_merge(predecessors, statement.annotation)
-                mark_label = self.make_mark(predecessor, statement.annotation)
-
-                fork_label = self.make_node(
-                    predecessors=[mark_label],
-                    node=CFG.Fork(
-                        variables,
-                        expression,
-                        annotation=statement.annotation
-                    )
-                )
-
-                return [fork_label]
-
-            case AST.Call(variables, function, arguments):
-                predecessor = self.make_merge(predecessors, statement.annotation)
-
-                call_label = self.make_node(
-                    predecessors=[predecessor],
-                    node=CFG.Call(
-                        variables,
+                self.lower_statement(
+                    [link_label],
+                    AST.TailCall(
                         function,
                         arguments,
                         annotation=statement.annotation
                     )
                 )
 
-                return [call_label]
+                pop_label = self.make_node(
+                    node=CFG.Pop(
+                        callsite,
+                        annotation=statement.annotation
+                    ),
+                    name="awake"
+                )
 
-            case AST.Join(variables, expression):
-                predecessor = self.make_merge(predecessors, statement.annotation)
-
-                join_label = self.make_node(
-                    predecessors=[predecessor],
-                    node=CFG.Join(
-                        variables,
-                        expression,
+                resume_label = self.make_node(
+                    predecessors=[pop_label],
+                    node=CFG.Resume(
+                        function,
+                        variable,
                         annotation=statement.annotation
                     )
                 )
 
-                return [join_label]
+                return [resume_label]
+
+            case AST.TailCall(function, arguments):
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                predecessors = self.lower_statement(
+                    [predecessor],
+                    AST.Block(
+                        statements=[
+                            AST.Let(
+                                parameter,
+                                common.Expression(
+                                    "{0}",
+                                    arguments=[argument],
+                                    annotation=argument.annotation
+                                ),
+                                annotation=parameter.annotation
+                            )
+                            for parameter, argument in arguments.items()
+                        ],
+                        annotation=statement.annotation
+                    )
+                )
+
+                assert len(predecessors) == 1
+
+                self.make_node(
+                    predecessors=predecessors,
+                    node=CFG.Push(
+                        function,
+                        annotation=statement.annotation
+                    ),
+                    name="call"
+                )
+
+                return []
+
+            case AST.Lookup(result, hit, function, arguments):
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                lookup_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Lookup(
+                        result,
+                        hit,
+                        function,
+                        arguments,
+                        annotation=statement.annotation
+                    )
+                )
+
+                return [lookup_label]
+
+            case AST.Memoize(function, arguments, value):
+                predecessor = self.make_merge(predecessors, statement.annotation)
+
+                memoize_label = self.make_node(
+                    predecessors=[predecessor],
+                    node=CFG.Memoize(
+                        function,
+                        arguments,
+                        value,
+                        annotation=statement.annotation
+                    )
+                )
+
+                return [predecessor]
 
             case _:
                 raise LoweringError(

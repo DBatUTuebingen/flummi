@@ -18,60 +18,68 @@ class AnalysisError(errors.PrettyError):
 type SymbolTable[A] = dict[common.Identifier[A], common.Type[A]]
 
 
-def analyze(
-    program: parser.Program
-) -> tuple[parser.Program, dict[common.Identifier, SymbolTable[errors.Location]]]:
-    for i, function in enumerate(program.function_list):
-        for other_function in program.function_list[i+1:]:
-            if function.name.identifier == other_function.name.identifier:
-                raise AnalysisError(
-                    "Found definition of function "
-                    f"{other_function.name.identifier!r}",
-                    other_function.annotation,
-                    "",
-                    "...that was already definied.",
-                    function.annotation
-                )
-
-    if (
-        program.inputs is not None and
-        len(program.main_function.parameters) == 0
-    ):
-        raise AnalysisError(
-            "Program supplies an input expression...",
-            program.inputs.annotation,
-            "",
-            "...but the defined function did not expect one.",
-            next(iter(program.main_function.parameters)).annotation
-        )
-
-    symbol_tables: dict[common.Identifier, SymbolTable] = {}
-    for i, function in enumerate(program.function_list):
-        program.function_list[i], symbol_table =\
-            Analyzer(program).analyze(function)
-        symbol_tables[function.name] = symbol_table
-
-    return program, symbol_tables
+def analyze(program: parser.Program) -> tuple[parser.Program, SymbolTable[errors.Location]]:
+    return Analyzer().analyze_program(program)
 
 
 @dataclass
 class Analyzer:
-    program          : AST.Program
+    functions      : dict[parser.Identifier, parser.Function] = field(init=False)
 
-    function_name    : parser.Identifier = field(init=False)
+    symbol_table   : SymbolTable             = field(init=False, default_factory=dict)
+    bound_symbols  : set[parser.Identifier]  = field(init=False, default_factory=set)
 
-    symbol_table     : SymbolTable             = field(init=False, default_factory=dict)
-    bound_symbols    : set[parser.Identifier]  = field(init=False, default_factory=set)
+    loop_names     : set[parser.Identifier]        = field(init=False, default_factory=set)
+    loop_scope     : list[parser.Identifier]       = field(init=False, default_factory=list)
+    loop_broken    : dict[parser.Identifier, bool] = field(init=False, default_factory=dict)
+    loop_stopped   : dict[parser.Identifier, bool] = field(init=False, default_factory=dict)
 
-    loop_names       : set[parser.Identifier]        = field(init=False, default_factory=set)
-    loop_scope       : list[parser.Identifier]       = field(init=False, default_factory=list)
-    loop_broken      : dict[parser.Identifier, bool] = field(init=False, default_factory=dict)
-    loop_stopped     : dict[parser.Identifier, bool] = field(init=False, default_factory=dict)
+    variable_prefix: str = field(init=False, default_factory=str)
 
-    def analyze(
+    def analyze_program(
         self,
-        function: AST.Function
-    ) -> tuple[AST.Function, SymbolTable]:
+        program: parser.Program
+    ) -> tuple[parser.Program, SymbolTable]:
+        self.functions = program.functions
+
+        for i, function in enumerate(program.function_list):
+            function.parameters = {
+                common.Identifier(
+                    function.name.identifier + "." + parameter.identifier,
+                    annotation=parameter.annotation
+                ): type
+                for parameter, type in function.parameters.items()
+            }
+
+            for other_function in program.function_list[i+1:]:
+                if function.name.identifier == other_function.name.identifier:
+                    raise AnalysisError(
+                        "Found definition of function "
+                        f"{other_function.name.identifier!r}",
+                        other_function.annotation,
+                        "",
+                        "...that was already definied.",
+                        function.annotation
+                    )
+
+        program.statement, stopped, _ = self.analyze_statement(program.statement)
+
+        if not stopped:
+            raise AnalysisError(
+                "Not all linear control paths in the top level statement are "
+                "termianted by a RETURN statement.",
+                program.statement.annotation
+            )
+
+        program.function_list = [
+            self.analyze_function(function)
+            for function in program.function_list
+        ]
+
+        return program, self.symbol_table
+
+    def analyze_function(self, function: parser.Function) -> parser.Function:
+        self.variable_prefix = function.name.identifier + "."
         self.symbol_table.update(function.parameters)
         self.bound_symbols.update(function.parameters.keys())
         self.function_name = function.name
@@ -81,16 +89,16 @@ class Analyzer:
         if not stopped:
             raise AnalysisError(
                 "Not all linear control paths in this function are termianted "
-                "by a STOP statement.",
+                "by a RETURN statement.",
                 function.annotation
             )
 
-        return function, self.symbol_table
+        return function
 
     def analyze_statement(
         self,
-        statement: AST.Statement
-    ) -> tuple[AST.Statement, bool, bool]:
+        statement: parser.Statement
+    ) -> tuple[parser.Statement, bool, bool]:
         match statement:
             case AST.Block(statements):
                 if not statements:
@@ -127,6 +135,7 @@ class Analyzer:
 
             case AST.Declaration(variables, type):
                 for variable in variables:
+                    variable.identifier = self.variable_prefix + variable.identifier
                     if variable in self.symbol_table:
                         original_declaration = next(
                             _variable
@@ -146,40 +155,19 @@ class Analyzer:
 
                 return statement, False, True
 
-            case AST.Assignment(variables, expression) | AST.Fork(variables, expression) | AST.Join(variables, expression):
+            case AST.Let(variable, expression):
                 self.analyze_expression(expression)
-
-                for variable in variables:
-                    self.analyze_variable_write(variable)
+                self.analyze_variable_write(variable)
 
                 return statement, False, False
 
-            case AST.Emit(variables):
-                function = self.program.functions[self.function_name]
-                delta = len(function.return_types)- len(variables)
-                if delta != 0:
-                    raise AnalysisError(
-                        f"Found {["less", "more"][delta > 0]} "
-                        "returned values...",
-                        statement.annotation,
-                        "",
-                        "...than expected.",
-                        function.annotation
-                    )
+            case AST.Return(variable):
+                self.analyze_variable_read(variable)
 
-                for variable in variables:
-                    self.analyze_variable_read(variable)
-
-                return statement, False, False
-
-            case AST.Stop():
                 for loop_label in self.loop_scope:
                     self.loop_stopped[loop_label] = True
 
                 return statement, True, False
-
-            case AST.Sync():
-                return statement, False, False
 
             case AST.If(condition, truthy_branch, falsey_branch):
                 self.analyze_variable_read(condition)
@@ -271,35 +259,27 @@ class Analyzer:
 
                 return statement, False, False
 
-            case AST.Call(variables, function, arguments):
-                if function not in self.program.functions:
-                    raise AnalysisError(
-                        "Found call to unknown function ",
-                        f"{function.identifier!r}.",
-                        function.annotation,
-                    )
+            case AST.Call(function, arguments, variable):
+                self.analyze_call_parameters(function, arguments)
+                self.analyze_variable_write(variable)
 
-                function = self.program.functions[function]
+                return statement, False, False
 
-                if len(arguments) != len(function.parameters):
-                    raise AnalysisError(
-                        "Found mismatch between number of arguments...",
-                        arguments[-1].annotation,
-                        "...and the number expected.",
-                        function.annotation
-                    )
-                for argument in arguments:
-                    self.analyze_variable_read(argument)
+            case AST.TailCall(function, arguments):
+                self.analyze_call_parameters(function, arguments)
 
-                if len(variables) != len(function.return_types):
-                    raise AnalysisError(
-                        "Found mismatch between number of bound variables...",
-                        variables[-1].annotation,
-                        "...and the number expected.",
-                        function.return_types[-1].annotation
-                    )
-                for variable in variables:
-                    self.analyze_variable_write(variable)
+                return statement, True, False
+
+            case AST.Lookup(result, hit, function, arguments):
+                self.analyze_call_parameters(function, arguments)
+                self.analyze_variable_write(result)
+                self.analyze_variable_write(hit)
+
+                return statement, False, False
+
+            case AST.Memoize(function, arguments, value):
+                self.analyze_call_parameters(function, arguments)
+                self.analyze_variable_read(value)
 
                 return statement, False, False
 
@@ -313,7 +293,32 @@ class Analyzer:
         for variable in expression.arguments:
             self.analyze_variable_read(variable)
 
+    def analyze_call_parameters(self, function: parser.Identifier, arguments: dict[parser.Identifier, parser.Identifier]):
+        if function not in self.functions:
+            raise AnalysisError(
+                "Found call to unknown function ",
+                f"{function.identifier!r}.",
+                function.annotation,
+            )
+
+        function_definition = self.functions[function]
+
+        for parameter in arguments.keys():
+            parameter.identifier = function.identifier + "." + parameter.identifier
+
+        if arguments.keys() != function_definition.parameters.keys():
+            raise AnalysisError(
+                "Found mismatch between arguments...",
+                list(arguments.values())[-1].annotation,
+                "...and the expected parameters.",
+                function.annotation,
+                str(function_definition.parameters)
+            )
+        for argument in arguments.values():
+            self.analyze_variable_read(argument)
+
     def analyze_variable_read(self, variable: parser.Identifier):
+        variable.identifier = self.variable_prefix + variable.identifier
         if variable not in self.bound_symbols:
             raise AnalysisError(
                 "Found read from uninitialised variable "
@@ -322,6 +327,7 @@ class Analyzer:
             )
 
     def analyze_variable_write(self, variable: parser.Identifier):
+        variable.identifier = self.variable_prefix + variable.identifier
         if variable not in self.bound_symbols:
             if variable not in self.symbol_table:
                 raise AnalysisError(

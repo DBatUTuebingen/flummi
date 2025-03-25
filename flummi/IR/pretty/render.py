@@ -1,8 +1,5 @@
-from typing import Any
-
-from .. import CFG, common
+from .. import CFG
 from .pretty import pretty
-from ...library import errors
 
 
 __all__ = (
@@ -23,101 +20,71 @@ graph [
 edge [
     fontname = "{font}",
 ];
-{subgraphs}
+{nodes}
 {edges}
-}}
-"""
-
-FUNCTION_TEMPLATE= """\
-subgraph "func%{name}" {{
-cluster=true;
-{body}
-label="{name}({parameters}) -> {return_types}"
 }}
 """
 
 NODE_TEMPLATE = '"{label}" [label="{body}",{style}];'
 
 NODE_STYLES: dict[type[CFG.Node], str] = {
-    CFG.Source:      'color = forestgreen    , fontcolor = forestgreen    ',
-    CFG.Sink:        'color = firebrick      , fontcolor = firebrick      ',
-    CFG.Join:        'color = goldenrod      , fontcolor = goldenrod      ',
-    CFG.Fork:        'color = purple         , fontcolor = purple         ',
-    CFG.Wait:        'color = orange         , fontcolor = orange         ',
-    CFG.Mark:        'color = royalblue      , fontcolor = royalblue      ',
-    CFG.Conditional: 'color = mediumvioletred, fontcolor = mediumvioletred',
-    CFG.Emit:        'color = darkcyan       , fontcolor = darkcyan       ',
-    CFG.Merge:       'color = darkcyan       , fontcolor = darkcyan       ',
-    CFG.Assignment:  'color = darkcyan       , fontcolor = darkcyan       ',
-    CFG.Call:        'color = navy           , fontcolor = navy           ',
+    CFG.Pop:      'style = filled, fillcolor = orange         , color = white, fontcolor = white',
+    CFG.Push:     'style = filled, fillcolor = goldenrod      , color = white, fontcolor = white',
+    CFG.Where:    'style = filled, fillcolor = forestgreen    , color = white, fontcolor = white',
+    CFG.WhereNot: 'style = filled, fillcolor = forestgreen    , color = white, fontcolor = white',
+    CFG.Merge:    'style = filled, fillcolor = darkcyan       , color = white, fontcolor = white',
+    CFG.Let:      'style = filled, fillcolor = royalblue      , color = white, fontcolor = white',
+    CFG.Return:   'style = filled, fillcolor = navy           , color = white, fontcolor = white',
+    CFG.Link:     'style = filled, fillcolor = firebrick      , color = white, fontcolor = white',
+    CFG.Resume:   'style = filled, fillcolor = crimson        , color = white, fontcolor = white',
+    CFG.Lookup:   'style = filled, fillcolor = purple         , color = white, fontcolor = white',
+    CFG.Memoize:  'style = filled, fillcolor = mediumvioletred, color = white, fontcolor = white',
 }
 
 def render(
-    program: common.Program[Any, CFG.Graph[errors.Location]],
+    graph: CFG.Graph,
     *,
     font: str = "monospace"
 ) -> str:
-    subgraphs = []
+    nodes = (
+        NODE_TEMPLATE.format(
+            label=label.identifier,
+            body=(
+                f"{{{
+                    pretty(node)
+                    .replace("\n", "\\l")
+                    .replace(" ", "\\ ")
+                    .replace("{", "\\{")
+                    .replace("}", "\\}")
+                    .replace("<", "\\<")
+                    .replace(">", "\\>")
+                }\\l|{{{label.identifier}\\l|@{label.annotation.column}:{label.annotation.line}}}}}"
+            ),
+            style=NODE_STYLES.get(type(node), '')
+        )
+        for label, node in graph.nodes.items()
+    )
+
     edges = []
 
-    for function in program.function_list:
-        nodes = (
-            NODE_TEMPLATE.format(
-                label=label.identifier,
-                body=(
-                    f"{{{
-                        pretty(node)
-                        .replace("\n", "\\l")
-                        .replace(" ", "\\ ")
-                        .replace("{", "\\{")
-                        .replace("}", "\\}")
-                        .replace("<", "\\<")
-                        .replace(">", "\\>")
-                    }\\l|@{label.annotation.column}:{label.annotation.line}}}"
-                ),
-                style=NODE_STYLES.get(type(node), '')
-            )
-            for label, node in function.body.nodes.items()
-        )
+    edges.extend(
+        f'"{source.identifier}":s -> "{target.identifier}":n;'
+        for source, targets in graph.edges.items()
+        for target in targets
+    )
 
-        edges.extend(
-            f'"{source.identifier}":s -> "{target.identifier}":n;'
-            for source, targets in function.body.edges.items()
-            for target in targets
-        )
+    edges.extend(
+        f'"{sink.identifier}":s -> "{source.identifier}":n [style="dashed"];'
+        for sink, sink_node in graph.nodes.items()
+        if isinstance(sink_node, CFG.Push)
+        for source, source_node in graph.nodes.items()
+        if isinstance(source_node, CFG.Pop)
+        and sink_node.label == source_node.label
+    )
 
-        edges.extend(
-            f'"{sink.identifier}":s -> "{source.identifier}":n [style="dashed"];'
-            for sink, sink_node in function.body.nodes.items()
-            if isinstance(sink_node, CFG.Sink)
-            for source, source_node in function.body.nodes.items()
-            if isinstance(source_node, CFG.Source)
-            and sink_node.label == source_node.label
-        )
-
-        edges.extend(
-            f'"{label.identifier}":s -> "{program.functions[node.function].body.entry_label.identifier}":n [style="dotted"];'
-            for label, node in function.body.nodes.items()
-            if isinstance(node, CFG.Call)
-        )
-
-        subgraphs.append(
-             FUNCTION_TEMPLATE.format(
-                name=function.name.identifier,
-                parameters=", ".join(
-                    f"{name.identifier}: {type.source}"
-                    for name, type in function.parameters.items()
-                ),
-                return_types=", ".join(
-                    type.source
-                    for type in function.return_types
-                ),
-                body="\n".join(nodes)
-            )
-        )
 
     return PRORGAM_TEMPLATE.format(
-        subgraphs="\n".join(subgraphs),
+        nodes="\n".join(nodes),
         edges="\n".join(edges),
         font=font
     )
