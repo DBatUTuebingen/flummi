@@ -43,6 +43,7 @@ def codegen(
         isinstance(node, (CFG.Link, CFG.Resume))
         for node in cfg.nodes.values()
     )
+
     working_table_schema: dict[str, str] = {
         names.iteration: "INT",
         names.kind: "TEXT",
@@ -405,7 +406,8 @@ def codegen(
                 predicates=[
                     Kind.MEMO + " = " +
                     sql.variable(names.kind, "m"),
-                    sql.variable(names.label, "f") + " IS NOT NULL",
+                    Kind.STACK_FRAME + " = " +
+                    sql.variable(names.label, "f"),
                 ]
             )
         )
@@ -414,24 +416,42 @@ def codegen(
         keep_alives.append(
             sql.select(
                 select_list=[
-                    sql.variable(column, "c") + " + 1"
+                    sql.variable(column, "f") + " + 1"
                     if column == names.iteration else
-                    sql.variable(column, "c")
+                    sql.variable(column, "f")
                     for column in working_table_schema
                 ],
                 from_list=[
-                    sql.named(sql.name(names.working_table), "c"),
-                    sql.named(sql.name(names.working_table), "o"),
+                    sql.named(sql.name(names.working_table), "f"),
+                    sql.named(
+                        sql.paren(sql.select(
+                            select_list=[
+                                sql.named(
+                                    sql.call(
+                                        "MAX",
+                                        [
+                                            sql.variable(names.depth, "m")
+                                        ]
+                                    ),
+                                    names.max_depth
+                                )
+                            ],
+                            from_list=[
+                                sql.named(sql.name(names.working_table), "m")
+                            ],
+                            predicates=[
+                                Kind.STACK_FRAME + " = " +
+                                sql.variable(names.kind, "m"),
+                            ]
+                        )),
+                        "m"
+                    ),
                 ],
                 predicates=[
                     Kind.STACK_FRAME + " = " +
-                    sql.variable(names.kind, "c"),
-                    Kind.STACK_FRAME + " = " +
-                    sql.variable(names.kind, "o"),
-                    sql.variable(names.return_label, "o") + " = " +
-                    sql.variable(names.label, "c"),
-                    sql.variable(names.depth, "o") + " - " +
-                    sql.variable(names.depth, "c") + " = 1",
+                    sql.variable(names.kind, "f"),
+                    sql.variable(names.max_depth, "m") + " > " +
+                    sql.variable(names.depth, "f"),
                 ]
             )
         )
