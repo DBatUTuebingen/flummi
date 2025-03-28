@@ -59,6 +59,7 @@ def render(
                     .replace("}", "\\}")
                     .replace("<", "\\<")
                     .replace(">", "\\>")
+                    .replace("\"", "\\\"")
                 }\\l|{{{label.identifier}\\l|@{label.annotation.column}:{label.annotation.line}}}}}"
             ),
             style=NODE_STYLES.get(type(node), '')
