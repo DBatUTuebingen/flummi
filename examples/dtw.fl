@@ -3,6 +3,7 @@
   LET i = §_.i§[];
   LET j = §__.j§[];
   TAIL dtw(i: i, j: j)
+  -- TAIL dtw_memo(i: i, j: j)
 }
 
 FUN dtw(i: §int§, j: §int§) -> §float§: {
@@ -34,3 +35,54 @@ FUN dtw(i: §int§, j: §int§) -> §float§: {
     }
   }
 }
+
+FUN dtw_memo(i: §int§, j: §int§) -> §float§: {
+  DECLARE k, hit: §boolean§;
+  DECLARE _i,_j: §int§;
+  DECLARE a,b,c,x,y,w: §float§;
+
+  LET k = §{0} == 0 and {1} == 0§[i,j];
+  IF k THEN {
+    LET w = §0.0§[];
+    RETURN w
+  } ELSE {
+    LET k = §{0} == 0 or {1} == 0§[i,j];
+    IF k THEN {
+      LET w = §'+inf' :: float§[];
+      RETURN w
+    } ELSE {
+      LET _i = §{0} - 1§[i];
+      LET _j = §{0} - 1§[j];
+
+      LOOKUP a, hit = dtw_memo(i: _i, j:  j);
+      IF hit THEN {
+        NOOP
+      } ELSE {
+        CALL a = dtw_memo(i: _i, j: j);
+        MEMOIZE dtw_memo(i: _i, j: j) = a
+      };
+
+      LOOKUP b, hit = dtw_memo(i: i, j: _j);
+      IF hit THEN {
+        NOOP
+      } ELSE {
+        CALL b = dtw_memo(i: i, j: _j);
+        MEMOIZE dtw_memo(i: i, j: _j) = b
+      };
+
+      LOOKUP c, hit = dtw_memo(i: _i, j: _j);
+      IF hit THEN {
+        NOOP
+      } ELSE {
+        CALL c = dtw_memo(i: _i, j: _j);
+        MEMOIZE dtw_memo(i: _i, j: _j) = c
+      };
+
+      LET x = §select val from X where idx = {0}§[i];
+      LET y = §select val from Y where idx = {0}§[j];
+      LET w = §abs({0} - {1}) + least({2}, {3}, {4})§[x,y,a,b,c];
+      RETURN w
+    }
+  }
+}
+

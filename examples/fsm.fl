@@ -1,0 +1,36 @@
+{
+  DECLARE state: §int§;
+  DECLARE input: §text§;
+  LET state = §0§[];
+  LET input = §_.input§[];
+  TAIL parse(state: state, input: input)
+}
+
+FUN parse(state: §int§, input: §text§) -> §boolean§: {
+  DECLARE k: §boolean§;
+
+  LET k = §length({0}) = 0§[input];
+  IF k THEN {
+    LET k = §
+      SELECT DISTINCT edge.final
+      FROM   fsm AS edge
+      WHERE  {0} = edge.source
+    §[state];
+    RETURN k
+  } ELSE {
+    LET state = §
+      SELECT edge.target
+      FROM   fsm AS edge
+      WHERE  {0} = edge.source
+      AND    strpos(edge.labels, left({1}, 1)) > 0
+    §[state,input];
+    LET k = §{0} IS NULL§[state];
+    IF k THEN {
+      LET k = §FALSE§[];
+      RETURN k
+    } ELSE {
+      LET input = §right({0}, -1)§[input];
+      TAIL parse(state: state, input: input)
+    }
+  }
+}

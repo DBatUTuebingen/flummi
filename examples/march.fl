@@ -1,0 +1,159 @@
+{
+  DECLARE current, goal: §point§;
+  DECLARE track: §boolean§;
+  DECLARE trace: §popoint§;
+
+  LET current = §{{x: x, y: y}}§[];
+  LET goal = §{{x: x, y: y}}§[];
+  LET track = §false§[];
+  LET trace = §[]§[];
+
+  TAIL march_regular(current: current, goal: goal, track: track)
+  -- TAIL march_tail(current: current, goal: goal, track: track, trace: trace)
+  -- TAIL march_iter(start: current)
+}
+
+FUN march_regular(current: §point§, goal: §point§, track: §boolean§) -> §popoint§: {
+  DECLARE k: §boolean§;
+  DECLARE trace: §popoint§;
+  DECLARE direction: §direction§;
+  DECLARE next: §point§;
+
+  LET k = §{0} AND {1} = {2}§[track, current, goal];
+  IF k THEN {
+    LET trace = §[]§[];
+    RETURN trace
+  } ELSE {
+    LET direction = §
+      SELECT d
+      FROM   squares AS s,
+             directions AS d
+      WHERE  s.xy[1] = {0}.x
+      AND    s.xy[2] = {0}.y
+      AND    s.ll = d.ll
+      AND    s.lr = d.lr
+      AND    s.ul = d.ul
+      AND    s.ur = d.ur
+    §[current];
+
+    LET k = §{0} IS NULL§[direction];
+    IF k THEN {
+      LET trace = §NULL§[];
+      RETURN trace
+    } ELSE NOOP;
+
+    LET k = §NOT {0} AND {1}."track?"§[track,direction];
+    IF k THEN {
+      LET track = §TRUE§[];
+      LET goal = §{0}§[current]
+    } ELSE NOOP;
+
+    LET next = §
+      {{
+        x: {0}.x + {1}.dirx,
+        y: {0}.y + {1}.diry,
+      }}
+    §[current, direction];
+
+    CALL trace = march_regular(current: next, goal: goal, track: track);
+
+    IF track THEN LET trace = §[{0}] || {1}§[current, trace] ELSE NOOP;
+
+    RETURN trace
+  }
+}
+
+FUN march_tail(current: §point§, goal: §point§, track: §boolean§, trace: §point[]§) -> §point[]§: {
+  DECLARE k: §boolean§;
+  DECLARE direction: §direction§;
+  DECLARE next: §point§;
+
+  LET k = §{0} AND {1} = {2}§[track, current, goal];
+  IF k THEN RETURN trace
+  ELSE {
+    LET direction = §
+      SELECT d
+      FROM   squares AS s,
+             directions AS d
+      WHERE  s.xy[1] = {0}.x
+      AND    s.xy[2] = {0}.y
+      AND    s.ll = d.ll
+      AND    s.lr = d.lr
+      AND    s.ul = d.ul
+      AND    s.ur = d.ur
+    §[current];
+
+    LET k = §{0} IS NULL§[direction];
+    IF k THEN {
+      LET trace = §NULL§[];
+      RETURN trace
+    } ELSE NOOP;
+
+    LET k = §NOT {0} AND {1}."track?"§[track,direction];
+    IF k THEN {
+      LET track = §TRUE§[];
+      LET goal = §{0}§[current]
+    } ELSE NOOP;
+
+    IF track THEN LET trace = §{0} || [{1}]§[trace, current] ELSE NOOP;
+
+    LET next = §
+      {{
+        x: {0}.x + {1}.dirx,
+        y: {0}.y + {1}.diry,
+      }}
+    §[current, direction];
+
+    TAIL march_tail(current: next, goal: goal, track: track, trace: trace)
+  }
+}
+
+FUN march_iter(start: §point§) -> §point[]§: {
+  DECLARE k, track: §boolean§;
+  DECLARE direction: §direction§;
+  DECLARE current, goal: §point§;
+  DECLARE trace: §point[]§;
+
+  LET track = §FALSE§[];
+  LET trace = §[]§[];
+  LET current = §{0}§[start];
+  LET goal = §NULL§[];
+
+  LOOP l {
+    LET k = §{0} AND {1} IS NOT DISTINCT FROM {2}§[track, current, goal];
+    IF k THEN BREAK l
+    ELSE {
+      LET direction = §
+        SELECT d
+        FROM   squares AS s,
+               directions AS d
+        WHERE  s.xy[1] = {0}.x
+        AND    s.xy[2] = {0}.y
+        AND    s.ll = d.ll
+        AND    s.lr = d.lr
+        AND    s.ul = d.ul
+        AND    s.ur = d.ur
+      §[current];
+
+      LET k = §{0} IS NULL§[direction];
+      IF k THEN BREAK l ELSE NOOP;
+
+      LET k = §NOT {0} AND {1}."track?"§[track,direction];
+      IF k THEN {
+        LET track = §TRUE§[];
+        LET goal = §{0}§[current]
+      } ELSE NOOP;
+
+      IF track THEN LET trace = §{0} || [{1}]§[trace, current] ELSE NOOP;
+
+      LET current = §
+      {{
+        x: {0}.x + {1}.dirx,
+        y: {0}.y + {1}.diry,
+      }}
+      §[current, direction]
+    }
+  };
+
+  RETURN trace
+}

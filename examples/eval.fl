@@ -2,6 +2,7 @@
   DECLARE e: §expression§;
   LET e = §expr§[];
   TAIL eval(e: e)
+  -- TAIL eval_memo(e: e)
 }
 
 FUN eval(e: §expression§) -> §numeric§: {
@@ -18,6 +19,52 @@ FUN eval(e: §expression§) -> §numeric§: {
     CALL left  = eval(e: child);
     LET  child = §select e from expression as e where {0}.arg2 = e.node§[e];
     CALL right = eval(e: child);
+
+    LET k = §{0}.op = '+'§[e];
+    IF k THEN {
+      LET res = §{0} + {1}§[left, right];
+      RETURN res
+    } ELSE {
+      LET k = §{0}.op = '*'§[e];
+      IF k THEN {
+        LET res = §{0} * {1}§[left, right];
+        RETURN res
+      } ELSE {
+        LET res = §NULL§[];
+        RETURN res
+      }
+    }
+  }
+}
+
+
+FUN eval_memo(e: §expression§) -> §numeric§: {
+  DECLARE k, hit: §boolean§;
+  DECLARE res, left, right: §numeric§;
+  DECLARE child: §expression§;
+
+  LET k = §{0}.op = 'ℓ'§[e];
+  IF k THEN {
+    LET res = §{0}.lit§[e];
+    RETURN res
+  } ELSE {
+    LET  child = §select e from expression as e where {0}.arg1 = e.node§[e];
+    LOOKUP left, hit = eval_memo(e: child);
+    IF hit THEN {
+      NOOP
+    } ELSE {
+      CALL left = eval_memo(e: child);
+      MEMOIZE eval_memo(e: child) = left
+    };
+
+    LET  child = §select e from expression as e where {0}.arg2 = e.node§[e];
+    LOOKUP right, hit = eval_memo(e: child);
+    IF hit THEN {
+      NOOP
+    } ELSE {
+      CALL right = eval_memo(e: child);
+      MEMOIZE eval_memo(e: child) = right
+    };
 
     LET k = §{0}.op = '+'§[e];
     IF k THEN {
