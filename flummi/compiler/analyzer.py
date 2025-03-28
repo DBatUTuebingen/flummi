@@ -36,6 +36,8 @@ class Analyzer:
 
     variable_prefix: str = field(init=False, default_factory=str)
 
+    called_functions: set[parser.Identifier] = field(init=False, default_factory=set)
+
     def analyze_program(
         self,
         program: parser.Program
@@ -71,10 +73,20 @@ class Analyzer:
                 program.statement.annotation
             )
 
-        program.function_list = [
-            self.analyze_function(function)
-            for function in program.function_list
-        ]
+        stack = list(self.called_functions)
+        seen = set()
+        analyzed_functions = []
+
+        while stack:
+            function = stack.pop()
+            seen.add(function)
+            self.called_functions = set()
+            analyzed_functions.append(
+                self.analyze_function(program.functions[function])
+            )
+            stack += list(self.called_functions - seen)
+
+        program.function_list = analyzed_functions
 
         return program, self.symbol_table
 
@@ -262,11 +274,13 @@ class Analyzer:
             case AST.Call(function, arguments, variable):
                 self.analyze_call_parameters(function, arguments)
                 self.analyze_variable_write(variable)
+                self.called_functions.add(function)
 
                 return statement, False, False
 
             case AST.TailCall(function, arguments):
                 self.analyze_call_parameters(function, arguments)
+                self.called_functions.add(function)
 
                 return statement, True, False
 
