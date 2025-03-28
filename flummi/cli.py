@@ -158,9 +158,7 @@ def cli():
                     variable_allocations,
                     result_allocation,
                     explicit_materialized=Flag.EXPLICIT_MATERIALIZED in flags,
-                    avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCES in flags,
-                    keep_memos_alive=True,
-                    keep_stackframes_alive=True
+                    avoid_multiple_recursive_references=Flag.AVOID_MULTIPLE_RECURSIVE_REFERENCES in flags
                 )
 
                 if arguments.output:

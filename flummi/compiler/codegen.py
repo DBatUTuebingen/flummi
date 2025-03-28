@@ -26,14 +26,23 @@ def codegen(
     #? [info] config
     explicit_materialized: bool = False,
     avoid_multiple_recursive_references: bool = False,
-    keep_stackframes_alive: bool = True,
-    keep_memos_alive: bool = True,
+    keep_stackframes_alive: bool = False,
+    keep_memos_alive: bool = False,
 ) -> str:
     predecessors = graph.invert(cfg.edges)
 
     working_table_writers = []
     ctes = []
 
+    keep_memos_alive |= any(
+        isinstance(node, (CFG.Lookup, CFG.Memoize))
+        for node in cfg.nodes.values()
+    )
+
+    keep_stackframes_alive |= any(
+        isinstance(node, (CFG.Link, CFG.Resume))
+        for node in cfg.nodes.values()
+    )
     working_table_schema: dict[str, str] = {
         names.iteration: "INT",
         names.kind: "TEXT",
