@@ -12,7 +12,7 @@ __all__ = (
     "Label",
     "Graph",
     "Let",
-    "Return",
+    "Emit",
     "Where",
     "WhereNot",
     "Merge",
@@ -49,7 +49,7 @@ class Let[A](Node[A]):
 
 
 @dataclass
-class Return[A](Node[A]):
+class Emit[A](Node[A]):
     function: common.Identifier[A]
     variable: common.Identifier[A]
 

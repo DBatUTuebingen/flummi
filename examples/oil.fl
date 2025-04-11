@@ -1,0 +1,53 @@
+{
+  DECLARE pivot_x, pivot_y: §int§;
+  LET pivot_x = §start.x§[];
+  LET pivot_y = §start.y§[];
+
+  TAIL oil_iter(
+    pivot_x: pivot_x,
+    pivot_y: pivot_y
+  )
+}
+
+
+FUN oil_iter(pivot_x: §int§, pivot_y: §int§) -> §struct(x int, y int, yield int)§: {
+  DECLARE c: §boolean§;
+  DECLARE yield: §int§;
+  DECLARE slope, cost: §float§;
+  DECLARE current: §struct(x int, y int, cost int, slope float)§;
+  DECLARE well: §struct(x int, y int, yield int)§;
+
+  LET well = §NULL§[];
+  LET slope = §'-Infinity' :: float§[];
+  LET cost = §'-Infinity' :: float§[];
+  LET yield = §
+    SELECT abs(e.c)
+    FROM   endpoints AS e
+    WHERE  e.x = {0}
+    AND    e.y = {1}
+  §[pivot_x, pivot_y];
+
+  LOOP loop {
+    LET current = §
+      SELECT  {{x: e.x, y: e.y, cost: actual_cost, slope: rot}}
+      FROM    endpoints AS e,
+      LATERAL (SELECT (e.x - {0}) :: float / (e.y - {1}),
+                      CASE WHEN {1} > e.y THEN -e.c ELSE e.c END) AS _(rot, actual_cost)
+      WHERE   e.y <> {1}
+      AND     (rot > {2} OR
+               rot = {2} AND actual_cost < {3})
+      ORDER BY rot, actual_cost DESC
+      LIMIT 1
+    §[pivot_x, pivot_y, slope, cost];
+
+    LET c = §{0} IS NULL§[current];
+    IF c THEN { EMIT well; STOP } ELSE NOOP;
+
+    LET slope = §{0}.slope§[current];
+    LET cost = §{0}.cost§[current];
+    LET yield = §{0} + {1}§[yield, cost];
+
+    LET c = §{0} IS NULL OR {1} > {0}.yield§[well, yield];
+    IF c THEN LET well = §{{x: {0}.x, y: {0}.y, yield: {1}}}§[current, yield] ELSE NOOP
+  }
+}

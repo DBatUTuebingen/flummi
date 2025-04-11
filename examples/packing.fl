@@ -1,0 +1,107 @@
+{
+  DECLARE orderkey, capacity: §int§;
+  LET orderkey = §o.o_orderkey§[];
+  LET capacity = §60§[];
+
+  TAIL pack(
+    orderkey: orderkey,
+    capacity: capacity
+  )
+}
+
+FUN pack(orderkey: §int§, capacity: §int§) -> §text[]§: {
+  DECLARE c: §boolean§;
+  DECLARE n, items, size, subset, max_size, max_subset, linenumber: §int§;
+  DECLARE pack: §text§;
+  DECLARE packs: §text[]§;
+
+  LET packs = §array[] :: text[]§[];
+
+  -- # of lineitems in order
+  LET n = §
+    SELECT COUNT(*) :: int
+    FROM   lineitem AS l
+    WHERE  l.l_orderkey = {0}
+  §[orderkey];
+
+  -- orderkey not found or container capacity sufficient to hold the largest part?
+  LET c = §
+    {0} = 0 OR
+    {2} < (SELECT MAX(p.p_size)
+           FROM   lineitem AS l,
+                  part AS p
+           WHERE  l.l_orderkey = {1}
+           AND    l.l_partkey = p.p_partkey)
+  §[n, orderkey, capacity];
+  IF c THEN {
+    LET packs = §NULL§[];
+    EMIT packs;
+    STOP
+  } ELSE {
+    LET items = §(1 << {0}) - 1§[n];
+
+    LOOP outer {
+      -- as long as there are still lineitems to pack...
+      LET c = §{0} = 0§[items];
+      IF c THEN BREAK outer ELSE {
+        LET max_size = §0§[];
+        LET max_subset = §0§[]; -- ∅
+
+        -- iterate through all non-empty subsets of items
+        LET subset = §{0} & -{0}§[items];
+
+        LOOP inner_1 {
+          -- find size of current lineitem subset o
+          LET size = §
+            SELECT SUM(p.p_size)
+            FROM   lineitem AS l,
+                   part AS p
+            WHERE  l.l_orderkey = {0}
+            AND    {1} & (1 << l.l_linenumber - 1) <> 0
+            AND    l.l_partkey = p.p_partkey
+          §[orderkey, subset];
+
+          LET c = §{0} <= {1} AND {0} > {2}§[size, capacity, max_size];
+          IF c THEN {
+            LET max_size = §{0}§[size];
+            LET max_subset = §{0}§[subset]
+          } ELSE NOOP;
+
+          LET c = §{0} = {1}§[subset, items];
+          IF c
+          -- exit if iterated through all lineitem subsets ...
+          THEN BREAK inner_1
+          -- ... else, consider next lineitem subset
+          ELSE LET subset = §{0} & ({1} - {0})§[items, subset]
+        };
+
+        -- convert bit set max_subset into set of linenumbers
+        LET pack = §''§[];
+        LET linenumber = §0§[];
+        LOOP inner_2 {
+          LET linenumber = §{0} + 1§[linenumber];
+          LET c = §{0} > {1}§[linenumber, n];
+          IF c THEN BREAK inner_2 ELSE {
+            LET c = §{0} & (1 << {1} - 1) <> 0§[max_subset, linenumber];
+            IF c
+            THEN LET pack = §{0} || '#'§[pack]
+            ELSE LET pack = §{0} || '.'§[pack]
+          }
+        };
+
+        -- emit pack
+        LET packs = §list_append({0}, {1})§[packs, pack];
+
+        -- we've selected lineitems in set max_subset,
+        -- update items to remove these lineitems
+        LET items = §{0} & (-{1} - 1)§[items, max_subset]
+        -- ⚠️ if pointwise inversion is supported as an operator use it instead ;)
+        -- LET items = §{0} & ~{1}§[items, max_subset]
+      }
+    }
+  };
+
+  EMIT packs;
+  STOP
+}
+

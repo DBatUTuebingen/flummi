@@ -49,7 +49,7 @@ def plan_data_flow[A](ast: AST.Program[A], cfg: CFG.Graph[A], symbol_table: Symb
         function.name: RESULT(function.name, function.annotation).identifier
         for function in ast.function_list
     } | {
-        None: "@result"
+        common.Identifier("@program", annotation=ast.annotation): "@result"
     }
 
     return outputs, registers, variable_allocations, register_allocations, result_allocation
@@ -100,7 +100,7 @@ def free_variables[A](node: CFG.Node[A]) -> set[common.Identifier[A]]:
         case CFG.Let(_, common.Expression(_, variables)):
             return set(variables)
 
-        case CFG.Return(_, variable):
+        case CFG.Emit(_, variable):
             return {
                 variable,
                 RETURN_LABEL(node.annotation),

@@ -21,7 +21,7 @@ type Node         = CFG.Node[Annotation]
 type Let          = CFG.Let[Annotation]
 type Where        = CFG.Where[Annotation]
 type WhereNot     = CFG.WhereNot[Annotation]
-type Return       = CFG.Return[Annotation]
+type Emit         = CFG.Emit[Annotation]
 type Push         = CFG.Push[Annotation]
 type Pop          = CFG.Pop[Annotation]
 type Link         = CFG.Link[Annotation]
@@ -43,7 +43,7 @@ class LoweringError(errors.PrettyError, ValueError):
 
 @dataclass
 class Lowering:
-    _return_from: Identifier = field(init=False)
+    _emit_from: Identifier = field(init=False)
     _label_prefix: str = field(init=False, default_factory=str)
     _nodes: dict[Label, Node] = field(init=False, default_factory=dict)
     _edges: dict[Label, set[Label]] = field(init=False, default_factory=lambda: defaultdict(set))
@@ -74,7 +74,7 @@ class Lowering:
             name="program"
         )
 
-        self._return_from = common.Identifier(
+        self._emit_from = common.Identifier(
             "@program",
             annotation=program.annotation
         )
@@ -92,7 +92,7 @@ class Lowering:
         )
 
     def lower_function(self, function: parser.Function) -> None:
-        self._return_from = function.name
+        self._emit_from = function.name
 
         self._label_prefix = function.name.identifier
 
@@ -171,19 +171,22 @@ class Lowering:
 
                 return [this_label]
 
-            case AST.Return(variable):
+            case AST.Stop():
+                return []
+
+            case AST.Emit(variable):
                 predecessor = self.make_merge(predecessors, statement.annotation)
 
                 this_label = self.make_node(
                     predecessors=[predecessor],
-                    node=CFG.Return(
-                        function=self._return_from,
+                    node=CFG.Emit(
+                        function=self._emit_from,
                         variable=variable,
                         annotation=statement.annotation
                     )
                 )
 
-                return []
+                return [predecessor]
 
             case AST.Block(statements):
                 for statement in statements:

@@ -1,0 +1,54 @@
+{
+  DECLARE c: §boolean§;
+  DECLARE result: §text§;
+  DECLARE custkey, ground, air, mail: §int§;
+
+  LET custkey = §c.c_custkey§[];
+
+  LET ground = §
+    SELECT COUNT(*)
+    FROM   lineitem AS l, orders AS o
+    WHERE  l.l_orderkey = o.o_orderkey AND o.o_custkey = {0}
+    AND    l.l_shipmode IN ('RAIL', 'TRUCK')
+  §[custkey];
+  LET air = §
+    SELECT COUNT(*)
+    FROM   lineitem AS l, orders AS o
+    WHERE  l.l_orderkey = o.o_orderkey AND o.o_custkey = {0}
+    AND    l.l_shipmode IN ('AIR', 'AIR REG')
+  §[custkey];
+  LET mail = §
+    SELECT COUNT(*)
+    FROM   lineitem AS l, orders AS o
+    WHERE  l.l_orderkey = o.o_orderkey AND o.o_custkey = {0}
+    AND    l.l_shipmode = 'MAIL'
+  §[custkey];
+
+  LET c = §{0} >= {1} AND {0} >= {2}§[ground,air,mail];
+  IF c
+  THEN {
+    LET result = §'ground'§[];
+    EMIT result;
+    STOP
+  } ELSE {
+    LET c = §{0} >= {1} AND {0} >= {2}§[air,ground,mail];
+    IF c
+    THEN {
+      LET result = §'air'§[];
+      EMIT result;
+      STOP
+    } ELSE {
+      LET c = §{0} >= {1} AND {0} >= {2}§[mail,ground,air];
+      IF c
+      THEN {
+        LET result = §'mail'§[];
+        EMIT result;
+        STOP
+      } ELSE {
+        LET result = §NULL§[];
+        EMIT result;
+        STOP
+      }
+    }
+  }
+}

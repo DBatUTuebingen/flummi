@@ -1,0 +1,266 @@
+{
+  DECLARE cloud: §int§;
+  LET cloud = §cloud_id§[];
+
+  TAIL giftwrap_iter(cloud: cloud)
+  -- TAIL giftwrap_iter_tbv(cloud: cloud)
+  -- TAIL giftwrap_rec_start(cloud: cloud)
+  -- TAIL giftwrap_tail_start(cloud: cloud)
+}
+
+-- *iterative version*
+FUN giftwrap_iter(cloud: §int§) -> §int[]§: {
+  DECLARE c: §boolean§;
+  DECLARE poh0, poh: §struct(cloud int, label int, x int, y int)§;
+  DECLARE poh0_label, poh_label: §int§;
+  DECLARE poh_x, poh_y: §hugeint§;
+  DECLARE wrap: §int[]§;
+
+  -- poh0 is leftmost point in S (and is on the hull)
+  LET poh0 = §
+    SELECT pt
+    FROM   points AS pt
+    WHERE  pt.cloud = {0}
+    ORDER BY pt.x
+    LIMIT 1
+  §[cloud];
+
+  LET poh0_label = §{0}.label§[poh0];
+  LET poh_label = §{0}.label§[poh0];
+  LET poh_x = §{0}.x§[poh0];
+  LET poh_y = §{0}.y§[poh0];
+  LET wrap = §[]§[];
+
+  LOOP loop {
+    -- emit point on hull
+    LET wrap = §{0} || [{1}]§[wrap,poh_label];
+
+    -- find point p1 in S such that no point p2 in S is to the left of line poh—p1
+    LET poh = §
+      SELECT p1
+      FROM   points AS p1
+      WHERE  p1.cloud = {0}
+      AND    p1.label <> {1}
+      AND    NOT EXISTS (SELECT 1
+                        FROM   points AS p2
+                        WHERE  left_of(p2.x, p2.y, {2}, {3}, p1.x, p1.y)
+                        AND    p2.cloud = {0})
+    §[cloud, poh_label, poh_x, poh_y];
+
+    LET poh_label = §{0}.label§[poh];
+    LET poh_x = §{0}.x§[poh];
+    LET poh_y = §{0}.y§[poh];
+
+    LET c = §{0} = {1}§[poh_label, poh0_label];
+
+    IF c THEN BREAK loop ELSE NOOP
+  };
+
+  EMIT wrap;
+  STOP
+}
+
+-- *iterative version*
+FUN giftwrap_iter_tbv(cloud: §int§) -> §int[]§: {
+  DECLARE c: §boolean§;
+  DECLARE poh0, poh: §struct(cloud int, label int, x int, y int)§;
+  DECLARE poh0_label, poh_label: §int§;
+  DECLARE poh_x, poh_y: §hugeint§;
+
+  -- poh0 is leftmost point in S (and is on the hull)
+  LET poh0 = §
+    SELECT pt
+    FROM   points AS pt
+    WHERE  pt.cloud = {0}
+    ORDER BY pt.x
+    LIMIT 1
+  §[cloud];
+
+  LET poh0_label = §{0}.label§[poh0];
+  LET poh_label = §{0}.label§[poh0];
+  LET poh_x = §{0}.x§[poh0];
+  LET poh_y = §{0}.y§[poh0];
+
+  LOOP loop {
+    -- emit point on hull
+    EMIT poh_label;
+
+    -- find point p1 in S such that no point p2 in S is to the left of line poh—p1
+    LET poh = §
+      SELECT p1
+      FROM   points AS p1
+      WHERE  p1.cloud = {0}
+      AND    p1.label <> {1}
+      AND    NOT EXISTS (SELECT 1
+                        FROM   points AS p2
+                        WHERE  left_of(p2.x, p2.y, {2}, {3}, p1.x, p1.y)
+                        AND    p2.cloud = {0})
+    §[cloud, poh_label, poh_x, poh_y];
+
+    LET poh_label = §{0}.label§[poh];
+    LET poh_x = §{0}.x§[poh];
+    LET poh_y = §{0}.y§[poh];
+
+    LET c = §{0} = {1}§[poh_label, poh0_label];
+
+    IF c THEN STOP ELSE NOOP
+  }
+}
+
+-- *regular recursive version*
+FUN giftwrap_rec_start(cloud: §int§) -> §int[]§: {
+  DECLARE c: §boolean§;
+  DECLARE poh0, poh: §struct(cloud int, label int, x int, y int)§;
+  DECLARE poh0_label, poh_label: §int§;
+  DECLARE poh_x, poh_y: §hugeint§;
+
+  -- poh0 is leftmost point in S (and is on the hull)
+  LET poh0 = §
+    SELECT pt
+    FROM   points AS pt
+    WHERE  pt.cloud = {0}
+    ORDER BY pt.x
+    LIMIT 1
+  §[cloud];
+
+  LET poh0_label = §{0}.label§[poh0];
+  LET poh_label = §{0}.label§[poh0];
+  LET poh_x = §{0}.x§[poh0];
+  LET poh_y = §{0}.y§[poh0];
+
+  TAIL giftwrap_rec_loop(
+    cloud: cloud,
+    poh0_label: poh0_label,
+    poh_label: poh_label,
+    poh_x: poh_x,
+    poh_y: poh_y
+  )
+}
+
+FUN giftwrap_rec_loop(
+  cloud: §int§,
+  poh0_label: §int§,
+  poh_label: §int§,
+  poh_x: §hugeint§,
+  poh_y: §hugeint§
+) -> §int[]§: {
+  DECLARE c: §boolean§;
+  DECLARE next: §struct(cloud int, label int, x int, y int)§;
+  DECLARE next_label: §int§;
+  DECLARE next_x, next_y: §hugeint§;
+  DECLARE wrap: §int[]§;
+
+  LET c = §{0} = {1}§[poh_label, poh0_label];
+  IF c THEN {
+    LET wrap = §[]§[];
+    EMIT wrap;
+    STOP
+  } ELSE {
+    -- find point p1 in S such that no point p2 in S is to the left of line poh—p1
+    LET next = §
+      SELECT p1
+      FROM   points AS p1
+      WHERE  p1.cloud = {0}
+      AND    p1.label <> {1}
+      AND    NOT EXISTS (SELECT 1
+                        FROM   points AS p2
+                        WHERE  left_of(p2.x, p2.y, {2}, {3}, p1.x, p1.y)
+                        AND    p2.cloud = {0})
+    §[cloud, poh_label, poh_x, poh_y];
+
+    LET next_label = §{0}.label§[next];
+    LET next_x = §{0}.x§[next];
+    LET next_y = §{0}.y§[next];
+
+    CALL wrap = giftwrap_rec_loop(
+      cloud: cloud,
+      poh0_label: poh0_label,
+      poh_label: next_label,
+      poh_x: next_x,
+      poh_y: next_y
+    );
+    LET wrap = §[{1}] || {0}§[wrap,poh_label];
+    EMIT wrap;
+    STOP
+  }
+}
+
+-- *tail recursive version*
+FUN giftwrap_tail_start(cloud: §int§) -> §int[]§: {
+  DECLARE c: §boolean§;
+  DECLARE poh0, poh: §struct(cloud int, label int, x int, y int)§;
+  DECLARE poh0_label, poh_label: §int§;
+  DECLARE poh_x, poh_y: §hugeint§;
+  DECLARE wrap: §int[]§;
+
+  LET wrap = §[]§[];
+
+  -- poh0 is leftmost point in S (and is on the hull)
+  LET poh0 = §
+    SELECT pt
+    FROM   points AS pt
+    WHERE  pt.cloud = {0}
+    ORDER BY pt.x
+    LIMIT 1
+  §[cloud];
+
+  LET poh0_label = §{0}.label§[poh0];
+  LET poh_label = §{0}.label§[poh0];
+  LET poh_x = §{0}.x§[poh0];
+  LET poh_y = §{0}.y§[poh0];
+
+  TAIL giftwrap_tail_loop(
+    cloud: cloud,
+    poh0_label: poh0_label,
+    poh_label: poh_label,
+    poh_x: poh_x,
+    poh_y: poh_y,
+    wrap: wrap
+  )
+}
+
+FUN giftwrap_tail_loop(
+  cloud: §int§,
+  poh0_label: §int§,
+  poh_label: §int§,
+  poh_x: §hugeint§,
+  poh_y: §hugeint§,
+  wrap: §int[]§
+) -> §int[]§: {
+  DECLARE c: §boolean§;
+  DECLARE next: §struct(cloud int, label int, x int, y int)§;
+  DECLARE next_label: §int§;
+  DECLARE next_x, next_y: §hugeint§;
+
+  -- emit point on hull
+  LET wrap = §{0} || [{1}]§[wrap,poh_label];
+
+  -- find point p1 in S such that no point p2 in S is to the left of line poh—p1
+  LET next = §
+    SELECT p1
+    FROM   points AS p1
+    WHERE  p1.cloud = {0}
+    AND    p1.label <> {1}
+    AND    NOT EXISTS (SELECT 1
+                      FROM   points AS p2
+                      WHERE  left_of(p2.x, p2.y, {2}, {3}, p1.x, p1.y)
+                      AND    p2.cloud = {0})
+  §[cloud, poh_label, poh_x, poh_y];
+
+  LET next_label = §{0}.label§[next];
+  LET next_x = §{0}.x§[next];
+  LET next_y = §{0}.y§[next];
+
+  LET c = §{0} = {1}§[next_label, poh0_label];
+
+  IF c
+  THEN {EMIT wrap; STOP}
+  ELSE TAIL giftwrap_tail_loop(
+    cloud: cloud,
+    poh0_label: poh0_label,
+    poh_label: next_label,
+    poh_x: next_x,
+    poh_y: next_y,
+    wrap: wrap
+  )
+}

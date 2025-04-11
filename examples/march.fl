@@ -22,7 +22,8 @@ FUN march_regular(current: §point§, goal: §point§, track: §boolean§) -> §
   LET k = §{0} AND {1} = {2}§[track, current, goal];
   IF k THEN {
     LET trace = §[]§[];
-    RETURN trace
+    EMIT trace;
+    STOP
   } ELSE {
     LET direction = §
       SELECT d
@@ -39,7 +40,8 @@ FUN march_regular(current: §point§, goal: §point§, track: §boolean§) -> §
     LET k = §{0} IS NULL§[direction];
     IF k THEN {
       LET trace = §NULL§[];
-      RETURN trace
+      EMIT trace;
+      STOP
     } ELSE NOOP;
 
     LET k = §NOT {0} AND {1}."track?"§[track,direction];
@@ -59,7 +61,8 @@ FUN march_regular(current: §point§, goal: §point§, track: §boolean§) -> §
 
     IF track THEN LET trace = §[{0}] || {1}§[current, trace] ELSE NOOP;
 
-    RETURN trace
+    EMIT trace;
+    STOP
   }
 }
 
@@ -69,7 +72,7 @@ FUN march_tail(current: §point§, goal: §point§, track: §boolean§, trace: �
   DECLARE next: §point§;
 
   LET k = §{0} AND {1} = {2}§[track, current, goal];
-  IF k THEN RETURN trace
+  IF k THEN { EMIT trace; STOP }
   ELSE {
     LET direction = §
       SELECT d
@@ -86,7 +89,8 @@ FUN march_tail(current: §point§, goal: §point§, track: §boolean§, trace: �
     LET k = §{0} IS NULL§[direction];
     IF k THEN {
       LET trace = §NULL§[];
-      RETURN trace
+      EMIT trace;
+      STOP
     } ELSE NOOP;
 
     LET k = §NOT {0} AND {1}."track?"§[track,direction];
@@ -155,5 +159,6 @@ FUN march_iter(start: §point§) -> §point[]§: {
     }
   };
 
-  RETURN trace
+  EMIT trace;
+  STOP
 }

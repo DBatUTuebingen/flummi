@@ -67,7 +67,10 @@ def codegen(
                 name=names.working_table,
                 columns=list(working_table_schema),
                 body=sql.select(
-                    select_list=list(working_table_schema),
+                    select_list=[
+                        sql.variable(column)
+                        for column in working_table_schema
+                    ],
                     from_list=[sql.name(names.working_table)]
                 )
             )
@@ -100,7 +103,7 @@ def codegen(
                     ]
                 )
 
-            case CFG.Return(function, variable):
+            case CFG.Emit(function, variable):
                 these_predecessors = predecessors[name]
                 assert len(these_predecessors) == 1
                 predecessor = list(these_predecessors)[0]
@@ -407,7 +410,7 @@ def codegen(
                     Kind.MEMO + " = " +
                     sql.variable(names.kind, "m"),
                     Kind.STACK_FRAME + " = " +
-                    sql.variable(names.label, "f"),
+                    sql.variable(names.kind, "f"),
                 ]
             )
         )
@@ -491,7 +494,7 @@ def codegen(
 
     extract_results = sql.select(
         select_list=[
-            sql.variable(result_allocation[None], "p")
+            sql.variable(result_allocation[common.Identifier("@program", annotation=None)], "p")
         ],
         from_list=[
             sql.named(sql.name(names.working_table), "p")

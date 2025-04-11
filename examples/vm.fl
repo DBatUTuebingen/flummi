@@ -96,10 +96,12 @@ FUN run(ins: §instruction§, regs: §int[]§) -> §int§: {
                   LET k = §{0}.opc = 'hlt'§[ins];
                   IF k THEN {
                     LET res = §{1}[{0}.reg1]§[ins,regs];
-                    RETURN res
+                    EMIT res;
+                    STOP
                   } ELSE {
                     LET res = §NULL§[];
-                    RETURN res
+                    EMIT res;
+                    STOP
                   }
                 }
               }

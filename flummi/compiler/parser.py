@@ -19,7 +19,8 @@ type Break       = AST.Break[errors.Location]
 type Continue    = AST.Continue[errors.Location]
 type Block       = AST.Block[errors.Location]
 type NoOp        = AST.NoOp[errors.Location]
-type Return      = AST.Return[errors.Location]
+type Emit        = AST.Emit[errors.Location]
+type Stop        = AST.Stop[errors.Location]
 type If          = AST.If[errors.Location]
 type Let         = AST.Let[errors.Location]
 type TailCall    = AST.TailCall[errors.Location]
@@ -64,9 +65,10 @@ class Tokens(parser.Tokens):
     LOOP = r"LOOP"
     CONTINUE = r"CONTINUE"
     BREAK = r"BREAK"
-    RETURN = r"RETURN"
+    EMIT = r"EMIT"
     THEN = r"THEN"
     ELSE = r"ELSE"
+    STOP = r"STOP"
     NOOP = r"NOOP"
     LOOKUP = r"LOOKUP"
     MEMOIZE = r"MEMOIZE"
@@ -164,8 +166,10 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_break()
         elif self.lookahead(Tokens.IF):
             return self.parse_if()
-        elif self.lookahead(Tokens.RETURN):
-            return self.parse_return()
+        elif self.lookahead(Tokens.STOP):
+            return self.parse_stop()
+        elif self.lookahead(Tokens.EMIT):
+            return self.parse_emit()
         elif self.lookahead(Tokens.LEFT_BRACE):
             return self.parse_block()
         elif self.lookahead(Tokens.NOOP):
@@ -229,11 +233,18 @@ class Parser(parser.Parser[Tokens]):
             falsey_branch=falsey_branch
         )
 
-    def parse_return(self) -> Return:
+    def parse_stop(self) -> Stop:
         location = self.current.location
-        self.expect(Tokens.RETURN)
+        self.expect(Tokens.STOP)
+        return AST.Stop(
+            annotation=location
+        )
+
+    def parse_emit(self) -> Emit:
+        location = self.current.location
+        self.expect(Tokens.EMIT)
         variable = self.parse_variable()
-        return AST.Return(
+        return AST.Emit(
             annotation=location,
             variable=variable
         )

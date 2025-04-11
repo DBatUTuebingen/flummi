@@ -14,24 +14,27 @@ FUN dtw(i: §int§, j: §int§) -> §float§: {
   LET k = §{0} == 0 and {1} == 0§[i,j];
   IF k THEN {
     LET w = §0.0§[];
-    RETURN w
+    EMIT w;
+    STOP
   } ELSE {
     LET k = §{0} == 0 or {1} == 0§[i,j];
     IF k THEN {
       LET w = §'+inf' :: float§[];
-      RETURN w
+      EMIT w;
+      STOP
     } ELSE {
       LET _i = §{0} - 1§[i];
+      LET _j = §{0} - 1§[j];
+
       CALL a = dtw(i: _i, j:  j);
-      LET _j = §{0} - 1§[j];
       CALL b = dtw(i:  i, j: _j);
-      LET _i = §{0} - 1§[i];
-      LET _j = §{0} - 1§[j];
       CALL c = dtw(i: _i, j: _j);
+
       LET x = §select val from X where idx = {0}§[i];
       LET y = §select val from Y where idx = {0}§[j];
       LET w = §abs({0} - {1}) + least({2}, {3}, {4})§[x,y,a,b,c];
-      RETURN w
+      EMIT w;
+      STOP
     }
   }
 }
@@ -44,17 +47,19 @@ FUN dtw_memo(i: §int§, j: §int§) -> §float§: {
   LET k = §{0} == 0 and {1} == 0§[i,j];
   IF k THEN {
     LET w = §0.0§[];
-    RETURN w
+    EMIT w;
+    STOP
   } ELSE {
     LET k = §{0} == 0 or {1} == 0§[i,j];
     IF k THEN {
       LET w = §'+inf' :: float§[];
-      RETURN w
+      EMIT w;
+      STOP
     } ELSE {
       LET _i = §{0} - 1§[i];
       LET _j = §{0} - 1§[j];
 
-      LOOKUP a, hit = dtw_memo(i: _i, j:  j);
+      LOOKUP a, hit = dtw_memo(i: _i, j: j);
       IF hit THEN {
         NOOP
       } ELSE {
@@ -81,7 +86,8 @@ FUN dtw_memo(i: §int§, j: §int§) -> §float§: {
       LET x = §select val from X where idx = {0}§[i];
       LET y = §select val from Y where idx = {0}§[j];
       LET w = §abs({0} - {1}) + least({2}, {3}, {4})§[x,y,a,b,c];
-      RETURN w
+      EMIT w;
+      STOP
     }
   }
 }

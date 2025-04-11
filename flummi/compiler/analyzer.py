@@ -69,7 +69,7 @@ class Analyzer:
         if not stopped:
             raise AnalysisError(
                 "Not all linear control paths in the top level statement are "
-                "termianted by a RETURN statement.",
+                "termianted by a STOP statement.",
                 program.statement.annotation
             )
 
@@ -101,7 +101,7 @@ class Analyzer:
         if not stopped:
             raise AnalysisError(
                 "Not all linear control paths in this function are termianted "
-                "by a RETURN statement.",
+                "by a STOP statement.",
                 function.annotation
             )
 
@@ -173,13 +173,16 @@ class Analyzer:
 
                 return statement, False, False
 
-            case AST.Return(variable):
-                self.analyze_variable_read(variable)
-
+            case AST.Stop():
                 for loop_label in self.loop_scope:
                     self.loop_stopped[loop_label] = True
 
                 return statement, True, False
+
+            case AST.Emit(variable):
+                self.analyze_variable_read(variable)
+
+                return statement, False, False
 
             case AST.If(condition, truthy_branch, falsey_branch):
                 self.analyze_variable_read(condition)

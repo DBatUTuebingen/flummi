@@ -13,7 +13,8 @@ FUN eval(e: §expression§) -> §numeric§: {
   LET k = §{0}.op = 'ℓ'§[e];
   IF k THEN {
     LET res = §{0}.lit§[e];
-    RETURN res
+    EMIT res;
+    STOP
   } ELSE {
     LET  child = §select e from expression as e where {0}.arg1 = e.node§[e];
     CALL left  = eval(e: child);
@@ -23,15 +24,18 @@ FUN eval(e: §expression§) -> §numeric§: {
     LET k = §{0}.op = '+'§[e];
     IF k THEN {
       LET res = §{0} + {1}§[left, right];
-      RETURN res
+      EMIT res;
+      STOP
     } ELSE {
       LET k = §{0}.op = '*'§[e];
       IF k THEN {
         LET res = §{0} * {1}§[left, right];
-        RETURN res
+        EMIT res;
+        STOP
       } ELSE {
         LET res = §NULL§[];
-        RETURN res
+        EMIT res;
+        STOP
       }
     }
   }
@@ -46,7 +50,8 @@ FUN eval_memo(e: §expression§) -> §numeric§: {
   LET k = §{0}.op = 'ℓ'§[e];
   IF k THEN {
     LET res = §{0}.lit§[e];
-    RETURN res
+    EMIT res;
+    STOP
   } ELSE {
     LET  child = §select e from expression as e where {0}.arg1 = e.node§[e];
     LOOKUP left, hit = eval_memo(e: child);
@@ -69,15 +74,18 @@ FUN eval_memo(e: §expression§) -> §numeric§: {
     LET k = §{0}.op = '+'§[e];
     IF k THEN {
       LET res = §{0} + {1}§[left, right];
-      RETURN res
+      EMIT res;
+      STOP
     } ELSE {
       LET k = §{0}.op = '*'§[e];
       IF k THEN {
         LET res = §{0} * {1}§[left, right];
-        RETURN res
+        EMIT res;
+        STOP
       } ELSE {
         LET res = §NULL§[];
-        RETURN res
+        EMIT res;
+        STOP
       }
     }
   }

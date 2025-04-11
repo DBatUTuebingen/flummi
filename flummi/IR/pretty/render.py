@@ -34,7 +34,7 @@ NODE_STYLES: dict[type[CFG.Node], str] = {
     CFG.WhereNot: 'style = filled, fillcolor = forestgreen    , color = white, fontcolor = white',
     CFG.Merge:    'style = filled, fillcolor = darkcyan       , color = white, fontcolor = white',
     CFG.Let:      'style = filled, fillcolor = royalblue      , color = white, fontcolor = white',
-    CFG.Return:   'style = filled, fillcolor = navy           , color = white, fontcolor = white',
+    CFG.Emit:     'style = filled, fillcolor = navy           , color = white, fontcolor = white',
     CFG.Link:     'style = filled, fillcolor = firebrick      , color = white, fontcolor = white',
     CFG.Resume:   'style = filled, fillcolor = crimson        , color = white, fontcolor = white',
     CFG.Lookup:   'style = filled, fillcolor = purple         , color = white, fontcolor = white',

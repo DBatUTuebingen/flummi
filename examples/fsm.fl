@@ -16,7 +16,8 @@ FUN parse(state: §int§, input: §text§) -> §boolean§: {
       FROM   fsm AS edge
       WHERE  {0} = edge.source
     §[state];
-    RETURN k
+    EMIT k;
+    STOP
   } ELSE {
     LET state = §
       SELECT edge.target
@@ -27,7 +28,8 @@ FUN parse(state: §int§, input: §text§) -> §boolean§: {
     LET k = §{0} IS NULL§[state];
     IF k THEN {
       LET k = §FALSE§[];
-      RETURN k
+      EMIT k;
+      STOP
     } ELSE {
       LET input = §right({0}, -1)§[input];
       TAIL parse(state: state, input: input)

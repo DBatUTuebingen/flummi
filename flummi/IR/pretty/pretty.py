@@ -6,8 +6,8 @@ from ...library import utils
 
 def pretty(node: CFG.Node) -> str:
     match node:
-        case CFG.Return(function, variable):
-            return f"RETURN {variable.identifier} FROM {function.identifier}"
+        case CFG.Emit(function, variable):
+            return f"EMIT {variable.identifier} FROM {function.identifier}"
 
         case CFG.Let(variable, expression):
             this = f"LET {variable.identifier} = "

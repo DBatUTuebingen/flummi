@@ -14,7 +14,8 @@ __all__ = (
     "Continue",
     "Declaration",
     "Let",
-    "Return",
+    "Stop",
+    "Emit",
     "NoOp",
     "TailCall",
     "Call",
@@ -46,9 +47,13 @@ class Continue[A](Statement[A]):
 class Break[A](Statement[A]):
     name: common.Identifier[A]
 
+@dataclass
+class Stop[A](Statement[A]):
+    ...
+
 
 @dataclass
-class Return[A](Statement[A]):
+class Emit[A](Statement[A]):
     variable: common.Identifier[A]
 
 

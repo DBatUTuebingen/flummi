@@ -2,11 +2,106 @@
   DECLARE x, y: §int§;
   LET x = §here§[];
   LET y = §there§[];
-  TAIL comps(node: x, target: y)
-  -- TAIL comps_memo(node: x, target: y)
+  -- TAIL comps_func(node: x, target: y)
+  -- TAIL comps_iter(node: x, target: y)
+  TAIL comps_iter_memo(node: x, target: y)
+  -- TAIL comps_mixed(node: x, target: y)
+  -- TAIL comps_mixed_memo(node: x, target: y)
 }
 
-FUN comps(node: §int§, target: §int§) -> §boolean§: {
+FUN comps_func(node: §int§, target: §int§) -> §boolean§: {
+  DECLARE k: §boolean§;
+  DECLARE child: §int§;
+
+  LET k = §{0} = {1}§[node, target];
+  IF k THEN {
+    LET k = §true§[];
+    EMIT k;
+    STOP
+  } ELSE {
+    LET k = §not exists (select * from nodes where id = {0})§[node];
+    IF k THEN {
+      LET k = §false§[];
+      EMIT k;
+      STOP
+    } ELSE {
+      LET k = §(select count(*) from nodes where id = {0}) = 2§[node];
+      IF k THEN {
+        LET child = §select next from nodes where id = {0} AND child = 'l'§[node];
+        CALL k = comps_func(node: child, target: target);
+        IF k THEN { EMIT k; STOP } ELSE NOOP;
+        LET child = §select next from nodes where id = {0} AND child = 'r'§[node];
+        TAIL comps_func(node: child, target: target)
+      } ELSE {
+        LET child = §select next from nodes where id = {0}§[node];
+        TAIL comps_func(node: child, target: target)
+      }
+    }
+  }
+}
+
+FUN comps_iter(node: §int§, target: §int§) -> §boolean§: {
+  DECLARE k: §boolean§;
+  DECLARE stack, children: §int[]§;
+
+  LET stack = §[{0}]§[node];
+  LOOP loop {
+    LET k = §len({0}) = 0§[stack];
+    IF k THEN {
+      LET k = §false§[];
+      EMIT k;
+      STOP
+    } ELSE NOOP;
+
+    LET node = §{0}[1]§[stack];
+    LET stack = §{0}[2:]§[stack];
+
+    LET k = §{0} = {1}§[node, target];
+    IF k THEN { EMIT k; STOP } ELSE NOOP;
+
+    LET children = §select array_agg(next) from nodes where id = {0}§[node];
+    -- even earlier exit possible!
+    -- LET k = §list_contains({0}, {1})§[children, target];
+    -- IF k THEN { EMIT k; STOP } ELSE NOOP;
+
+    LET stack = §{0} || coalesce({1}, [])§[stack, children]
+  }
+}
+
+FUN comps_iter_memo(node: §int§, target: §int§) -> §boolean§: {
+  DECLARE k, hit: §boolean§;
+  DECLARE stack, children: §int[]§;
+
+  LET stack = §[{0}]§[node];
+  LOOP loop {
+    LET k = §len({0}) = 0§[stack];
+    IF k THEN {
+      LET k = §false§[];
+      EMIT k;
+      STOP
+    } ELSE NOOP;
+
+    LET node = §{0}[1]§[stack];
+    LET stack = §{0}[2:]§[stack];
+
+    LOOKUP k, hit = comps_iter_memo(node: node, target: target);
+    IF hit THEN CONTINUE loop ELSE {
+      LET k = §{0} = {1}§[node, target];
+      IF k THEN { EMIT k; STOP } ELSE NOOP;
+
+      MEMOIZE comps_iter_memo(node: node, target: target) = k;
+
+      LET children = §select array_agg(next) from nodes where id = {0}§[node];
+      -- even earlier exit possible!
+      -- LET k = §list_contains({0}, {1})§[children, target];
+      -- IF k THEN { EMIT k; STOP } ELSE NOOP;
+
+      LET stack = §{0} || coalesce({1}, [])§[stack, children]
+    }
+  }
+}
+
+FUN comps_mixed(node: §int§, target: §int§) -> §boolean§: {
   DECLARE k: §boolean§;
   DECLARE child: §int§;
   DECLARE children: §int[]§;
@@ -14,24 +109,27 @@ FUN comps(node: §int§, target: §int§) -> §boolean§: {
   LET k = §{0} = {1}§[node, target];
   IF k THEN {
     LET k = §true§[];
-    RETURN k
+    EMIT k;
+    STOP
   } ELSE {
     LET children = §select array_agg(next) from nodes where id = {0}§[node];
     LET k = §{0} is null§[children];
     IF k THEN {
       LET k = §false§[];
-      RETURN k
+      EMIT k;
+      STOP
     } ELSE {
       LOOP l {
         LET node = §{0}[1]§[children];
         LET k = §len({0}) = 1§[children];
         IF k THEN {
-          TAIL comps(node: node, target: target)
+          TAIL comps_mixed(node: node, target: target)
         } ELSE {
           LET children = §{0}[2:]§[children];
-          CALL k = comps(node: node, target: target);
+          CALL k = comps_mixed(node: node, target: target);
           IF k THEN {
-            RETURN k
+            EMIT k;
+            STOP
           } ELSE {
             CONTINUE l
           }
@@ -41,7 +139,7 @@ FUN comps(node: §int§, target: §int§) -> §boolean§: {
   }
 }
 
-FUN comps_memo(node: §int§, target: §int§) -> §boolean§: {
+FUN comps_mixed_memo(node: §int§, target: §int§) -> §boolean§: {
   DECLARE k, hit: §boolean§;
   DECLARE child: §int§;
   DECLARE children: §int[]§;
@@ -49,7 +147,8 @@ FUN comps_memo(node: §int§, target: §int§) -> §boolean§: {
   LET k = §{0} = {1}§[node, target];
   IF k THEN {
     LET k = §true§[];
-    RETURN k
+    EMIT k;
+    STOP
   } ELSE {
     LET children = §
       select array_agg(next)
@@ -59,23 +158,24 @@ FUN comps_memo(node: §int§, target: §int§) -> §boolean§: {
     LET k = §{0} is null§[children];
     IF k THEN {
       LET k = §false§[];
-      RETURN k
+      EMIT k;
+      STOP
     } ELSE {
       LOOP l {
         LET node = §{0}[1]§[children];
         LET children = §{0}[2:]§[children];
-        LOOKUP k, hit = comps_memo(node: node, target: target);
+        LOOKUP k, hit = comps_mixed_memo(node: node, target: target);
         IF hit THEN {
           NOOP
         } ELSE {
-          CALL k = comps_memo(node: node, target: target);
-          MEMOIZE comps_memo(node: node, target: target) = k
+          CALL k = comps_mixed_memo(node: node, target: target);
+          MEMOIZE comps_mixed_memo(node: node, target: target) = k
         };
         LET hit = §
           NOT {0} AND
           len({1}) > 0
         §[k, children];
-        IF hit THEN CONTINUE l ELSE RETURN k
+        IF hit THEN CONTINUE l ELSE { EMIT k; STOP }
       }
     }
   }

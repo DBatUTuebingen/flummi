@@ -19,14 +19,16 @@ FUN shortestpath(nodes: §int§, s: §int§, e: §int§) -> §int§: {
       WHERE  edge.here = {0}
       AND    edge.there = {1}
     §[s,e];
-    RETURN ret
+    EMIT ret;
+    STOP
   } ELSE {
     LET _nodes = §{0} - 1§[nodes];
     CALL a = shortestpath(nodes: _nodes, s: s    , e: e    );
     CALL b = shortestpath(nodes: _nodes, s: s    , e: nodes);
     CALL c = shortestpath(nodes: _nodes, s: nodes, e: e    );
     LET ret = §least({0}, {1} + {2})§[a,b,c];
-    RETURN ret
+    EMIT ret;
+    STOP
   }
 }
 
@@ -42,7 +44,8 @@ FUN shortestpath_memo(nodes: §int§, s: §int§, e: §int§) -> §int§: {
       WHERE  edge.here = {0}
       AND    edge.there = {1}
     §[s,e];
-    RETURN ret
+    EMIT ret;
+    STOP
   } ELSE {
     LET _nodes = §{0} - 1§[nodes];
 
@@ -71,6 +74,7 @@ FUN shortestpath_memo(nodes: §int§, s: §int§, e: §int§) -> §int§: {
     };
 
     LET ret = §least({0}, {1} + {2})§[a,b,c];
-    RETURN ret
+    EMIT ret;
+    STOP
   }
 }
