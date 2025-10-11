@@ -11,6 +11,7 @@ __all__ = (
     "Program",
     "Label",
     "Graph",
+    "Primitive",
     "Start",
     "Let",
     "Emit",
@@ -22,27 +23,26 @@ Label = common.Identifier
 
 @dataclass
 class Graph(common.Located):
-    entry_label: Label
-    nodes: dict[Label, Node]
-    edges: graph.Graph[Label]
+    primitives: dict[Label, Primitive]
+    transitions: graph.Graph[Label]
 
 
 @dataclass
-class Node(common.Located, ABC): ...
+class Primitive(common.Located, ABC): ...
 
 
 @dataclass
-class Start(Node): ...
+class Start(Primitive): ...
 
 
 @dataclass
-class Let(Node):
+class Let(Primitive):
     variable: common.Identifier
     expression: common.Expression
 
 
 @dataclass
-class Emit(Node):
+class Emit(Primitive):
     variable: common.Identifier
 
 

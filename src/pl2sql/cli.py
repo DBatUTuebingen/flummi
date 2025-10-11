@@ -9,8 +9,8 @@ from .IR.pretty.render import render
 from .compiler.parser import parse
 from .compiler.analyzer import analyze
 from .compiler.lowering import lower
-from .compiler.data_flow import plan_data_flow
-from .compiler.codegen import codegen
+from .compiler.solver import solve
+from .compiler.generator import generate
 
 from .library.errors import PrettyError
 
@@ -69,9 +69,9 @@ def compile(
         if graph is not None:
             render_to_file(lowered_program.body, graph, dot)
 
-        outputs = plan_data_flow(lowered_program)
+        dataflow = solve(lowered_program)
 
-        sql = codegen(lowered_program, outputs)
+        sql = generate(lowered_program, dataflow)
 
     except PrettyError as e:
         print(e.format(source), file=sys.stderr)

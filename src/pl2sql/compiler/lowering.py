@@ -18,7 +18,9 @@ class LoweringError(errors.PrettyError, ValueError): ...  # pyright: ignore[repo
 
 @dataclass
 class Lowering:
-    _nodes: dict[CFP.Label, CFP.Node] = field(init=False, default_factory=dict)
+    _primitives: dict[CFP.Label, CFP.Primitive] = field(
+        init=False, default_factory=dict
+    )
     _edges: dict[CFP.Label, set[CFP.Label]] = field(
         init=False, default_factory=lambda: defaultdict(set)
     )
@@ -36,36 +38,34 @@ class Lowering:
         )
 
     def lower_program(self, program: AST.Program) -> CFP.Program:
-        entry_label = common.Identifier("@start", location=program.location)
-
-        start_node = self.make_node(
-            node=CFP.Start(
+        entry_label = self.add_primitive(
+            primitive=CFP.Start(
                 location=program.location,
             ),
             name="start",
         )
 
-        _ = self.lower_statement(start_node, program.body)
+        _ = self.lower_statement(entry_label, program.body)
 
         graph = CFP.Graph(
-            entry_label=entry_label,
-            nodes=self._nodes,
-            edges=self._edges,
+            primitives=self._primitives,
+            transitions=self._edges,
             location=program.location,
         )
 
         return CFP.Program(body=graph, location=program.location)
 
-    def make_node(
+    def add_primitive(
         self,
-        node: CFP.Node,
+        primitive: CFP.Primitive,
         predecessor: CFP.Label | None = None,
         name: str | None = None,
     ) -> CFP.Label:
         label = self._make_label(
-            name or type(node).__name__.lower(), location=node.location
+            name or type(primitive).__name__.lower(),
+            location=primitive.location,
         )
-        self._nodes[label] = node
+        self._primitives[label] = primitive
         self._edges[label] = set()
         if predecessor:
             self._edges[predecessor].add(label)
@@ -79,9 +79,9 @@ class Lowering:
                 return predecessor
 
             case AST.Let(variable, expression):
-                this_label = self.make_node(
+                this_label = self.add_primitive(
                     predecessor=predecessor,
-                    node=CFP.Let(
+                    primitive=CFP.Let(
                         variable=variable,
                         expression=expression,
                         location=statement.location,
@@ -94,9 +94,9 @@ class Lowering:
                 return
 
             case AST.Emit(variable):
-                this_label = self.make_node(
+                this_label = self.add_primitive(
                     predecessor=predecessor,
-                    node=CFP.Emit(
+                    primitive=CFP.Emit(
                         variable=variable,
                         location=statement.location,
                     ),

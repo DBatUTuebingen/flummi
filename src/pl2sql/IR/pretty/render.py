@@ -25,7 +25,7 @@ edge [
 
 NODE_TEMPLATE = '"{label}" [label="{body}",{style}];'
 
-NODE_STYLES: dict[type[CFP.Node], str] = {
+NODE_STYLES: dict[type[CFP.Primitive], str] = {
     CFP.Let: "style = filled, fillcolor = royalblue, color = white, fontcolor = white",
     CFP.Emit: "style = filled, fillcolor = navy, color = white, fontcolor = white",
 }
@@ -52,14 +52,14 @@ def render[A](graph: CFP.Graph, *, font: str = "monospace") -> str:
             ),
             style=NODE_STYLES.get(type(node), ""),
         )
-        for label, node in graph.nodes.items()
+        for label, node in graph.primitives.items()
     )
 
     edges: list[str] = []
 
     edges.extend(
         f'"{source.identifier}":s -> "{target.identifier}":n;'
-        for source, targets in graph.edges.items()
+        for source, targets in graph.transitions.items()
         for target in targets
     )
 

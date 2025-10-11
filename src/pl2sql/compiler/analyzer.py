@@ -1,9 +1,8 @@
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 
-from ..IR import AST
+from ..IR import AST, common
 
 from ..library import errors
-from . import parser
 
 __all__ = ("analyze",)
 
@@ -12,18 +11,18 @@ class AnalysisError(errors.PrettyError): ...
 
 
 def analyze(
-    program: parser.Program,
-) -> parser.Program:
+    program: AST.Program,
+) -> AST.Program:
     return Analyzer().analyze_program(program)
 
 
 @dataclass
 class Analyzer:
-    bound_symbols: set[parser.Identifier] = field(
+    bound_symbols: set[common.Identifier] = field(
         init=False, default_factory=set
     )
 
-    def analyze_program(self, program: parser.Program) -> parser.Program:
+    def analyze_program(self, program: AST.Program) -> AST.Program:
         result, stopped, _ = self.analyze_statement(program.body)
 
         if not stopped:
@@ -37,8 +36,8 @@ class Analyzer:
         return program
 
     def analyze_statement(
-        self, statement: parser.Statement
-    ) -> tuple[parser.Statement, bool, bool]:
+        self, statement: AST.Statement
+    ) -> tuple[AST.Statement, bool, bool]:
         match statement:
             case AST.Block(statements):
                 if not statements:
@@ -48,7 +47,7 @@ class Analyzer:
 
                 stopped = False
 
-                new_statements: list[parser.Statement] = []
+                new_statements: list[AST.Statement] = []
                 for child_statement in statements:
                     new_child_statement, stopped, elide = (
                         self.analyze_statement(child_statement)
@@ -58,14 +57,13 @@ class Analyzer:
                         if stopped:
                             break
 
-                if len(new_statements) == 1:
+                if len(new_statements) == 0:
+                    return AST.NoOp(location=statement.location), False, True
+                elif len(new_statements) == 1:
                     return (new_statements[0], stopped, False)
                 else:
-                    return (
-                        replace(statement, statements=new_statements),
-                        stopped,
-                        len(new_statements) == 0,
-                    )
+                    statement.statements = new_statements
+                    return statement, stopped, False
 
             case AST.NoOp():
                 return statement, False, True
@@ -89,16 +87,16 @@ class Analyzer:
                     "Found unknown statement.", statement.location
                 )
 
-    def analyze_expression(self, expression: parser.Expression):
+    def analyze_expression(self, expression: common.Expression):
         for variable in expression.arguments:
             self.analyze_variable_read(variable)
 
-    def analyze_variable_read(self, variable: parser.Identifier):
+    def analyze_variable_read(self, variable: common.Identifier):
         if variable not in self.bound_symbols:
             raise AnalysisError(
                 f"Found read from uninitialised variable {variable.identifier!r}.",
                 variable.location,
             )
 
-    def analyze_variable_write(self, variable: parser.Identifier):
+    def analyze_variable_write(self, variable: common.Identifier):
         self.bound_symbols.add(variable)

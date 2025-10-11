@@ -15,8 +15,7 @@ def merge[A, B](a: Graph[A], b: Graph[B]) -> Graph[A | B]:
 
     for label in a.keys() | b.keys():
         new[label] = (
-            a.get(label, default=set[A]())  # pyright: ignore[reportCallIssue]
-            | b.get(label, default=set[B]())  # pyright: ignore[reportCallIssue]
+            a.get(label, default=set[A]()) | b.get(label, default=set[B]())  # pyright: ignore[reportCallIssue]
         )
         #! [note] We ignore the "call issue" here since PyLance is to weak to
         #!        detect implicit subtyping...
@@ -32,7 +31,7 @@ def invert[A](graph: Graph[A]) -> Graph[A]:
     return new
 
 
-def dependent_ordering[A: SupportsRichComparison](
+def topological_order[A: SupportsRichComparison](
     successors: Graph[A],
 ) -> Iterator[A]:
     predecessors = invert(successors)

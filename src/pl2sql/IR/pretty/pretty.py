@@ -4,8 +4,8 @@ from .. import CFP
 from ...library import utils
 
 
-def pretty(node: CFP.Node) -> str:
-    match node:
+def pretty(primitive: CFP.Primitive) -> str:
+    match primitive:
         case CFP.Emit(variable):
             return f"EMIT {variable.identifier}"
 
@@ -25,4 +25,4 @@ def pretty(node: CFP.Node) -> str:
             return this
 
         case _:
-            return type(node).__name__.upper()
+            return type(primitive).__name__.upper()
