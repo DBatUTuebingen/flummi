@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..library.errors import Location
 
 __all__ = (
-    "Annotated",
+    "Located",
     "Expression",
     "Identifier",
     "Type",
@@ -13,26 +14,26 @@ __all__ = (
 
 
 @dataclass(kw_only=True, match_args=False)
-class Annotated[A]:
-    annotation: A = field(hash=False, compare=False, repr=False)
+class Located:
+    location: Location = field(hash=False, compare=False, repr=False)
 
 
 @dataclass
-class Expression[A](Annotated[A]):
+class Expression(Located):
     source: str
-    arguments: list[Identifier[A]]
+    arguments: list[Identifier]
 
 
 @dataclass(unsafe_hash=True, order=True)
-class Identifier[A](Annotated[A]):
+class Identifier(Located):
     identifier: str
 
 
 @dataclass
-class Type[A](Annotated[A]):
+class Type(Located):
     source: str
 
 
 @dataclass
-class Program[A, B](Annotated[A]):
+class Program[B](Located):
     body: B

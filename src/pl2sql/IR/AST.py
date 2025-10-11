@@ -16,31 +16,31 @@ __all__ = (
 )
 
 
-type Program[A] = common.Program[A, Statement[A]]
-
-
-class Statement[A](common.Annotated[A], ABC): ...
+class Statement(common.Located, ABC): ...
 
 
 @dataclass
-class Block[A](Statement[A]):
-    statements: list[Statement[A]]
+class Block(Statement):
+    statements: list[Statement]
 
 
 @dataclass
-class Let[A](Statement[A]):
-    variable: common.Identifier[A]
-    expression: common.Expression[A]
+class Let(Statement):
+    variable: common.Identifier
+    expression: common.Expression
 
 
 @dataclass
-class Emit[A](Statement[A]):
-    variable: common.Identifier[A]
+class Emit(Statement):
+    variable: common.Identifier
 
 
 @dataclass
-class Stop[A](Statement[A]): ...
+class Stop(Statement): ...
 
 
 @dataclass
-class NoOp[A](Statement[A]): ...
+class NoOp(Statement): ...
+
+
+Program = common.Program[Statement]

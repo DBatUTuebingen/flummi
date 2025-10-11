@@ -5,24 +5,11 @@ from ..IR import common, AST, CFP
 
 from ..library import errors
 
-from . import parser
-
 
 __all__ = ("lower",)
 
-type Annotation = errors.Location
-type Program = CFP.Program[Annotation]
-type Label = CFP.Label[Annotation]
-type Graph = CFP.Graph[Annotation]
-type Node = CFP.Node[Annotation]
-type Let = CFP.Let[Annotation]
-type Emit = CFP.Emit[Annotation]
-type Expression = common.Expression[Annotation]
-type Type = common.Type[Annotation]
-type Identifier = common.Identifier[Annotation]
 
-
-def lower(program: parser.Program) -> Graph:
+def lower(program: AST.Program) -> CFP.Program:
     return Lowering().lower_program(program)
 
 
@@ -31,48 +18,52 @@ class LoweringError(errors.PrettyError, ValueError): ...  # pyright: ignore[repo
 
 @dataclass
 class Lowering:
-    _nodes: dict[Label, Node] = field(init=False, default_factory=dict)
-    _edges: dict[Label, set[Label]] = field(
+    _nodes: dict[CFP.Label, CFP.Node] = field(init=False, default_factory=dict)
+    _edges: dict[CFP.Label, set[CFP.Label]] = field(
         init=False, default_factory=lambda: defaultdict(set)
     )
     _label_counters: dict[str, int] = field(
         init=False, default_factory=lambda: defaultdict(int)
     )
 
-    def _make_label[A](self, name: str, annotation: A) -> common.Identifier[A]:
+    def _make_label(
+        self, name: str, location: errors.Location
+    ) -> common.Identifier:
         self._label_counters[name] += 1
         return common.Identifier(
             f"{name}.{self._label_counters[name]}",
-            annotation=annotation,
+            location=location,
         )
 
-    def lower_program(self, program: parser.Program) -> Graph:
-        entry_label = common.Identifier("@start", annotation=program.annotation)
+    def lower_program(self, program: AST.Program) -> CFP.Program:
+        entry_label = common.Identifier("@start", location=program.location)
 
         start_node = self.make_node(
             node=CFP.Start(
-                annotation=program.annotation,
+                location=program.location,
             ),
             name="start",
         )
 
         _ = self.lower_statement(start_node, program.body)
 
-        return CFP.Graph(
+        graph = CFP.Graph(
             entry_label=entry_label,
             nodes=self._nodes,
             edges=self._edges,
-            annotation=program.annotation,
+            location=program.location,
         )
+
+        return CFP.Program(body=graph, location=program.location)
 
     def make_node(
         self,
-        node: Node,
-        predecessor: Label | None = None,
+        node: CFP.Node,
+        predecessor: CFP.Label | None = None,
         name: str | None = None,
-    ) -> Label:
+    ) -> CFP.Label:
         label = self._make_label(
-            name or type(node).__name__.lower(), annotation=node.annotation
+            name or type(node).__name__.lower(), location=node.location
         )
         self._nodes[label] = node
         self._edges[label] = set()
@@ -81,8 +72,8 @@ class Lowering:
         return label
 
     def lower_statement(
-        self, predecessor: Label | None, statement: parser.Statement
-    ) -> Label | None:
+        self, predecessor: CFP.Label | None, statement: AST.Statement
+    ) -> CFP.Label | None:
         match statement:
             case AST.NoOp():
                 return predecessor
@@ -93,7 +84,7 @@ class Lowering:
                     node=CFP.Let(
                         variable=variable,
                         expression=expression,
-                        annotation=statement.annotation,
+                        location=statement.location,
                     ),
                 )
 
@@ -107,7 +98,7 @@ class Lowering:
                     predecessor=predecessor,
                     node=CFP.Emit(
                         variable=variable,
-                        annotation=statement.annotation,
+                        location=statement.location,
                     ),
                 )
 
@@ -124,5 +115,5 @@ class Lowering:
             case _:
                 raise LoweringError(
                     "Encounted unexpected statement during lowering.",
-                    statement.annotation,
+                    statement.location,
                 )

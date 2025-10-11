@@ -29,7 +29,7 @@ class Analyzer:
         if not stopped:
             raise AnalysisError(
                 "Not all linear control paths in the top level statement are termianted by a STOP statement.",
-                result.annotation,
+                result.location,
             )
 
         program.body = result
@@ -43,7 +43,7 @@ class Analyzer:
             case AST.Block(statements):
                 if not statements:
                     raise AnalysisError(
-                        "Found empty block.", statement.annotation
+                        "Found empty block.", statement.location
                     )
 
                 stopped = False
@@ -86,7 +86,7 @@ class Analyzer:
 
             case _:
                 raise AnalysisError(
-                    "Found unknown statement.", statement.annotation
+                    "Found unknown statement.", statement.location
                 )
 
     def analyze_expression(self, expression: parser.Expression):
@@ -97,7 +97,7 @@ class Analyzer:
         if variable not in self.bound_symbols:
             raise AnalysisError(
                 f"Found read from uninitialised variable {variable.identifier!r}.",
-                variable.annotation,
+                variable.location,
             )
 
     def analyze_variable_write(self, variable: parser.Identifier):

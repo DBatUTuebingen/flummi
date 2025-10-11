@@ -6,14 +6,16 @@ from ..library import sql, graph
 __all__ = ("codegen",)
 
 
-def codegen[A](
-    cfp: CFP.Graph[A],
+def codegen(
+    program: CFP.Program,
     # ? [info] data flow
-    outputs: dict[common.Identifier[A], set[common.Identifier[A]]],
+    outputs: dict[common.Identifier, set[common.Identifier]],
 ) -> str:
+    cfp = program.body
+
     predecessors = graph.invert(cfp.edges)
 
-    output_writers: list[CFP.Label[A]] = []
+    output_writers: list[CFP.Label] = []
     ctes: list[sql.SQL] = []
 
     for name, node in cfp.nodes.items():

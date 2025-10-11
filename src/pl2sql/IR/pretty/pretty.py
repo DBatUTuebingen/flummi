@@ -4,7 +4,7 @@ from .. import CFP
 from ...library import utils
 
 
-def pretty[A](node: CFP.Node[A]) -> str:
+def pretty(node: CFP.Node) -> str:
     match node:
         case CFP.Emit(variable):
             return f"EMIT {variable.identifier}"

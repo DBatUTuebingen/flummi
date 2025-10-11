@@ -17,31 +17,33 @@ __all__ = (
 )
 
 
-type Program[A] = common.Program[A, Graph[A]]
-type Label[A] = common.Identifier[A]
+Label = common.Identifier
 
 
 @dataclass
-class Graph[A](common.Annotated[A]):
-    entry_label: Label[A]
-    nodes: dict[Label[A], Node[A]]
-    edges: graph.Graph[Label[A]]
+class Graph(common.Located):
+    entry_label: Label
+    nodes: dict[Label, Node]
+    edges: graph.Graph[Label]
 
 
 @dataclass
-class Node[A](common.Annotated[A], ABC): ...
+class Node(common.Located, ABC): ...
 
 
 @dataclass
-class Start[A](Node[A]): ...
+class Start(Node): ...
 
 
 @dataclass
-class Let[A](Node[A]):
-    variable: common.Identifier[A]
-    expression: common.Expression[A]
+class Let(Node):
+    variable: common.Identifier
+    expression: common.Expression
 
 
 @dataclass
-class Emit[A](Node[A]):
-    variable: common.Identifier[A]
+class Emit(Node):
+    variable: common.Identifier
+
+
+Program = common.Program[Graph]

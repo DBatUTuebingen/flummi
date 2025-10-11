@@ -1,18 +1,18 @@
 from ..IR import CFP, common
-from ..library import utils
+from ..library import utils, errors
 from . import names
 
 
-def plan_data_flow[A](cfg: CFP.Graph[A]):
-    inputs = get_block_inputs(cfg)
-    outputs = get_block_outputs(cfg, inputs)
+def plan_data_flow(program: CFP.Program):
+    inputs = get_block_inputs(program.body)
+    outputs = get_block_outputs(program.body, inputs)
 
     return outputs
 
 
-def get_block_inputs[A](
-    cfg: CFP.Graph[A],
-) -> dict[CFP.Label[A], set[common.Identifier[A]]]:
+def get_block_inputs(
+    cfg: CFP.Graph,
+) -> dict[CFP.Label, set[common.Identifier]]:
     inputs = {label: uses(node) for label, node in cfg.nodes.items()}
 
     while True:
@@ -30,10 +30,10 @@ def get_block_inputs[A](
     return inputs
 
 
-def get_block_outputs[A](
-    cfg: CFP.Graph[A],
-    inputs: dict[CFP.Label[A], set[common.Identifier[A]]],
-) -> dict[CFP.Label[A], set[common.Identifier[A]]]:
+def get_block_outputs(
+    cfg: CFP.Graph,
+    inputs: dict[CFP.Label, set[common.Identifier]],
+) -> dict[CFP.Label, set[common.Identifier]]:
     return {
         label: utils.union(inputs[successor] for successor in cfg.edges[label])
         | binds(node)
@@ -41,7 +41,7 @@ def get_block_outputs[A](
     }
 
 
-def uses[A](node: CFP.Node[A]) -> set[common.Identifier[A]]:
+def uses(node: CFP.Node) -> set[common.Identifier]:
     match node:
         case CFP.Let(_, common.Expression(_, variables)):
             return set(variables)
@@ -53,24 +53,24 @@ def uses[A](node: CFP.Node[A]) -> set[common.Identifier[A]]:
             return set()
 
 
-def binds[A](node: CFP.Node[A]) -> set[common.Identifier[A]]:
+def binds(node: CFP.Node) -> set[common.Identifier]:
     match node:
         case CFP.Start():
-            return {NOTHING(node.annotation)}
+            return {NOTHING(node.location)}
 
         case CFP.Let(variable, _):
             return {variable}
 
         case CFP.Emit(_):
-            return {RESULT(node.annotation)}
+            return {RESULT(node.location)}
 
         case _:
             return set()
 
 
-def RESULT[A](annotation: A) -> common.Identifier[A]:
-    return common.Identifier(names.result, annotation=annotation)
+def RESULT(location: errors.Location) -> common.Identifier:
+    return common.Identifier(names.result, location=location)
 
 
-def NOTHING[A](annotation: A) -> common.Identifier[A]:
-    return common.Identifier(names.nothing, annotation=annotation)
+def NOTHING(location: errors.Location) -> common.Identifier:
+    return common.Identifier(names.nothing, location=location)

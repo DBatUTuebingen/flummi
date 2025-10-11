@@ -1,5 +1,4 @@
 from .. import CFP
-from ...compiler import lowering
 from .pretty import pretty
 
 
@@ -26,13 +25,13 @@ edge [
 
 NODE_TEMPLATE = '"{label}" [label="{body}",{style}];'
 
-NODE_STYLES: dict[type[lowering.Node], str] = {
+NODE_STYLES: dict[type[CFP.Node], str] = {
     CFP.Let: "style = filled, fillcolor = royalblue, color = white, fontcolor = white",
     CFP.Emit: "style = filled, fillcolor = navy, color = white, fontcolor = white",
 }
 
 
-def render[A](graph: lowering.Graph, *, font: str = "monospace") -> str:
+def render[A](graph: CFP.Graph, *, font: str = "monospace") -> str:
     nodes = (
         NODE_TEMPLATE.format(
             label=label.identifier,
@@ -47,8 +46,8 @@ def render[A](graph: lowering.Graph, *, font: str = "monospace") -> str:
                     .replace('<', '\\<')
                     .replace('>', '\\>')
                     .replace('"', '\\"')
-                }\\l|{{{label.identifier}\\l|@{label.annotation.column}:{
-                    label.annotation.line
+                }\\l|{{{label.identifier}\\l|@{label.location.column}:{
+                    label.location.line
                 }}}}}"
             ),
             style=NODE_STYLES.get(type(node), ""),

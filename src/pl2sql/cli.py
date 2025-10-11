@@ -12,7 +12,7 @@ from .compiler.lowering import lower
 from .compiler.data_flow import plan_data_flow
 from .compiler.codegen import codegen
 
-from .library.errors import PrettyError, Location
+from .library.errors import PrettyError
 
 
 import typer
@@ -60,18 +60,19 @@ def compile(
         source = f.read()
 
     try:
-        ast = parse(source)
+        parsed_program = parse(source)
 
-        analyzed_ast = analyze(ast)
+        analyzed_program = analyze(parsed_program)
 
-        cfp = lower(analyzed_ast)
+        lowered_program = lower(analyzed_program)
 
         if graph is not None:
-            render_to_file(cfp, graph, dot)
+            render_to_file(lowered_program.body, graph, dot)
 
-        outputs = plan_data_flow(cfp)
+        outputs = plan_data_flow(lowered_program)
 
-        sql = codegen(cfp, outputs)
+        sql = codegen(lowered_program, outputs)
+
     except PrettyError as e:
         print(e.format(source), file=sys.stderr)
         sys.exit(1)
@@ -80,7 +81,7 @@ def compile(
         _ = f.write(sql)
 
 
-def render_to_file(graph: Graph[Location], path: Path, command: str = "dot"):
+def render_to_file(graph: Graph, path: Path, command: str = "dot"):
     _ = subprocess.run(
         args=[command, "-T", path.suffix[1:] or "png", "-o", path.absolute()],
         input=render(graph).encode(),
