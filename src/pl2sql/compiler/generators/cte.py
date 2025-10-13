@@ -1,50 +1,44 @@
-from dataclasses import dataclass
+from typing import override
 
-from . import names
-from .solver import Dataflow
-from ..IR import CFP
-from ..library import sql, graph
-
-
-__all__ = ("generate",)
+from .base import Generator
+from .. import names
+from ...IR import CFP
+from ...library import sql, graph
 
 
-def generate(program: CFP.Program, dataflow: Dataflow) -> str:
-    return CodeGenerator(dataflow).gen_program(program)
-
-
-@dataclass
-class CodeGenerator:
-    dataflow: Dataflow
-
-    def gen_program(self, program: CFP.Program) -> sql.SQL:
+class CTEGenerator(Generator, name="CTE"):
+    @override
+    def generate_program(self, program: CFP.Program) -> sql.SQL:
         cfp = program.body
         predecessors = graph.invert(cfp.transitions)
 
         ctes = [
-            self.gen_primitive(
+            self.generate_primitive(
                 cfp.primitives[label], predecessors[label], label
             )
             for label in graph.topological_order(cfp.transitions)
         ]
 
-        return sql.with_ctes(
-            ctes=ctes,
-            body=sql.union_all(
-                [
-                    sql.select(
-                        select_list=[
-                            sql.variable(names.result, label.identifier)
-                        ],
-                        from_list=[sql.name(label.identifier)],
-                    )
-                    for label, primitive in cfp.primitives.items()
-                    if isinstance(primitive, CFP.Emit)
-                ]
-            ),
+        return (
+            sql.with_ctes(
+                ctes=ctes,
+                body=sql.union_all(
+                    [
+                        sql.select(
+                            select_list=[
+                                sql.variable(names.result, label.identifier)
+                            ],
+                            from_list=[sql.name(label.identifier)],
+                        )
+                        for label, primitive in cfp.primitives.items()
+                        if isinstance(primitive, CFP.Emit)
+                    ]
+                ),
+            )
+            + ";"
         )
 
-    def gen_primitive(
+    def generate_primitive(
         self,
         primitive: CFP.Primitive,
         predecessors: set[CFP.Label],

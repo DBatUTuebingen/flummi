@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from ..IR import CFP, common
-from ..library import utils, errors
+from ..library import utils, graph
 from . import names
 
 __all__ = ("solve",)
@@ -11,6 +11,8 @@ __all__ = ("solve",)
 class Dataflow:
     inputs: dict[CFP.Label, set[common.Identifier]]
     outputs: dict[CFP.Label, set[common.Identifier]]
+
+    binding_sites: dict[CFP.Label, dict[common.Identifier, CFP.Label]]
 
 
 def solve(program: CFP.Program) -> Dataflow:
@@ -24,7 +26,9 @@ class DataflowSolver:
 
         inputs, outputs = self.live_variable_analysis(cfp)
 
-        return Dataflow(inputs, outputs)
+        binding_sites = self.collect_binding_sites(cfp)
+
+        return Dataflow(inputs, outputs, binding_sites)
 
     @staticmethod
     def live_variable_analysis(
@@ -77,21 +81,43 @@ class DataflowSolver:
     def binds(primitive: CFP.Primitive) -> set[common.Identifier]:
         match primitive:
             case CFP.Start():
-                return {NOTHING(primitive.location)}
+                return {
+                    common.Identifier(
+                        names.nothing, location=primitive.location
+                    )
+                }
 
             case CFP.Let(variable, _):
                 return {variable}
 
             case CFP.Emit(_):
-                return {RESULT(primitive.location)}
+                return {
+                    common.Identifier(names.result, location=primitive.location)
+                }
 
             case _:
                 return set()
 
+    @staticmethod
+    def collect_binding_sites(
+        cfp: CFP.Graph,
+    ) -> dict[CFP.Label, dict[common.Identifier, CFP.Label]]:
+        binding_sites: dict[CFP.Label, dict[common.Identifier, CFP.Label]] = {}
+        last_binding_sites: dict[common.Identifier, CFP.Label] = {}
 
-def RESULT(location: errors.Location) -> common.Identifier:
-    return common.Identifier(names.result, location=location)
+        for label in graph.topological_order(cfp.transitions):
+            primitive = cfp.primitives[label]
 
+            binding_sites[label] = {
+                variable: last_binding_sites[variable]
+                for variable in DataflowSolver.uses(primitive)
+            }
 
-def NOTHING(location: errors.Location) -> common.Identifier:
-    return common.Identifier(names.nothing, location=location)
+            last_binding_sites.update(
+                {
+                    variable: label
+                    for variable in DataflowSolver.binds(primitive)
+                }
+            )
+
+        return binding_sites

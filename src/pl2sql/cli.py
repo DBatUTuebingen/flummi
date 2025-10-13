@@ -10,7 +10,7 @@ from .compiler.parser import parse
 from .compiler.analyzer import analyze
 from .compiler.lowering import lower
 from .compiler.solver import solve
-from .compiler.generator import generate
+from .compiler.generators import GenerationMethod, generate
 
 from .library.errors import PrettyError
 
@@ -43,6 +43,12 @@ def compile(
             help="The path to write the compiled query to.",
         ),
     ],
+    method: Annotated[
+        GenerationMethod,
+        typer.Argument(
+            case_sensitive=False, help="The code generation method to use."
+        ),
+    ],
     graph: Annotated[
         Path | None,
         typer.Option(
@@ -71,7 +77,7 @@ def compile(
 
         dataflow = solve(lowered_program)
 
-        sql = generate(lowered_program, dataflow)
+        sql = generate(method, lowered_program, dataflow)
 
     except PrettyError as e:
         print(e.format(source), file=sys.stderr)
