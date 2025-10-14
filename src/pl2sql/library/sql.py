@@ -16,6 +16,8 @@ __all__ = (
     "cast",
     "lateral",
     "paren",
+    "case",
+    "when",
 )
 
 
@@ -189,3 +191,20 @@ def window(
             window += "\nRANGE " + indent1(dedent(range), " " * 6)
 
     return expression + " OVER (" + indent1(window, "  ") + ")"
+
+
+def case(*whens: SQL, default: SQL | None = None) -> SQL:
+    case_expression = "CASE\n"
+    for when in whens:
+        case_expression += indent(when, "  ")
+    if default:
+        case_expression += "  ELSE " + indent1(default, " " * 7) + "\n"
+    case_expression += "END"
+    return case_expression
+
+
+def when(condition: SQL, body: SQL) -> SQL:
+    output = ""
+    output += "WHEN " + indent1(condition, " " * 5) + "\n"
+    output += "THEN " + indent1(body, " " * 5) + "\n"
+    return output

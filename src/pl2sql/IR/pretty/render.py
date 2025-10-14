@@ -28,6 +28,9 @@ NODE_TEMPLATE = '"{label}" [label="{body}",{style}];'
 NODE_STYLES: dict[type[CFP.Primitive], str] = {
     CFP.Let: "style = filled, fillcolor = royalblue, color = white, fontcolor = white",
     CFP.Emit: "style = filled, fillcolor = navy, color = white, fontcolor = white",
+    CFP.Merge: "style = filled, fillcolor = darkcyan, color = white, fontcolor = white",
+    CFP.Where: "style = filled, fillcolor = forestgreen, color = white, fontcolor = white",
+    CFP.WhereNot: "style = filled, fillcolor = forestgreen, color = white, fontcolor = white",
 }
 
 

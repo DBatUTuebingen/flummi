@@ -1,7 +1,7 @@
 from textwrap import dedent
 
 from ..IR.common import Expression, Type, Identifier
-from ..IR.AST import Program, Statement, Block, Let, Emit, Stop, NoOp
+from ..IR.AST import Program, Statement, Block, Let, Emit, Stop, NoOp, If
 
 from ..library import errors, parser
 
@@ -29,6 +29,9 @@ class Tokens(parser.Tokens):
     EMIT = r"EMIT"
     STOP = r"STOP"
     NOOP = r"NOOP"
+    IF = r"IF"
+    THEN = r"THEN"
+    ELSE = r"ELSE"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -81,6 +84,8 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_noop()
         elif self.lookahead(Tokens.LET):
             return self.parse_let()
+        elif self.lookahead(Tokens.IF):
+            return self.parse_if()
         else:
             raise self.error("Expected statement.")
 
@@ -114,3 +119,18 @@ class Parser(parser.Parser[Tokens]):
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
         return Let(location=location, variable=variable, expression=expression)
+
+    def parse_if(self) -> If:
+        location = self.current.location
+        self.expect(Tokens.IF)
+        variable = self.parse_variable()
+        self.expect(Tokens.THEN)
+        truthy_branch = self.parse_statement()
+        self.expect(Tokens.ELSE)
+        falsey_branch = self.parse_statement()
+        return If(
+            location=location,
+            condition=variable,
+            truthy_branch=truthy_branch,
+            falsey_branch=falsey_branch,
+        )

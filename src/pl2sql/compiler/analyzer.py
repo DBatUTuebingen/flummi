@@ -45,22 +45,24 @@ class Analyzer:
                         "Found empty block.", statement.location
                     )
 
-                stopped = False
+                stopped = True
 
                 new_statements: list[AST.Statement] = []
                 for child_statement in statements:
-                    new_child_statement, stopped, elide = (
+                    child_statement, child_stopped, child_elidable = (
                         self.analyze_statement(child_statement)
                     )
-                    if not elide:
-                        new_statements.append(new_child_statement)
-                        if stopped:
+                    if not child_elidable:
+                        new_statements.append(child_statement)
+                        if child_stopped:
                             break
+                else:
+                    stopped = False
 
                 if len(new_statements) == 0:
                     return AST.NoOp(location=statement.location), False, True
                 elif len(new_statements) == 1:
-                    return (new_statements[0], stopped, False)
+                    return new_statements[0], stopped, False
                 else:
                     statement.statements = new_statements
                     return statement, stopped, False
@@ -81,6 +83,29 @@ class Analyzer:
                 self.analyze_variable_read(variable)
 
                 return statement, False, False
+
+            case AST.If(condition, truthy_branch, falsey_branch):
+                self.analyze_variable_read(condition)
+                truthy_branch, truthy_stopped, truthy_elidable = (
+                    self.analyze_statement(truthy_branch)
+                )
+                falsey_branch, falsey_stopped, falsey_elidable = (
+                    self.analyze_statement(falsey_branch)
+                )
+
+                if truthy_elidable and falsey_elidable:
+                    return AST.NoOp(location=statement.location), False, True
+                else:
+                    return (
+                        AST.If(
+                            condition=condition,
+                            truthy_branch=truthy_branch,
+                            falsey_branch=falsey_branch,
+                            location=statement.location,
+                        ),
+                        truthy_stopped and falsey_stopped,
+                        False,
+                    )
 
             case _:
                 raise AnalysisError(

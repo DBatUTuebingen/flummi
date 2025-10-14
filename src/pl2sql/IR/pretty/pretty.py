@@ -24,5 +24,11 @@ def pretty(primitive: CFP.Primitive) -> str:
             )
             return this
 
+        case CFP.Where(variable):
+            return f"WHERE {variable.identifier}"
+
+        case CFP.WhereNot(variable):
+            return f"WHERE NOT {variable.identifier}"
+
         case _:
             return type(primitive).__name__.upper()

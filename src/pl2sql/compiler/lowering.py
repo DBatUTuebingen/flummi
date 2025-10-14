@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from ..IR import common, AST, CFP
 
-from ..library import errors
+from ..library import errors, graph
 
 
 __all__ = ("lower",)
@@ -37,6 +37,22 @@ class Lowering:
             location=location,
         )
 
+    def add_merge(
+        self, predecessors: list[CFP.Label], location: errors.Location
+    ) -> CFP.Label:
+        if len(predecessors) > 1:
+            label = self.add_primitive(CFP.Merge(location=location))
+            for predecessor in predecessors:
+                self.add_edge(predecessor, label)
+            return label
+        elif len(predecessors) == 1:
+            return predecessors[0]
+        else:
+            raise LoweringError(
+                "Tried to create a merge primtiive with no predecessors.",
+                location,
+            )
+
     def lower_program(self, program: AST.Program) -> CFP.Program:
         entry_label = self.add_primitive(
             primitive=CFP.Start(
@@ -45,20 +61,30 @@ class Lowering:
             name="start",
         )
 
-        _ = self.lower_statement(entry_label, program.body)
+        _ = self.lower_statement([entry_label], program.body)
 
-        graph = CFP.Graph(
+        predecessors = graph.invert(self._edges)
+
+        for label, primitive in self._primitives.items():
+            multiple_predecessors = len(predecessors[label]) > 1
+            is_merge = isinstance(primitive, CFP.Merge)
+            if is_merge != multiple_predecessors:
+                raise LoweringError(
+                    "Produced multi-predecessor non-merge primitives!",
+                    primitive.location,
+                )
+
+        cfp = CFP.Graph(
             primitives=self._primitives,
             transitions=self._edges,
             location=program.location,
         )
 
-        return CFP.Program(body=graph, location=program.location)
+        return CFP.Program(body=cfp, location=program.location)
 
     def add_primitive(
         self,
         primitive: CFP.Primitive,
-        predecessor: CFP.Label | None = None,
         name: str | None = None,
     ) -> CFP.Label:
         label = self._make_label(
@@ -67,51 +93,79 @@ class Lowering:
         )
         self._primitives[label] = primitive
         self._edges[label] = set()
-        if predecessor:
-            self._edges[predecessor].add(label)
         return label
 
+    def add_edge(self, source: CFP.Label, sink: CFP.Label):
+        self._edges[source].add(sink)
+
     def lower_statement(
-        self, predecessor: CFP.Label | None, statement: AST.Statement
-    ) -> CFP.Label | None:
+        self, predecessors: list[CFP.Label], statement: AST.Statement
+    ) -> list[CFP.Label]:
         match statement:
             case AST.NoOp():
-                return predecessor
+                return predecessors
 
             case AST.Let(variable, expression):
+                predecessor = self.add_merge(predecessors, statement.location)
+
                 this_label = self.add_primitive(
-                    predecessor=predecessor,
-                    primitive=CFP.Let(
+                    CFP.Let(
                         variable=variable,
                         expression=expression,
                         location=statement.location,
                     ),
                 )
 
-                return this_label
+                self.add_edge(predecessor, this_label)
+
+                return [this_label]
 
             case AST.Stop():
-                return
+                return []
 
             case AST.Emit(variable):
-                this_label = self.add_primitive(
-                    predecessor=predecessor,
-                    primitive=CFP.Emit(
-                        variable=variable,
-                        location=statement.location,
-                    ),
-                )
+                for predecessor in predecessors:
+                    emit_label = self.add_primitive(
+                        primitive=CFP.Emit(
+                            variable=variable,
+                            location=statement.location,
+                        ),
+                    )
 
-                return predecessor
+                    self.add_edge(predecessor, emit_label)
+
+                return predecessors
 
             case AST.Block(statements):
                 for statement in statements:
-                    if predecessor is not None:
-                        predecessor = self.lower_statement(
-                            predecessor, statement
-                        )
+                    if not predecessors:
+                        break
 
-                return predecessor
+                    predecessors = self.lower_statement(predecessors, statement)
+
+                return predecessors
+
+            case AST.If(condition, truthy_branch, falsey_branch):
+                predecessor = self.add_merge(predecessors, statement.location)
+
+                where_label = self.add_primitive(
+                    CFP.Where(condition, location=statement.location)
+                )
+                where_not_label = self.add_primitive(
+                    CFP.WhereNot(condition, location=statement.location)
+                )
+                self.add_edge(predecessor, where_label)
+                self.add_edge(predecessor, where_not_label)
+
+                truthy_labels = self.lower_statement(
+                    [where_label], truthy_branch
+                )
+                falsey_labels = self.lower_statement(
+                    [where_not_label], falsey_branch
+                )
+
+                return truthy_labels + falsey_labels
+
             case _:
                 raise LoweringError(
                     "Encounted unexpected statement during lowering.",

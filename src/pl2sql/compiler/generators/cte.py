@@ -14,7 +14,9 @@ class CTEGenerator(Generator, name="CTE"):
 
         ctes = [
             self.generate_primitive(
-                cfp.primitives[label], predecessors[label], label
+                label,
+                cfp.primitives[label],
+                predecessors[label],
             )
             for label in graph.topological_order(cfp.transitions)
         ]
@@ -38,12 +40,17 @@ class CTEGenerator(Generator, name="CTE"):
             + ";"
         )
 
+    @override
     def generate_primitive(
         self,
+        label: CFP.Label,
         primitive: CFP.Primitive,
         predecessors: set[CFP.Label],
-        label: CFP.Label,
     ) -> sql.SQL:
+        outputs = [
+            variable.identifier for variable in self.dataflow.outputs[label]
+        ] or [names.nothing]
+
         match primitive:
             case CFP.Start():
                 assert len(predecessors) == 0
@@ -52,9 +59,9 @@ class CTEGenerator(Generator, name="CTE"):
                     select_list=[
                         sql.named(
                             "NULL",
-                            output.identifier,
+                            output,
                         )
-                        for output in self.dataflow.outputs[label]
+                        for output in outputs
                     ],
                 )
 
@@ -78,13 +85,11 @@ class CTEGenerator(Generator, name="CTE"):
                                     )
                                 )
                             )
-                            if output == variable
-                            else sql.variable(
-                                output.identifier, predecessor.identifier
-                            ),
-                            output.identifier,
+                            if output == variable.identifier
+                            else sql.variable(output, predecessor.identifier),
+                            output,
                         )
-                        for output in self.dataflow.outputs[label]
+                        for output in outputs
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                 )
@@ -99,24 +104,77 @@ class CTEGenerator(Generator, name="CTE"):
                             sql.variable(
                                 variable.identifier, predecessor.identifier
                             )
-                            if output.identifier == names.result
-                            else sql.variable(
-                                output.identifier, predecessor.identifier
-                            ),
-                            output.identifier,
+                            if output == names.result
+                            else sql.variable(output, predecessor.identifier),
+                            output,
                         )
-                        for output in self.dataflow.outputs[label]
+                        for output in outputs
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                 )
 
+            case CFP.Merge():
+                assert len(predecessors) > 1
+
+                body = sql.union_all(
+                    [
+                        sql.select(
+                            select_list=[
+                                sql.named(
+                                    "NULL"
+                                    if output == names.nothing
+                                    else sql.variable(
+                                        output,
+                                        predecessor.identifier,
+                                    ),
+                                    output,
+                                )
+                                for output in outputs
+                            ],
+                            from_list=[sql.name(predecessor.identifier)],
+                        )
+                        for predecessor in predecessors
+                    ]
+                )
+
+            case CFP.Where(condition) | CFP.WhereNot(condition):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            "NULL"
+                            if output == names.nothing
+                            else sql.variable(
+                                output,
+                                predecessor.identifier,
+                            ),
+                            output,
+                        )
+                        for output in outputs
+                    ],
+                    from_list=[sql.name(predecessor.identifier)],
+                    predicates=[
+                        sql.variable(
+                            condition.identifier, predecessor.identifier
+                        )
+                        + " IS NOT DISTINCT FROM "
+                        + (
+                            "TRUE"
+                            if isinstance(primitive, CFP.Where)
+                            else "FALSE"
+                        )
+                    ],
+                )
+
             case _:
-                raise NotImplementedError()
+                return super().generate_primitive(
+                    label, primitive, predecessors
+                )
 
         return sql.cte(
             name=label.identifier,
-            columns=[
-                output.identifier for output in self.dataflow.outputs[label]
-            ],
+            columns=outputs,
             body=body,
         )

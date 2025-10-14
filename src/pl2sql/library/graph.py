@@ -1,3 +1,8 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsRichComparison
+
 from collections.abc import Iterator
 from functools import reduce
 from graphlib import TopologicalSorter
@@ -30,8 +35,15 @@ def invert[A](graph: Graph[A]) -> Graph[A]:
     return new
 
 
-def topological_order[A](graph: Graph[A]) -> Iterator[A]:
-    yield from TopologicalSorter(invert(graph)).static_order()
+def topological_order[A: SupportsRichComparison](
+    graph: Graph[A],
+) -> Iterator[A]:
+    sorter = TopologicalSorter(invert(graph))
+    sorter.prepare()
+    while sorter.is_active():
+        node_group = sorter.get_ready()
+        yield from sorted(node_group)
+        sorter.done(*node_group)
 
 
 def compute_dominator_tree[A](

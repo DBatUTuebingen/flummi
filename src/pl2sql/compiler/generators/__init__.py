@@ -9,7 +9,7 @@ from ...library import sql
 # modules as a way method to dispatch their evaluation. Those evaluations
 # automatically populate the GENERATORS dictionary, from which we can access
 # the actual code generators!
-from . import cte, lateral  # pyright: ignore[reportUnusedImport]  # noqa: F401
+from . import cte, lateral, guarded_lateral  # pyright: ignore[reportUnusedImport]  # noqa: F401
 
 
 __all__ = ("generate", "GenerationMethod")

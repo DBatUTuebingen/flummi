@@ -15,6 +15,9 @@ __all__ = (
     "Start",
     "Let",
     "Emit",
+    "Merge",
+    "Where",
+    "WhereNot",
 )
 
 
@@ -44,6 +47,19 @@ class Let(Primitive):
 @dataclass
 class Emit(Primitive):
     variable: common.Identifier
+
+
+class Merge(Primitive): ...
+
+
+@dataclass
+class Where(Primitive):
+    condition: common.Identifier
+
+
+@dataclass
+class WhereNot(Primitive):
+    condition: common.Identifier
 
 
 Program = common.Program[Graph]

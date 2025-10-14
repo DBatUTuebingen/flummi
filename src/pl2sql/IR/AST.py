@@ -13,6 +13,7 @@ __all__ = (
     "Stop",
     "Emit",
     "NoOp",
+    "If",
 )
 
 
@@ -41,6 +42,13 @@ class Stop(Statement): ...
 
 @dataclass
 class NoOp(Statement): ...
+
+
+@dataclass
+class If(Statement):
+    condition: common.Identifier
+    truthy_branch: Statement
+    falsey_branch: Statement
 
 
 Program = common.Program[Statement]
