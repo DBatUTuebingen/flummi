@@ -38,7 +38,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                     sql.when(
                                         sql.variable(
                                             names.guard,
-                                            self.dataflow.guards[
+                                            self.dataflow.guard_of[
                                                 label
                                             ].identifier,
                                         ),
@@ -47,7 +47,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                                 sql.paren(
                                                     sql.variable(
                                                         argument.identifier,
-                                                        self.dataflow.binding_sites_at[
+                                                        self.dataflow.binding_sites_after[
                                                             predecessor
                                                         ][argument].identifier,
                                                     )
@@ -74,9 +74,9 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                             select_list=[
                                 sql.variable(
                                     variable.identifier,
-                                    self.dataflow.binding_sites_at[predecessor][
-                                        variable
-                                    ].identifier,
+                                    self.dataflow.binding_sites_after[
+                                        predecessor
+                                    ][variable].identifier,
                                 ),
                             ],
                         )
@@ -94,14 +94,14 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                             select_list=[
                                 sql.variable(
                                     names.guard,
-                                    self.dataflow.guards[label].identifier,
+                                    self.dataflow.guard_of[label].identifier,
                                 )
                                 + " AND "
                                 + sql.variable(
                                     variable.identifier,
-                                    self.dataflow.binding_sites_at[predecessor][
-                                        variable
-                                    ].identifier,
+                                    self.dataflow.binding_sites_after[
+                                        predecessor
+                                    ][variable].identifier,
                                 )
                                 + " IS NOT DISTINCT FROM "
                                 + (
@@ -125,12 +125,12 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                     select_list=[
                                         sql.variable(
                                             variable.identifier,
-                                            self.dataflow.binding_sites_at[
+                                            self.dataflow.binding_sites_after[
                                                 predecessor
                                             ][variable].identifier,
                                         )
                                         for variable in sorted(
-                                            self.dataflow.binding_sites_at[
+                                            self.dataflow.binding_sites_after[
                                                 label
                                             ]
                                         )
@@ -138,7 +138,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                     predicates=[
                                         sql.variable(
                                             names.guard,
-                                            self.dataflow.guards[
+                                            self.dataflow.guard_of[
                                                 predecessor
                                             ].identifier,
                                         )
@@ -152,7 +152,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                     columns=[
                         variable.identifier
                         for variable in sorted(
-                            self.dataflow.binding_sites_at[label]
+                            self.dataflow.binding_sites_after[label]
                         )
                     ],
                 )

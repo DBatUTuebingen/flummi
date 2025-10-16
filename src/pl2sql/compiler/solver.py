@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 
 from ..IR import CFP, common
@@ -12,11 +13,12 @@ class SolverError(errors.PrettyError, ValueError): ...  # pyright: ignore[report
 
 @dataclass
 class Dataflow:
-    inputs: dict[CFP.Label, set[common.Identifier]]
-    outputs: dict[CFP.Label, set[common.Identifier]]
+    inputs_of: dict[CFP.Label, set[common.Identifier]]
+    outputs_of: dict[CFP.Label, set[common.Identifier]]
 
-    binding_sites_at: dict[CFP.Label, dict[common.Identifier, CFP.Label]]
-    guards: dict[CFP.Label, CFP.Label]
+    binding_sites_after: dict[CFP.Label, dict[common.Identifier, CFP.Label]]
+    guard_of: dict[CFP.Label, CFP.Label]
+    guarded_by: dict[CFP.Label, set[CFP.Label]]
 
 
 def solve(program: CFP.Program) -> Dataflow:
@@ -28,13 +30,15 @@ class DataflowSolver:
     def solve_program(self, program: CFP.Program) -> Dataflow:
         cfp = program.body
 
-        inputs, outputs = self.live_variable_analysis(cfp)
+        inputs_of, outputs_of = self.live_variable_analysis(cfp)
 
-        binding_sites_at = self.collect_binding_sites_at(cfp)
+        binding_sites_after = self.reaching_definition_analysis(cfp)
 
-        guards = self.collect_guards(cfp)
+        guard_of, guarded_by = self.guard_analysis(cfp)
 
-        return Dataflow(inputs, outputs, binding_sites_at, guards)
+        return Dataflow(
+            inputs_of, outputs_of, binding_sites_after, guard_of, guarded_by
+        )
 
     @staticmethod
     def live_variable_analysis(
@@ -43,33 +47,38 @@ class DataflowSolver:
         dict[CFP.Label, set[common.Identifier]],
         dict[CFP.Label, set[common.Identifier]],
     ]:
-        inputs = {
+        inputs_of = {
             label: DataflowSolver.uses(primitive)
             for label, primitive in cfp.primitives.items()
         }
-        outputs = {
+        outputs_of = {
             label: DataflowSolver.binds(primitive)
             for label, primitive in cfp.primitives.items()
         }
 
-        changed = True
-        while changed:
-            changed = False
-            for label in cfp.primitives:
-                new_outputs = utils.union(
-                    inputs[successor] for successor in cfp.transitions[label]
+        predecessors_of = graph.invert(cfp.transitions)
+
+        worklist = set(cfp.primitives)
+
+        while worklist:
+            label = worklist.pop()
+
+            new_outputs = (
+                utils.union(
+                    inputs_of[successor] for successor in cfp.transitions[label]
                 )
+                - outputs_of[label]
+            )
 
-                new_outputs -= outputs[label]
+            if not new_outputs:
+                continue
 
-                if not new_outputs:
-                    continue
+            inputs_of[label] |= new_outputs
+            outputs_of[label] |= new_outputs
 
-                changed = True
-                inputs[label] |= new_outputs
-                outputs[label] |= new_outputs
+            worklist |= predecessors_of[label]
 
-        return inputs, outputs
+        return inputs_of, outputs_of
 
     @staticmethod
     def uses(primitive: CFP.Primitive) -> set[common.Identifier]:
@@ -109,30 +118,31 @@ class DataflowSolver:
                 return set()
 
     @staticmethod
-    def collect_binding_sites_at(
+    def reaching_definition_analysis(
         cfp: CFP.Graph,
     ) -> dict[CFP.Label, dict[common.Identifier, CFP.Label]]:
-        predecessors = graph.invert(cfp.transitions)
+        predecessors_of = graph.invert(cfp.transitions)
 
-        binding_sites_at: dict[
+        binding_sites_after: dict[
             CFP.Label, dict[common.Identifier, CFP.Label]
         ] = {}
+
         for label in graph.topological_order(cfp.transitions):
             primitive = cfp.primitives[label]
 
-            binding_sites_after_here: dict[common.Identifier, CFP.Label] = {}
+            binding_sites_after_here = dict[common.Identifier, CFP.Label]()
 
-            if len(predecessors[label]) > 0:
-                first_predecessor, *other_predecessors = predecessors[label]
+            if len(predecessors_of[label]) > 0:
+                first_predecessor, *other_predecessors = predecessors_of[label]
 
                 if isinstance(primitive, CFP.Merge):
                     variables_to_rebind = set(
-                        binding_sites_at[first_predecessor]
+                        binding_sites_after[first_predecessor]
                     )
                     for predecessor in other_predecessors:
                         # We only keep the variables that always have a garanteed
                         # associated binding in all of the predecessors.
-                        variables_to_rebind &= binding_sites_at[
+                        variables_to_rebind &= binding_sites_after[
                             predecessor
                         ].keys()
 
@@ -140,36 +150,40 @@ class DataflowSolver:
                         variable: label for variable in variables_to_rebind
                     }
                 else:
-                    if other_predecessors:
-                        raise SolverError(
-                            "Found too many predecessors during binding compuation at...",
-                            primitive.location,
-                        )
+                    # For anything but merges, there should be only at most one
+                    # predecessor.
+                    assert not other_predecessors
 
                     # We need to explicitly copy here, otherwise all labels from
                     # here until the next merge will share the same dictionary
                     # object in memory...
                     binding_sites_after_here = dict(
-                        binding_sites_at[first_predecessor]
+                        binding_sites_after[first_predecessor]
                     )
 
             if isinstance(primitive, CFP.Let):
-                binding_sites_after_here[primitive.variable] = label
+                binding_sites_after_here |= {primitive.variable: label}
 
-            binding_sites_at[label] = binding_sites_after_here
+            binding_sites_after[label] = binding_sites_after_here
 
-        return binding_sites_at
+        return binding_sites_after
 
     @staticmethod
-    def collect_guards(cfp: CFP.Graph) -> dict[CFP.Label, CFP.Label]:
+    def guard_analysis(
+        cfp: CFP.Graph,
+    ) -> tuple[dict[CFP.Label, CFP.Label], dict[CFP.Label, set[CFP.Label]]]:
         GUARDING_PRIMITIVES: tuple[type[CFP.Primitive], ...] = (
             CFP.Start,
             CFP.Where,
             CFP.WhereNot,
+            # Merges act as virtual guards, i.e., they do not introduce a "new"
+            # guarded region for their successors, but act as a standin for
+            # their (the merges) own guard and their region.
             CFP.Merge,
         )
 
-        guards: dict[CFP.Label, CFP.Label] = {}
+        guard_of: dict[CFP.Label, CFP.Label] = {}
+
         levels: dict[CFP.Label, int] = {
             label: 0
             for label, primitive in cfp.primitives.items()
@@ -180,45 +194,55 @@ class DataflowSolver:
             guard_primitive = cfp.primitives[guard_label]
             if isinstance(guard_primitive, GUARDING_PRIMITIVES):
                 stack: list[CFP.Label] = list(cfp.transitions[guard_label])
-
                 if isinstance(guard_primitive, CFP.Merge):
                     # Since merges are control dependent on their predecessors
                     # and the topological order garantees that all control
                     # dependencies are visited before we get here, we can simply
                     # lookup the merges guard and to use for this segement.
-                    guard_label = guards[guard_label]
-                elif guard_label in guards:
-                    levels[guard_label] = levels[guards[guard_label]] + 1
+                    guard_label = guard_of[guard_label]
+                elif guard_label in guard_of:
+                    levels[guard_label] = levels[guard_of[guard_label]] + 1
 
                 while stack:
-                    guarded_label = stack.pop(0)
-                    guarded_primitive = cfp.primitives[guarded_label]
+                    label = stack.pop()
+                    primitive = cfp.primitives[label]
 
-                    if isinstance(guarded_primitive, CFP.Merge):
-                        guards_guard = guards[guard_label]
-                        if existing_guard := guards.get(guarded_label):
+                    if isinstance(primitive, CFP.Merge):
+                        guards_guard = guard_of[guard_label]
+                        if existing_guard := guard_of.get(label):
                             if levels[guards_guard] > levels[existing_guard]:
+                                # A superceeding guard has already been found
+                                # for this merge, so we don't need to do
+                                # anything here.
                                 continue
-                        guards[guarded_label] = guards_guard
+
+                        guard_of[label] = guards_guard
                     else:
-                        if guarded_label in guards:
-                            raise SolverError(
-                                "Found multiple guards for primitive at...",
-                                guarded_primitive.location,
-                            )
+                        # For anything but merges, there should be no prior
+                        # guard for the current label.
+                        assert label not in guard_of
 
-                        guards[guarded_label] = guard_label
+                        guard_of[label] = guard_label
 
-                        if not isinstance(
-                            guarded_primitive, GUARDING_PRIMITIVES
-                        ):
-                            stack.extend(cfp.transitions[guarded_label])
+                        if not isinstance(primitive, GUARDING_PRIMITIVES):
+                            stack.extend(cfp.transitions[label])
 
-        if guards.keys() != {
+        # Excluding the start primitives, all other primitives should have been
+        # assigned a guard once the above loop(s) have been completed.
+        assert guard_of.keys() == {
             label
             for label, primitive in cfp.primitives.items()
             if not isinstance(primitive, CFP.Start)
-        }:
-            raise SolverError("Could not find guards for all primitives!")
+        }
 
-        return guards
+        # We can only compute this afterwards instead of "on the fly" during the
+        # loop(s) above, since merges can possibly be re-assigned from one guard
+        # to another, depending on the order in which we visit the guards. The
+        # necessary special casing to cover this re-assignment is not worth the
+        # hassel and sacrafice of cleanliness since we can do it easily
+        # afterwards, i.e., here.
+        guarded_by: dict[CFP.Label, set[CFP.Label]] = defaultdict(set)
+        for guardee, guard in guard_of.items():
+            guarded_by[guard].add(guardee)
+
+        return guard_of, guarded_by
