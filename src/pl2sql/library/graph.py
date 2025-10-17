@@ -97,3 +97,11 @@ def loop_heads[A](successors: Graph[A]) -> set[A]:
                 stack.append(successor)
 
     return heads
+
+
+def subgraph[A](graph: Graph[A], nodes: set[A]) -> Graph[A]:
+    return {
+        node: children & nodes
+        for node, children in graph.items()
+        if node in nodes
+    }
