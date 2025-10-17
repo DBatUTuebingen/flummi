@@ -21,10 +21,11 @@ class Generator(ABC):
         if not isabstract(cls):
             GENERATORS[name or cls.__name__] = cls
 
+    program: CFP.Program
     flow: FlowSolution
 
     @abstractmethod
-    def generate_program(self, program: CFP.Program) -> sql.SQL:
+    def generate(self) -> sql.SQL:
         raise NotImplementedError
 
 

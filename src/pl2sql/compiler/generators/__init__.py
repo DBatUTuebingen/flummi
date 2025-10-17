@@ -21,4 +21,4 @@ GenerationMethod = StrEnum("GenerationMethod", zip(_GENERATORS, _GENERATORS))
 def generate(
     method: GenerationMethod, program: CFP.Program, dataflow: FlowSolution
 ) -> sql.SQL:
-    return _GENERATORS[method.value](dataflow).generate_program(program)
+    return _GENERATORS[method.value](program, dataflow).generate()

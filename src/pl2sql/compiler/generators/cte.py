@@ -8,8 +8,8 @@ from ...library import sql, graph
 
 class CTEGenerator(PrimitiveGenerator, name="CTE"):
     @override
-    def generate_program(self, program: CFP.Program) -> sql.SQL:
-        cfp = program.body
+    def generate(self) -> sql.SQL:
+        cfp = self.program.body
         predecessors = graph.invert(cfp.transitions)
 
         ctes = [
