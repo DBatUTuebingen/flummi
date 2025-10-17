@@ -1,7 +1,7 @@
 from enum import StrEnum
 
 from .base import GENERATORS as _GENERATORS
-from ..solver import Dataflow
+from ..solver import FlowSolution
 from ...IR import CFP
 from ...library import sql
 
@@ -19,6 +19,6 @@ GenerationMethod = StrEnum("GenerationMethod", zip(_GENERATORS, _GENERATORS))
 
 
 def generate(
-    method: GenerationMethod, program: CFP.Program, dataflow: Dataflow
+    method: GenerationMethod, program: CFP.Program, dataflow: FlowSolution
 ) -> sql.SQL:
     return _GENERATORS[method.value](dataflow).generate_program(program)

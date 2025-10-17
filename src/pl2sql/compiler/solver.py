@@ -12,7 +12,7 @@ class SolverError(errors.PrettyError, ValueError): ...  # pyright: ignore[report
 
 
 @dataclass
-class Dataflow:
+class FlowSolution:
     inputs_of: dict[CFP.Label, set[common.Identifier]]
     outputs_of: dict[CFP.Label, set[common.Identifier]]
 
@@ -21,13 +21,13 @@ class Dataflow:
     guarded_by: dict[CFP.Label, set[CFP.Label]]
 
 
-def solve(program: CFP.Program) -> Dataflow:
-    return DataflowSolver().solve_program(program)
+def solve(program: CFP.Program) -> FlowSolution:
+    return FlowSolver().solve_program(program)
 
 
 @dataclass
-class DataflowSolver:
-    def solve_program(self, program: CFP.Program) -> Dataflow:
+class FlowSolver:
+    def solve_program(self, program: CFP.Program) -> FlowSolution:
         cfp = program.body
 
         inputs_of, outputs_of = self.live_variable_analysis(cfp)
@@ -36,7 +36,7 @@ class DataflowSolver:
 
         guard_of, guarded_by = self.guard_analysis(cfp)
 
-        return Dataflow(
+        return FlowSolution(
             inputs_of, outputs_of, binding_sites_after, guard_of, guarded_by
         )
 
@@ -48,11 +48,11 @@ class DataflowSolver:
         dict[CFP.Label, set[common.Identifier]],
     ]:
         inputs_of = {
-            label: DataflowSolver.uses(primitive)
+            label: FlowSolver.uses(primitive)
             for label, primitive in cfp.primitives.items()
         }
         outputs_of = {
-            label: DataflowSolver.binds(primitive)
+            label: FlowSolver.binds(primitive)
             for label, primitive in cfp.primitives.items()
         }
 

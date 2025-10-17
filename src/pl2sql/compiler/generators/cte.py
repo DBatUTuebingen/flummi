@@ -48,7 +48,7 @@ class CTEGenerator(Generator, name="CTE"):
         predecessors: set[CFP.Label],
     ) -> sql.SQL:
         outputs = [
-            variable.identifier for variable in self.dataflow.outputs_of[label]
+            variable.identifier for variable in self.flow.outputs_of[label]
         ] or [names.nothing]
 
         match primitive:

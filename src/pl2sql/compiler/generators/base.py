@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from inspect import isabstract
 
-from ..solver import Dataflow
+from ..solver import FlowSolution
 from ...IR import CFP
 from ...library import sql, errors
 
@@ -19,7 +20,7 @@ class Generator(ABC):
     def __init_subclass__(cls, name: str = "") -> None:
         GENERATORS[name or cls.__name__] = cls
 
-    dataflow: Dataflow
+    flow: FlowSolution
 
     @abstractmethod
     def generate_program(self, program: CFP.Program) -> sql.SQL:
