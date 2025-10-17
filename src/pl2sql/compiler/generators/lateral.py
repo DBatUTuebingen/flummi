@@ -1,12 +1,12 @@
 from typing import override
 
-from .base import Generator
+from .base import PrimitiveGenerator
 from .. import names
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class LateralGenerator(Generator, name="lateral"):
+class LateralGenerator(PrimitiveGenerator, name="lateral"):
     @override
     def generate_program(self, program: CFP.Program) -> sql.SQL:
         cfp = program.body

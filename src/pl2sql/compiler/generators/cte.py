@@ -1,12 +1,12 @@
 from typing import override
 
-from .base import Generator
+from .base import PrimitiveGenerator
 from .. import names
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class CTEGenerator(Generator, name="CTE"):
+class CTEGenerator(PrimitiveGenerator, name="CTE"):
     @override
     def generate_program(self, program: CFP.Program) -> sql.SQL:
         cfp = program.body

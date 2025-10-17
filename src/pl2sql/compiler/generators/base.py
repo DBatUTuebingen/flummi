@@ -18,7 +18,8 @@ GENERATORS: dict[str, type[Generator]] = {}
 @dataclass
 class Generator(ABC):
     def __init_subclass__(cls, name: str = "") -> None:
-        GENERATORS[name or cls.__name__] = cls
+        if not isabstract(cls):
+            GENERATORS[name or cls.__name__] = cls
 
     flow: FlowSolution
 
@@ -26,6 +27,8 @@ class Generator(ABC):
     def generate_program(self, program: CFP.Program) -> sql.SQL:
         raise NotImplementedError
 
+
+class PrimitiveGenerator(Generator, ABC):
     @abstractmethod
     def generate_primitive(
         self,
