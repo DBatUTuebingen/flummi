@@ -3,10 +3,55 @@ from typing import override
 from .lateral import LateralGenerator
 from .. import names
 from ...IR import CFP
-from ...library import sql
+from ...library import sql, graph
 
 
 class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
+    @override
+    def generate(self) -> sql.SQL:
+        cfp = self.program.body
+        predecessors = graph.invert(cfp.transitions)
+
+        from_list = [
+            self.generate_primitive(
+                label, cfp.primitives[label], predecessors[label]
+            )
+            for label in graph.topological_order(cfp.transitions)
+        ]
+
+        from_list.append(
+            sql.named(
+                sql.lateral(
+                    sql.union_all(
+                        [
+                            sql.select(
+                                [sql.variable(names.result, label.identifier)],
+                                predicates=[
+                                    sql.variable(
+                                        names.guard,
+                                        self.flow.guard_of[label].identifier,
+                                    )
+                                    + " IS NOT DISTINCT FROM TRUE"
+                                ],
+                            )
+                            for label, primitive in cfp.primitives.items()
+                            if isinstance(primitive, CFP.Emit)
+                        ]
+                    )
+                ),
+                names.result,
+                columns=[names.result],
+            )
+        )
+
+        return (
+            sql.select(
+                select_list=[sql.variable(names.result, names.result)],
+                from_list=from_list,
+            )
+            + ";"
+        )
+
     @override
     def generate_primitive(
         self,
