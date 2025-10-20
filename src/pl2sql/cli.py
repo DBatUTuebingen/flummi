@@ -68,16 +68,16 @@ def compile(
     try:
         parsed_program = parse(source)
 
-        analyzed_program = analyze(parsed_program)
+        analyzed_program, symbol_table = analyze(parsed_program)
 
         lowered_program = lower(analyzed_program)
 
         if graph is not None:
             render_to_file(lowered_program.body, graph, dot)
 
-        dataflow = solve(lowered_program)
+        dataflow = solve(lowered_program, symbol_table)
 
-        sql = generate(method, lowered_program, dataflow)
+        sql = generate(method, lowered_program, dataflow, symbol_table)
 
     except PrettyError as e:
         print(e.format(source), file=sys.stderr)

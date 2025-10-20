@@ -4,7 +4,10 @@ from ..IR import AST, common
 
 from ..library import errors
 
-__all__ = ("analyze",)
+__all__ = ("analyze", "SymbolTable")
+
+
+type SymbolTable = dict[common.Identifier, common.Type]
 
 
 class AnalysisError(errors.PrettyError): ...
@@ -12,12 +15,17 @@ class AnalysisError(errors.PrettyError): ...
 
 def analyze(
     program: AST.Program,
-) -> AST.Program:
-    return Analyzer().analyze_program(program)
+) -> tuple[AST.Program, SymbolTable]:
+    analyzer = Analyzer()
+    analyzed_program = analyzer.analyze_program(program)
+    symbol_table = analyzer.symbol_table
+
+    return analyzed_program, symbol_table
 
 
 @dataclass
 class Analyzer:
+    symbol_table: SymbolTable = field(init=False, default_factory=dict)
     bound_symbols: set[common.Identifier] = field(
         init=False, default_factory=set
     )
@@ -68,6 +76,24 @@ class Analyzer:
                     return statement, stopped, False
 
             case AST.NoOp():
+                return statement, False, True
+
+            case AST.Declare(variable, type):
+                if variable in self.symbol_table:
+                    original_declaration = next(
+                        _variable
+                        for _variable in self.symbol_table
+                        if _variable.identifier == variable.identifier
+                    )
+                    raise AnalysisError(
+                        f"Found declaration of variable {variable.identifier!r}...",
+                        variable.location,
+                        "",
+                        "...that was already declared at.",
+                        original_declaration.location,
+                    )
+
+                self.symbol_table[variable] = type
                 return statement, False, True
 
             case AST.Let(variable, expression):
@@ -124,4 +150,9 @@ class Analyzer:
             )
 
     def analyze_variable_write(self, variable: common.Identifier):
+        if variable not in self.symbol_table:
+            raise AnalysisError(
+                f"Found write to undeclared variable {variable.identifier!r}.",
+                variable.location,
+            )
         self.bound_symbols.add(variable)

@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from inspect import isabstract
 
+from ..analyzer import SymbolTable
 from ..solver import FlowSolution
 from ...IR import CFP
 from ...library import sql, errors
@@ -23,6 +24,7 @@ class Generator(ABC):
 
     program: CFP.Program
     flow: FlowSolution
+    symbol_table: SymbolTable
 
     @abstractmethod
     def generate(self) -> sql.SQL:

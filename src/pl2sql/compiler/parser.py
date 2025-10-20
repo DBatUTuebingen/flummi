@@ -1,7 +1,17 @@
 from textwrap import dedent
 
 from ..IR.common import Expression, Type, Identifier
-from ..IR.AST import Program, Statement, Block, Let, Emit, Stop, NoOp, If
+from ..IR.AST import (
+    Program,
+    Statement,
+    Block,
+    Declare,
+    Let,
+    Emit,
+    Stop,
+    NoOp,
+    If,
+)
 
 from ..library import errors, parser
 
@@ -21,10 +31,12 @@ class Tokens(parser.Tokens):
     LEFT_BRACKET = r"\["
     RIGHT_BRACE = r"}"
     RIGHT_BRACKET = r"\]"
+    COLON = r":"
     SEMICOLON = r";"
     COMMA = r","
     SQL = r"[§][^§]+[§]"
     EQUALS = r"="
+    DECLARE = r"DECLARE"
     LET = r"LET"
     EMIT = r"EMIT"
     STOP = r"STOP"
@@ -49,7 +61,7 @@ class Parser(parser.Parser[Tokens]):
             free_variables = []
         else:
             free_variables = list(
-                self.sequence(self.parse_variable, Tokens.COMMA)
+                self.sequence(self.parse_identifier, Tokens.COMMA)
             )
             self.expect(Tokens.RIGHT_BRACKET)
         return Expression(
@@ -58,7 +70,7 @@ class Parser(parser.Parser[Tokens]):
             arguments=free_variables,
         )
 
-    def parse_variable(self) -> Identifier:
+    def parse_identifier(self) -> Identifier:
         location = self.current.location
         identifier = self.expectv(Tokens.IDENTIFIER)
         return Identifier(location=location, identifier=identifier)
@@ -86,6 +98,8 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_let()
         elif self.lookahead(Tokens.IF):
             return self.parse_if()
+        elif self.lookahead(Tokens.DECLARE):
+            return self.parse_declare()
         else:
             raise self.error("Expected statement.")
 
@@ -97,7 +111,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_emit(self) -> Emit:
         location = self.current.location
         self.expect(Tokens.EMIT)
-        variable = self.parse_variable()
+        variable = self.parse_identifier()
         return Emit(location=location, variable=variable)
 
     def parse_block(self) -> Block:
@@ -115,7 +129,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_let(self) -> Let:
         location = self.current.location
         self.expect(Tokens.LET)
-        variable = self.parse_variable()
+        variable = self.parse_identifier()
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
         return Let(location=location, variable=variable, expression=expression)
@@ -123,7 +137,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_if(self) -> If:
         location = self.current.location
         self.expect(Tokens.IF)
-        variable = self.parse_variable()
+        variable = self.parse_identifier()
         self.expect(Tokens.THEN)
         truthy_branch = self.parse_statement()
         self.expect(Tokens.ELSE)
@@ -134,3 +148,11 @@ class Parser(parser.Parser[Tokens]):
             truthy_branch=truthy_branch,
             falsey_branch=falsey_branch,
         )
+
+    def parse_declare(self) -> Declare:
+        location = self.current.location
+        self.expect(Tokens.DECLARE)
+        variable = self.parse_identifier()
+        self.expect(Tokens.COLON)
+        type = self.parse_type()
+        return Declare(location=location, variable=variable, type=type)

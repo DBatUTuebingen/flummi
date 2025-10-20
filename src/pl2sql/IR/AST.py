@@ -9,6 +9,7 @@ __all__ = (
     "Program",
     "Statement",
     "Block",
+    "Declare",
     "Let",
     "Stop",
     "Emit",
@@ -23,6 +24,12 @@ class Statement(common.Located, ABC): ...
 @dataclass
 class Block(Statement):
     statements: list[Statement]
+
+
+@dataclass
+class Declare(Statement):
+    variable: common.Identifier
+    type: common.Type
 
 
 @dataclass

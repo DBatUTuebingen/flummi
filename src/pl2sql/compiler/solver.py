@@ -1,8 +1,10 @@
 from collections import defaultdict
 from dataclasses import dataclass
 
+
 from ..IR import CFP, common
 from ..library import utils, graph, errors
+from .analyzer import SymbolTable
 from . import names
 
 __all__ = ("solve",)
@@ -21,12 +23,14 @@ class FlowSolution:
     guarded_by: dict[CFP.Label, set[CFP.Label]]
 
 
-def solve(program: CFP.Program) -> FlowSolution:
-    return FlowSolver().solve_program(program)
+def solve(program: CFP.Program, symbol_table: SymbolTable) -> FlowSolution:
+    return FlowSolver(symbol_table).solve_program(program)
 
 
 @dataclass
 class FlowSolver:
+    symbol_table: SymbolTable
+
     def solve_program(self, program: CFP.Program) -> FlowSolution:
         cfp = program.body
 
