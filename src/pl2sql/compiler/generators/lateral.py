@@ -73,7 +73,7 @@ class LateralGenerator(PrimitiveGenerator, name="lateral"):
                                         sql.paren(
                                             sql.variable(
                                                 argument.identifier,
-                                                self.flow.binding_sites_after[
+                                                self.flow.definitions_after[
                                                     predecessor
                                                 ][argument].identifier,
                                             )
@@ -98,7 +98,7 @@ class LateralGenerator(PrimitiveGenerator, name="lateral"):
                                 sql.named(
                                     sql.variable(
                                         variable.identifier,
-                                        self.flow.binding_sites_after[
+                                        self.flow.definitions_after[
                                             predecessor
                                         ][variable].identifier,
                                     ),

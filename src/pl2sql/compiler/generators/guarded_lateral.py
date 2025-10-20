@@ -92,7 +92,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                                 sql.paren(
                                                     sql.variable(
                                                         argument.identifier,
-                                                        self.flow.binding_sites_after[
+                                                        self.flow.definitions_after[
                                                             predecessor
                                                         ][argument].identifier,
                                                     )
@@ -119,7 +119,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                             select_list=[
                                 sql.variable(
                                     variable.identifier,
-                                    self.flow.binding_sites_after[predecessor][
+                                    self.flow.definitions_after[predecessor][
                                         variable
                                     ].identifier,
                                 ),
@@ -144,7 +144,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                 + " AND "
                                 + sql.variable(
                                     variable.identifier,
-                                    self.flow.binding_sites_after[predecessor][
+                                    self.flow.definitions_after[predecessor][
                                         variable
                                     ].identifier,
                                 )
@@ -170,12 +170,12 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                     select_list=[
                                         sql.variable(
                                             variable.identifier,
-                                            self.flow.binding_sites_after[
+                                            self.flow.definitions_after[
                                                 predecessor
                                             ][variable].identifier,
                                         )
                                         for variable in sorted(
-                                            self.flow.binding_sites_after[label]
+                                            self.flow.definitions_after[label]
                                         )
                                     ],
                                     predicates=[
@@ -195,7 +195,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                     columns=[
                         variable.identifier
                         for variable in sorted(
-                            self.flow.binding_sites_after[label]
+                            self.flow.definitions_after[label]
                         )
                     ],
                 )

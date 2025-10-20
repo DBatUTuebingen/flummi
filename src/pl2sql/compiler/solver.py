@@ -18,39 +18,39 @@ class FlowSolution:
     inputs_of: dict[CFP.Label, set[common.Identifier]]
     outputs_of: dict[CFP.Label, set[common.Identifier]]
 
-    binding_sites_after: dict[CFP.Label, dict[common.Identifier, CFP.Label]]
+    definitions_after: dict[CFP.Label, dict[common.Identifier, CFP.Label]]
     guard_of: dict[CFP.Label, CFP.Label]
     guarded_by: dict[CFP.Label, set[CFP.Label]]
 
 
 def solve(program: CFP.Program, symbol_table: SymbolTable) -> FlowSolution:
-    return FlowSolver(symbol_table).solve_program(program)
+    return FlowSolver(program, symbol_table).solve()
 
 
 @dataclass
 class FlowSolver:
+    program: CFP.Program
     symbol_table: SymbolTable
 
-    def solve_program(self, program: CFP.Program) -> FlowSolution:
-        cfp = program.body
+    def solve(self) -> FlowSolution:
+        inputs_of, outputs_of = self.live_variable_analysis()
 
-        inputs_of, outputs_of = self.live_variable_analysis(cfp)
+        definitions_after = self.reaching_definition_analysis()
 
-        binding_sites_after = self.reaching_definition_analysis(cfp)
-
-        guard_of, guarded_by = self.guard_analysis(cfp)
+        guard_of, guarded_by = self.guard_analysis()
 
         return FlowSolution(
-            inputs_of, outputs_of, binding_sites_after, guard_of, guarded_by
+            inputs_of, outputs_of, definitions_after, guard_of, guarded_by
         )
 
-    @staticmethod
     def live_variable_analysis(
-        cfp: CFP.Graph,
+        self,
     ) -> tuple[
         dict[CFP.Label, set[common.Identifier]],
         dict[CFP.Label, set[common.Identifier]],
     ]:
+        cfp = self.program.body
+
         inputs_of = {
             label: FlowSolver.uses(primitive)
             for label, primitive in cfp.primitives.items()
@@ -121,37 +121,37 @@ class FlowSolver:
             case _:
                 return set()
 
-    @staticmethod
     def reaching_definition_analysis(
-        cfp: CFP.Graph,
+        self,
     ) -> dict[CFP.Label, dict[common.Identifier, CFP.Label]]:
-        predecessors_of = graph.invert(cfp.transitions)
+        cfp = self.program.body
 
-        binding_sites_after: dict[
+        predecessors_of = graph.invert(cfp.transitions)
+        definitions_after: dict[
             CFP.Label, dict[common.Identifier, CFP.Label]
         ] = {}
 
         for label in graph.topological_order(cfp.transitions):
             primitive = cfp.primitives[label]
 
-            binding_sites_after_here = dict[common.Identifier, CFP.Label]()
+            definitions_after_here: dict[common.Identifier, CFP.Label] = {}
 
             if len(predecessors_of[label]) > 0:
                 first_predecessor, *other_predecessors = predecessors_of[label]
 
                 if isinstance(primitive, CFP.Merge):
-                    variables_to_rebind = set(
-                        binding_sites_after[first_predecessor]
+                    variables_to_redefine = set(
+                        definitions_after[first_predecessor]
                     )
                     for predecessor in other_predecessors:
                         # We only keep the variables that always have a garanteed
                         # associated binding in all of the predecessors.
-                        variables_to_rebind &= binding_sites_after[
+                        variables_to_redefine &= definitions_after[
                             predecessor
                         ].keys()
 
-                    binding_sites_after_here = {
-                        variable: label for variable in variables_to_rebind
+                    definitions_after_here = {
+                        variable: label for variable in variables_to_redefine
                     }
                 else:
                     # For anything but merges, there should be only at most one
@@ -161,21 +161,21 @@ class FlowSolver:
                     # We need to explicitly copy here, otherwise all labels from
                     # here until the next merge will share the same dictionary
                     # object in memory...
-                    binding_sites_after_here = dict(
-                        binding_sites_after[first_predecessor]
+                    definitions_after_here = dict(
+                        definitions_after[first_predecessor]
                     )
 
             if isinstance(primitive, CFP.Let):
-                binding_sites_after_here |= {primitive.variable: label}
+                definitions_after_here |= {primitive.variable: label}
 
-            binding_sites_after[label] = binding_sites_after_here
+            definitions_after[label] = definitions_after_here
 
-        return binding_sites_after
+        return definitions_after
 
-    @staticmethod
     def guard_analysis(
-        cfp: CFP.Graph,
+        self,
     ) -> tuple[dict[CFP.Label, CFP.Label], dict[CFP.Label, set[CFP.Label]]]:
+        cfp = self.program.body
         GUARDING_PRIMITIVES: tuple[type[CFP.Primitive], ...] = (
             CFP.Start,
             CFP.Where,

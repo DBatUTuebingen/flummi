@@ -58,7 +58,7 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
                             predicates=[
                                 sql.variable(
                                     variable.identifier,
-                                    self.flow.binding_sites_after[predecessor][
+                                    self.flow.definitions_after[predecessor][
                                         variable
                                     ].identifier,
                                 )
@@ -82,7 +82,7 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
                                 sql.named(
                                     sql.variable(
                                         variable.identifier,
-                                        self.flow.binding_sites_after[
+                                        self.flow.definitions_after[
                                             predecessor
                                         ][variable].identifier,
                                     ),
