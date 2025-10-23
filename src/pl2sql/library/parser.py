@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import InitVar, dataclass, field
 from enum import StrEnum, unique, EnumMeta, EnumDict
 import re
 from typing import Callable
@@ -20,7 +20,7 @@ class TokensMeta(EnumMeta):
 class Tokens(StrEnum, metaclass=TokensMeta): ...
 
 
-@dataclass
+@dataclass(slots=True)
 class Token[T: Tokens]:
     type: T
     value: str
@@ -74,26 +74,17 @@ def make_lexer[T: Tokens](
 class ParseError(PrettyError, SyntaxError): ...  # pyright: ignore[reportUnsafeMultipleInheritance]
 
 
+@dataclass(slots=True)
 class Parser[T: Tokens]:
-    __slots__: tuple[str, ...] = (
-        "source",
-        "tokens",
-        "current",
-        "done",
-        "prefetched",
-    )
-
     source: str
-    tokens: Iterator[Token[T]]
-    current: Token[T]
-    done: bool
-    prefetched: list[Token[T]]
+    lexer: InitVar[Lexer[T]]
+    tokens: Iterator[Token[T]] = field(init=False)
+    current: Token[T] = field(init=False)
+    done: bool = field(init=False, default=False)
+    prefetched: list[Token[T]] = field(init=False, default_factory=list)
 
-    def __init__(self, source: str, lexer: Lexer[T]):
-        self.source = source
-        self.tokens = lexer(source)
-        self.done = False
-        self.prefetched = []
+    def __post_init__(self, lexer: Lexer[T]):
+        self.tokens = lexer(self.source)
         self.advance()
 
     def error(self, msg: str):
