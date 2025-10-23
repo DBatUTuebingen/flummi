@@ -13,39 +13,73 @@ type SymbolTable = dict[common.Identifier, common.Type]
 class AnalysisError(errors.PrettyError): ...
 
 
-def analyze(
-    program: AST.Program,
-) -> tuple[AST.Program, SymbolTable]:
-    analyzer = Analyzer()
-    analyzed_program = analyzer.analyze_program(program)
-    symbol_table = analyzer.symbol_table
-
-    return analyzed_program, symbol_table
+class AnalysisResult(NamedTuple):
+    program: AST.Program
+    symbol_table: SymbolTable
+    features: Features
 
 
-@dataclass
+def analyze(program: AST.Program) -> AnalysisResult:
+    return Analyzer(program).analyze()
+
+
+@dataclass(slots=True)
 class Analyzer:
+    program: AST.Program
+    features: Features = field(init=False, default=Features.SEQUENCING)
+    emit_type: common.Type | None = field(init=False, default=None)
     symbol_table: SymbolTable = field(init=False, default_factory=dict)
     bound_symbols: set[common.Identifier] = field(
         init=False, default_factory=set
     )
 
-    def analyze_program(self, program: AST.Program) -> AST.Program:
-        result, stopped, _ = self.analyze_statement(program.body)
+    def analyze(self) -> AnalysisResult:
+        result, stopped, _ = self.analyze_statement(self.program.body)
 
         if not stopped:
             raise AnalysisError(
                 "Not all linear control paths in the top level statement are termianted by a STOP statement.",
-                result.location,
             )
 
-        program.body = result
+        self.program.body = result
 
-        return program
+        if self.emit_type is None:
+            raise AnalysisError(
+                "Could not find a single EMIT and thus could not determine the type of the values this program emits.",
+            )
 
-    def analyze_statement(
-        self, statement: AST.Statement
-    ) -> tuple[AST.Statement, bool, bool]:
+        for feature in self.features:
+            if (dependencies := FEATURE_DEPENDECIES.get(feature)) is not None:
+                self.features |= dependencies
+
+        return AnalysisResult(
+            self.program,
+            self.symbol_table,
+            self.features,
+        )
+
+    class StatementResult(NamedTuple):
+        statement: AST.Statement
+        stopped: bool = False
+        elidable: bool = False
+
+        @classmethod
+        def elide(cls, statement: AST.Statement) -> Self:
+            return cls(
+                AST.NoOp(location=statement.location),
+                stopped=False,
+                elidable=False,
+            )
+
+        @classmethod
+        def stop(cls, statement: AST.Statement) -> Self:
+            return cls(
+                statement,
+                stopped=True,
+                elidable=False,
+            )
+
+    def analyze_statement(self, statement: AST.Statement) -> StatementResult:
         match statement:
             case AST.Block(statements):
                 if not statements:
@@ -68,16 +102,20 @@ class Analyzer:
                     stopped = False
 
                 if len(new_statements) == 0:
-                    return AST.NoOp(location=statement.location), False, True
+                    return self.StatementResult.elide(statement)
                 elif len(new_statements) == 1:
-                    return new_statements[0], stopped, False
+                    return self.StatementResult(
+                        new_statements[0], stopped=stopped
+                    )
                 else:
                     statement.statements = new_statements
-                    return statement, stopped, False
+                    return self.StatementResult(statement, stopped=stopped)
 
             case AST.NoOp():
-                return statement, False, True
+                return self.StatementResult.elide(statement)
 
+            case AST.Stop():
+                return self.StatementResult.stop(statement)
             case AST.Declare(variable, type):
                 if variable in self.symbol_table:
                     original_declaration = next(
@@ -94,23 +132,35 @@ class Analyzer:
                     )
 
                 self.symbol_table[variable] = type
-                return statement, False, True
+                return self.StatementResult.elide(statement)
 
             case AST.Let(variable, expression):
                 self.analyze_expression(expression)
                 self.analyze_variable_write(variable)
 
-                return statement, False, False
-
-            case AST.Stop():
-                return statement, True, False
+                return self.StatementResult(statement)
 
             case AST.Emit(variable):
                 self.analyze_variable_read(variable)
 
-                return statement, False, False
+                emit_type = self.symbol_table[variable]
+                if self.emit_type is None:
+                    self.emit_type = replace(
+                        emit_type, location=statement.location
+                    )
+                elif emit_type != self.emit_type:
+                    raise AnalysisError(
+                        f"Found conflicting emission types ({emit_type.source} vs. {self.emit_type.source}) at...",
+                        statement.location,
+                        "...and...",
+                        self.emit_type.location,
+                    )
+
+                return self.StatementResult(statement)
 
             case AST.If(condition, truthy_branch, falsey_branch):
+                self.features |= Features.BRANCHING
+
                 self.analyze_variable_read(condition)
                 truthy_branch, truthy_stopped, truthy_elidable = (
                     self.analyze_statement(truthy_branch)
@@ -120,17 +170,16 @@ class Analyzer:
                 )
 
                 if truthy_elidable and falsey_elidable:
-                    return AST.NoOp(location=statement.location), False, True
+                    return self.StatementResult.elide(statement)
                 else:
-                    return (
+                    return self.StatementResult(
                         AST.If(
                             condition=condition,
                             truthy_branch=truthy_branch,
                             falsey_branch=falsey_branch,
                             location=statement.location,
                         ),
-                        truthy_stopped and falsey_stopped,
-                        False,
+                        stopped=truthy_stopped and falsey_stopped,
                     )
 
             case _:

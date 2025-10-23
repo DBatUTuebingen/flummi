@@ -68,7 +68,7 @@ def compile(
     try:
         parsed_program = parse(source)
 
-        analyzed_program, symbol_table = analyze(parsed_program)
+        analyzed_program, symbol_table, features = analyze(parsed_program)
 
         lowered_program = lower(analyzed_program)
 
