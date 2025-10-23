@@ -11,6 +11,9 @@ from ..IR.AST import (
     Stop,
     NoOp,
     If,
+    Loop,
+    Continue,
+    Break,
 )
 
 from ..library import errors, parser
@@ -44,6 +47,9 @@ class Tokens(parser.Tokens):
     IF = r"IF"
     THEN = r"THEN"
     ELSE = r"ELSE"
+    LOOP = r"LOOP"
+    CONTINUE = r"CONTINUE"
+    BREAK = r"BREAK"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -100,6 +106,12 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_if()
         elif self.lookahead(Tokens.DECLARE):
             return self.parse_declare()
+        elif self.lookahead(Tokens.LOOP):
+            return self.parse_loop()
+        elif self.lookahead(Tokens.CONTINUE):
+            return self.parse_continue()
+        elif self.lookahead(Tokens.BREAK):
+            return self.parse_break()
         else:
             raise self.error("Expected statement.")
 
@@ -156,3 +168,28 @@ class Parser(parser.Parser[Tokens]):
         self.expect(Tokens.COLON)
         type = self.parse_type()
         return Declare(location=location, variable=variable, type=type)
+
+    def parse_loop(self) -> Loop:
+        location = self.current.location
+        self.expect(Tokens.LOOP)
+        name = self.parse_identifier()
+        body = self.parse_statement()
+        return Loop(location=location, name=name, body=body)
+
+    def parse_continue(self) -> Continue:
+        location = self.current.location
+        self.expect(Tokens.CONTINUE)
+        name = self.parse_identifier()
+        return Continue(
+            location=location,
+            name=name,
+        )
+
+    def parse_break(self) -> Break:
+        location = self.current.location
+        self.expect(Tokens.BREAK)
+        name = self.parse_identifier()
+        return Break(
+            location=location,
+            name=name,
+        )

@@ -2,7 +2,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from ..IR import common, AST, CFP
-
 from ..library import errors, graph
 
 
@@ -16,7 +15,7 @@ def lower(program: AST.Program) -> CFP.Program:
 class LoweringError(errors.PrettyError, ValueError): ...  # pyright: ignore[reportUnsafeMultipleInheritance]
 
 
-@dataclass
+@dataclass(slots=True)
 class Lowering:
     _primitives: dict[CFP.Label, CFP.Primitive] = field(
         init=False, default_factory=dict
@@ -24,8 +23,14 @@ class Lowering:
     _edges: dict[CFP.Label, set[CFP.Label]] = field(
         init=False, default_factory=lambda: defaultdict(set)
     )
+    _backedges: dict[CFP.Label, set[CFP.Label]] = field(
+        init=False, default_factory=lambda: defaultdict(set)
+    )
     _label_counters: dict[str, int] = field(
         init=False, default_factory=lambda: defaultdict(int)
+    )
+    _loop_heads: dict[AST.LoopName, CFP.Label] = field(
+        init=False, default_factory=dict
     )
 
     def _make_label(
@@ -38,7 +43,7 @@ class Lowering:
         )
 
     def add_merge(
-        self, predecessors: list[CFP.Label], location: errors.Location
+        self, predecessors: set[CFP.Label], location: errors.Location
     ) -> CFP.Label:
         if len(predecessors) > 1:
             label = self.add_primitive(CFP.Merge(location=location))
@@ -46,7 +51,7 @@ class Lowering:
                 self.add_edge(predecessor, label)
             return label
         elif len(predecessors) == 1:
-            return predecessors[0]
+            return list(predecessors)[0]
         else:
             raise LoweringError(
                 "Tried to create a merge primtiive with no predecessors.",
@@ -61,7 +66,7 @@ class Lowering:
             name="start",
         )
 
-        _ = self.lower_statement([entry_label], program.body)
+        _ = self.lower_statement({entry_label}, program.body)
 
         predecessors = graph.invert(self._edges)
 
@@ -76,7 +81,9 @@ class Lowering:
 
         cfp = CFP.Graph(
             primitives=self._primitives,
-            transitions=self._edges,
+            entry_label=entry_label,
+            edges=self._edges,
+            backedges=self._backedges,
             location=program.location,
         )
 
@@ -98,12 +105,47 @@ class Lowering:
     def add_edge(self, source: CFP.Label, sink: CFP.Label):
         self._edges[source].add(sink)
 
+    def add_backedge(
+        self,
+        source: CFP.Label,
+        sink: CFP.Label,
+        location: errors.Location | None = None,
+    ):
+        goto_label = self.add_primitive(
+            CFP.GoTo(sink, location=location or source.location)
+        )
+        self._edges[source].add(goto_label)
+        self._backedges[goto_label].add(sink)
+
+    @dataclass(slots=True)
+    class StatementResult:
+        outgoing_labels: set[CFP.Label] = field(default_factory=set)
+        loop_exits: dict[AST.LoopName, set[CFP.Label]] = field(
+            default_factory=dict
+        )
+
+        def merge(self, other: Lowering.StatementResult):
+            self.outgoing_labels |= other.outgoing_labels
+            return self.merge_loop_exits(other)
+
+        def merge_loop_exits(self, other: Lowering.StatementResult):
+            for name, exits in other.loop_exits.items():
+                if name not in self.loop_exits:
+                    self.loop_exits[name] = exits
+                else:
+                    self.loop_exits[name] |= exits
+            return self
+
+        def exit_loop(self, name: AST.LoopName):
+            self.outgoing_labels = self.loop_exits.pop(name, set())
+            return self
+
     def lower_statement(
-        self, predecessors: list[CFP.Label], statement: AST.Statement
-    ) -> list[CFP.Label]:
+        self, predecessors: set[CFP.Label], statement: AST.Statement
+    ) -> StatementResult:
         match statement:
             case AST.NoOp():
-                return predecessors
+                return self.StatementResult(predecessors)
 
             case AST.Let(variable, expression):
                 predecessor = self.add_merge(predecessors, statement.location)
@@ -118,10 +160,10 @@ class Lowering:
 
                 self.add_edge(predecessor, this_label)
 
-                return [this_label]
+                return self.StatementResult({this_label})
 
             case AST.Stop():
-                return []
+                return self.StatementResult()
 
             case AST.Emit(variable):
                 for predecessor in predecessors:
@@ -134,16 +176,21 @@ class Lowering:
 
                     self.add_edge(predecessor, emit_label)
 
-                return predecessors
+                return self.StatementResult(predecessors)
 
             case AST.Block(statements):
-                for statement in statements:
-                    if not predecessors:
+                result = self.StatementResult(predecessors)
+
+                for child in statements:
+                    if not result.outgoing_labels:
                         break
 
-                    predecessors = self.lower_statement(predecessors, statement)
+                    child_result = self.lower_statement(
+                        result.outgoing_labels, child
+                    )
+                    result = child_result.merge_loop_exits(result)
 
-                return predecessors
+                return result
 
             case AST.If(condition, truthy_branch, falsey_branch):
                 predecessor = self.add_merge(predecessors, statement.location)
@@ -157,14 +204,42 @@ class Lowering:
                 self.add_edge(predecessor, where_label)
                 self.add_edge(predecessor, where_not_label)
 
-                truthy_labels = self.lower_statement(
-                    [where_label], truthy_branch
+                truthy_result = self.lower_statement(
+                    {where_label}, truthy_branch
                 )
-                falsey_labels = self.lower_statement(
-                    [where_not_label], falsey_branch
+                falsey_result = self.lower_statement(
+                    {where_not_label}, falsey_branch
                 )
 
-                return truthy_labels + falsey_labels
+                return truthy_result.merge(falsey_result)
+
+            case AST.Loop(name, body):
+                head_label = self.add_primitive(
+                    CFP.Start(location=statement.location)
+                )
+                self._loop_heads[name] = head_label
+
+                result = self.lower_statement(predecessors | {head_label}, body)
+
+                for loopback_label in result.outgoing_labels:
+                    self.add_backedge(
+                        loopback_label, head_label, location=statement.location
+                    )
+
+                return result.exit_loop(name)
+
+            case AST.Continue(name):
+                head_label = self._loop_heads[name]
+
+                for predecessor in predecessors:
+                    self.add_backedge(
+                        predecessor, head_label, location=statement.location
+                    )
+
+                return self.StatementResult()
+
+            case AST.Break(name):
+                return self.StatementResult(loop_exits={name: predecessors})
 
             case _:
                 raise LoweringError(

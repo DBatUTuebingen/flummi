@@ -20,12 +20,6 @@ __all__ = (
 
 
 Label = common.Identifier
-
-
-@dataclass
-class Graph(common.Located):
-    primitives: dict[Label, Primitive]
-    transitions: graph.Graph[Label]
 Variable = common.Identifier
 
 
@@ -60,6 +54,19 @@ class Where(Primitive):
 @dataclass(slots=True)
 class WhereNot(Primitive):
     condition: Variable
+
+
+@dataclass(slots=True)
+class GoTo(Primitive):
+    label: Label
+
+
+@dataclass(slots=True)
+class Graph(common.Located):
+    primitives: dict[Label, Primitive]
+    entry_label: Label
+    edges: graph.Graph[Label]
+    backedges: graph.Graph[Label]
 
 
 Program = common.Program[Graph]

@@ -10,7 +10,7 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
     @override
     def generate(self) -> sql.SQL:
         cfp = self.program.body
-        predecessors = graph.invert(cfp.transitions)
+        predecessors = graph.invert(cfp.edges)
 
         ctes = [
             self.generate_primitive(
@@ -18,7 +18,7 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
                 cfp.primitives[label],
                 predecessors[label],
             )
-            for label in graph.topological_order(cfp.transitions)
+            for label in graph.topological_order(cfp.edges)
         ]
 
         return (

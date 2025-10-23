@@ -7,6 +7,7 @@ __all__ = (
     "Program",
     "Statement",
     "Variable",
+    "LoopName",
     "Block",
     "Declare",
     "Let",
@@ -14,9 +15,14 @@ __all__ = (
     "Emit",
     "NoOp",
     "If",
+    "Loop",
+    "Continue",
+    "Break",
 )
 
 Variable = common.Identifier
+LoopName = common.Identifier
+
 
 class Statement(common.Located, ABC): ...
 
@@ -56,6 +62,22 @@ class If(Statement):
     condition: Variable
     truthy_branch: Statement
     falsey_branch: Statement
+
+
+@dataclass(slots=True)
+class Loop(Statement):
+    name: LoopName
+    body: Statement
+
+
+@dataclass(slots=True)
+class Continue(Statement):
+    name: LoopName
+
+
+@dataclass(slots=True)
+class Break(Statement):
+    name: LoopName
 
 
 Program = common.Program[Statement]

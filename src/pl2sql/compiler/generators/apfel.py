@@ -25,8 +25,8 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
 
     def generate_region(self, entry_label: CFP.Label) -> sql.SQL:
         region_labels = self.flow.guarded_by[entry_label]
-        region = graph.subgraph(self.program.body.transitions, region_labels)
-        predecessors = graph.invert(self.program.body.transitions)
+        region = graph.subgraph(self.program.body.edges, region_labels)
+        predecessors = graph.invert(self.program.body.edges)
 
         from_list: list[sql.SQL] = []
         results: list[sql.SQL] = []

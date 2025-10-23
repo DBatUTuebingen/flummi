@@ -10,13 +10,13 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
     @override
     def generate(self) -> sql.SQL:
         cfp = self.program.body
-        predecessors = graph.invert(cfp.transitions)
+        predecessors = graph.invert(cfp.edges)
 
         from_list = [
             self.generate_primitive(
                 label, cfp.primitives[label], predecessors[label]
             )
-            for label in graph.topological_order(cfp.transitions)
+            for label in graph.topological_order(cfp.edges)
         ]
 
         from_list.append(

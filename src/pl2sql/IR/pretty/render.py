@@ -32,6 +32,7 @@ NODE_STYLES: dict[type[CFP.Primitive], str] = {
     CFP.Merge: "style = filled, fillcolor = yellowgreen, color = white, fontcolor = white",
     CFP.Where: "style = filled, fillcolor = forestgreen, color = white, fontcolor = white",
     CFP.WhereNot: "style = filled, fillcolor = darkgreen, color = white, fontcolor = white",
+    CFP.GoTo: "style = filled, fillcolor = darkorange, color = white, fontcolor = white",
 }
 
 
@@ -63,7 +64,7 @@ def render[A](graph: CFP.Graph, *, font: str = "monospace") -> str:
 
     edges.extend(
         f'"{source.identifier}":s -> "{target.identifier}":n;'
-        for source, targets in graph.transitions.items()
+        for source, targets in graph.edges.items()
         for target in targets
     )
 

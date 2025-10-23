@@ -1,7 +1,10 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from typing import NamedTuple, Self
 
+
+from . import constants
+from .features import Features, FEATURE_DEPENDECIES
 from ..IR import AST, common
-
 from ..library import errors
 
 __all__ = ("analyze", "SymbolTable")
@@ -16,6 +19,7 @@ class AnalysisError(errors.PrettyError): ...
 class AnalysisResult(NamedTuple):
     program: AST.Program
     symbol_table: SymbolTable
+    system_variables: dict[constants.Names, AST.Variable]
     features: Features
 
 
@@ -31,6 +35,13 @@ class Analyzer:
     symbol_table: SymbolTable = field(init=False, default_factory=dict)
     bound_symbols: set[common.Identifier] = field(
         init=False, default_factory=set
+    )
+
+    used_loop_names: set[common.Identifier] = field(
+        init=False, default_factory=set
+    )
+    loop_name_stack: list[common.Identifier] = field(
+        init=False, default_factory=list
     )
 
     def analyze(self) -> AnalysisResult:
@@ -52,9 +63,29 @@ class Analyzer:
             if (dependencies := FEATURE_DEPENDECIES.get(feature)) is not None:
                 self.features |= dependencies
 
+        system_variables: dict[constants.Names, AST.Variable] = {}
+
+        emit_variable = AST.Variable(
+            constants.Names.RESULT, location=self.program.location
+        )
+        self.symbol_table[emit_variable] = replace(
+            self.emit_type, location=self.program.location
+        )
+        system_variables[constants.Names.RESULT] = emit_variable
+
+        if Features.ITERATION in self.features:
+            label_variable = AST.Variable(
+                constants.Names.LABEL, location=self.program.location
+            )
+            self.symbol_table[label_variable] = common.Type(
+                "TEXT", location=self.program.location
+            )
+            system_variables[constants.Names.LABEL] = label_variable
+
         return AnalysisResult(
             self.program,
             self.symbol_table,
+            system_variables,
             self.features,
         )
 
@@ -116,6 +147,7 @@ class Analyzer:
 
             case AST.Stop():
                 return self.StatementResult.stop(statement)
+
             case AST.Declare(variable, type):
                 if variable in self.symbol_table:
                     original_declaration = next(
@@ -181,6 +213,57 @@ class Analyzer:
                         ),
                         stopped=truthy_stopped and falsey_stopped,
                     )
+
+            case AST.Loop(name, body):
+                self.features |= Features.ITERATION
+
+                if name in self.used_loop_names:
+                    original_label = next(
+                        original_label
+                        for original_label in self.used_loop_names
+                        if original_label.identifier == name.identifier
+                    )
+                    raise AnalysisError(
+                        f"Found introduction of loop name {name.identifier!r}...",
+                        name.location,
+                        "",
+                        "...that was already introduced at.",
+                        original_label.location,
+                    )
+
+                self.used_loop_names.add(name)
+                self.loop_name_stack.append(name)
+
+                body, body_stopped, body_elidable = self.analyze_statement(body)
+
+                _label = self.loop_name_stack.pop()
+                assert _label == name
+
+                if body_elidable:
+                    return self.StatementResult.elide(statement)
+                else:
+                    return self.StatementResult(
+                        AST.Loop(name, body, location=statement.location),
+                        stopped=body_stopped,
+                    )
+
+            case AST.Continue(name):
+                if name not in self.loop_name_stack:
+                    raise AnalysisError(
+                        f"Found continue to unintroduced loop name {name.identifier!r}.",
+                        name.location,
+                    )
+
+                return self.StatementResult(statement)
+
+            case AST.Break(name):
+                if name not in self.loop_name_stack:
+                    raise AnalysisError(
+                        f"Found break to unintroduced loop name {name.identifier!r}.",
+                        name.location,
+                    )
+
+                return self.StatementResult.stop(statement)
 
             case _:
                 raise AnalysisError(

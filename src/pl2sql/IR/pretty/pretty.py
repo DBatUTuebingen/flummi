@@ -30,5 +30,8 @@ def pretty(primitive: CFP.Primitive) -> str:
         case CFP.WhereNot(variable):
             return f"WHERE NOT {variable.identifier}"
 
+        case CFP.GoTo(label):
+            return f"GOTO {label.identifier}"
+
         case _:
             return type(primitive).__name__.upper()
