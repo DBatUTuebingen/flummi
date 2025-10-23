@@ -35,5 +35,5 @@ class Type(Located):
 
 
 @dataclass
-class Program[B](Located):
+class Program[B: Located](Located):
     body: B

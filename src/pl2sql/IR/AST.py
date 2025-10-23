@@ -8,6 +8,7 @@ from . import common
 __all__ = (
     "Program",
     "Statement",
+    "Variable",
     "Block",
     "Declare",
     "Let",
@@ -17,6 +18,7 @@ __all__ = (
     "If",
 )
 
+Variable = common.Identifier
 
 class Statement(common.Located, ABC): ...
 
@@ -28,19 +30,19 @@ class Block(Statement):
 
 @dataclass
 class Declare(Statement):
-    variable: common.Identifier
+    variable: Variable
     type: common.Type
 
 
 @dataclass
 class Let(Statement):
-    variable: common.Identifier
+    variable: Variable
     expression: common.Expression
 
 
 @dataclass
 class Emit(Statement):
-    variable: common.Identifier
+    variable: Variable
 
 
 @dataclass
@@ -53,7 +55,7 @@ class NoOp(Statement): ...
 
 @dataclass
 class If(Statement):
-    condition: common.Identifier
+    condition: Variable
     truthy_branch: Statement
     falsey_branch: Statement
 

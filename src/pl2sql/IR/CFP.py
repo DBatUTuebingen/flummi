@@ -28,6 +28,7 @@ Label = common.Identifier
 class Graph(common.Located):
     primitives: dict[Label, Primitive]
     transitions: graph.Graph[Label]
+Variable = common.Identifier
 
 
 @dataclass
@@ -40,13 +41,13 @@ class Start(Primitive): ...
 
 @dataclass
 class Let(Primitive):
-    variable: common.Identifier
+    variable: Variable
     expression: common.Expression
 
 
 @dataclass
 class Emit(Primitive):
-    variable: common.Identifier
+    variable: Variable
 
 
 class Merge(Primitive): ...
@@ -54,12 +55,12 @@ class Merge(Primitive): ...
 
 @dataclass
 class Where(Primitive):
-    condition: common.Identifier
+    condition: Variable
 
 
 @dataclass
 class WhereNot(Primitive):
-    condition: common.Identifier
+    condition: Variable
 
 
 Program = common.Program[Graph]

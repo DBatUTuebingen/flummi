@@ -14,17 +14,24 @@ class SolverError(errors.PrettyError, ValueError): ...  # pyright: ignore[report
 
 
 @dataclass
+type VariablesPer[T] = dict[T, set[CFP.Variable]]
+
+type InputMap = VariablesPer[CFP.Label]
+type OutputMap = VariablesPer[CFP.Label]
 class FlowSolution:
-    inputs_of: dict[CFP.Label, set[common.Identifier]]
-    outputs_of: dict[CFP.Label, set[common.Identifier]]
+    inputs_of: InputMap
+    outputs_of: OutputMap
 
     definitions_after: dict[CFP.Label, dict[common.Identifier, CFP.Label]]
     guard_of: dict[CFP.Label, CFP.Label]
     guarded_by: dict[CFP.Label, set[CFP.Label]]
 
 
-def solve(program: CFP.Program, symbol_table: SymbolTable) -> FlowSolution:
-    return FlowSolver(program, symbol_table).solve()
+def solve(
+    program: CFP.Program,
+    symbol_table: SymbolTable,
+) -> FlowSolution:
+    return FlowSolver(program, symbol_table, system_variables).solve()
 
 
 @dataclass
@@ -41,22 +48,22 @@ class FlowSolver:
 
         return FlowSolution(
             inputs_of, outputs_of, definitions_after, guard_of, guarded_by
+            inputs_of=inputs_of,
+            outputs_of=outputs_of,
+            definitions_after=definitions_after,
+            guard_of=guard_of,
+            guarded_by=guarded_by,
         )
 
-    def live_variable_analysis(
-        self,
-    ) -> tuple[
-        dict[CFP.Label, set[common.Identifier]],
-        dict[CFP.Label, set[common.Identifier]],
-    ]:
+    def live_variable_analysis(self) -> tuple[InputMap, OutputMap]:
         cfp = self.program.body
 
-        inputs_of = {
-            label: FlowSolver.uses(primitive)
+        inputs_of: InputMap = {
+            label: self.uses(primitive)
             for label, primitive in cfp.primitives.items()
         }
-        outputs_of = {
-            label: FlowSolver.binds(primitive)
+        outputs_of: OutputMap = {
+            label: self.binds(primitive)
             for label, primitive in cfp.primitives.items()
         }
 
@@ -84,8 +91,7 @@ class FlowSolver:
 
         return inputs_of, outputs_of
 
-    @staticmethod
-    def uses(primitive: CFP.Primitive) -> set[common.Identifier]:
+    def uses(self, primitive: CFP.Primitive) -> set[CFP.Variable]:
         match primitive:
             case CFP.Let(_, common.Expression(_, variables)):
                 return set(variables)
@@ -100,41 +106,28 @@ class FlowSolver:
             case _:
                 return set()
 
-    @staticmethod
-    def binds(primitive: CFP.Primitive) -> set[common.Identifier]:
+    def binds(self, primitive: CFP.Primitive) -> set[CFP.Variable]:
         match primitive:
-            case CFP.Start():
-                return {
-                    common.Identifier(
-                        names.nothing, location=primitive.location
-                    )
-                }
-
             case CFP.Let(variable, _):
                 return {variable}
 
             case CFP.Emit(_):
-                return {
-                    common.Identifier(names.result, location=primitive.location)
-                }
 
             case _:
                 return set()
 
     def reaching_definition_analysis(
         self,
-    ) -> dict[CFP.Label, dict[common.Identifier, CFP.Label]]:
+    ) -> dict[CFP.Label, dict[CFP.Variable, CFP.Label]]:
         cfp = self.program.body
 
         predecessors_of = graph.invert(cfp.transitions)
-        definitions_after: dict[
-            CFP.Label, dict[common.Identifier, CFP.Label]
-        ] = {}
+        definitions_after: dict[CFP.Label, dict[CFP.Variable, CFP.Label]] = {}
 
         for label in graph.topological_order(cfp.transitions):
             primitive = cfp.primitives[label]
 
-            definitions_after_here: dict[common.Identifier, CFP.Label] = {}
+            definitions_after_here: dict[CFP.Variable, CFP.Label] = {}
 
             if len(predecessors_of[label]) > 0:
                 first_predecessor, *other_predecessors = predecessors_of[label]
@@ -215,7 +208,7 @@ class FlowSolver:
                         guards_guard = guard_of[guard_label]
                         if existing_guard := guard_of.get(label):
                             if levels[guards_guard] > levels[existing_guard]:
-                                # A superceeding guard has already been found
+                                # A superceding guard has already been found
                                 # for this merge, so we don't need to do
                                 # anything here.
                                 continue
@@ -243,7 +236,7 @@ class FlowSolver:
         # loop(s) above, since merges can possibly be re-assigned from one guard
         # to another, depending on the order in which we visit the guards. The
         # necessary special casing to cover this re-assignment is not worth the
-        # hassel and sacrafice of cleanliness since we can do it easily
+        # hassel and sacrifice of cleanliness since we can do it easily
         # afterwards, i.e., here.
         guarded_by: dict[CFP.Label, set[CFP.Label]] = defaultdict(set)
         for guardee, guard in guard_of.items():
