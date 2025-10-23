@@ -31,34 +31,35 @@ class Graph(common.Located):
 Variable = common.Identifier
 
 
-@dataclass
+@dataclass(slots=True)
 class Primitive(common.Located, ABC): ...
 
 
-@dataclass
+@dataclass(slots=True)
 class Start(Primitive): ...
 
 
-@dataclass
+@dataclass(slots=True)
 class Let(Primitive):
     variable: Variable
     expression: common.Expression
 
 
-@dataclass
+@dataclass(slots=True)
 class Emit(Primitive):
     variable: Variable
 
 
+@dataclass(slots=True)
 class Merge(Primitive): ...
 
 
-@dataclass
+@dataclass(slots=True)
 class Where(Primitive):
     condition: Variable
 
 
-@dataclass
+@dataclass(slots=True)
 class WhereNot(Primitive):
     condition: Variable
 

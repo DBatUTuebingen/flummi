@@ -23,37 +23,37 @@ Variable = common.Identifier
 class Statement(common.Located, ABC): ...
 
 
-@dataclass
+@dataclass(slots=True)
 class Block(Statement):
     statements: list[Statement]
 
 
-@dataclass
+@dataclass(slots=True)
 class Declare(Statement):
     variable: Variable
     type: common.Type
 
 
-@dataclass
+@dataclass(slots=True)
 class Let(Statement):
     variable: Variable
     expression: common.Expression
 
 
-@dataclass
+@dataclass(slots=True)
 class Emit(Statement):
     variable: Variable
 
 
-@dataclass
+@dataclass(slots=True)
 class Stop(Statement): ...
 
 
-@dataclass
+@dataclass(slots=True)
 class NoOp(Statement): ...
 
 
-@dataclass
+@dataclass(slots=True)
 class If(Statement):
     condition: Variable
     truthy_branch: Statement
