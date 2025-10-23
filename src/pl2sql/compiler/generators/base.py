@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from inspect import isabstract
@@ -13,10 +11,7 @@ from ...library import sql, errors
 class GenerationError(errors.PrettyError, ValueError): ...  # pyright: ignore[reportUnsafeMultipleInheritance]
 
 
-GENERATORS: dict[str, type[Generator]] = {}
-
-
-@dataclass
+@dataclass(slots=True)
 class Generator(ABC):
     def __init_subclass__(cls, name: str = "") -> None:
         if not isabstract(cls):
@@ -44,3 +39,6 @@ class PrimitiveGenerator(Generator, ABC):
             "This primitive comes from here...",
             primitive.location,
         )
+
+
+GENERATORS: dict[str, type[Generator]] = {}

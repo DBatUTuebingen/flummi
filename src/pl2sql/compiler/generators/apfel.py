@@ -2,7 +2,7 @@ from typing import override
 
 from .base import GenerationError
 from .lateral import LateralGenerator
-from .. import names
+from .. import constants
 from ...IR import CFP
 from ...library import sql, graph
 
@@ -44,7 +44,7 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
                         sql.select(
                             [
                                 sql.variable(
-                                    names.result,
+                                    constants.Names.RESULT,
                                     label.identifier,
                                 )
                             ],
@@ -52,7 +52,7 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
                                 sql.named(
                                     sql.paren(child_region),
                                     label.identifier,
-                                    columns=[names.result],
+                                    columns=[constants.Names.RESULT],
                                 )
                             ],
                             predicates=[
@@ -86,7 +86,7 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
                                             predecessor
                                         ][variable].identifier,
                                     ),
-                                    label.identifier + names.result,
+                                    label.identifier + constants.Names.RESULT,
                                 )
                             ]
                         )
@@ -107,12 +107,14 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
         from_list.append(
             sql.named(
                 sql.lateral(sql.union_all(results)),
-                names.result,
-                columns=[names.result],
+                constants.Names.RESULT,
+                columns=[constants.Names.RESULT],
             )
         )
 
         return sql.select(
-            select_list=[sql.variable(names.result, names.result)],
+            select_list=[
+                sql.variable(constants.Names.RESULT, constants.Names.RESULT)
+            ],
             from_list=from_list,
         )

@@ -1,7 +1,7 @@
 from typing import override
 
 from .base import PrimitiveGenerator
-from .. import names
+from .. import constants
 from ...IR import CFP
 from ...library import sql, graph
 
@@ -25,21 +25,27 @@ class LateralGenerator(PrimitiveGenerator, name="lateral"):
                     sql.union_all(
                         [
                             sql.select(
-                                [sql.variable(names.result, label.identifier)]
+                                [
+                                    sql.variable(
+                                        constants.Names.RESULT, label.identifier
+                                    )
+                                ]
                             )
                             for label, primitive in cfp.primitives.items()
                             if isinstance(primitive, CFP.Emit)
                         ]
                     )
                 ),
-                names.result,
-                columns=[names.result],
+                constants.Names.RESULT,
+                columns=[constants.Names.RESULT],
             )
         )
 
         return (
             sql.select(
-                select_list=[sql.variable(names.result, names.result)],
+                select_list=[
+                    sql.variable(constants.Names.RESULT, constants.Names.RESULT)
+                ],
                 from_list=from_list,
             )
             + ";"
@@ -57,7 +63,9 @@ class LateralGenerator(PrimitiveGenerator, name="lateral"):
                 assert not predecessors
                 return sql.paren(
                     sql.select(
-                        select_list=[sql.named("NULL", names.nothing)],
+                        select_list=[
+                            sql.named(sql.NULL, constants.Names.NOTHING)
+                        ],
                     )
                 )
 
@@ -102,13 +110,13 @@ class LateralGenerator(PrimitiveGenerator, name="lateral"):
                                             predecessor
                                         ][variable].identifier,
                                     ),
-                                    names.result,
+                                    constants.Names.RESULT,
                                 )
                             ],
                         )
                     ),
                     label.identifier,
-                    columns=[names.result],
+                    columns=[constants.Names.RESULT],
                 )
 
             case _:

@@ -1,7 +1,7 @@
 from typing import override
 
 from .base import PrimitiveGenerator
-from .. import names
+from .. import constants
 from ...IR import CFP
 from ...library import sql, graph
 
@@ -28,7 +28,9 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
                     [
                         sql.select(
                             select_list=[
-                                sql.variable(names.result, label.identifier)
+                                sql.variable(
+                                    constants.Names.RESULT, label.identifier
+                                )
                             ],
                             from_list=[sql.name(label.identifier)],
                         )
@@ -49,7 +51,7 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
     ) -> sql.SQL:
         outputs = [
             variable.identifier for variable in self.flow.outputs_of[label]
-        ] or [names.nothing]
+        ] or [constants.Names.NOTHING]
 
         match primitive:
             case CFP.Start():
@@ -58,7 +60,7 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
                 body = sql.select(
                     select_list=[
                         sql.named(
-                            "NULL",
+                            sql.NULL,
                             output,
                         )
                         for output in outputs
@@ -104,7 +106,7 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
                             sql.variable(
                                 variable.identifier, predecessor.identifier
                             )
-                            if output == names.result
+                            if output == constants.Names.RESULT
                             else sql.variable(output, predecessor.identifier),
                             output,
                         )
@@ -121,8 +123,8 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
                         sql.select(
                             select_list=[
                                 sql.named(
-                                    "NULL"
-                                    if output == names.nothing
+                                    sql.NULL
+                                    if output == constants.Names.NOTHING
                                     else sql.variable(
                                         output,
                                         predecessor.identifier,
@@ -144,8 +146,8 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
                 body = sql.select(
                     select_list=[
                         sql.named(
-                            "NULL"
-                            if output == names.nothing
+                            sql.NULL
+                            if output == constants.Names.NOTHING
                             else sql.variable(
                                 output,
                                 predecessor.identifier,

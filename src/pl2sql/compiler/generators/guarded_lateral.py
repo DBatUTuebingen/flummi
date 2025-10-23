@@ -1,7 +1,7 @@
 from typing import override
 
 from .lateral import LateralGenerator
-from .. import names
+from .. import constants
 from ...IR import CFP
 from ...library import sql, graph
 
@@ -25,10 +25,14 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                     sql.union_all(
                         [
                             sql.select(
-                                [sql.variable(names.result, label.identifier)],
+                                [
+                                    sql.variable(
+                                        constants.Names.RESULT, label.identifier
+                                    )
+                                ],
                                 predicates=[
                                     sql.variable(
-                                        names.guard,
+                                        constants.Names.GUARD,
                                         self.flow.guard_of[label].identifier,
                                     )
                                     + " IS NOT DISTINCT FROM TRUE"
@@ -39,14 +43,16 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                         ]
                     )
                 ),
-                names.result,
-                columns=[names.result],
+                constants.Names.RESULT,
+                columns=[constants.Names.RESULT],
             )
         )
 
         return (
             sql.select(
-                select_list=[sql.variable(names.result, names.result)],
+                select_list=[
+                    sql.variable(constants.Names.RESULT, constants.Names.RESULT)
+                ],
                 from_list=from_list,
             )
             + ";"
@@ -69,7 +75,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                         )
                     ),
                     label.identifier,
-                    [names.guard],
+                    [constants.Names.GUARD],
                 )
 
             case CFP.Let(variable, expression):
@@ -82,7 +88,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                 sql.case(
                                     sql.when(
                                         sql.variable(
-                                            names.guard,
+                                            constants.Names.GUARD,
                                             self.flow.guard_of[
                                                 label
                                             ].identifier,
@@ -101,7 +107,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                             )
                                         ),
                                     ),
-                                    default="NULL",
+                                    default=sql.NULL,
                                 ),
                             ]
                         )
@@ -127,7 +133,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                         )
                     ),
                     label.identifier,
-                    columns=[names.result],
+                    columns=[constants.Names.RESULT],
                 )
 
             case CFP.Where(variable) | CFP.WhereNot(variable):
@@ -138,7 +144,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                         sql.select(
                             select_list=[
                                 sql.variable(
-                                    names.guard,
+                                    constants.Names.GUARD,
                                     self.flow.guard_of[label].identifier,
                                 )
                                 + " AND "
@@ -158,7 +164,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                         )
                     ),
                     label.identifier,
-                    columns=[names.guard],
+                    columns=[constants.Names.GUARD],
                 )
 
             case CFP.Merge():
@@ -180,7 +186,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                     ],
                                     predicates=[
                                         sql.variable(
-                                            names.guard,
+                                            constants.Names.GUARD,
                                             self.flow.guard_of[
                                                 predecessor
                                             ].identifier,
