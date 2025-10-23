@@ -29,7 +29,7 @@ def indent1(lines: str, prefix: str):
 def groupby[T, K: SupportsRichComparison](
     things: Iterator[T], key: Callable[[T], K]
 ) -> Iterable[tuple[K, Iterable[T]]]:
-    return _groupby[K, T](
+    return _groupby(
         sorted(
             things,
             key=key,
