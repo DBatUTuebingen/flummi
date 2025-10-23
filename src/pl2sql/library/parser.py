@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections.abc import Iterator
 from dataclasses import InitVar, dataclass, field
 from enum import StrEnum, unique, EnumMeta, EnumDict
@@ -12,7 +10,7 @@ from .errors import PrettyError, Location
 class TokensMeta(EnumMeta):
     def __new__(
         metacls, cls: str, bases: tuple[type, ...], classdict: EnumDict
-    ) -> TokensMeta:
+    ) -> type:
         new_enum: EnumMeta = super().__new__(metacls, cls, bases, classdict)
         return unique(new_enum)  # pyright: ignore[reportUnknownVariableType, reportArgumentType]
 
