@@ -1,16 +1,21 @@
-from enum import Flag, auto, unique
+from enum import Enum, auto, unique
 
 
 @unique
-class Features(Flag):
+class Feature(Enum):
     SEQUENCING = auto()
     BRANCHING = auto()
     ITERATION = auto()
 
 
-MINIMAL_FEATURES = Features.SEQUENCING
+type Features = set[Feature]
+
+MINIMAL_FEATURES = {Feature.SEQUENCING}
 
 FEATURE_DEPENDECIES = {
-    Features.BRANCHING: Features.SEQUENCING,
-    Features.ITERATION: Features.BRANCHING | Features.SEQUENCING,
+    Feature.BRANCHING: {Feature.SEQUENCING},
+    Feature.ITERATION: {
+        Feature.BRANCHING,
+        Feature.SEQUENCING,
+    },
 }

@@ -18,10 +18,7 @@ def analyze_live_variables(
     def uses(primitive: CFP.Primitive) -> set[CFP.Variable]:
         match primitive:
             case CFP.Start():
-                if constants.Names.LABEL in system_variables:
-                    return {system_variables[constants.Names.LABEL]}
-                else:
-                    return set()
+                return {system_variables[constants.Names.LABEL]}
 
             case CFP.Let(_, common.Expression(_, variables)):
                 return set(variables)

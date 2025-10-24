@@ -3,7 +3,7 @@ from typing import override
 from .base import GenerationError
 from .lateral import LateralGenerator
 from .. import constants
-from ..features import Features
+from ..features import Feature
 from ...IR import CFP
 from ...library import sql, graph
 
@@ -11,7 +11,7 @@ from ...library import sql, graph
 class ApfelGenerator(
     LateralGenerator,
     name="apfel",
-    supports=Features.SEQUENCING | Features.BRANCHING,
+    supports={Feature.SEQUENCING, Feature.BRANCHING},
 ):
     @override
     def generate(self) -> sql.SQL:

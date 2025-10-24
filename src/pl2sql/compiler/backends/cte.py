@@ -3,7 +3,7 @@ from typing import override
 from .base import PrimitiveBackend
 from .mixins import UseLiveVariables
 from .. import constants
-from ..features import Features
+from ..features import Feature
 from ...IR import CFP
 from ...library import sql, graph
 
@@ -12,7 +12,7 @@ class CTEGenerator(
     UseLiveVariables,
     PrimitiveBackend,
     name="CTE",
-    supports=Features.SEQUENCING | Features.BRANCHING,
+    supports={Feature.SEQUENCING, Feature.BRANCHING},
 ):
     @override
     def generate(self) -> sql.SQL:

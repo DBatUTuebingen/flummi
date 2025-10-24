@@ -32,7 +32,7 @@ def run(
 ) -> sql.SQL:
     backend_cls = _BACKENDS[backend.value]
 
-    unsported_features = features & ~backend_cls.supported_features
+    unsported_features = features - backend_cls.supported_features
     if unsported_features:
         raise FeatureError(
             "Program uses features the backend does not support: "

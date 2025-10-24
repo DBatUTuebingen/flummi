@@ -3,7 +3,7 @@ from typing import override
 from .mixins import UseColumnAllocation
 from .cte import CTEGenerator
 from .. import constants
-from ..features import Features
+from ..features import Feature
 from ...IR import CFP
 from ...library import sql, graph
 
@@ -12,7 +12,7 @@ class RecursiveCTEGenerator(
     UseColumnAllocation,
     CTEGenerator,
     name="recursive_cte",
-    supports=Features.SEQUENCING | Features.BRANCHING | Features.ITERATION,
+    supports={Feature.SEQUENCING, Feature.BRANCHING, Feature.ITERATION},
 ):
     @override
     def generate(self) -> sql.SQL:

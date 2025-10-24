@@ -3,7 +3,7 @@ from typing import NamedTuple, Self
 
 
 from . import constants
-from .features import Features, FEATURE_DEPENDECIES, MINIMAL_FEATURES
+from .features import Feature, Features, FEATURE_DEPENDECIES, MINIMAL_FEATURES
 from ..IR import AST, common
 from ..library import errors
 
@@ -73,7 +73,7 @@ class Analyzer:
         )
         system_variables[constants.Names.RESULT] = emit_variable
 
-        if Features.ITERATION in self.features:
+        if Feature.ITERATION in self.features:
             label_variable = AST.Variable(
                 constants.Names.LABEL, location=self.program.location
             )
@@ -113,6 +113,8 @@ class Analyzer:
     def analyze_statement(self, statement: AST.Statement) -> StatementResult:
         match statement:
             case AST.Block(statements):
+                self.features.add(Feature.SEQUENCING)
+
                 if not statements:
                     raise AnalysisError(
                         "Found empty block.", statement.location
@@ -191,7 +193,7 @@ class Analyzer:
                 return self.StatementResult(statement)
 
             case AST.If(condition, truthy_branch, falsey_branch):
-                self.features |= Features.BRANCHING
+                self.features.add(Feature.BRANCHING)
 
                 self.analyze_variable_read(condition)
                 truthy_branch, truthy_stopped, truthy_elidable = (
@@ -215,7 +217,7 @@ class Analyzer:
                     )
 
             case AST.Loop(name, body):
-                self.features |= Features.ITERATION
+                self.features.add(Feature.ITERATION)
 
                 if name in self.used_loop_names:
                     original_label = next(

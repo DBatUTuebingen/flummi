@@ -3,7 +3,7 @@ from typing import override
 from .base import PrimitiveBackend
 from .mixins import UseGuards, UseReachingDefinitions
 from .. import constants
-from ..features import Features
+from ..features import Feature
 from ...IR import CFP
 from ...library import sql, graph
 
@@ -13,7 +13,7 @@ class LateralGenerator(
     UseReachingDefinitions,
     PrimitiveBackend,
     name="lateral",
-    supports=Features.SEQUENCING,
+    supports={Feature.SEQUENCING},
 ):
     @override
     def generate(self) -> sql.SQL:
