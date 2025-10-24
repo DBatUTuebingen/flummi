@@ -11,6 +11,7 @@ from ..solvers.live_variable_analysis import (
     OutputMap,
     analyze_live_variables,
 )
+from ..solvers.column_allocation import Schema, Allocations, allocate_columns
 from ..solvers.reaching_definitions_analysis import (
     Definitions,
     analyze_reaching_definitions,
@@ -51,6 +52,22 @@ class UseLiveVariables(Backend, ABC):
 
         self.inputs_of, self.outputs_of = analyze_live_variables(
             self.program, self.system_variables
+        )
+
+
+@dataclass
+class UseColumnAllocation(UseLiveVariables, ABC):
+    schema: Schema = field(init=False)
+    allocation_for: Allocations = field(init=False)
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        self.schema, self.allocation_for = allocate_columns(
+            self.program,
+            self.symbol_table,
+            self.system_variables,
+            self.inputs_of,
         )
 
 
