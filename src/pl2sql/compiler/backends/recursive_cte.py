@@ -3,12 +3,16 @@ from typing import override
 from .base import UseColumnAllocation
 from .cte import CTEGenerator
 from .. import constants
+from ..features import Features
 from ...IR import CFP
 from ...library import sql, graph
 
 
 class RecursiveCTEGenerator(
-    UseColumnAllocation, CTEGenerator, name="recursive_cte"
+    UseColumnAllocation,
+    CTEGenerator,
+    name="recursive_cte",
+    supports=Features.SEQUENCING | Features.BRANCHING | Features.ITERATION,
 ):
     @override
     def generate(self) -> sql.SQL:

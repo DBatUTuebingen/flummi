@@ -2,11 +2,16 @@ from typing import override
 
 from .lateral import LateralGenerator
 from .. import constants
+from ..features import Features
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
+class GuardedLateralGenerator(
+    LateralGenerator,
+    name="guarded_lateral",
+    supports=Features.SEQUENCING | Features.BRANCHING,
+):
     @override
     def generate(self) -> sql.SQL:
         cfp = self.program.body

@@ -2,12 +2,17 @@ from typing import override
 
 from .base import PrimitiveBackend, UseGuards, UseReachingDefinitions
 from .. import constants
+from ..features import Features
 from ...IR import CFP
 from ...library import sql, graph
 
 
 class LateralGenerator(
-    UseGuards, UseReachingDefinitions, PrimitiveBackend, name="lateral"
+    UseGuards,
+    UseReachingDefinitions,
+    PrimitiveBackend,
+    name="lateral",
+    supports=Features.SEQUENCING,
 ):
     @override
     def generate(self) -> sql.SQL:

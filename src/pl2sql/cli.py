@@ -74,7 +74,9 @@ def compile(
         if graph is not None:
             render_to_file(lowered_program.body, graph, dot)
 
-        sql = run(backend, lowered_program, symbol_table, system_variables)
+        sql = run(
+            backend, lowered_program, features, symbol_table, system_variables
+        )
 
     except PrettyError as e:
         print(e.format(source), file=sys.stderr)

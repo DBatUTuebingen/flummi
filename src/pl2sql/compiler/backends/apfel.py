@@ -3,11 +3,16 @@ from typing import override
 from .base import GenerationError
 from .lateral import LateralGenerator
 from .. import constants
+from ..features import Features
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class ApfelGenerator(LateralGenerator, name="apfel"):
+class ApfelGenerator(
+    LateralGenerator,
+    name="apfel",
+    supports=Features.SEQUENCING | Features.BRANCHING,
+):
     @override
     def generate(self) -> sql.SQL:
         start_candidates = [

@@ -2,11 +2,17 @@ from typing import override
 
 from .base import PrimitiveBackend, UseLiveVariables
 from .. import constants
+from ..features import Features
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class CTEGenerator(UseLiveVariables, PrimitiveBackend, name="CTE"):
+class CTEGenerator(
+    UseLiveVariables,
+    PrimitiveBackend,
+    name="CTE",
+    supports=Features.SEQUENCING | Features.BRANCHING,
+):
     @override
     def generate(self) -> sql.SQL:
         cfp = self.program.body
