@@ -9,10 +9,11 @@ __all__ = ("analyze_region_guards",)
 type Guard = CFP.Label
 type Region = set[CFP.Label]
 
+type GuardMap = CFP.PerLabel[Guard]
+type RegionMap = CFP.PerLabel[Region]
 
-def analyze_region_guards(
-    program: CFP.Program,
-) -> tuple[dict[CFP.Label, Guard], dict[Guard, Region]]:
+
+def analyze_region_guards(program: CFP.Program) -> tuple[GuardMap, RegionMap]:
     cfp = program.body
 
     # This implementation doesn't support cycles! Since we don't implement any
@@ -33,9 +34,9 @@ def analyze_region_guards(
         CFP.Merge,
     )
 
-    guard_of: dict[CFP.Label, Guard] = {}
+    guard_of: CFP.PerLabel[Guard] = {}
 
-    levels: dict[CFP.Label, int] = {
+    levels: CFP.PerLabel[int] = {
         label: 0
         for label, primitive in cfp.primitives.items()
         if isinstance(primitive, CFP.Start)

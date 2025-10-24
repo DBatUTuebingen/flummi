@@ -12,7 +12,7 @@ __all__ = ("allocate_columns",)
 
 type Column = str
 type Schema = dict[Column, common.Type]
-type Allocations = dict[CFP.Label, Allocation]
+type Allocations = CFP.PerLabel[Allocation]
 
 
 @dataclass(slots=True)
@@ -62,7 +62,7 @@ def allocate_columns(
     # to the sets of type siblings themselves, we also collect the maximum
     # cardinality of them by type.
 
-    type_siblings_at: dict[CFP.Label, dict[common.Type, list[CFP.Variable]]] = (
+    type_siblings_at: CFP.PerLabel[dict[common.Type, list[CFP.Variable]]] = (
         defaultdict(lambda: defaultdict(list))
     )
     max_type_counts: dict[common.Type, int] = defaultdict(int)

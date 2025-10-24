@@ -20,6 +20,8 @@ __all__ = (
 
 
 Label = common.Identifier
+type PerLabel[T] = dict[Label, T]
+
 Variable = common.Identifier
 
 
@@ -63,7 +65,7 @@ class GoTo(Primitive):
 
 @dataclass(slots=True)
 class Graph(common.Located):
-    primitives: dict[Label, Primitive]
+    primitives: PerLabel[Primitive]
     entry_label: Label
     edges: graph.Graph[Label]
     backedges: graph.Graph[Label]

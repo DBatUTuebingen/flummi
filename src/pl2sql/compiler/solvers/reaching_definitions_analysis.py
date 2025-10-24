@@ -5,16 +5,15 @@ __all__ = ("analyze_reaching_definitions",)
 
 
 type Definitions = dict[CFP.Variable, CFP.Label]
+type DefinitionMap = CFP.PerLabel[Definitions]
 
 
-def analyze_reaching_definitions(
-    program: CFP.Program,
-) -> dict[CFP.Label, Definitions]:
+def analyze_reaching_definitions(program: CFP.Program) -> DefinitionMap:
     cfp = program.body
 
     predecessors_of = graph.invert(cfp.edges)
 
-    definitions_after: dict[CFP.Label, Definitions] = {}
+    definitions_after: CFP.PerLabel[Definitions] = {}
 
     for label in graph.topological_order(cfp.edges):
         primitive = cfp.primitives[label]

@@ -17,13 +17,13 @@ class LoweringError(errors.PrettyError, ValueError): ...  # pyright: ignore[repo
 
 @dataclass(slots=True)
 class Lowering:
-    _primitives: dict[CFP.Label, CFP.Primitive] = field(
+    _primitives: CFP.PerLabel[CFP.Primitive] = field(
         init=False, default_factory=dict
     )
-    _edges: dict[CFP.Label, set[CFP.Label]] = field(
+    _edges: CFP.PerLabel[set[CFP.Label]] = field(
         init=False, default_factory=lambda: defaultdict(set)
     )
-    _backedges: dict[CFP.Label, set[CFP.Label]] = field(
+    _backedges: CFP.PerLabel[set[CFP.Label]] = field(
         init=False, default_factory=lambda: defaultdict(set)
     )
     _label_counters: dict[str, int] = field(

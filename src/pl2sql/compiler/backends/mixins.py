@@ -2,7 +2,6 @@ from abc import ABC
 from dataclasses import dataclass, field
 
 from .base import Backend
-from ...IR import CFP
 from ..solvers.live_variable_analysis import (
     InputMap,
     OutputMap,
@@ -10,10 +9,14 @@ from ..solvers.live_variable_analysis import (
 )
 from ..solvers.column_allocation import Schema, Allocations, allocate_columns
 from ..solvers.reaching_definitions_analysis import (
-    Definitions,
+    DefinitionMap,
     analyze_reaching_definitions,
 )
-from ..solvers.region_guard_analysis import Guard, Region, analyze_region_guards
+from ..solvers.region_guard_analysis import (
+    GuardMap,
+    RegionMap,
+    analyze_region_guards,
+)
 
 
 @dataclass
@@ -47,7 +50,7 @@ class UseColumnAllocation(UseLiveVariables, ABC):
 
 @dataclass
 class UseReachingDefinitions(Backend, ABC):
-    definitions_after: dict[CFP.Label, Definitions] = field(init=False)
+    definitions_after: DefinitionMap = field(init=False)
 
     def __post_init__(self):
         super().__post_init__()
@@ -59,8 +62,8 @@ class UseReachingDefinitions(Backend, ABC):
 
 @dataclass
 class UseGuards(Backend, ABC):
-    guard_of: dict[CFP.Label, Guard] = field(init=False)
-    guarded_by: dict[Guard, Region] = field(init=False)
+    guard_of: GuardMap = field(init=False)
+    guarded_by: RegionMap = field(init=False)
 
     def __post_init__(self):
         super().__post_init__()

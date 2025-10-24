@@ -5,17 +5,17 @@ from .. import constants
 __all__ = ("analyze_live_variables",)
 
 
-type VariablesPer[T] = dict[T, set[CFP.Variable]]
+type Variables = set[CFP.Variable]
 
-type InputMap = VariablesPer[CFP.Label]
-type OutputMap = VariablesPer[CFP.Label]
+type InputMap = CFP.PerLabel[Variables]
+type OutputMap = CFP.PerLabel[Variables]
 
 
 def analyze_live_variables(
     program: CFP.Program,
     system_variables: dict[constants.Names, CFP.Variable],
 ) -> tuple[InputMap, OutputMap]:
-    def uses(primitive: CFP.Primitive) -> set[CFP.Variable]:
+    def uses(primitive: CFP.Primitive) -> Variables:
         match primitive:
             case CFP.Start():
                 return {system_variables[constants.Names.LABEL]}
@@ -33,7 +33,7 @@ def analyze_live_variables(
             case _:
                 return set()
 
-    def binds(primitive: CFP.Primitive) -> set[CFP.Variable]:
+    def binds(primitive: CFP.Primitive) -> Variables:
         match primitive:
             case CFP.Let(variable, _):
                 return {variable}
