@@ -3,7 +3,7 @@ from typing import NamedTuple, Self
 
 
 from . import constants
-from .features import Features, FEATURE_DEPENDECIES
+from .features import Features, FEATURE_DEPENDECIES, MINIMAL_FEATURES
 from ..IR import AST, common
 from ..library import errors
 
@@ -30,7 +30,7 @@ def analyze(program: AST.Program) -> AnalysisResult:
 @dataclass(slots=True)
 class Analyzer:
     program: AST.Program
-    features: Features = field(init=False, default=Features.SEQUENCING)
+    features: Features = field(init=False, default=MINIMAL_FEATURES)
     emit_type: common.Type | None = field(init=False, default=None)
     symbol_table: SymbolTable = field(init=False, default_factory=dict)
     bound_symbols: set[common.Identifier] = field(

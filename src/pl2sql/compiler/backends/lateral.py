@@ -1,6 +1,7 @@
 from typing import override
 
-from .base import PrimitiveBackend, UseGuards, UseReachingDefinitions
+from .base import PrimitiveBackend
+from .mixins import UseGuards, UseReachingDefinitions
 from .. import constants
 from ..features import Features
 from ...IR import CFP

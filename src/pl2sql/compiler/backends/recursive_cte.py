@@ -1,6 +1,6 @@
 from typing import override
 
-from .base import UseColumnAllocation
+from .mixins import UseColumnAllocation
 from .cte import CTEGenerator
 from .. import constants
 from ..features import Features

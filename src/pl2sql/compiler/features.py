@@ -8,6 +8,8 @@ class Features(Flag):
     ITERATION = auto()
 
 
+MINIMAL_FEATURES = Features.SEQUENCING
+
 FEATURE_DEPENDECIES = {
     Features.BRANCHING: Features.SEQUENCING,
     Features.ITERATION: Features.BRANCHING | Features.SEQUENCING,

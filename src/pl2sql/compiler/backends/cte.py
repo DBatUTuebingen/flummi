@@ -1,6 +1,7 @@
 from typing import override
 
-from .base import PrimitiveBackend, UseLiveVariables
+from .base import PrimitiveBackend
+from .mixins import UseLiveVariables
 from .. import constants
 from ..features import Features
 from ...IR import CFP
