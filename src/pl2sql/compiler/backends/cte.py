@@ -1,12 +1,12 @@
 from typing import override
 
-from .base import PrimitiveGenerator
+from .base import PrimitiveBackend, UseLiveVariables
 from .. import constants
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class CTEGenerator(PrimitiveGenerator, name="CTE"):
+class CTEGenerator(UseLiveVariables, PrimitiveBackend, name="CTE"):
     @override
     def generate(self) -> sql.SQL:
         cfp = self.program.body
@@ -50,7 +50,7 @@ class CTEGenerator(PrimitiveGenerator, name="CTE"):
         predecessors: set[CFP.Label],
     ) -> sql.SQL:
         outputs = [
-            variable.identifier for variable in self.flow.outputs_of[label]
+            variable.identifier for variable in self.outputs_of[label]
         ] or [constants.Names.NOTHING]
 
         match primitive:

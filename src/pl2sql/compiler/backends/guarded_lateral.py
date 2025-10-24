@@ -33,7 +33,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                 predicates=[
                                     sql.variable(
                                         constants.Names.GUARD,
-                                        self.flow.guard_of[label].identifier,
+                                        self.guard_of[label].identifier,
                                     )
                                     + " IS NOT DISTINCT FROM TRUE"
                                 ],
@@ -89,16 +89,14 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                     sql.when(
                                         sql.variable(
                                             constants.Names.GUARD,
-                                            self.flow.guard_of[
-                                                label
-                                            ].identifier,
+                                            self.guard_of[label].identifier,
                                         ),
                                         expression.source.format(
                                             *(
                                                 sql.paren(
                                                     sql.variable(
                                                         argument.identifier,
-                                                        self.flow.definitions_after[
+                                                        self.definitions_after[
                                                             predecessor
                                                         ][argument].identifier,
                                                     )
@@ -125,7 +123,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                             select_list=[
                                 sql.variable(
                                     variable.identifier,
-                                    self.flow.definitions_after[predecessor][
+                                    self.definitions_after[predecessor][
                                         variable
                                     ].identifier,
                                 ),
@@ -145,12 +143,12 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                             select_list=[
                                 sql.variable(
                                     constants.Names.GUARD,
-                                    self.flow.guard_of[label].identifier,
+                                    self.guard_of[label].identifier,
                                 )
                                 + " AND "
                                 + sql.variable(
                                     variable.identifier,
-                                    self.flow.definitions_after[predecessor][
+                                    self.definitions_after[predecessor][
                                         variable
                                     ].identifier,
                                 )
@@ -176,18 +174,18 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                                     select_list=[
                                         sql.variable(
                                             variable.identifier,
-                                            self.flow.definitions_after[
-                                                predecessor
-                                            ][variable].identifier,
+                                            self.definitions_after[predecessor][
+                                                variable
+                                            ].identifier,
                                         )
                                         for variable in sorted(
-                                            self.flow.definitions_after[label]
+                                            self.definitions_after[label]
                                         )
                                     ],
                                     predicates=[
                                         sql.variable(
                                             constants.Names.GUARD,
-                                            self.flow.guard_of[
+                                            self.guard_of[
                                                 predecessor
                                             ].identifier,
                                         )
@@ -200,9 +198,7 @@ class GuardedLateralGenerator(LateralGenerator, name="guarded_lateral"):
                     label.identifier,
                     columns=[
                         variable.identifier
-                        for variable in sorted(
-                            self.flow.definitions_after[label]
-                        )
+                        for variable in sorted(self.definitions_after[label])
                     ],
                 )
 

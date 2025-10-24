@@ -9,8 +9,7 @@ from .IR.pretty.render import render
 from .compiler.parser import parse
 from .compiler.analyzer import analyze
 from .compiler.lowering import lower
-from .compiler.solver import solve
-from .compiler.generators import GenerationMethod, generate
+from .compiler.backends import Backend, run
 
 from .library.errors import PrettyError
 
@@ -43,11 +42,9 @@ def compile(
             help="The path to write the compiled query to.",
         ),
     ],
-    method: Annotated[
-        GenerationMethod,
-        typer.Argument(
-            case_sensitive=False, help="The code generation method to use."
-        ),
+    backend: Annotated[
+        Backend,
+        typer.Argument(case_sensitive=False, help="The backend to use."),
     ],
     graph: Annotated[
         Path | None,
@@ -77,9 +74,7 @@ def compile(
         if graph is not None:
             render_to_file(lowered_program.body, graph, dot)
 
-        dataflow = solve(lowered_program, symbol_table)
-
-        sql = generate(method, lowered_program, dataflow, symbol_table)
+        sql = run(backend, lowered_program, symbol_table, system_variables)
 
     except PrettyError as e:
         print(e.format(source), file=sys.stderr)

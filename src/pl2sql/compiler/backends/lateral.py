@@ -1,12 +1,14 @@
 from typing import override
 
-from .base import PrimitiveGenerator
+from .base import PrimitiveBackend, UseGuards, UseReachingDefinitions
 from .. import constants
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class LateralGenerator(PrimitiveGenerator, name="lateral"):
+class LateralGenerator(
+    UseGuards, UseReachingDefinitions, PrimitiveBackend, name="lateral"
+):
     @override
     def generate(self) -> sql.SQL:
         cfp = self.program.body
@@ -81,7 +83,7 @@ class LateralGenerator(PrimitiveGenerator, name="lateral"):
                                         sql.paren(
                                             sql.variable(
                                                 argument.identifier,
-                                                self.flow.definitions_after[
+                                                self.definitions_after[
                                                     predecessor
                                                 ][argument].identifier,
                                             )
@@ -106,9 +108,9 @@ class LateralGenerator(PrimitiveGenerator, name="lateral"):
                                 sql.named(
                                     sql.variable(
                                         variable.identifier,
-                                        self.flow.definitions_after[
-                                            predecessor
-                                        ][variable].identifier,
+                                        self.definitions_after[predecessor][
+                                            variable
+                                        ].identifier,
                                     ),
                                     constants.Names.RESULT,
                                 )

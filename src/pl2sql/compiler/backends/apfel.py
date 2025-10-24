@@ -24,7 +24,7 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
         return self.generate_region(start_candidates[0]) + ";"
 
     def generate_region(self, entry_label: CFP.Label) -> sql.SQL:
-        region_labels = self.flow.guarded_by[entry_label]
+        region_labels = self.guarded_by[entry_label]
         region = graph.subgraph(self.program.body.edges, region_labels)
         predecessors = graph.invert(self.program.body.edges)
 
@@ -58,7 +58,7 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
                             predicates=[
                                 sql.variable(
                                     variable.identifier,
-                                    self.flow.definitions_after[predecessor][
+                                    self.definitions_after[predecessor][
                                         variable
                                     ].identifier,
                                 )
@@ -82,9 +82,9 @@ class ApfelGenerator(LateralGenerator, name="apfel"):
                                 sql.named(
                                     sql.variable(
                                         variable.identifier,
-                                        self.flow.definitions_after[
-                                            predecessor
-                                        ][variable].identifier,
+                                        self.definitions_after[predecessor][
+                                            variable
+                                        ].identifier,
                                     ),
                                     label.identifier + constants.Names.RESULT,
                                 )
