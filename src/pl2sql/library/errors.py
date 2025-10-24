@@ -12,13 +12,16 @@ class Location:
     column: int
 
 
+type Reason = str | Location
+
+
 class PrettyError(Exception):
     lookahead: ClassVar[int] = 2
     lookbehind: ClassVar[int] = 2
 
-    reasoning: Iterable[str | Location]
+    reasoning: Iterable[Reason]
 
-    def __init__(self, *reasoning: str | Location):
+    def __init__(self, *reasoning: Reason):
         self.reasoning = reasoning
         super().__init__()
 

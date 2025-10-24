@@ -1,9 +1,10 @@
+from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from typing import NamedTuple, Self
 
 
 from . import constants
-from .features import Feature, Features, FEATURE_DEPENDECIES, MINIMAL_FEATURES
+from .features import Feature, FEATURE_DEPENDECIES
 from ..IR import AST, common
 from ..library import errors
 
@@ -20,7 +21,7 @@ class AnalysisResult(NamedTuple):
     program: AST.Program
     symbol_table: SymbolTable
     system_variables: dict[constants.Names, AST.Variable]
-    features: Features
+    features: dict[Feature, list[errors.Location | None]]
 
 
 def analyze(program: AST.Program) -> AnalysisResult:
@@ -30,7 +31,9 @@ def analyze(program: AST.Program) -> AnalysisResult:
 @dataclass(slots=True)
 class Analyzer:
     program: AST.Program
-    features: Features = field(init=False, default=MINIMAL_FEATURES)
+    features: dict[Feature, list[errors.Location | None]] = field(
+        init=False, default_factory=lambda: defaultdict(list)
+    )
     emit_type: common.Type | None = field(init=False, default=None)
     symbol_table: SymbolTable = field(init=False, default_factory=dict)
     bound_symbols: set[common.Identifier] = field(
@@ -61,7 +64,8 @@ class Analyzer:
 
         for feature in self.features:
             if (dependencies := FEATURE_DEPENDECIES.get(feature)) is not None:
-                self.features |= dependencies
+                for requried_feature in dependencies:
+                    self.features[requried_feature].append(None)
 
         system_variables: dict[constants.Names, AST.Variable] = {}
 
@@ -113,7 +117,7 @@ class Analyzer:
     def analyze_statement(self, statement: AST.Statement) -> StatementResult:
         match statement:
             case AST.Block(statements):
-                self.features.add(Feature.SEQUENCING)
+                self.features[Feature.SEQUENCING].append(statement.location)
 
                 if not statements:
                     raise AnalysisError(
@@ -193,7 +197,7 @@ class Analyzer:
                 return self.StatementResult(statement)
 
             case AST.If(condition, truthy_branch, falsey_branch):
-                self.features.add(Feature.BRANCHING)
+                self.features[Feature.BRANCHING].append(statement.location)
 
                 self.analyze_variable_read(condition)
                 truthy_branch, truthy_stopped, truthy_elidable = (
@@ -217,7 +221,7 @@ class Analyzer:
                     )
 
             case AST.Loop(name, body):
-                self.features.add(Feature.ITERATION)
+                self.features[Feature.ITERATION].append(statement.location)
 
                 if name in self.used_loop_names:
                     original_label = next(

@@ -3,7 +3,7 @@ from enum import StrEnum
 from .base import BACKENDS as _BACKENDS
 from ..analyzer import SymbolTable
 from ..constants import Names
-from ..features import Features
+from ..features import Feature
 from ...IR import CFP
 from ...library import sql, errors
 
@@ -26,17 +26,35 @@ Backend = StrEnum("Backend", zip(_BACKENDS, _BACKENDS))
 def run(
     backend: Backend,
     program: CFP.Program,
-    features: Features,
+    features: dict[Feature, list[errors.Location | None]],
     symbol_table: SymbolTable,
     system_variables: dict[Names, CFP.Variable],
 ) -> sql.SQL:
     backend_cls = _BACKENDS[backend.value]
 
-    unsported_features = features - backend_cls.supported_features
-    if unsported_features:
+    unsupported_features = features.keys() - backend_cls.supported_features
+    if unsupported_features:
         raise FeatureError(
-            "Program uses features the backend does not support: "
-            + f"{','.join(str(feature.name) for feature in unsported_features)}."
+            f"Program uses features the {backend.name!r} backend does not support: ",
+            "",
+            *sum(
+                (
+                    [
+                        f"- {unsupported_feature.name.lower()}, found at:",
+                        *sum(
+                            (
+                                [location, ""]
+                                for location in features[unsupported_feature]
+                                if location is not None
+                            ),
+                            start=list[errors.Reason](),
+                        ),
+                        "",
+                    ]
+                    for unsupported_feature in unsupported_features
+                ),
+                start=list[errors.Reason](),
+            )[:-1],
         )
 
     return backend_cls(program, symbol_table, system_variables).generate()
