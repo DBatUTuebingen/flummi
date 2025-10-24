@@ -11,7 +11,14 @@ from ...library import sql, errors
 # modules as a way method to dispatch their evaluation. Those evaluations
 # automatically populate the BACKENDS dictionary, from which we can access
 # the actual code generators!
-from . import cte, lateral, guarded_lateral, apfel, recursive_cte  # pyright: ignore[reportUnusedImport]  # noqa: F401
+from . import (
+    cte,  # pyright: ignore[reportUnusedImport]  # noqa: F401
+    lateral,  # pyright: ignore[reportUnusedImport]  # noqa: F401
+    guarded_lateral,  # pyright: ignore[reportUnusedImport]  # noqa: F401
+    apfel,  # pyright: ignore[reportUnusedImport]  # noqa: F401
+    recursive_cte,  # pyright: ignore[reportUnusedImport]  # noqa: F401
+    mutually_recursive_cte,  # pyright: ignore[reportUnusedImport]  # noqa: F401
+)
 
 
 __all__ = ("Backend",)

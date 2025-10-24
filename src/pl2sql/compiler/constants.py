@@ -8,3 +8,4 @@ class Names(StrEnum):
     NOTHING = "@nothing"
     GUARD = "@guard"
     WORKING_TABLE = "@loop"
+    INITIALIZATION = "@init"

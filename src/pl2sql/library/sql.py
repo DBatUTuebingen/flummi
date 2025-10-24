@@ -108,9 +108,24 @@ def cte(
     )
 
 
-def with_ctes(ctes: list[SQL], body: SQL, recursive: bool = False) -> SQL:
+def typed_cte(name: str, columns: dict[str, SQL], body: SQL) -> SQL:
     return (
-        f"WITH{' RECURSIVE' * recursive}\n"
+        f"{_name(name)}({', '.join(f'{_name(column)} {type}' for column, type in columns.items())}) "
+        + "AS (\n"
+        + indent(dedent(body), "  ")
+        + "\n)"
+    )
+
+
+def with_ctes(
+    ctes: list[SQL],
+    body: SQL,
+    recursive: bool = False,
+    mutually_recursive: bool = False,
+) -> SQL:
+    assert not (recursive and mutually_recursive)
+    return (
+        f"WITH{' MUTUALLY' * mutually_recursive}{' RECURSIVE' * (recursive + mutually_recursive)}\n"
         + indent(",\n".join(map(dedent, ctes)), "  ")
         + f"\n{dedent(body)}"
     )
