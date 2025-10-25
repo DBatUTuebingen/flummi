@@ -1,15 +1,19 @@
 from typing import override
 
+
 from .base import GenerationError
-from .lateral import LateralGenerator
+from .mixins import UseGuards, UseReachingDefinitions
+from .lateral import LateralBackend
 from .. import constants
 from ..features import Feature
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class ApfelGenerator(
-    LateralGenerator,
+class ApfelBackend(
+    LateralBackend,
+    UseGuards,
+    UseReachingDefinitions,
     name="apfel",
     supports={Feature.SEQUENCING, Feature.BRANCHING},
 ):

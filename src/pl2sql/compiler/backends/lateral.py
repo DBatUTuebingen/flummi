@@ -1,17 +1,16 @@
 from typing import override
 
 from .base import PrimitiveBackend
-from .mixins import UseGuards, UseReachingDefinitions
+from .mixins import UseReachingDefinitions
 from .. import constants
 from ..features import Feature
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class LateralGenerator(
-    UseGuards,
-    UseReachingDefinitions,
+class LateralBackend(
     PrimitiveBackend,
+    UseReachingDefinitions,
     name="lateral",
     supports={Feature.SEQUENCING},
 ):

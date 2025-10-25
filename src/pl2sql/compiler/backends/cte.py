@@ -8,9 +8,9 @@ from ...IR import CFP
 from ...library import sql, graph
 
 
-class CTEGenerator(
-    UseLiveVariables,
+class CTEBackend(
     PrimitiveBackend,
+    UseLiveVariables,
     name="CTE",
     supports={Feature.SEQUENCING, Feature.BRANCHING},
 ):

@@ -1,7 +1,7 @@
 from typing import override
 
-from .mixins import UseColumnAllocation
-from .cte import CTEGenerator
+from .mixins import UseColumnAllocation, UseLiveVariables
+from .cte import CTEBackend
 from .. import constants
 from ..features import Feature
 from ...IR import CFP
@@ -9,8 +9,9 @@ from ...library import sql, graph
 
 
 class RecursiveCTEGenerator(
+    CTEBackend,
     UseColumnAllocation,
-    CTEGenerator,
+    UseLiveVariables,
     name="recursive_cte",
     supports={Feature.SEQUENCING, Feature.BRANCHING, Feature.ITERATION},
 ):

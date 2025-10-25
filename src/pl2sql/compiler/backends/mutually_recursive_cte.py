@@ -1,16 +1,16 @@
 from typing import override
 
-from .mixins import UseColumnAllocation
-from .cte import CTEGenerator
+from .mixins import UseLiveVariables
+from .cte import CTEBackend
 from .. import constants
 from ..features import Feature
 from ...IR import CFP
 from ...library import sql, graph, utils
 
 
-class MutuallyRecursiveCTEGenerator(
-    UseColumnAllocation,
-    CTEGenerator,
+class MutuallyRecursiveCTEBackend(
+    CTEBackend,
+    UseLiveVariables,
     name="mutually_recursive_cte",
     supports={Feature.SEQUENCING, Feature.BRANCHING, Feature.ITERATION},
 ):

@@ -1,14 +1,18 @@
 from typing import override
 
-from .lateral import LateralGenerator
+
+from .lateral import LateralBackend
+from .mixins import UseReachingDefinitions, UseGuards
 from .. import constants
 from ..features import Feature
 from ...IR import CFP
 from ...library import sql, graph
 
 
-class GuardedLateralGenerator(
-    LateralGenerator,
+class GuardedLateralBackend(
+    LateralBackend,
+    UseGuards,
+    UseReachingDefinitions,
     name="guarded_lateral",
     supports={Feature.SEQUENCING, Feature.BRANCHING},
 ):
