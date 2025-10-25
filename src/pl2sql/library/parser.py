@@ -53,7 +53,7 @@ def make_lexer[T: Tokens](
         line, line_start, column = 1, 0, 0
         for match in re.finditer(token_regex, code):
             assert match.lastgroup is not None
-            type = types[match.lastgroup]  # type: ignore
+            type = types[match.lastgroup]
             value = match.group()
             column = 1 + match.start() - line_start
 

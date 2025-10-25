@@ -3,6 +3,9 @@ import sys
 from pathlib import Path
 from typing import Annotated
 
+import rich
+import typer
+
 from .IR.CFP import Graph
 from .IR.pretty.render import render
 
@@ -13,8 +16,6 @@ from .compiler.backends import Backend, run
 
 from .library.errors import PrettyError
 
-
-import typer
 
 __all__ = ("cli",)
 
@@ -79,7 +80,7 @@ def compile(
         )
 
     except PrettyError as e:
-        print(e.format(source), file=sys.stderr)
+        rich.print(e.rich_format(source), file=sys.stderr)
         sys.exit(1)
 
     with open(output, "w+") as f:

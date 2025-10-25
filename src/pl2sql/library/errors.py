@@ -2,6 +2,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import ClassVar
 
+from rich.panel import Panel
+from rich.text import Text
+from rich.console import Group, RenderableType
+
 
 __all__ = ("PrettyError", "Location")
 
@@ -25,22 +29,30 @@ class PrettyError(Exception):
         self.reasoning = reasoning
         super().__init__()
 
-    def format(self, source: str) -> str:
-        formatted_reasons = [f"{type(self).__name__}:"]
+    def rich_format(self, source: str) -> Panel:
+        formatted_reasons: list[RenderableType] = []
         for reason in self.reasoning:
             if isinstance(reason, Location):
                 formatted_reasons.append(
-                    format_location(
-                        source,
-                        reason,
-                        lookahead=self.lookahead,
-                        lookbehind=self.lookbehind,
+                    Panel(
+                        format_location(
+                            source,
+                            reason,
+                            lookahead=self.lookahead,
+                            lookbehind=self.lookbehind,
+                        ),
+                        border_style="dim",
                     )
                 )
             else:
-                formatted_reasons.append(reason)
+                formatted_reasons.append(Text.from_markup(reason))
 
-        return "\n".join(formatted_reasons)
+        return Panel.fit(
+            Group(*formatted_reasons),
+            title=f"[bold red]{type(self).__name__}[/bold red]",
+            title_align="left",
+            border_style="red",
+        )
 
 
 def format_location(
@@ -52,11 +64,19 @@ def format_location(
     last_line = min(len(lines), location.line + lookbehind)
 
     annotated_source = [
-        f"{1 + i + first_line: >{len(str(last_line))}} | {line}"
+        f"[cyan]{1 + i + first_line: >{len(str(last_line))}}[/cyan] [bold]│[/bold] {line}"
         for i, line in enumerate(lines[first_line:last_line])
     ]
-    marker = "-" * (len(str(last_line)) + 3 + location.column - 1) + "^"
+    marker = (
+        "[bold red]"
+        + "─" * (len(str(last_line)) + 3 + location.column - 1)
+        + "╯[/bold red]"
+    )
 
     return "\n".join(
-        [*annotated_source[:local_line], marker, *annotated_source[local_line:]]
+        [
+            *annotated_source[:local_line],
+            marker,
+            *annotated_source[local_line:],
+        ]
     )

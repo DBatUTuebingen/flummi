@@ -48,24 +48,21 @@ class Analyzer:
     )
 
     def analyze(self) -> AnalysisResult:
-        result, stopped, _ = self.analyze_statement(self.program.body)
-
-        if not stopped:
-            raise AnalysisError(
-                "Not all linear control paths in the top level statement are termianted by a STOP statement.",
-            )
-
-        self.program.body = result
+        self.program.body, _, _ = self.analyze_statement(self.program.body)
 
         if self.emit_type is None:
             raise AnalysisError(
-                "Could not find a single EMIT and thus could not determine the type of the values this program emits.",
+                "Could not find a single [bold]EMIT[/bold] and thus could not determine the type of the values this program emits.",
             )
 
-        for feature in self.features:
+        feature_stack = list(self.features)
+        while feature_stack:
+            feature = feature_stack.pop()
             if (dependencies := FEATURE_DEPENDECIES.get(feature)) is not None:
-                for requried_feature in dependencies:
-                    self.features[requried_feature].append(None)
+                for required_feature in dependencies:
+                    if required_feature not in self.features:
+                        _ = self.features[feature]
+                        feature_stack.append(required_feature)
 
         system_variables: dict[constants.Names, AST.Variable] = {}
 
@@ -162,10 +159,9 @@ class Analyzer:
                         if _variable.identifier == variable.identifier
                     )
                     raise AnalysisError(
-                        f"Found declaration of variable {variable.identifier!r}...",
+                        f"Found declaration of variable [bold]{variable.identifier}[/bold]...",
                         variable.location,
-                        "",
-                        "...that was already declared at.",
+                        "...that was already declared.",
                         original_declaration.location,
                     )
 
@@ -184,13 +180,13 @@ class Analyzer:
                 emit_type = self.symbol_table[variable]
                 if self.emit_type is None:
                     self.emit_type = replace(
-                        emit_type, location=statement.location
+                        emit_type, location=variable.location
                     )
                 elif emit_type != self.emit_type:
                     raise AnalysisError(
-                        f"Found conflicting emission types ({emit_type.source} vs. {self.emit_type.source}) at...",
-                        statement.location,
-                        "...and...",
+                        f"Found differing type [bold]{emit_type.source}[/bold] of an emitted value...",
+                        variable.location,
+                        f"...to previously emitted value of type [bold]{self.emit_type.source}[/bold].",
                         self.emit_type.location,
                     )
 
@@ -230,10 +226,9 @@ class Analyzer:
                         if original_label.identifier == name.identifier
                     )
                     raise AnalysisError(
-                        f"Found introduction of loop name {name.identifier!r}...",
+                        f"Found introduction of loop name [bold]{name.identifier}[/bold]...",
                         name.location,
-                        "",
-                        "...that was already introduced at.",
+                        "...that was already introduced.",
                         original_label.location,
                     )
 
@@ -256,7 +251,7 @@ class Analyzer:
             case AST.Continue(name):
                 if name not in self.loop_name_stack:
                     raise AnalysisError(
-                        f"Found continue to unintroduced loop name {name.identifier!r}.",
+                        f"Found continue to unintroduced loop name [bold]{name.identifier}[/bold].",
                         name.location,
                     )
 
@@ -265,7 +260,7 @@ class Analyzer:
             case AST.Break(name):
                 if name not in self.loop_name_stack:
                     raise AnalysisError(
-                        f"Found break to unintroduced loop name {name.identifier!r}.",
+                        f"Found break to unintroduced loop name [bold]{name.identifier}[/bold].",
                         name.location,
                     )
 
@@ -283,14 +278,14 @@ class Analyzer:
     def analyze_variable_read(self, variable: common.Identifier):
         if variable not in self.bound_symbols:
             raise AnalysisError(
-                f"Found read from uninitialised variable {variable.identifier!r}.",
+                f"Found read from uninitialised variable [bold]{variable.identifier}[/bold].",
                 variable.location,
             )
 
     def analyze_variable_write(self, variable: common.Identifier):
         if variable not in self.symbol_table:
             raise AnalysisError(
-                f"Found write to undeclared variable {variable.identifier!r}.",
+                f"Found write to undeclared variable [bold]{variable.identifier}[/bold].",
                 variable.location,
             )
         self.bound_symbols.add(variable)

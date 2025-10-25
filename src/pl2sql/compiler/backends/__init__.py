@@ -42,26 +42,25 @@ def run(
     unsupported_features = features.keys() - backend_cls.supported_features
     if unsupported_features:
         raise FeatureError(
-            f"Program uses features the {backend.name!r} backend does not support: ",
-            "",
+            f"Program uses features the [bold]{backend.name}[/bold] backend does not support: ",
             *sum(
                 (
                     [
-                        f"- {unsupported_feature.name.lower()}, found at:",
-                        *sum(
-                            (
-                                [location, ""]
-                                for location in features[unsupported_feature]
-                                if location is not None
-                            ),
-                            start=list[errors.Reason](),
+                        f"- [bold]{unsupported_feature.name.lower()}[/bold], e.g.",
+                        next(
+                            location
+                            for location in features[unsupported_feature]
+                            if location is not None
                         ),
-                        "",
                     ]
                     for unsupported_feature in unsupported_features
+                    if any(
+                        feature is not None
+                        for feature in features[unsupported_feature]
+                    )
                 ),
                 start=list[errors.Reason](),
-            )[:-1],
+            ),
         )
 
     return backend_cls(program, symbol_table, system_variables).generate()
