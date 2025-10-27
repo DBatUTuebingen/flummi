@@ -16,17 +16,10 @@ class MutuallyRecursiveCTEBackend(
 ):
     @override
     def generate(self) -> sql.SQL:
-        cfp = self.program.body
-        predecessors = graph.invert(cfp.edges)
-
         ctes = [
-            self.generate_primitive(
-                label,
-                cfp.primitives[label],
-                predecessors[label],
-            )
-            for label in graph.topological_order(cfp.edges)
-            if not isinstance(cfp.primitives[label], CFP.GoTo)
+            self.generate_primitive(label)
+            for label in graph.topological_order(self.successors_of)
+            if not isinstance(self.primitives[label], CFP.GoTo)
         ]
 
         return (
@@ -43,7 +36,7 @@ class MutuallyRecursiveCTEBackend(
                             ],
                             from_list=[sql.name(label.identifier)],
                         )
-                        for label, primitive in cfp.primitives.items()
+                        for label, primitive in self.primitives.items()
                         if isinstance(primitive, CFP.Emit)
                     ]
                 ),
@@ -52,12 +45,10 @@ class MutuallyRecursiveCTEBackend(
         )
 
     @override
-    def generate_primitive(
-        self,
-        label: CFP.Label,
-        primitive: CFP.Primitive,
-        predecessors: set[CFP.Label],
-    ) -> sql.SQL:
+    def generate_primitive(self, label: CFP.Label) -> sql.SQL:
+        primitive = self.primitives[label]
+        predecessors = self.predecessors_of[label]
+
         outputs = {
             variable.identifier: self.symbol_table[variable].source
             for variable in self.outputs_of[label]
@@ -210,9 +201,7 @@ class MutuallyRecursiveCTEBackend(
                 )
 
             case _:
-                return super().generate_primitive(
-                    label, primitive, predecessors
-                )
+                return super().generate_primitive(label)
 
         return sql.typed_cte(
             name=label.identifier,

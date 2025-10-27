@@ -16,16 +16,9 @@ class CTEBackend(
 ):
     @override
     def generate(self) -> sql.SQL:
-        cfp = self.program.body
-        predecessors = graph.invert(cfp.edges)
-
         ctes = [
-            self.generate_primitive(
-                label,
-                cfp.primitives[label],
-                predecessors[label],
-            )
-            for label in graph.topological_order(cfp.edges)
+            self.generate_primitive(label)
+            for label in graph.topological_order(self.successors_of)
         ]
 
         return (
@@ -41,7 +34,7 @@ class CTEBackend(
                             ],
                             from_list=[sql.name(label.identifier)],
                         )
-                        for label, primitive in cfp.primitives.items()
+                        for label, primitive in self.primitives.items()
                         if isinstance(primitive, CFP.Emit)
                     ]
                 ),
@@ -53,9 +46,10 @@ class CTEBackend(
     def generate_primitive(
         self,
         label: CFP.Label,
-        primitive: CFP.Primitive,
-        predecessors: set[CFP.Label],
     ) -> sql.SQL:
+        primitive = self.primitives[label]
+        predecessors = self.predecessors_of[label]
+
         outputs = [
             variable.identifier for variable in self.outputs_of[label]
         ] or [constants.Names.NOTHING]
@@ -178,9 +172,7 @@ class CTEBackend(
                 )
 
             case _:
-                return super().generate_primitive(
-                    label, primitive, predecessors
-                )
+                return super().generate_primitive(label)
 
         return sql.cte(
             name=label.identifier,

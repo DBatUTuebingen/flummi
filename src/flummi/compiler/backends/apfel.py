@@ -35,17 +35,17 @@ class ApfelBackend(
     def generate_region(self, entry_label: CFP.Label) -> sql.SQL:
         region_labels = self.guarded_by[entry_label]
         region = graph.subgraph(self.program.body.edges, region_labels)
-        predecessors = graph.invert(self.program.body.edges)
 
         from_list: list[sql.SQL] = []
         results: list[sql.SQL] = []
 
         for label in graph.topological_order(region):
             primitive = self.program.body.primitives[label]
+            predecessors = self.predecessors_of[label]
             match primitive:
                 case CFP.Where(variable) | CFP.WhereNot(variable):
-                    assert len(predecessors[label]) == 1
-                    predecessor = list(predecessors[label])[0]
+                    assert len(predecessors) == 1
+                    predecessor = list(predecessors)[0]
 
                     child_region = self.generate_region(label)
 
@@ -82,8 +82,8 @@ class ApfelBackend(
                     )
 
                 case CFP.Emit(variable):
-                    assert len(predecessors[label]) == 1
-                    predecessor = list(predecessors[label])[0]
+                    assert len(predecessors) == 1
+                    predecessor = list(predecessors)[0]
 
                     results.append(
                         sql.select(
@@ -107,11 +107,7 @@ class ApfelBackend(
                             "Found non-exiting primitive between exiting ones!"
                         )
 
-                    from_list.append(
-                        self.generate_primitive(
-                            label, primitive, predecessors[label]
-                        )
-                    )
+                    from_list.append(self.generate_primitive(label))
 
         from_list.append(
             sql.named(

@@ -17,21 +17,12 @@ class RecursiveCTEGenerator(
 ):
     @override
     def generate(self) -> sql.SQL:
-        cfp = self.program.body
-        predecessors = graph.invert(cfp.edges)
-
         ctes: list[sql.SQL] = []
         working_table_writes: list[sql.SQL] = []
-        for label in graph.topological_order(cfp.edges):
-            primitive = cfp.primitives[label]
+        for label in graph.topological_order(self.successors_of):
+            primitive = self.primitives[label]
 
-            ctes.append(
-                self.generate_primitive(
-                    label,
-                    primitive,
-                    predecessors[label],
-                )
-            )
+            ctes.append(self.generate_primitive(label))
 
             match primitive:  # pyright: ignore[reportMatchNotExhaustive]
                 case CFP.GoTo(target_label):
@@ -139,12 +130,10 @@ class RecursiveCTEGenerator(
         )
 
     @override
-    def generate_primitive(
-        self,
-        label: CFP.Label,
-        primitive: CFP.Primitive,
-        predecessors: set[CFP.Label],
-    ) -> sql.SQL:
+    def generate_primitive(self, label: CFP.Label) -> sql.SQL:
+        primitive = self.primitives[label]
+        predecessors = self.predecessors_of[label]
+
         match primitive:
             case CFP.Start():
                 assert len(predecessors) == 0
@@ -210,9 +199,7 @@ class RecursiveCTEGenerator(
                 )
 
             case _:
-                return super().generate_primitive(
-                    label, primitive, predecessors
-                )
+                return super().generate_primitive(label)
 
         return sql.cte(
             name=label.identifier,

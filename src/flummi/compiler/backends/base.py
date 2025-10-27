@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from inspect import isabstract
 from typing import ClassVar
 
@@ -7,7 +7,7 @@ from ..features import Features, MINIMAL_FEATURES
 from ..analyzer import SymbolTable
 from ..constants import Names
 from ...IR import CFP
-from ...library import sql, errors
+from ...library import sql, errors, graph
 
 
 class GenerationError(errors.PrettyError, ValueError): ...  # pyright: ignore[reportUnsafeMultipleInheritance]
@@ -22,7 +22,11 @@ class Backend(ABC):
         cls,
         supports: Features = MINIMAL_FEATURES,
         name: str = "",
+        *args,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
+        **kwargs,  # pyright: ignore[reportUnknownParameterType, reportMissingParameterType]
     ) -> None:
+        super().__init_subclass__(*args, **kwargs)
+
         if not isabstract(cls):
             BACKENDS[name or cls.__name__] = cls
         cls.supported_features = supports
@@ -33,7 +37,24 @@ class Backend(ABC):
     symbol_table: SymbolTable
     system_variables: dict[Names, CFP.Variable]
 
-    def __post_init__(self): ...
+    primitives: dict[CFP.Label, CFP.Primitive] = field(init=False)
+
+    successors_of: dict[CFP.Label, set[CFP.Label]] = field(init=False)
+    predecessors_of: dict[CFP.Label, set[CFP.Label]] = field(init=False)
+
+    virtual_successors_of: dict[CFP.Label, set[CFP.Label]] = field(init=False)
+    virtual_predecessors_of: dict[CFP.Label, set[CFP.Label]] = field(init=False)
+
+    def __post_init__(self):
+        self.primitives = self.program.body.primitives
+
+        self.successors_of = self.program.body.edges
+        self.predecessors_of = graph.invert(self.successors_of)
+
+        self.virtual_successors_of = graph.merge(
+            self.program.body.edges, self.program.body.backedges
+        )
+        self.virtual_predecessors_of = graph.invert(self.virtual_successors_of)
 
     @abstractmethod
     def generate(self) -> sql.SQL:
@@ -46,9 +67,8 @@ class PrimitiveBackend(Backend, ABC):
     def generate_primitive(
         self,
         label: CFP.Label,
-        primitive: CFP.Primitive,
-        predecessors: set[CFP.Label],
     ) -> sql.SQL:
+        primitive = self.primitives[label]
         raise GenerationError(
             f"This generator does not support {type(primitive).__name__} primitives.",
             "This primitive comes from here...",
