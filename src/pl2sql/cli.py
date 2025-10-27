@@ -14,15 +14,17 @@ from .compiler.analyzer import analyze
 from .compiler.lowering import lower
 from .compiler.backends import Backend, run
 
+from .interpreter import evaluate
+
 from .library.errors import PrettyError
 
 
 __all__ = ("cli",)
 
-cli = typer.Typer()
+cli = typer.Typer(name="flummi", help="The Flummi Compile Prototype.")
 
 
-@cli.command("compile")
+@cli.command(name="compile", help="Compile a given flummi program to SQL.")
 def compile(
     input: Annotated[
         Path,
@@ -85,6 +87,35 @@ def compile(
 
     with open(output, "w+") as f:
         _ = f.write(sql)
+
+
+@cli.command("interpret", help="Interpret a given flummi program using DuckDB.")
+def interpret(
+    input: Annotated[
+        Path,
+        typer.Argument(
+            dir_okay=False,
+            file_okay=True,
+            readable=True,
+            exists=True,
+            help="The file to compile.",
+        ),
+    ],
+):
+    with open(input, "r") as f:
+        source = f.read()
+
+    try:
+        parsed_program = parse(source)
+
+        analyzed_program, symbol_table, _, _ = analyze(parsed_program)
+
+        for result in evaluate(analyzed_program, symbol_table):  # pyright: ignore[reportAny]
+            rich.print(result)
+
+    except PrettyError as e:
+        rich.print(e.rich_format(source), file=sys.stderr)
+        sys.exit(1)
 
 
 def render_to_file(graph: Graph, path: Path, command: str = "dot"):
