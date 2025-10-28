@@ -18,6 +18,7 @@ from . import (
     apfel,  # pyright: ignore[reportUnusedImport]  # noqa: F401
     recursive_cte,  # pyright: ignore[reportUnusedImport]  # noqa: F401
     mutually_recursive_cte,  # pyright: ignore[reportUnusedImport]  # noqa: F401
+    trampoline,  # pyright: ignore[reportUnusedImport]  # noqa: F401
 )
 
 

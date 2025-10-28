@@ -1,6 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass, field
 
+from ...IR import CFP
 from .base import Backend
 from ..solvers.live_variable_analysis import (
     InputMap,
@@ -33,7 +34,7 @@ class UseLiveVariables(Backend, ABC):
 
 
 @dataclass
-class UseColumnAllocation(UseLiveVariables, ABC):
+class UseStartAllocation(UseLiveVariables, ABC):
     schema: Schema = field(init=False)
     allocation_for: Allocations = field(init=False)
 
@@ -41,7 +42,27 @@ class UseColumnAllocation(UseLiveVariables, ABC):
         super().__post_init__()
 
         self.schema, self.allocation_for = allocate_columns(
-            self.program,
+            [
+                label
+                for label, primitive in self.primitives.items()
+                if isinstance(primitive, CFP.Start)
+            ],
+            self.symbol_table,
+            self.system_variables,
+            self.inputs_of,
+        )
+
+
+@dataclass
+class UseFullAllocation(UseLiveVariables, ABC):
+    schema: Schema = field(init=False)
+    allocation_for: Allocations = field(init=False)
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        self.schema, self.allocation_for = allocate_columns(
+            list(self.primitives),
             self.symbol_table,
             self.system_variables,
             self.inputs_of,

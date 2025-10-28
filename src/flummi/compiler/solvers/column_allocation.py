@@ -5,7 +5,6 @@ from ...IR import CFP, common
 from ...library import utils
 from ..analyzer import SymbolTable
 from .. import constants
-from .live_variable_analysis import InputMap
 
 __all__ = ("allocate_columns",)
 
@@ -34,26 +33,15 @@ class Allocation:
 
 
 def allocate_columns(
-    program: CFP.Program,
+    labels_to_allocate: list[CFP.Label],
     symbol_table: SymbolTable,
     system_variables: dict[constants.Names, CFP.Variable],
-    inputs_of: InputMap,
+    variables_at: CFP.PerLabel[set[CFP.Variable]],
 ) -> tuple[Schema, Allocations]:
     SYSTEM_SCHEMA = {
         variable.identifier: symbol_table[variable]
         for variable in system_variables.values()
     }
-
-    # We will only perform column allocation for start node start
-    # primitives. Since we can get the reverse allocations needed for nodes
-    # containing goto primitives by simply inverting the mappings of the
-    # respective targeted nodes.
-
-    labels_to_allocate = [
-        label
-        for label, primitive in program.body.primitives.items()
-        if isinstance(primitive, CFP.Start)
-    ]
 
     # First, collect all "type siblings", i.e., groupings of like typed
     # variables, at each label we wish to perform column allocation for.
@@ -69,7 +57,7 @@ def allocate_columns(
 
     for label in labels_to_allocate:
         for type, variables in utils.groupby(
-            iter(inputs_of[label] - set(system_variables.values())),
+            iter(variables_at[label] - set(system_variables.values())),
             lambda variable: symbol_table[variable],
         ):
             variables = list(variables)

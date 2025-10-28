@@ -66,6 +66,19 @@ class Analyzer:
 
         system_variables: dict[constants.Names, AST.Variable] = {}
 
+        # The order here is important! To make our lives easier in the
+        # trampoline backend, we always introduce the label as the first system
+        # variable, since that is what Umbra's `umbra.trampoline` function
+        # expects.
+
+        label_variable = AST.Variable(
+            constants.Names.LABEL, location=self.program.location
+        )
+        self.symbol_table[label_variable] = common.Type(
+            "TEXT", location=self.program.location
+        )
+        system_variables[constants.Names.LABEL] = label_variable
+
         emit_variable = AST.Variable(
             constants.Names.RESULT, location=self.program.location
         )
@@ -73,15 +86,6 @@ class Analyzer:
             self.emit_type, location=self.program.location
         )
         system_variables[constants.Names.RESULT] = emit_variable
-
-        if Feature.ITERATION in self.features:
-            label_variable = AST.Variable(
-                constants.Names.LABEL, location=self.program.location
-            )
-            self.symbol_table[label_variable] = common.Type(
-                "TEXT", location=self.program.location
-            )
-            system_variables[constants.Names.LABEL] = label_variable
 
         return AnalysisResult(
             self.program,

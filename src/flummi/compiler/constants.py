@@ -9,3 +9,5 @@ class Names(StrEnum):
     GUARD = "@guard"
     WORKING_TABLE = "@loop"
     INITIALIZATION = "@init"
+    BODY = "@body"
+    TRAMPOLINE = "trampoline"

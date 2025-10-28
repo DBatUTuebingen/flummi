@@ -223,3 +223,9 @@ def when(condition: SQL, body: SQL) -> SQL:
     output += "WHEN " + indent1(condition, " " * 5) + "\n"
     output += "THEN " + indent1(body, " " * 5) + "\n"
     return output
+
+
+def values(*rows: tuple[SQL, ...]) -> SQL:
+    return "VALUES " + indent1(
+        "\n".join(paren(",".join(row)) for row in rows), " " * 9
+    )
