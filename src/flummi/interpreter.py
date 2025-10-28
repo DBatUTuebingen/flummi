@@ -114,4 +114,7 @@ def evaluate(
                                 break
 
             case _:
-                ...
+                raise EvaluationError(
+                    f"{statement.__class__.__name__} statements not supported.",
+                    statement.location,
+                )

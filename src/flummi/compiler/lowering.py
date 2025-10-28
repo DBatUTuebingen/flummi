@@ -1,6 +1,8 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
+from typing import Self
 
+from .constants import Names
 from ..IR import common, AST, CFP
 from ..library import errors, graph
 
@@ -33,7 +35,7 @@ class Lowering:
         init=False, default_factory=dict
     )
 
-    def _make_label(
+    def fresh_identifier(
         self, name: str, location: errors.Location
     ) -> common.Identifier:
         self._label_counters[name] += 1
@@ -48,7 +50,7 @@ class Lowering:
         if len(predecessors) > 1:
             label = self.add_primitive(CFP.Merge(location=location))
             for predecessor in predecessors:
-                self.add_edge(predecessor, label)
+                self.add_direct_edge(predecessor, label)
             return label
         elif len(predecessors) == 1:
             return list(predecessors)[0]
@@ -82,8 +84,8 @@ class Lowering:
         cfp = CFP.Graph(
             primitives=self._primitives,
             entry_label=entry_label,
-            edges=self._edges,
-            backedges=self._backedges,
+            direct_edges=self._edges,
+            indirect_edges=self._backedges,
             location=program.location,
         )
 
@@ -94,7 +96,7 @@ class Lowering:
         primitive: CFP.Primitive,
         name: str | None = None,
     ) -> CFP.Label:
-        label = self._make_label(
+        label = self.fresh_identifier(
             name or type(primitive).__name__.lower(),
             location=primitive.location,
         )
@@ -102,10 +104,10 @@ class Lowering:
         self._edges[label] = set()
         return label
 
-    def add_edge(self, source: CFP.Label, sink: CFP.Label):
+    def add_direct_edge(self, source: CFP.Label, sink: CFP.Label):
         self._edges[source].add(sink)
 
-    def add_backedge(
+    def add_indirect_edge(
         self,
         source: CFP.Label,
         sink: CFP.Label,
@@ -124,11 +126,11 @@ class Lowering:
             default_factory=dict
         )
 
-        def merge(self, other: Lowering.StatementResult):
+        def merge(self, other: Self):
             self.outgoing_labels |= other.outgoing_labels
             return self.merge_loop_exits(other)
 
-        def merge_loop_exits(self, other: Lowering.StatementResult):
+        def merge_loop_exits(self, other: Self):
             for name, exits in other.loop_exits.items():
                 if name not in self.loop_exits:
                     self.loop_exits[name] = exits
@@ -158,7 +160,7 @@ class Lowering:
                     ),
                 )
 
-                self.add_edge(predecessor, this_label)
+                self.add_direct_edge(predecessor, this_label)
 
                 return self.StatementResult({this_label})
 
@@ -174,7 +176,7 @@ class Lowering:
                         ),
                     )
 
-                    self.add_edge(predecessor, emit_label)
+                    self.add_direct_edge(predecessor, emit_label)
 
                 return self.StatementResult(predecessors)
 
@@ -201,8 +203,8 @@ class Lowering:
                 where_not_label = self.add_primitive(
                     CFP.WhereNot(condition, location=statement.location)
                 )
-                self.add_edge(predecessor, where_label)
-                self.add_edge(predecessor, where_not_label)
+                self.add_direct_edge(predecessor, where_label)
+                self.add_direct_edge(predecessor, where_not_label)
 
                 truthy_result = self.lower_statement(
                     {where_label}, truthy_branch
@@ -222,7 +224,7 @@ class Lowering:
                 result = self.lower_statement(predecessors | {head_label}, body)
 
                 for loopback_label in result.outgoing_labels:
-                    self.add_backedge(
+                    self.add_indirect_edge(
                         loopback_label, head_label, location=statement.location
                     )
 
@@ -232,7 +234,7 @@ class Lowering:
                 head_label = self._loop_heads[name]
 
                 for predecessor in predecessors:
-                    self.add_backedge(
+                    self.add_indirect_edge(
                         predecessor, head_label, location=statement.location
                     )
 
@@ -240,6 +242,58 @@ class Lowering:
 
             case AST.Break(name):
                 return self.StatementResult(loop_exits={name: predecessors})
+
+            case AST.Fork(variables, expression):
+                predecessor = self.add_merge(predecessors, statement.location)
+
+                this_label = self.add_primitive(
+                    CFP.Fork(variables, expression, location=statement.location)
+                )
+
+                self.add_direct_edge(predecessor, this_label)
+
+                return self.StatementResult({this_label})
+
+            case AST.Gather(aggregates, keys):
+                predecessor = self.add_merge(predecessors, statement.location)
+
+                this_label = self.add_primitive(
+                    CFP.Gather(aggregates, keys, location=statement.location)
+                )
+
+                self.add_direct_edge(predecessor, this_label)
+
+                return self.StatementResult({this_label})
+
+            case AST.Sync():
+                predecessor = self.add_merge(predecessors, statement.location)
+
+                probe_variable = self.fresh_identifier(
+                    Names.PROBE, statement.location
+                )
+
+                wait_label = self.add_primitive(
+                    CFP.Start(location=statement.location), name="wait"
+                )
+                probe_label = self.add_primitive(
+                    CFP.SiblingProbe(
+                        probe_variable, wait_label, location=statement.location
+                    )
+                )
+                not_done_label = self.add_primitive(
+                    CFP.WhereNot(probe_variable, location=statement.location)
+                )
+                done_label = self.add_primitive(
+                    CFP.Where(probe_variable, location=statement.location)
+                )
+
+                self.add_indirect_edge(predecessor, wait_label)
+                self.add_direct_edge(wait_label, probe_label)
+                self.add_direct_edge(probe_label, done_label)
+                self.add_direct_edge(probe_label, not_done_label)
+                self.add_indirect_edge(not_done_label, wait_label)
+
+                return self.StatementResult({done_label})
 
             case _:
                 raise LoweringError(

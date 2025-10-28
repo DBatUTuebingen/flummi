@@ -90,10 +90,10 @@ def select(
                 indent1(dedent(key), " " * 10) for key in group_keys
             )
 
-            if having:
-                query += "\nHAVING " + "\nAND    ".join(
-                    indent1(dedent(predicate), " " * 7) for predicate in having
-                )
+        if having:
+            query += "\nHAVING " + "\nAND    ".join(
+                indent1(dedent(predicate), " " * 7) for predicate in having
+            )
 
     return query
 

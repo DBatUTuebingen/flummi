@@ -20,31 +20,56 @@ def analyze_live_variables(
             case CFP.Start():
                 return {system_variables[constants.Names.LABEL]}
 
-            case CFP.Let(_, common.Expression(_, variables)):
+            case CFP.Let(_, common.Expression(_, variables)) | CFP.Fork(
+                _, common.Expression(_, variables)
+            ):
                 return set(variables)
 
-            case (
-                CFP.Emit(variable)
-                | CFP.Where(variable)
-                | CFP.WhereNot(variable)
-            ):
+            case CFP.Where(variable) | CFP.WhereNot(variable):
                 return {variable}
+
+            case CFP.Emit(variable):
+                return {
+                    variable,
+                    system_variables[constants.Names.ITERATION],
+                }
+
+            case CFP.GoTo(_):
+                return {system_variables[constants.Names.ITERATION]}
+
+            case CFP.Gather(aggregates, keys):
+                return utils.union(
+                    set(expression.arguments)
+                    for expression in aggregates.values()
+                ) | set(keys)
 
             case _:
                 return set()
 
     def binds(primitive: CFP.Primitive) -> Variables:
         match primitive:
-            case CFP.Let(variable, _):
+            case CFP.Let(variable, _) | CFP.SiblingProbe(variable, _):
                 return {variable}
 
             case CFP.Emit(_):
                 assert constants.Names.RESULT in system_variables
-                return {system_variables[constants.Names.RESULT]}
+                return {
+                    system_variables[constants.Names.RESULT],
+                    system_variables[constants.Names.ITERATION],
+                }
 
             case CFP.GoTo(_):
                 assert constants.Names.LABEL in system_variables
-                return {system_variables[constants.Names.LABEL]}
+                return {
+                    system_variables[constants.Names.LABEL],
+                    system_variables[constants.Names.ITERATION],
+                }
+
+            case CFP.Fork(variables, _):
+                return set(variables)
+
+            case CFP.Gather(aggregates, keys):
+                return {*aggregates.keys(), *keys}
 
             case _:
                 return set()
@@ -58,7 +83,7 @@ def analyze_live_variables(
         label: binds(primitive) for label, primitive in cfp.primitives.items()
     }
 
-    successors_of = graph.merge(cfp.edges, cfp.backedges)
+    successors_of = graph.merge(cfp.direct_edges, cfp.indirect_edges)
     predecessors_of = graph.invert(successors_of)
 
     worklist = set(cfp.primitives)

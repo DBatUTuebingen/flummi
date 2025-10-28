@@ -6,6 +6,7 @@ class Feature(Enum):
     SEQUENCING = auto()
     BRANCHING = auto()
     ITERATION = auto()
+    CONCURRENCY = auto()
 
 
 type Features = set[Feature]

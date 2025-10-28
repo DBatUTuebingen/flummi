@@ -11,11 +11,11 @@ type DefinitionMap = CFP.PerLabel[Definitions]
 def analyze_reaching_definitions(program: CFP.Program) -> DefinitionMap:
     cfp = program.body
 
-    predecessors_of = graph.invert(cfp.edges)
+    predecessors_of = graph.invert(cfp.direct_edges)
 
     definitions_after: CFP.PerLabel[Definitions] = {}
 
-    for label in graph.topological_order(cfp.edges):
+    for label in graph.topological_order(cfp.direct_edges):
         primitive = cfp.primitives[label]
 
         definitions_after_here: Definitions = {}

@@ -71,6 +71,7 @@ class Analyzer:
         # variable, since that is what Umbra's `umbra.trampoline` function
         # expects.
 
+        # if Feature.ITERATION in self.features:
         label_variable = AST.Variable(
             constants.Names.LABEL, location=self.program.location
         )
@@ -86,6 +87,14 @@ class Analyzer:
             self.emit_type, location=self.program.location
         )
         system_variables[constants.Names.RESULT] = emit_variable
+
+        iteration_variable = AST.Variable(
+            constants.Names.ITERATION, location=self.program.location
+        )
+        self.symbol_table[iteration_variable] = common.Type(
+            "int", location=self.program.location
+        )
+        system_variables[constants.Names.ITERATION] = iteration_variable
 
         return AnalysisResult(
             self.program,
@@ -269,6 +278,31 @@ class Analyzer:
                     )
 
                 return self.StatementResult.stop(statement)
+
+            case AST.Fork(variables, expression):
+                self.features[Feature.CONCURRENCY].append(statement.location)
+
+                for variable in variables:
+                    self.analyze_variable_write(variable)
+                self.analyze_expression(expression)
+
+                return self.StatementResult(statement)
+
+            case AST.Gather(aggregates, keys):
+                for variable, aggregate in aggregates.items():
+                    self.analyze_variable_write(variable)
+                    self.analyze_expression(aggregate)
+
+                for variable in keys:
+                    self.analyze_variable_read(variable)
+
+                return self.StatementResult(statement)
+
+            case AST.Sync():
+                if Feature.CONCURRENCY not in self.features:
+                    return self.StatementResult.elide(statement)
+                else:
+                    return self.StatementResult(statement)
 
             case _:
                 raise AnalysisError(

@@ -4,6 +4,7 @@ from ..IR.common import Expression, Type, Identifier
 from ..IR.AST import (
     Program,
     Statement,
+    Variable,
     Block,
     Declare,
     Let,
@@ -14,6 +15,9 @@ from ..IR.AST import (
     Loop,
     Continue,
     Break,
+    Fork,
+    Gather,
+    Sync,
 )
 
 from ..library import errors, parser
@@ -50,6 +54,10 @@ class Tokens(parser.Tokens):
     LOOP = r"LOOP"
     CONTINUE = r"CONTINUE"
     BREAK = r"BREAK"
+    FORK = r"FORK"
+    GATHER = r"GATHER"
+    BY = r"BY"
+    SYNC = r"SYNC"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -112,6 +120,12 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_continue()
         elif self.lookahead(Tokens.BREAK):
             return self.parse_break()
+        elif self.lookahead(Tokens.FORK):
+            return self.parse_fork()
+        elif self.lookahead(Tokens.GATHER):
+            return self.parse_gather()
+        elif self.lookahead(Tokens.SYNC):
+            return self.parse_sync()
         else:
             raise self.error("Expected statement.")
 
@@ -193,3 +207,37 @@ class Parser(parser.Parser[Tokens]):
             location=location,
             name=name,
         )
+
+    def parse_fork(self) -> Fork:
+        location = self.current.location
+        self.expect(Tokens.FORK)
+        variables = list(self.sequence(self.parse_identifier, Tokens.COMMA))
+        self.expect(Tokens.EQUALS)
+        expression = self.parse_expression()
+        return Fork(
+            variables=variables, expression=expression, location=location
+        )
+
+    def parse_gather(self) -> Gather:
+        location = self.current.location
+        self.expect(Tokens.GATHER)
+
+        def parse_aggregate() -> tuple[Variable, Expression]:
+            variable = self.parse_identifier()
+            self.expect(Tokens.EQUALS)
+            expression = self.parse_expression()
+            return variable, expression
+
+        aggregates = dict(self.sequence(parse_aggregate, Tokens.COMMA))
+
+        if self.match(Tokens.BY):
+            keys = list(self.sequence(self.parse_identifier, Tokens.COMMA))
+        else:
+            keys = []
+
+        return Gather(aggregates=aggregates, keys=keys, location=location)
+
+    def parse_sync(self) -> Sync:
+        location = self.current.location
+        self.expect(Tokens.SYNC)
+        return Sync(location=location)

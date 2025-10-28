@@ -48,11 +48,11 @@ class Backend(ABC):
     def __post_init__(self):
         self.primitives = self.program.body.primitives
 
-        self.successors_of = self.program.body.edges
+        self.successors_of = self.program.body.direct_edges
         self.predecessors_of = graph.invert(self.successors_of)
 
         self.virtual_successors_of = graph.merge(
-            self.program.body.edges, self.program.body.backedges
+            self.program.body.direct_edges, self.program.body.indirect_edges
         )
         self.virtual_predecessors_of = graph.invert(self.virtual_successors_of)
 

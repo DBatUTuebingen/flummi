@@ -54,7 +54,7 @@ class MutuallyRecursiveCTEBackend(
             for variable in self.outputs_of[label]
         } or {constants.Names.NOTHING: "TEXT"}
 
-        predecessors_of = graph.invert(self.program.body.edges)
+        predecessors_of = graph.invert(self.program.body.direct_edges)
 
         match primitive:
             case CFP.Start() if label == self.program.body.entry_label:

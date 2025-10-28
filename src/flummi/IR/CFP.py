@@ -16,6 +16,9 @@ __all__ = (
     "Merge",
     "Where",
     "WhereNot",
+    "Fork",
+    "Gather",
+    "SiblingProbe",
 )
 
 
@@ -64,11 +67,29 @@ class GoTo(Primitive):
 
 
 @dataclass(slots=True)
+class Fork(Primitive):
+    variables: list[Variable]
+    expression: common.Expression
+
+
+@dataclass(slots=True)
+class Gather(Primitive):
+    aggregates: dict[Variable, common.Expression]
+    keys: list[Variable]
+
+
+@dataclass(slots=True)
+class SiblingProbe(Primitive):
+    variable: Variable
+    label: Label
+
+
+@dataclass(slots=True)
 class Graph(common.Located):
     primitives: PerLabel[Primitive]
     entry_label: Label
-    edges: graph.Graph[Label]
-    backedges: graph.Graph[Label]
+    direct_edges: graph.Graph[Label]
+    indirect_edges: graph.Graph[Label]
 
 
 Program = common.Program[Graph]

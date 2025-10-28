@@ -11,3 +11,6 @@ class Names(StrEnum):
     INITIALIZATION = "@init"
     BODY = "@body"
     TRAMPOLINE = "trampoline"
+    PROBE = "@probe"
+    EXPRESSION = "@expression"
+    ITERATION = "@iteration"

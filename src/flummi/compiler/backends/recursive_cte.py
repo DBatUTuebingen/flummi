@@ -13,7 +13,12 @@ class RecursiveCTEGenerator(
     UseStartAllocation,
     UseLiveVariables,
     name="recursive_cte",
-    supports={Feature.SEQUENCING, Feature.BRANCHING, Feature.ITERATION},
+    supports={
+        Feature.SEQUENCING,
+        Feature.BRANCHING,
+        Feature.ITERATION,
+        Feature.CONCURRENCY,
+    },
 ):
     @override
     def generate(self) -> sql.SQL:
@@ -164,7 +169,7 @@ class RecursiveCTEGenerator(
                         sql.variable(
                             constants.Names.LABEL, constants.Names.WORKING_TABLE
                         )
-                        + " IS NOT DISTINCT FROM "
+                        + " == "
                         + sql.string(label.identifier)
                     ],
                 )
@@ -181,12 +186,9 @@ class RecursiveCTEGenerator(
                         ),
                         *(
                             sql.named(
-                                sql.string(target_label.identifier),
-                                constants.Names.LABEL,
-                            )
-                            if output.identifier == constants.Names.LABEL
-                            else sql.named(
-                                sql.variable(
+                                sql.string(target_label.identifier)
+                                if output.identifier == constants.Names.LABEL
+                                else sql.variable(
                                     output.identifier,
                                     predecessor.identifier,
                                 ),
@@ -196,6 +198,151 @@ class RecursiveCTEGenerator(
                         ),
                     ],
                     from_list=[sql.name(predecessor.identifier)],
+                )
+
+            case CFP.Fork(variables, expression):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.NULL,
+                            constants.Names.NOTHING,
+                        ),
+                        *(
+                            sql.named(
+                                sql.variable(
+                                    output.identifier,
+                                    constants.Names.EXPRESSION,
+                                )
+                                if output in variables
+                                else sql.variable(
+                                    output.identifier, predecessor.identifier
+                                ),
+                                output.identifier,
+                            )
+                            for output in self.outputs_of[label]
+                        ),
+                    ],
+                    from_list=[
+                        sql.name(predecessor.identifier),
+                        sql.named(
+                            sql.lateral(
+                                expression.source.format(
+                                    *(
+                                        sql.paren(
+                                            sql.variable(
+                                                argument.identifier,
+                                                predecessor.identifier,
+                                            )
+                                        )
+                                        for argument in expression.arguments
+                                    )
+                                )
+                            ),
+                            constants.Names.EXPRESSION,
+                            [variable.identifier for variable in variables],
+                        ),
+                    ],
+                )
+
+            case CFP.SiblingProbe(variable, sibling_label):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.NULL,
+                            constants.Names.NOTHING,
+                        ),
+                        *(
+                            sql.named(
+                                (
+                                    sql.call(
+                                        "NOT EXISTS ",
+                                        [
+                                            sql.paren(
+                                                sql.select(
+                                                    select_list=[
+                                                        sql.named(
+                                                            sql.NULL,
+                                                            constants.Names.NOTHING,
+                                                        )
+                                                    ],
+                                                    from_list=[
+                                                        sql.name(
+                                                            constants.Names.WORKING_TABLE
+                                                        )
+                                                    ],
+                                                    predicates=[
+                                                        sql.variable(
+                                                            constants.Names.LABEL,
+                                                            constants.Names.WORKING_TABLE,
+                                                        )
+                                                        + " <>"
+                                                        + sql.string(
+                                                            sibling_label.identifier
+                                                        ),
+                                                    ],
+                                                )
+                                            )
+                                        ],
+                                    )
+                                )
+                                if output == variable
+                                else sql.variable(
+                                    output.identifier,
+                                    predecessor.identifier,
+                                ),
+                                output.identifier,
+                            )
+                            for output in self.outputs_of[label]
+                        ),
+                    ],
+                    from_list=[sql.name(predecessor.identifier)],
+                )
+
+            case CFP.Gather(aggregates, keys):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.NULL,
+                            constants.Names.NOTHING,
+                        ),
+                        *(
+                            sql.named(
+                                expression.source.format(
+                                    *(
+                                        sql.paren(
+                                            sql.variable(
+                                                argument.identifier,
+                                                predecessor.identifier,
+                                            )
+                                        )
+                                        for argument in expression.arguments
+                                    )
+                                )
+                                if (expression := aggregates.get(output))
+                                is not None
+                                else sql.variable(
+                                    output.identifier,
+                                    predecessor.identifier,
+                                )
+                                if output in keys
+                                else sql.NULL,
+                                output.identifier,
+                            )
+                            for output in self.outputs_of[label]
+                        ),
+                    ],
+                    from_list=[sql.name(predecessor.identifier)],
+                    group_keys=[variable.identifier for variable in keys],
+                    having=[sql.call("COUNT", ["*"]) + " > 0"],
                 )
 
             case _:

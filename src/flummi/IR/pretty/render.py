@@ -64,7 +64,7 @@ def render[A](graph: CFP.Graph, *, font: str = "monospace") -> str:
 
     edges.extend(
         f'"{source.identifier}":s -> "{target.identifier}":n;'
-        for source, targets in graph.edges.items()
+        for source, targets in graph.direct_edges.items()
         for target in targets
     )
 

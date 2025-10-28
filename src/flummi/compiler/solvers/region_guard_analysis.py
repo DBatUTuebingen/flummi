@@ -19,7 +19,7 @@ def analyze_region_guards(program: CFP.Program) -> tuple[GuardMap, RegionMap]:
     # This implementation doesn't support cycles! Since we don't implement any
     # code generators for cyclic CFPs that use region/guard information, we
     # don't need a full-blown PST-style region analysis.
-    assert not cfp.backedges
+    assert not cfp.indirect_edges
 
     # Guarding primitives are those who control the control flow of their
     # successors, i.e., either control flow sourcse like starts or conditionals
@@ -45,12 +45,12 @@ def analyze_region_guards(program: CFP.Program) -> tuple[GuardMap, RegionMap]:
     # We iterate through the whole CFP by iterating over all guards in
     # topoligical order—this ensures that we visit all guards of other guards
     # before the guards they guard. :-)
-    for guard_label in graph.topological_order(cfp.edges):
+    for guard_label in graph.topological_order(cfp.direct_edges):
         guard_primitive = cfp.primitives[guard_label]
         if isinstance(guard_primitive, GUARDING_PRIMITIVES):
             # For each guard, we collect all of its guardees using a simple
             # depth first traversal terminated by other guards.
-            stack: list[CFP.Label] = list(cfp.edges[guard_label])
+            stack: list[CFP.Label] = list(cfp.direct_edges[guard_label])
 
             if isinstance(guard_primitive, CFP.Merge):
                 # Since merges are control dependent on their predecessors
@@ -83,7 +83,7 @@ def analyze_region_guards(program: CFP.Program) -> tuple[GuardMap, RegionMap]:
                     guard_of[label] = guard_label
 
                     if not isinstance(primitive, GUARDING_PRIMITIVES):
-                        stack.extend(cfp.edges[label])
+                        stack.extend(cfp.direct_edges[label])
 
     # Excluding the start primitives, all other primitives should have been
     # assigned a guard once the above loop(s) have been completed.

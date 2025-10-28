@@ -34,7 +34,7 @@ class ApfelBackend(
 
     def generate_region(self, entry_label: CFP.Label) -> sql.SQL:
         region_labels = self.guarded_by[entry_label]
-        region = graph.subgraph(self.program.body.edges, region_labels)
+        region = graph.subgraph(self.program.body.direct_edges, region_labels)
 
         from_list: list[sql.SQL] = []
         results: list[sql.SQL] = []

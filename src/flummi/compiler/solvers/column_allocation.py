@@ -92,7 +92,12 @@ def allocate_columns(
 
     allocations = {
         label: Allocation(
-            {system_variables[constants.Names.LABEL]: constants.Names.LABEL}
+            {
+                system_variables[constants.Names.LABEL]: constants.Names.LABEL,
+                system_variables[
+                    constants.Names.ITERATION
+                ]: constants.Names.ITERATION,
+            }
             | {
                 variable: constants.Names.PROGRAM.format(
                     idx=offset_of[type] + i

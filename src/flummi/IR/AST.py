@@ -80,4 +80,20 @@ class Break(Statement):
     name: LoopName
 
 
+@dataclass(slots=True)
+class Fork(Statement):
+    variables: list[Variable]
+    expression: common.Expression
+
+
+@dataclass(slots=True)
+class Gather(Statement):
+    aggregates: dict[Variable, common.Expression]
+    keys: list[Variable]
+
+
+@dataclass(slots=True)
+class Sync(Statement): ...
+
+
 Program = common.Program[Statement]
