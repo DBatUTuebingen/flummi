@@ -1,0 +1,481 @@
+{
+  -- Misc declarations for common intermediates
+  DECLARE id : §int§;
+  DECLARE length : §real§;
+  DECLARE dist : §real§;
+  DECLARE condition : §bool§;
+
+  -- Setup render parameters  --------------------------------------------------
+  DECLARE shadows : §bool§;
+  LET shadows = §true§[];
+
+  DECLARE max_rec_depth : §int§;
+  LET max_rec_depth = §10§[];
+
+  DECLARE epsilon : §real§;
+  LET epsilon = §0.000001§[];
+
+  -- Setup scene  --------------------------------------------------------------
+  DECLARE light : §sphere§;
+  LET light = §SELECT s FROM spheres AS s WHERE material = 'l'§[];
+
+  DECLARE light_x : §real§;
+  DECLARE light_y : §real§;
+  DECLARE light_z : §real§;
+  LET light_x = §{0}.center_x§[light];
+  LET light_y = §{0}.center_y§[light];
+  LET light_z = §{0}.center_z§[light];
+
+  -- Setup camera  -------------------------------------------------------------
+  DECLARE image_width : §int§;
+  LET image_width = §4096§[];
+
+  DECLARE image_height : §int§;
+  LET image_height = §2304§[];
+
+  DECLARE fov : §real§;
+  LET fov = §radians(120)§[];
+
+  DECLARE image_aspect_ratio : §real§;
+  LET image_aspect_ratio = §{0} / {1}§[image_width, image_height];
+
+  DECLARE viewport_height : §real§;
+  LET viewport_height = §10§[];
+
+  DECLARE viewport_width : §real§;
+  LET viewport_width = §{0} * {1}§[viewport_height, image_aspect_ratio];
+
+  DECLARE position_x : §real§;
+  DECLARE position_y : §real§;
+  DECLARE position_z : §real§;
+  LET position_x = §0§[];     -- ⎫            ⎛ 0  ⎞
+  LET position_y = §0§[];     -- ⎬ position = ⎢ 0  ⎥
+  LET position_z = §-4.5§[];  -- ⎭            ⎝-4.5⎠
+
+  DECLARE looking_at_x : §real§;
+  DECLARE looking_at_y : §real§;
+  DECLARE looking_at_z : §real§;
+  LET looking_at_x = §0§[];  -- ⎫              ⎛0⎞
+  LET looking_at_y = §0§[];  -- ⎬ looking_at = ⎢0⎥
+  LET looking_at_z = §0§[];  -- ⎭              ⎝0⎠
+
+  DECLARE scene_up_x : §real§;
+  DECLARE scene_up_y : §real§;
+  DECLARE scene_up_z : §real§;
+  LET scene_up_x = §0§[];  -- ⎫      ⎛0⎞
+  LET scene_up_y = §1§[];  -- ⎬ scene_up = ⎢1⎥
+  LET scene_up_z = §0§[];  -- ⎭      ⎝0⎠
+
+  DECLARE camera_forward_x : §real§;
+  DECLARE camera_forward_y : §real§;
+  DECLARE camera_forward_z : §real§;
+  LET camera_forward_x = §{0} - {1}§[position_x, looking_at_x];  -- ⎫
+  LET camera_forward_y = §{0} - {1}§[position_y, looking_at_y];  -- ⎬ camera_forward = position - looking_at
+  LET camera_forward_z = §{0} - {1}§[position_z, looking_at_z];  -- ⎭
+
+  LET length = §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[camera_forward_x, camera_forward_y, camera_forward_z];  -- } length = |camera_forward|
+  LET camera_forward_x = §{0} / {1}§[camera_forward_x, length];  -- ⎫
+  LET camera_forward_y = §{0} / {1}§[camera_forward_y, length];  -- ⎬ camera_forward = camera_forward / length
+  LET camera_forward_z = §{0} / {1}§[camera_forward_z, length];  -- ⎭
+
+  DECLARE focal_length : §real§;
+  LET focal_length = §{0}§[length];  -- } focal_length = length (= |camera_forward|)
+
+  DECLARE camera_right_x : §real§;
+  DECLARE camera_right_y : §real§;
+  DECLARE camera_right_z : §real§;
+  LET camera_right_x = §{0} * {1} - {2} * {3}§[scene_up_y, camera_forward_z, scene_up_z, camera_forward_y];  -- ⎫
+  LET camera_right_y = §{0} * {1} - {2} * {3}§[scene_up_z, camera_forward_x, scene_up_x, camera_forward_z];  -- ⎬ camera_right = scene_up × camera_forward
+  LET camera_right_z = §{0} * {1} - {2} * {3}§[scene_up_x, camera_forward_y, scene_up_y, camera_forward_x];  -- ⎭
+
+  LET length = §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[camera_right_x, camera_right_y, camera_right_z];  -- } length = |camera_right|
+  LET camera_right_x = §{0} / {1}§[camera_right_x, length];  -- ⎫
+  LET camera_right_y = §{0} / {1}§[camera_right_y, length];  -- ⎬ camera_right = camera_right / length
+  LET camera_right_z = §{0} / {1}§[camera_right_z, length];  -- ⎭
+
+  DECLARE camera_up_x : §real§;
+  DECLARE camera_up_y : §real§;
+  DECLARE camera_up_z : §real§;
+  LET camera_up_x = §{0} * {1} - {2} * {3}§[camera_forward_y, camera_right_z, camera_forward_z, camera_right_y];  -- ⎫
+  LET camera_up_y = §{0} * {1} - {2} * {3}§[camera_forward_z, camera_right_x, camera_forward_x, camera_right_z];  -- ⎬ camera_up = scene_up × camera_forward
+  LET camera_up_z = §{0} * {1} - {2} * {3}§[camera_forward_x, camera_right_y, camera_forward_y, camera_right_x];  -- ⎭
+
+  LET length = §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[camera_up_x, camera_up_y, camera_up_z];  -- } length = |camera_up|
+  LET camera_up_x = §{0} / {1}§[camera_up_x, length];  -- ⎫
+  LET camera_up_y = §{0} / {1}§[camera_up_y, length];  -- ⎬ camera_up = camera_up / length
+  LET camera_up_z = §{0} / {1}§[camera_up_z, length];  -- ⎭
+
+  DECLARE viewport_horizontal_x : §real§;
+  DECLARE viewport_horizontal_y : §real§;
+  DECLARE viewport_horizontal_z : §real§;
+  LET viewport_horizontal_x = §{0} * {1}§[viewport_width, camera_right_x];
+  LET viewport_horizontal_y = §{0} * {1}§[viewport_width, camera_right_y];
+  LET viewport_horizontal_z = §{0} * {1}§[viewport_width, camera_right_z];
+
+  DECLARE viewport_vertical_x : §real§;
+  DECLARE viewport_vertical_y : §real§;
+  DECLARE viewport_vertical_z : §real§;
+  LET viewport_vertical_x = §{0} * -{1}§[viewport_height, camera_up_x];
+  LET viewport_vertical_y = §{0} * -{1}§[viewport_height, camera_up_y];
+  LET viewport_vertical_z = §{0} * -{1}§[viewport_height, camera_up_z];
+
+  DECLARE viewport_root_x : §real§;
+  DECLARE viewport_root_y : §real§;
+  DECLARE viewport_root_z : §real§;
+  LET viewport_root_x = §{0} - {1} * {2} - {3} / 2 - {4} / 2§[position_x, focal_length, camera_forward_x, viewport_horizontal_x, viewport_vertical_x];
+  LET viewport_root_y = §{0} - {1} * {2} - {3} / 2 - {4} / 2§[position_y, focal_length, camera_forward_y, viewport_horizontal_y, viewport_vertical_y];
+  LET viewport_root_z = §{0} - {1} * {2} - {3} / 2 - {4} / 2§[position_z, focal_length, camera_forward_z, viewport_horizontal_z, viewport_vertical_z];
+
+  DECLARE viewport_horizontal_offset_x : §real§;
+  DECLARE viewport_horizontal_offset_y : §real§;
+  DECLARE viewport_horizontal_offset_z : §real§;
+  LET viewport_horizontal_offset_x = §{0} / {1}§[viewport_horizontal_x, image_width];
+  LET viewport_horizontal_offset_y = §{0} / {1}§[viewport_horizontal_y, image_width];
+  LET viewport_horizontal_offset_z = §{0} / {1}§[viewport_horizontal_z, image_width];
+
+  DECLARE viewport_vertical_offset_x : §real§;
+  DECLARE viewport_vertical_offset_y : §real§;
+  DECLARE viewport_vertical_offset_z : §real§;
+  LET viewport_vertical_offset_x = §{0} / {1}§[viewport_vertical_x, image_height];
+  LET viewport_vertical_offset_y = §{0} / {1}§[viewport_vertical_y, image_height];
+  LET viewport_vertical_offset_z = §{0} / {1}§[viewport_vertical_z, image_height];
+
+  -- Dispatch screen pixels  ---------------------------------------------------
+  DECLARE screen_x : §int§;
+  FORK screen_x = §SELECT * FROM range({0})§[image_width];
+
+  DECLARE screen_y : §int§;
+  FORK screen_y = §SELECT * FROM range({0})§[image_height];
+
+  -- Compute ray directions ----------------------------------------------------
+  DECLARE origin_x : §real§;
+  DECLARE origin_y : §real§;
+  DECLARE origin_z : §real§;
+  LET origin_x = §{0}§[position_x];
+  LET origin_y = §{0}§[position_y];
+  LET origin_z = §{0}§[position_z];
+
+  DECLARE pixel_center_x : §real§;
+  DECLARE pixel_center_y : §real§;
+  DECLARE pixel_center_z : §real§;
+  LET pixel_center_x = §{0} + {1} * {2} + {3} * {4}§[viewport_root_x, screen_x, viewport_horizontal_offset_x, screen_y, viewport_vertical_offset_x];
+  LET pixel_center_y = §{0} + {1} * {2} + {3} * {4}§[viewport_root_y, screen_x, viewport_horizontal_offset_y, screen_y, viewport_vertical_offset_y];
+  LET pixel_center_z = §{0} + {1} * {2} + {3} * {4}§[viewport_root_z, screen_x, viewport_horizontal_offset_z, screen_y, viewport_vertical_offset_z];
+
+  DECLARE direction_x : §real§;
+  DECLARE direction_y : §real§;
+  DECLARE direction_z : §real§;
+  LET direction_x = §{0} - {1}§[pixel_center_x, origin_x]; -- ⎫
+  LET direction_y = §{0} - {1}§[pixel_center_y, origin_y]; -- ⎬ direction = pixel_center - origin
+  LET direction_z = §{0} - {1}§[pixel_center_z, origin_z]; -- ⎭
+
+  -- Setup ray
+  DECLARE shadow_ray : §bool§;
+  LET shadow_ray = §false§[];
+
+  DECLARE pixel_r : §real§;
+  DECLARE pixel_g : §real§;
+  DECLARE pixel_b : §real§;
+  LET pixel_r = §0§[];  -- ⎫         ⎛0⎞
+  LET pixel_g = §0§[];  -- ⎬ pixel = ⎢0⎥
+  LET pixel_b = §0§[];  -- ⎭(color)  ⎝0⎠
+
+  -- Iterate ray cast
+  DECLARE step : §int§;
+  LET step = §0§[];
+
+  LOOP ray_loop {
+    DECLARE color_r : §real§;
+    DECLARE color_g : §real§;
+    DECLARE color_b : §real§;
+    LET color_r = §0§[];  -- ⎫         ⎛0⎞
+    LET color_g = §0§[];  -- ⎬ color = ⎢0⎥
+    LET color_b = §0§[];  -- ⎭(color)  ⎝0⎠
+
+    LET length = §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[direction_x, direction_y, direction_z];  -- } length = |direction|
+    LET direction_x = §{0} / {1}§[direction_x, length];  -- ⎫
+    LET direction_y = §{0} / {1}§[direction_y, length];  -- ⎬ direction = direction / length
+    LET direction_z = §{0} / {1}§[direction_z, length];  -- ⎭
+
+    DECLARE min_dist : §real§;
+    LET min_dist = §'Infinity' :: real§[];
+
+    DECLARE material : §material§;
+    LET material = §'n'§[];
+
+    DECLARE normal_x : §real§;
+    DECLARE normal_y : §real§;
+    DECLARE normal_z : §real§;
+    LET normal_x = §0§[];  -- ⎫          ⎛0⎞
+    LET normal_y = §0§[];  -- ⎬ normal = ⎢0⎥
+    LET normal_z = §0§[];  -- ⎭          ⎝0⎠
+
+    LET id = §SELECT MAX(t.id) FROM triangles AS t§[];
+    LOOP triangle_loop {
+      DECLARE triangle : §triangle§;
+      LET triangle = §SELECT t FROM triangles AS t WHERE t.id = {0}§[id];
+
+      DECLARE e1_x : §real§;
+      DECLARE e1_y : §real§;
+      DECLARE e1_z : §real§;
+      LET e1_x = §{0}.p2_x - {0}.p1_x§[triangle];  -- ⎫
+      LET e1_y = §{0}.p2_y - {0}.p1_y§[triangle];  -- ⎬ e1 = p2 - p1
+      LET e1_z = §{0}.p2_z - {0}.p1_z§[triangle];  -- ⎭
+
+      DECLARE e2_x : §real§;
+      DECLARE e2_y : §real§;
+      DECLARE e2_z : §real§;
+      LET e2_x = §{0}.p3_x - {0}.p1_x§[triangle];  -- ⎫
+      LET e2_y = §{0}.p3_y - {0}.p1_y§[triangle];  -- ⎬ e2 = p3 - p1
+      LET e2_z = §{0}.p3_z - {0}.p1_z§[triangle];  -- ⎭
+
+      DECLARE P_x : §real§;
+      DECLARE P_y : §real§;
+      DECLARE P_z : §real§;
+      LET P_x = §{0} * {1} - {2} * {3}§[direction_y, e2_z, direction_z, e2_y];  -- ⎫
+      LET P_y = §{0} * {1} - {2} * {3}§[direction_z, e2_x, direction_x, e2_z];  -- ⎬ P = direction × e2
+      LET P_z = §{0} * {1} - {2} * {3}§[direction_x, e2_y, direction_y, e2_x];  -- ⎭
+
+      DECLARE det : §real§;
+      LET det = §{0} * {1} + {2} * {3} + {4} * {5}§[e1_x, P_x, e1_y, P_y, e1_z, P_z]; -- } det = e1 ⋅ P
+
+      LET condition = §abs({0}) <= {1}§[det, epsilon];
+      IF condition THEN NOOP
+      ELSE {
+        DECLARE T1_x : §real§;
+        DECLARE T1_y : §real§;
+        DECLARE T1_z : §real§;
+        LET T1_x = §{0} - {1}.p1_x§[origin_x, triangle];  -- ⎫
+        LET T1_y = §{0} - {1}.p1_y§[origin_y, triangle];  -- ⎬ T1 = origin - p1
+        LET T1_z = §{0} - {1}.p1_z§[origin_z, triangle];  -- ⎭
+
+        DECLARE u : §real§;
+        LET u = §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[T1_x, P_x, T1_y, P_y, T1_z, P_z, det];  -- } u = (T1 ⋅ P) / det
+
+        LET condition = §{0} NOT BETWEEN 0 AND 1§[u];
+        IF condition THEN NOOP
+        ELSE {
+          DECLARE Q_x : §real§;
+          DECLARE Q_y : §real§;
+          DECLARE Q_z : §real§;
+          LET Q_x = §{0} * {1} - {2} * {3}§[T1_y, e1_z, T1_z, e1_y];  -- ⎫
+          LET Q_y = §{0} * {1} - {2} * {3}§[T1_z, e1_x, T1_x, e1_z];  -- ⎬ Q = T1 × e1
+          LET Q_z = §{0} * {1} - {2} * {3}§[T1_x, e1_y, T1_y, e1_x];  -- ⎭
+
+          DECLARE v : §real§;
+          LET v = §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[direction_x, Q_x, direction_y, Q_y, direction_z, Q_z, det];  -- } v = (direction ⋅ Q) / det
+
+          LET condition = §0 > {0} OR {0} + {1} > 1§[v, u];
+          IF condition THEN NOOP
+          ELSE {
+            LET dist = §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[e2_x, Q_x, e2_y, Q_y, e2_z, Q_z, det];  -- } dist = (e2 ⋅ Q) / det
+
+            LET condition = §{0} <= {1} OR {0} >= {2}§[dist, epsilon, min_dist];
+            IF condition THEN NOOP
+            ELSE {
+              LET material = §{0}.material§[triangle];
+              LET min_dist = §{0}§[dist];
+
+              LET normal_x = §{0} * {1} - {2} * {3}§[e2_y, e1_z, e2_z, e1_y];  -- ⎫
+              LET normal_y = §{0} * {1} - {2} * {3}§[e2_z, e1_x, e2_x, e1_z];  -- ⎬ normal = e2 × e1
+              LET normal_z = §{0} * {1} - {2} * {3}§[e2_x, e1_y, e2_y, e1_x];  -- ⎭
+
+              LET length = §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[normal_x, normal_y, normal_z];  -- } length = |normal|
+              LET normal_x = §{0} / {1}§[normal_x, length];  -- ⎫
+              LET normal_y = §{0} / {1}§[normal_y, length];  -- ⎬ normal = normal / length
+              LET normal_z = §{0} / {1}§[normal_z, length];  -- ⎭
+
+              LET condition = §{0} * {1} + {2} * {3} + {4} * {5} > 0§[normal_x, direction_x, normal_y, direction_y, normal_z, direction_z];
+              IF condition
+              THEN {
+                LET normal_x = §{0} * -1§[normal_x];  -- ⎫
+                LET normal_y = §{0} * -1§[normal_y];  -- ⎬ normal = -normal
+                LET normal_z = §{0} * -1§[normal_z]   -- ⎭
+              } ELSE NOOP;
+
+              LET condition = §{0} = 'm'§[material];
+              IF condition
+              THEN {
+                LET color_r = §{0}.r§[triangle];
+                LET color_g = §{0}.g§[triangle];
+                LET color_b = §{0}.b§[triangle]
+              } ELSE NOOP
+            }
+          }
+        }
+      };
+
+      LET condition = §{0} = 0§[id];
+      IF condition
+      THEN BREAK triangle_loop
+      ELSE LET id = §{0} - 1§[id]
+    };
+
+    LET id = §SELECT MAX(s.id) FROM spheres AS s§[];
+    LOOP sphere_loop {
+      DECLARE sphere : §sphere§;
+
+      DECLARE L_x : §real§;
+      DECLARE L_y : §real§;
+      DECLARE L_z : §real§;
+
+      DECLARE d2 : §real§;
+
+      DECLARE tca : §real§;
+
+      DECLARE thc : §real§;
+
+      LET sphere = §SELECT t FROM spheres AS t WHERE t.id = {0}§[id];
+
+      LET L_x = §{0}.center_x - {1}§[sphere, origin_x];  -- ⎫
+      LET L_y = §{0}.center_y - {1}§[sphere, origin_y];  -- ⎬ L = center - origin
+      LET L_z = §{0}.center_z - {1}§[sphere, origin_z];  -- ⎭
+
+      LET tca = §{0} * {1} + {2} * {3} + {4} * {5}§[L_x, direction_x, L_y, direction_y, L_z, direction_z];  -- } tca = L ⋅ direction
+
+      LET d2 = §{0} ** 2 + {1} ** 2 + {2} ** 2 - {3} ** 2§[L_x, L_y, L_z, tca];  -- } d2 = |L|² - tca²
+
+      LET condition = §{0} > {1}.radius ** 2§[d2, sphere];
+      IF condition THEN NOOP
+      ELSE {                                                  --          _____________
+        LET thc = §sqrt({0}.radius ** 2 - {1})§[sphere, d2];  -- } thc = √radius² - d2`
+        LET dist = §least({0} + {1}, greatest({0} - {1}, 0))§[tca, thc];  -- } dist = min(tca + tch, max(tca - thc, 0))
+
+        LET condition = §{0} NOT BETWEEN {1} AND {2}§[dist, epsilon, min_dist];
+        IF condition THEN NOOP
+        ELSE {
+          LET material = §{0}.material§[sphere];
+          LET min_dist = §{0}§[dist];
+
+          LET normal_x = §{0} * {1} - {2}.center_x + {3}§[direction_x, dist, sphere, origin_x];  -- ⎫
+          LET normal_y = §{0} * {1} - {2}.center_y + {3}§[direction_y, dist, sphere, origin_y];  -- ⎬ normal = direction ⋅ dist - center + origin
+          LET normal_z = §{0} * {1} - {2}.center_z + {3}§[direction_z, dist, sphere, origin_z];  -- ⎭
+
+          LET length = §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[normal_x, normal_y, normal_z];  -- } length = |normal|
+          LET normal_x = §{0} / {1}§[normal_x, length];  -- ⎫
+          LET normal_y = §{0} / {1}§[normal_y, length];  -- ⎬ normal = normal / length
+          LET normal_z = §{0} / {1}§[normal_z, length];  -- ⎭
+
+          LET condition = §{0} = 'm'§[material];
+          IF condition
+          THEN {
+            LET color_r = §{0}.r§[sphere];
+            LET color_g = §{0}.g§[sphere];
+            LET color_b = §{0}.b§[sphere]
+          } ELSE NOOP
+        }
+      };
+
+      LET condition = §{0} = 0§[id];
+      IF condition
+      THEN BREAK sphere_loop
+      ELSE LET id = §{0} - 1§[id]
+    };
+
+    LET condition = §{0}§[shadow_ray];        -- ⎫
+    IF condition                              -- ⎪
+    THEN {                                    -- ⎪
+      LET condition = §{0} <> 'l'§[material]; -- ⎪
+      IF condition                            -- ⎪
+      THEN {                                  -- ⎬ If we are handling a shadow ray and haven't
+        LET pixel_r = §0§[];                  -- ⎪ hit a light we are actually in a shadow!
+        LET pixel_g = §0§[];                  -- ⎪ Black out the color and be done with it.
+        LET pixel_b = §0§[]                   -- ⎪
+      } ELSE NOOP;                            -- ⎪
+      BREAK ray_loop                          -- ⎭
+    } ELSE {
+      LET condition = §{0} = 'l'§[material];
+      IF condition
+      THEN {
+        LET pixel_r = §1§[];
+        LET pixel_g = §1§[];
+        LET pixel_b = §1§[]
+      } ELSE {
+        LET condition = §{0} = 'm'§[material];
+        IF condition
+        THEN {
+          --              Calculate actual hit position
+          --              and set the shadow ray origin
+          --              to that
+          --                ╭────┴────╮
+          LET origin_x = §{0} + {1} * {2} + {3} * {4}§[origin_x, direction_x, min_dist, normal_x, epsilon];
+          LET origin_y = §{0} + {1} * {2} + {3} * {4}§[origin_y, direction_y, min_dist, normal_y, epsilon];
+          LET origin_z = §{0} + {1} * {2} + {3} * {4}§[origin_z, direction_z, min_dist, normal_z, epsilon];
+          --                            ╰────┬────╯
+          --                      Back the shadow rays origin slightly
+          --                      off of the hit surface to avoid hitting
+          --                      the same object again
+
+          LET direction_x = §{0} - {1}§[light_x, origin_x];  -- ⎫
+          LET direction_y = §{0} - {1}§[light_y, origin_y];  -- ⎬ Direct the shadow ray towards the light source
+          LET direction_z = §{0} - {1}§[light_z, origin_z];  -- ⎭
+
+          LET length = §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[direction_x, direction_y, direction_z];  -- } length = |direction|
+          LET direction_x = §{0} / {1}§[direction_x, length];  -- ⎫
+          LET direction_y = §{0} / {1}§[direction_y, length];  -- ⎬ direction = direction / length
+          LET direction_z = §{0} / {1}§[direction_z, length];  -- ⎭
+
+          LET u = §greatest(0, {0} * {1} + {2} * {3} + {4} * {5})§[direction_x, normal_x, direction_y, normal_y, direction_z, normal_z];
+          LET pixel_r = §{0} * {1}§[color_r, u]; -- ⎬ Scale the influence of the materials color
+          LET pixel_g = §{0} * {1}§[color_g, u]; -- ⎪ in proportion to the angle difference
+          LET pixel_b = §{0} * {1}§[color_b, u]; -- ⎭ between the current ray and the shadow ray
+
+          LET condition = §{0}§[shadows]; -- ⎫
+          IF condition                    -- ⎪
+          THEN {                          -- ⎪ If shadows are enabled...
+            LET shadow_ray = §true§[];    -- ⎬   ...fire off a shadow ray
+            CONTINUE ray_loop             -- ⎪   ...otherwise we are done here.
+          } ELSE BREAK ray_loop           -- ⎭
+        } ELSE {
+          LET condition = §{0} = 'r'§[material];
+          IF condition
+          THEN {
+            --              Calculate actual hit position
+            --              and set the reflection ray origin
+            --              to that
+            --                ╭────┴────╮
+            LET origin_x = §{0} + {1} * {2} + {3} * {4}§[origin_x, direction_x, min_dist, normal_x, epsilon];
+            LET origin_y = §{0} + {1} * {2} + {3} * {4}§[origin_y, direction_y, min_dist, normal_y, epsilon];
+            LET origin_z = §{0} + {1} * {2} + {3} * {4}§[origin_z, direction_z, min_dist, normal_z, epsilon];
+            --                            ╰────┬────╯
+            --                      Back the reflection rays origin slightly
+            --                      off of the hit surface to avoid hitting
+            --                      the same object again
+
+            LET u = §2 * ({0} * {1} + {2} * {3} + {4} * {5})§[direction_x, normal_x, direction_y, normal_y, direction_z, normal_z];
+            LET direction_x = §{0} - {1} * {2}§[direction_x, normal_x, u];  -- ⎬ Calculate the new ray direction
+            LET direction_y = §{0} - {1} * {2}§[direction_y, normal_y, u];  -- ⎪ based on the assumption of perfect
+            LET direction_z = §{0} - {1} * {2}§[direction_z, normal_z, u];  -- ⎭ reflection
+
+            LET condition = §{0} < {1}§[step, max_rec_depth]; -- ⎫
+            IF condition                                      -- ⎪
+            THEN {                                            -- ⎪ If there are still some reflection passes...
+              LET step = §{0} + 1§[step];                     -- ⎬   ...go in for another round
+              CONTINUE ray_loop                               -- ⎪   ...otherwise we are done here.
+            } ELSE BREAK ray_loop                             -- ⎭
+          } ELSE NOOP
+        }
+      }
+    };
+    BREAK ray_loop
+  };
+
+  DECLARE result : §text§;
+  LET result = §
+    lpad(({0} * 255) :: int :: text, 3, ' ') || ' ' ||
+    lpad(({1} * 255) :: int :: text, 3, ' ') || ' ' ||
+    lpad(({2} * 255) :: int :: text, 3, ' ')
+  §[pixel_r, pixel_g, pixel_b];
+
+  SYNC;
+
+  GATHER result = §
+    E'P3\n' || {0} :: text || ' ' || {1} :: text || E'\n255\n' ||
+    string_agg({2}, E'\n' ORDER BY {3}, {4})
+    || E'\n'
+  §[image_width, image_height, result, screen_y, screen_x]
+  BY image_width, image_height;
+
+  EMIT result;
+  STOP
+}
