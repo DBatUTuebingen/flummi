@@ -169,7 +169,7 @@ class RecursiveCTEGenerator(
                         sql.variable(
                             constants.Names.LABEL, constants.Names.WORKING_TABLE
                         )
-                        + " == "
+                        + " = "
                         + sql.string(label.identifier)
                     ],
                 )
@@ -247,7 +247,7 @@ class RecursiveCTEGenerator(
                     ],
                 )
 
-            case CFP.SiblingProbe(variable, sibling_label):
+            case CFP.SiblingProbe(variable, sibling_label, keys):
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
@@ -281,9 +281,30 @@ class RecursiveCTEGenerator(
                                                             constants.Names.LABEL,
                                                             constants.Names.WORKING_TABLE,
                                                         )
-                                                        + " <>"
+                                                        + " <> "
                                                         + sql.string(
                                                             sibling_label.identifier
+                                                        ),
+                                                        *(
+                                                            sql.variable(
+                                                                column,
+                                                                constants.Names.WORKING_TABLE,
+                                                            )
+                                                            + " = "
+                                                            + sql.variable(
+                                                                key.identifier,
+                                                                predecessor.identifier,
+                                                            )
+                                                            for key in keys
+                                                            if (
+                                                                column
+                                                                := self.allocation_for[
+                                                                    sibling_label
+                                                                ].column_for(
+                                                                    key
+                                                                )
+                                                            )
+                                                            is not None
                                                         ),
                                                     ],
                                                 )

@@ -33,6 +33,9 @@ NODE_STYLES: dict[type[CFP.Primitive], str] = {
     CFP.Where: "style = filled, fillcolor = forestgreen, color = white, fontcolor = white",
     CFP.WhereNot: "style = filled, fillcolor = darkgreen, color = white, fontcolor = white",
     CFP.GoTo: "style = filled, fillcolor = darkorange, color = white, fontcolor = white",
+    CFP.Fork: "style = filled, fillcolor = darkorchid, color = white, fontcolor = white",
+    CFP.Gather: "style = filled, fillcolor = darkmagenta, color = white, fontcolor = white",
+    CFP.SiblingProbe: "style = filled, fillcolor = rebeccapurple, color = white, fontcolor = white",
 }
 
 
@@ -43,6 +46,7 @@ def render[A](graph: CFP.Graph, *, font: str = "monospace") -> str:
             body=(
                 f"{{{
                     pretty(node)
+                    .replace('\\', '\\\\')
                     .replace('\n', '\\l')
                     .replace('|', '\\|')
                     .replace(' ', '\\ ')

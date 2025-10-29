@@ -248,7 +248,7 @@ class Analyzer:
                 self.used_loop_names.add(name)
                 self.loop_name_stack.append(name)
 
-                body, body_stopped, body_elidable = self.analyze_statement(body)
+                body, _, body_elidable = self.analyze_statement(body)
 
                 _label = self.loop_name_stack.pop()
                 assert _label == name
@@ -258,7 +258,6 @@ class Analyzer:
                 else:
                     return self.StatementResult(
                         AST.Loop(name, body, location=statement.location),
-                        stopped=body_stopped,
                     )
 
             case AST.Continue(name):
@@ -298,7 +297,10 @@ class Analyzer:
 
                 return self.StatementResult(statement)
 
-            case AST.Sync():
+            case AST.Sync(keys):
+                for variable in keys:
+                    self.analyze_variable_read(variable)
+
                 if Feature.CONCURRENCY not in self.features:
                     return self.StatementResult.elide(statement)
                 else:

@@ -265,7 +265,7 @@ class Lowering:
 
                 return self.StatementResult({this_label})
 
-            case AST.Sync():
+            case AST.Sync(keys):
                 predecessor = self.add_merge(predecessors, statement.location)
 
                 probe_variable = self.fresh_identifier(
@@ -277,7 +277,10 @@ class Lowering:
                 )
                 probe_label = self.add_primitive(
                     CFP.SiblingProbe(
-                        probe_variable, wait_label, location=statement.location
+                        probe_variable,
+                        wait_label,
+                        keys,
+                        location=statement.location,
                     )
                 )
                 not_done_label = self.add_primitive(

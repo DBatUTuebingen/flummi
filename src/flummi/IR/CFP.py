@@ -82,6 +82,7 @@ class Gather(Primitive):
 class SiblingProbe(Primitive):
     variable: Variable
     label: Label
+    keys: list[Variable]
 
 
 @dataclass(slots=True)

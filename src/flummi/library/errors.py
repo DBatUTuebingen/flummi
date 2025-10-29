@@ -64,7 +64,7 @@ def format_location(
     last_line = min(len(lines), location.line + lookbehind)
 
     annotated_source = [
-        f"[cyan]{1 + i + first_line: >{len(str(last_line))}}[/cyan] [bold]│[/bold] {line}"
+        f"[cyan]{1 + i + first_line: >{len(str(last_line))}}[/cyan] [bold]│[/bold] {line.replace('[', r'\[')}"
         for i, line in enumerate(lines[first_line:last_line])
     ]
     marker = (

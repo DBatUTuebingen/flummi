@@ -93,7 +93,8 @@ class Gather(Statement):
 
 
 @dataclass(slots=True)
-class Sync(Statement): ...
+class Sync(Statement):
+    keys: list[Variable]
 
 
 Program = common.Program[Statement]

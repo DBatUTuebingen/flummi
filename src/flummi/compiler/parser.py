@@ -240,4 +240,8 @@ class Parser(parser.Parser[Tokens]):
     def parse_sync(self) -> Sync:
         location = self.current.location
         self.expect(Tokens.SYNC)
-        return Sync(location=location)
+        if self.match(Tokens.BY):
+            keys = list(self.sequence(self.parse_identifier, Tokens.COMMA))
+        else:
+            keys = []
+        return Sync(keys, location=location)
