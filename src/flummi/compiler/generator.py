@@ -116,6 +116,48 @@ class CodeGenerator:
                     from_list=[sql.name(predecessor.identifier)],
                 )
 
+            case CFP.Where(condition, inverted):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.variable(
+                                output.identifier, predecessor.identifier
+                            ),
+                            output.identifier,
+                        )
+                        for output in self.dataflow.outputs[label]
+                    ],
+                    from_list=[sql.name(predecessor.identifier)],
+                    predicates=[
+                        f"{sql.variable(condition.identifier, predecessor.identifier)} "
+                        + f"IS {'NOT ' * inverted} "
+                        + "DISTINCT FROM TRUE"
+                    ],
+                )
+
+            case CFP.Merge():
+                body = sql.union_all(
+                    [
+                        sql.select(
+                            select_list=[
+                                sql.named(
+                                    sql.variable(
+                                        output.identifier,
+                                        predecessor.identifier,
+                                    ),
+                                    output.identifier,
+                                )
+                                for output in self.dataflow.outputs[label]
+                            ],
+                            from_list=[sql.name(predecessor.identifier)],
+                        )
+                        for predecessor in predecessors
+                    ]
+                )
+
             case _:
                 raise NotImplementedError()
 

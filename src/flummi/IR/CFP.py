@@ -15,6 +15,8 @@ __all__ = (
     "Start",
     "Assignment",
     "Emit",
+    "Where",
+    "Merge",
 )
 
 
@@ -44,6 +46,16 @@ class Assignment(Primitive):
 @dataclass
 class Emit(Primitive):
     variable: common.Identifier
+
+
+@dataclass
+class Where(Primitive):
+    condition: common.Identifier
+    inverted: bool
+
+
+@dataclass
+class Merge(Primitive): ...
 
 
 Program = common.Program[Graph]

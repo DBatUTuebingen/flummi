@@ -65,19 +65,22 @@ class DataflowSolver:
     def uses(primitive: CFP.Primitive) -> set[common.Identifier]:
         match primitive:
             case CFP.Assignment(_, common.Expression(_, variables)):
-                return set(variables)
+                return {*variables, CONTROL(primitive.location)}
 
             case CFP.Emit(variable):
                 return {variable}
 
+            case CFP.Where(variable, _):
+                return {variable}
+
             case _:
-                return set()
+                return {CONTROL(primitive.location)}
 
     @staticmethod
     def binds(primitive: CFP.Primitive) -> set[common.Identifier]:
         match primitive:
             case CFP.Start():
-                return {NOTHING(primitive.location)}
+                return {CONTROL(primitive.location)}
 
             case CFP.Assignment(variable, _):
                 return {variable}
@@ -93,5 +96,5 @@ def RESULT(location: errors.Location) -> common.Identifier:
     return common.Identifier(names.result, location=location)
 
 
-def NOTHING(location: errors.Location) -> common.Identifier:
-    return common.Identifier(names.nothing, location=location)
+def CONTROL(location: errors.Location) -> common.Identifier:
+    return common.Identifier(names.control, location=location)

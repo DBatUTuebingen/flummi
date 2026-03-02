@@ -88,6 +88,21 @@ class Analyzer:
 
                 return AnalysisResult(statement, False, False)
 
+            case AST.Conditional(condition, true_branch, false_branch):
+                self.analyze_variable_read(condition)
+
+                true_result = self.analyze_statement(true_branch)
+                false_result = self.analyze_statement(false_branch)
+
+                statement.true_branch = true_result.statement
+                statement.false_branch = false_result.statement
+
+                return AnalysisResult(
+                    statement,
+                    true_result.stopped and false_result.stopped,
+                    true_result.elidable and false_result.elidable,
+                )
+
             case _:
                 raise AnalysisError(
                     "Found unknown statement.", statement.location
