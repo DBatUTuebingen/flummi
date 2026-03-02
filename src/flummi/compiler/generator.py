@@ -133,7 +133,7 @@ class CodeGenerator:
                     from_list=[sql.name(predecessor.identifier)],
                     predicates=[
                         f"{sql.variable(condition.identifier, predecessor.identifier)} "
-                        + f"IS {'NOT ' * inverted} "
+                        + f"IS {'NOT ' * (not inverted)}"
                         + "DISTINCT FROM TRUE"
                     ],
                 )

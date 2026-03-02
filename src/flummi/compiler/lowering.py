@@ -12,30 +12,38 @@ from ..library import errors
 __all__ = ("lower",)
 
 
-def lower(program: AST.Program) -> CFP.Program:
-    return Lowering().lower_program(program)
+def lower(program: AST.Program, multiplexing: Multiplexing) -> CFP.Program:
+    return Lowering(multiplexing).lower_program(program)
 
 
 class LoweringError(errors.PrettyError, ValueError): ...  # pyright: ignore[reportUnsafeMultipleInheritance]
 
 
-@unique
-class MultiplexBehavior(Enum):
-    MERGE = auto()
-    FAN = auto()
+@dataclass
+class Multiplexing:
+    @unique
+    class Method(Enum):
+        MERGE = auto()
+        FAN = auto()
 
+    default: Method = Method.MERGE
+    overrides: dict[type[AST.Statement], Method] = field(
+        default_factory=lambda: {
+            AST.Stop: Multiplexing.Method.FAN,
+            AST.Emit: Multiplexing.Method.FAN,
+            AST.Block: Multiplexing.Method.FAN,
+            AST.NoOp: Multiplexing.Method.FAN,
+        }
+    )
 
-MULTIPLEX_DEFAULT = MultiplexBehavior.MERGE
-MULTIPLEX_CONFIG: dict[type[AST.Statement], MultiplexBehavior] = {
-    AST.Stop: MultiplexBehavior.FAN,
-    AST.Emit: MultiplexBehavior.FAN,
-    AST.Block: MultiplexBehavior.FAN,
-    AST.NoOp: MultiplexBehavior.FAN,
-}
+    def method_for(self, statement: AST.Statement) -> Method:
+        return self.overrides.get(type(statement), self.default)
 
 
 @dataclass
 class Lowering:
+    multiplexing: Multiplexing
+
     _primitives: dict[CFP.Label, CFP.Primitive] = field(
         init=False, default_factory=dict
     )
@@ -167,14 +175,14 @@ class Lowering:
                         )
 
             case _:
-                match MULTIPLEX_CONFIG.get(type(statement), MULTIPLEX_DEFAULT):
-                    case MultiplexBehavior.FAN:
+                match self.multiplexing.method_for(statement):
+                    case Multiplexing.Method.FAN:
                         return union(
                             self.lower_statement({predecessor}, statement)
                             for predecessor in predecessors
                         )
 
-                    case MultiplexBehavior.MERGE:
+                    case Multiplexing.Method.MERGE:
                         merge = self.add_primitive(
                             predecessors=predecessors,
                             primitive=CFP.Merge(location=statement.location),

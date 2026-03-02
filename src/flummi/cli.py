@@ -8,7 +8,7 @@ from .IR.pretty.render import render
 
 from .compiler.parser import parse
 from .compiler.analyzer import analyze
-from .compiler.lowering import lower
+from .compiler.lowering import Multiplexing, lower
 from .compiler.solver import solve
 from .compiler.generator import generate
 
@@ -64,7 +64,7 @@ def compile(
 
         analyzed_program = analyze(parsed_program)
 
-        lowered_program = lower(analyzed_program)
+        lowered_program = lower(analyzed_program, multiplexing=Multiplexing())
 
         if graph is not None:
             render_to_file(lowered_program.body, graph, dot)
