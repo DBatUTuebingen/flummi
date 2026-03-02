@@ -7,6 +7,9 @@ from ..library import errors
 __all__ = ("analyze",)
 
 
+type SymbolTable = dict[AST.Variable, AST.Type]
+
+
 @dataclass(frozen=True)
 class AnalysisResult:
     statement: AST.Statement
@@ -19,14 +22,22 @@ class AnalysisError(errors.PrettyError): ...
 
 def analyze(
     program: AST.Program,
-) -> AST.Program:
-    return Analyzer().analyze_program(program)
+) -> tuple[AST.Program, SymbolTable]:
+    analyzer = Analyzer()
+    program = analyzer.analyze_program(program)
+    return program, analyzer.symbol_table
 
 
 @dataclass
 class Analyzer:
-    bound_symbols: set[common.Identifier] = field(
-        init=False, default_factory=set
+    symbol_table: SymbolTable = field(
+        init=False,
+        default_factory=dict,
+    )
+    emitted_type: AST.Type | None = field(init=False, default=None)
+    bound_symbols: set[AST.Variable] = field(
+        init=False,
+        default_factory=set,
     )
 
     def analyze_program(self, program: AST.Program) -> AST.Program:
@@ -44,6 +55,29 @@ class Analyzer:
 
     def analyze_statement(self, statement: AST.Statement) -> AnalysisResult:
         match statement:
+            case AST.Declaration(variable, type):
+                if variable in self.symbol_table:
+                    old_variable = next(
+                        old_variable
+                        for old_variable in self.symbol_table
+                        if variable == old_variable
+                    )
+
+                    raise AnalysisError(
+                        f"Found declaration of variable {variable.identifier!r}...",
+                        variable.location,
+                        "...that was previously declared.",
+                        old_variable.location,
+                    )
+
+                self.symbol_table[variable] = type
+
+                return AnalysisResult(
+                    AST.NoOp(location=statement.location),
+                    stopped=False,
+                    elidable=True,
+                )
+
             case AST.Block(statements):
                 if not statements:
                     raise AnalysisError(
@@ -86,6 +120,21 @@ class Analyzer:
             case AST.Emit(variable):
                 self.analyze_variable_read(variable)
 
+                this_type = self.symbol_table[variable]
+
+                if self.emitted_type:
+                    if self.emitted_type != this_type:
+                        raise AnalysisError(
+                            f"Found type-mismatch between emits. This emits {this_type.source!r}...",
+                            statement.location,
+                            f"...and this emits {self.emitted_type.source!r}.",
+                            self.emitted_type.location,
+                        )
+                else:
+                    self.emitted_type = this_type
+                    #! [WARN] This may clash with other things!
+                    self.emitted_type.location = statement.location
+
                 return AnalysisResult(statement, False, False)
 
             case AST.Conditional(condition, true_branch, false_branch):
@@ -120,4 +169,10 @@ class Analyzer:
             )
 
     def analyze_variable_write(self, variable: common.Identifier):
+        if variable not in self.symbol_table:
+            raise AnalysisError(
+                f"Found write to undeclared variable {variable.identifier!r}.",
+                variable.location,
+            )
+
         self.bound_symbols.add(variable)

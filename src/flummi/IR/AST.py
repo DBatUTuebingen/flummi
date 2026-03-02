@@ -1,11 +1,12 @@
-from __future__ import annotations
-
 from abc import ABC
 from dataclasses import dataclass
 
 from . import common
 
 __all__ = (
+    "Variable",
+    "Expression",
+    "Type",
     "Program",
     "Statement",
     "Block",
@@ -14,10 +15,21 @@ __all__ = (
     "Emit",
     "NoOp",
     "Conditional",
+    "Declaration",
 )
+
+Variable = common.Identifier
+Expression = common.Expression
+Type = common.Type
 
 
 class Statement(common.Located, ABC): ...
+
+
+@dataclass
+class Declaration(Statement):
+    variable: Variable
+    type: Type
 
 
 @dataclass
@@ -27,13 +39,13 @@ class Block(Statement):
 
 @dataclass
 class Assignment(Statement):
-    variable: common.Identifier
-    expression: common.Expression
+    variable: Variable
+    expression: Expression
 
 
 @dataclass
 class Emit(Statement):
-    variable: common.Identifier
+    variable: Variable
 
 
 @dataclass
@@ -46,7 +58,7 @@ class NoOp(Statement): ...
 
 @dataclass
 class Conditional(Statement):
-    condition: common.Identifier
+    condition: Variable
     true_branch: Statement
     false_branch: Statement
 

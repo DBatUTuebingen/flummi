@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from flummi.compiler.analyzer import SymbolTable
+
 from . import names
 from .solver import Dataflow
 from ..IR import CFP
@@ -9,13 +11,16 @@ from ..library import sql, graph
 __all__ = ("generate",)
 
 
-def generate(program: CFP.Program, dataflow: Dataflow) -> str:
-    return CodeGenerator(dataflow).gen_program(program)
+def generate(
+    program: CFP.Program, dataflow: Dataflow, symbol_table: SymbolTable
+) -> str:
+    return CodeGenerator(dataflow, symbol_table).gen_program(program)
 
 
 @dataclass
 class CodeGenerator:
     dataflow: Dataflow
+    symbol_table: SymbolTable
 
     def gen_program(self, program: CFP.Program) -> sql.SQL:
         cfp = program.body
@@ -71,7 +76,7 @@ class CodeGenerator:
                 body = sql.select(
                     select_list=[
                         sql.named(
-                            sql.paren(
+                            sql.cast(
                                 expression.source.format(
                                     *(
                                         sql.paren(
@@ -82,7 +87,8 @@ class CodeGenerator:
                                         )
                                         for argument in expression.arguments
                                     )
-                                )
+                                ),
+                                self.symbol_table[variable].source,
                             )
                             if output == variable
                             else sql.variable(

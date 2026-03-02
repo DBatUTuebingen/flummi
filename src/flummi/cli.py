@@ -35,14 +35,14 @@ def compile(
         ),
     ],
     output: Annotated[
-        Path,
+        Path | None,
         typer.Argument(
             dir_okay=False,
             file_okay=True,
             writable=True,
             help="The path to write the compiled query to.",
         ),
-    ],
+    ] = None,
     graph: Annotated[
         Path | None,
         typer.Option(
@@ -62,7 +62,7 @@ def compile(
     try:
         parsed_program = parse(source)
 
-        analyzed_program = analyze(parsed_program)
+        analyzed_program, symbol_table = analyze(parsed_program)
 
         lowered_program = lower(analyzed_program, multiplexing=Multiplexing())
 
@@ -71,14 +71,17 @@ def compile(
 
         dataflow = solve(lowered_program)
 
-        sql = generate(lowered_program, dataflow)
+        sql = generate(lowered_program, dataflow, symbol_table)
 
     except PrettyError as e:
         print(e.format(source), file=sys.stderr)
         sys.exit(1)
 
-    with open(output, "w+") as f:
-        _ = f.write(sql)
+    if output:
+        with open(output, "w+") as f:
+            _ = f.write(sql)
+    else:
+        print(sql)
 
 
 def render_to_file(graph: Graph, path: Path, command: str = "dot"):

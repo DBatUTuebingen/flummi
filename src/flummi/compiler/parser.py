@@ -1,7 +1,10 @@
 from textwrap import dedent
 
-from ..IR.common import Expression, Type, Identifier
 from ..IR.AST import (
+    Declaration,
+    Expression,
+    Type,
+    Variable,
     Conditional,
     Program,
     Statement,
@@ -41,6 +44,8 @@ class Tokens(parser.Tokens):
     IF = r"IF"
     THEN = r"THEN"
     ELSE = r"ELSE"
+    DECLARE = r"DECLARE"
+    COLON = r":"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -67,10 +72,10 @@ class Parser(parser.Parser[Tokens]):
             arguments=free_variables,
         )
 
-    def parse_variable(self) -> Identifier:
+    def parse_variable(self) -> Variable:
         location = self.current.location
         identifier = self.expectv(Tokens.IDENTIFIER)
-        return Identifier(location=location, identifier=identifier)
+        return Variable(location=location, identifier=identifier)
 
     def parse_type(self) -> Type:
         location = self.current.location
@@ -83,6 +88,8 @@ class Parser(parser.Parser[Tokens]):
         return Program(location=location, body=body)
 
     def parse_statement(self) -> Statement:
+        if self.lookahead(Tokens.DECLARE):
+            return self.parse_declaration()
         if self.lookahead(Tokens.STOP):
             return self.parse_stop()
         elif self.lookahead(Tokens.EMIT):
@@ -97,6 +104,18 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_conditional()
         else:
             raise self.error("Expected statement.")
+
+    def parse_declaration(self) -> Declaration:
+        location = self.current.location
+        self.expect(Tokens.DECLARE)
+        variable = self.parse_variable()
+        self.expect(Tokens.COLON)
+        type = self.parse_type()
+        return Declaration(
+            location=location,
+            variable=variable,
+            type=type,
+        )
 
     def parse_stop(self) -> Stop:
         location = self.current.location
