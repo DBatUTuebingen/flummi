@@ -1,18 +1,24 @@
 {
+  DECLARE c : §boolean§;
+  DECLARE r : §text§;
+
   LET c = §random() >= 0.5§[];
   IF c
   THEN LET r = §'tails'§[]
   ELSE LET r = §'heads'§[];
   EMIT r;
+
   LET c = §random() >= 0.5§[];
   IF c
   THEN LET r = §'tails'§[]
   ELSE LET r = §'heads'§[];
   EMIT r;
+
   LET c = §random() >= 0.5§[];
   IF c
   THEN LET r = §'tails'§[]
   ELSE LET r = §'heads'§[];
   EMIT r;
+
   STOP
 }
