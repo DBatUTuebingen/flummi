@@ -7,6 +7,13 @@ from ..library import errors
 __all__ = ("analyze",)
 
 
+@dataclass(frozen=True)
+class AnalysisResult:
+    statement: AST.Statement
+    stopped: bool
+    elidable: bool
+
+
 class AnalysisError(errors.PrettyError): ...
 
 
@@ -23,21 +30,19 @@ class Analyzer:
     )
 
     def analyze_program(self, program: AST.Program) -> AST.Program:
-        result, stopped, _ = self.analyze_statement(program.body)
+        result = self.analyze_statement(program.body)
 
-        if not stopped:
+        if not result.stopped:
             raise AnalysisError(
                 "Not all linear control paths in the top level statement are termianted by a STOP statement.",
-                result.location,
+                result.statement.location,
             )
 
-        program.body = result
+        program.body = result.statement
 
         return program
 
-    def analyze_statement(
-        self, statement: AST.Statement
-    ) -> tuple[AST.Statement, bool, bool]:
+    def analyze_statement(self, statement: AST.Statement) -> AnalysisResult:
         match statement:
             case AST.Block(statements):
                 if not statements:
@@ -49,38 +54,39 @@ class Analyzer:
 
                 new_statements: list[AST.Statement] = []
                 for child_statement in statements:
-                    new_child_statement, stopped, elide = (
-                        self.analyze_statement(child_statement)
-                    )
-                    if not elide:
-                        new_statements.append(new_child_statement)
-                        if stopped:
+                    child_result = self.analyze_statement(child_statement)
+                    if not child_result.elidable:
+                        new_statements.append(child_result.statement)
+                        if child_result.stopped:
+                            stopped = True
                             break
 
                 if len(new_statements) == 0:
-                    return AST.NoOp(location=statement.location), False, True
+                    return AnalysisResult(
+                        AST.NoOp(location=statement.location), False, True
+                    )
                 elif len(new_statements) == 1:
-                    return (new_statements[0], stopped, False)
+                    return AnalysisResult(new_statements[0], stopped, False)
                 else:
                     statement.statements = new_statements
-                    return statement, stopped, False
+                    return AnalysisResult(statement, stopped, False)
 
             case AST.NoOp():
-                return statement, False, True
+                return AnalysisResult(statement, False, True)
 
-            case AST.Let(variable, expression):
+            case AST.Assignment(variable, expression):
                 self.analyze_expression(expression)
                 self.analyze_variable_write(variable)
 
-                return statement, False, False
+                return AnalysisResult(statement, False, False)
 
             case AST.Stop():
-                return statement, True, False
+                return AnalysisResult(statement, True, False)
 
             case AST.Emit(variable):
                 self.analyze_variable_read(variable)
 
-                return statement, False, False
+                return AnalysisResult(statement, False, False)
 
             case _:
                 raise AnalysisError(

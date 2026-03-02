@@ -9,7 +9,7 @@ __all__ = (
     "Program",
     "Statement",
     "Block",
-    "Let",
+    "Assignment",
     "Stop",
     "Emit",
     "NoOp",
@@ -25,7 +25,7 @@ class Block(Statement):
 
 
 @dataclass
-class Let(Statement):
+class Assignment(Statement):
     variable: common.Identifier
     expression: common.Expression
 

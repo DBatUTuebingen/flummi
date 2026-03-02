@@ -9,7 +9,7 @@ def pretty(primitive: CFP.Primitive) -> str:
         case CFP.Emit(variable):
             return f"EMIT {variable.identifier}"
 
-        case CFP.Let(variable, expression):
+        case CFP.Assignment(variable, expression):
             this = f"LET {variable.identifier} = "
             this += utils.indent1(
                 dedent(

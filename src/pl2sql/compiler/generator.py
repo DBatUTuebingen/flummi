@@ -64,7 +64,7 @@ class CodeGenerator:
                     ],
                 )
 
-            case CFP.Let(variable, expression):
+            case CFP.Assignment(variable, expression):
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 

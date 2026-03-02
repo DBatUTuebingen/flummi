@@ -1,7 +1,15 @@
 from textwrap import dedent
 
 from ..IR.common import Expression, Type, Identifier
-from ..IR.AST import Program, Statement, Block, Let, Emit, Stop, NoOp
+from ..IR.AST import (
+    Program,
+    Statement,
+    Block,
+    Assignment,
+    Emit,
+    Stop,
+    NoOp,
+)
 
 from ..library import errors, parser
 
@@ -80,7 +88,7 @@ class Parser(parser.Parser[Tokens]):
         elif self.lookahead(Tokens.NOOP):
             return self.parse_noop()
         elif self.lookahead(Tokens.LET):
-            return self.parse_let()
+            return self.parse_assignment()
         else:
             raise self.error("Expected statement.")
 
@@ -107,10 +115,12 @@ class Parser(parser.Parser[Tokens]):
         self.expect(Tokens.NOOP)
         return NoOp(location=location)
 
-    def parse_let(self) -> Let:
+    def parse_assignment(self) -> Assignment:
         location = self.current.location
         self.expect(Tokens.LET)
         variable = self.parse_variable()
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
-        return Let(location=location, variable=variable, expression=expression)
+        return Assignment(
+            location=location, variable=variable, expression=expression
+        )

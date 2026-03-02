@@ -78,10 +78,10 @@ class Lowering:
             case AST.NoOp():
                 return predecessor
 
-            case AST.Let(variable, expression):
+            case AST.Assignment(variable, expression):
                 this_label = self.add_primitive(
                     predecessor=predecessor,
-                    primitive=CFP.Let(
+                    primitive=CFP.Assignment(
                         variable=variable,
                         expression=expression,
                         location=statement.location,

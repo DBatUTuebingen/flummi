@@ -26,7 +26,7 @@ edge [
 NODE_TEMPLATE = '"{label}" [label="{body}",{style}];'
 
 NODE_STYLES: dict[type[CFP.Primitive], str] = {
-    CFP.Let: "style = filled, fillcolor = royalblue, color = white, fontcolor = white",
+    CFP.Assignment: "style = filled, fillcolor = royalblue, color = white, fontcolor = white",
     CFP.Emit: "style = filled, fillcolor = navy, color = white, fontcolor = white",
 }
 

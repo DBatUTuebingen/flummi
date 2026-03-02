@@ -64,7 +64,7 @@ class DataflowSolver:
     @staticmethod
     def uses(primitive: CFP.Primitive) -> set[common.Identifier]:
         match primitive:
-            case CFP.Let(_, common.Expression(_, variables)):
+            case CFP.Assignment(_, common.Expression(_, variables)):
                 return set(variables)
 
             case CFP.Emit(variable):
@@ -79,7 +79,7 @@ class DataflowSolver:
             case CFP.Start():
                 return {NOTHING(primitive.location)}
 
-            case CFP.Let(variable, _):
+            case CFP.Assignment(variable, _):
                 return {variable}
 
             case CFP.Emit(_):

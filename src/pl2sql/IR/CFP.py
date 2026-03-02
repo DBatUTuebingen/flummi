@@ -13,7 +13,7 @@ __all__ = (
     "Graph",
     "Primitive",
     "Start",
-    "Let",
+    "Assignment",
     "Emit",
 )
 
@@ -36,7 +36,7 @@ class Start(Primitive): ...
 
 
 @dataclass
-class Let(Primitive):
+class Assignment(Primitive):
     variable: common.Identifier
     expression: common.Expression
 
