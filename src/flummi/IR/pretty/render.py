@@ -59,7 +59,7 @@ def render[A](graph: CFP.Graph, *, font: str = "monospace") -> str:
 
     edges.extend(
         f'"{source.identifier}":s -> "{target.identifier}":n;'
-        for source, targets in graph.transitions.items()
+        for source, targets in graph.successors_of.items()
         for target in targets
     )
 

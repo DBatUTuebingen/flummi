@@ -1,65 +1,140 @@
 from dataclasses import dataclass, field
+from enum import Flag, auto, unique
 
-from ..IR import AST, common
+from .names import SystemVariable
+
+from ..IR.AST import (
+    Program,
+    Statement,
+    Declaration,
+    Block,
+    NoOp,
+    Stop,
+    Assignment,
+    Emit,
+    Conditional,
+    Loop,
+    Continue,
+    Break,
+)
+from ..IR.common import Variable, Type, Label, Expression
 
 from ..library import errors
 
 __all__ = ("analyze",)
 
 
-type SymbolTable = dict[AST.Variable, AST.Type]
+type SymbolTable = dict[Variable, Type]
 
 
-@dataclass(frozen=True)
+@unique
+class Feature(Flag):
+    SEQUENCING = auto()
+    BRANCHING = auto()
+    ITERATING = auto()
+
+
+@dataclass
 class AnalysisResult:
-    statement: AST.Statement
-    stopped: bool
-    elidable: bool
+    symbol_table: SymbolTable
+    features: Feature
+    system_variables: dict[SystemVariable, Variable]
 
 
 class AnalysisError(errors.PrettyError): ...
 
 
-def analyze(
-    program: AST.Program,
-) -> tuple[AST.Program, SymbolTable]:
-    analyzer = Analyzer()
-    program = analyzer.analyze_program(program)
-    return program, analyzer.symbol_table
+def analyze(program: Program) -> AnalysisResult:
+    return Analyzer(program).run()
 
 
 @dataclass
 class Analyzer:
-    symbol_table: SymbolTable = field(
+    _program: Program
+
+    _features: Feature = field(
+        init=False,
+        default_factory=lambda: Feature(0),
+    )
+    _system_variables: dict[SystemVariable, Variable] = field(
         init=False,
         default_factory=dict,
     )
-    emitted_type: AST.Type | None = field(init=False, default=None)
-    bound_symbols: set[AST.Variable] = field(
+
+    _symbol_table: SymbolTable = field(
+        init=False,
+        default_factory=dict,
+    )
+    _emitted_type: Type | None = field(
+        init=False,
+        default=None,
+    )
+
+    _bound_symbols: set[Variable] = field(
         init=False,
         default_factory=set,
     )
 
-    def analyze_program(self, program: AST.Program) -> AST.Program:
-        result = self.analyze_statement(program.body)
+    _loop_labels: set[Label] = field(
+        init=False,
+        default_factory=set,
+    )
+    _loop_label_scope: list[Label] = field(
+        init=False,
+        default_factory=list,
+    )
 
-        if not result.stopped:
-            raise AnalysisError(
-                "Not all linear control paths in the top level statement are termianted by a STOP statement.",
-                result.statement.location,
+    def __post_init__(self):
+        self._add_system_variable(SystemVariable.CONTROL, "int")
+
+    def _add_feature(self, feature: Feature):
+        if feature in self._features:
+            return
+        else:
+            self._features |= feature
+
+            match feature:
+                case Feature.ITERATING:
+                    self._add_system_variable(SystemVariable.LABEL, "text")
+                    self._add_system_variable(SystemVariable.ITERATION, "int")
+
+                case _:
+                    ...
+
+    def _add_system_variable(self, name: SystemVariable, type_source: str):
+        variable = Variable(
+            name,
+            location=self._program.location,
+        )
+
+        self._symbol_table[variable] = Type(
+            type_source,
+            location=self._program.location,
+        )
+
+        self._system_variables[name] = variable
+
+    def run(self) -> AnalysisResult:
+        self.analyze_statement(self._program.body)
+
+        if self._emitted_type is not None:
+            self._add_system_variable(
+                SystemVariable.RESULT, self._emitted_type.source
             )
 
-        program.body = result.statement
+        return AnalysisResult(
+            symbol_table=self._symbol_table,
+            features=self._features,
+            system_variables=self._system_variables,
+        )
 
-        return program
-
-    def analyze_statement(self, statement: AST.Statement) -> AnalysisResult:
+    def analyze_statement(self, statement: Statement) -> None:
         match statement:
-            case AST.Declaration(variable, type):
-                if variable in self.symbol_table:
+            case Declaration(variable, type):
+                if variable in self._symbol_table:
                     old_variable = next(
                         old_variable
-                        for old_variable in self.symbol_table
+                        for old_variable in self._symbol_table
                         if variable == old_variable
                     )
 
@@ -70,109 +145,109 @@ class Analyzer:
                         old_variable.location,
                     )
 
-                self.symbol_table[variable] = type
+                self._symbol_table[variable] = type
 
-                return AnalysisResult(
-                    AST.NoOp(location=statement.location),
-                    stopped=False,
-                    elidable=True,
-                )
-
-            case AST.Block(statements):
+            case Block(statements):
                 if not statements:
                     raise AnalysisError(
                         "Found empty block.", statement.location
                     )
 
-                stopped = False
+                self._add_feature(Feature.SEQUENCING)
 
-                new_statements: list[AST.Statement] = []
                 for child_statement in statements:
-                    child_result = self.analyze_statement(child_statement)
-                    if not child_result.elidable:
-                        new_statements.append(child_result.statement)
-                        if child_result.stopped:
-                            stopped = True
-                            break
+                    self.analyze_statement(child_statement)
 
-                if len(new_statements) == 0:
-                    return AnalysisResult(
-                        AST.NoOp(location=statement.location), False, True
-                    )
-                elif len(new_statements) == 1:
-                    return AnalysisResult(new_statements[0], stopped, False)
-                else:
-                    statement.statements = new_statements
-                    return AnalysisResult(statement, stopped, False)
+            case NoOp() | Stop():
+                return
 
-            case AST.NoOp():
-                return AnalysisResult(statement, False, True)
-
-            case AST.Assignment(variable, expression):
+            case Assignment(variable, expression):
                 self.analyze_expression(expression)
                 self.analyze_variable_write(variable)
 
-                return AnalysisResult(statement, False, False)
-
-            case AST.Stop():
-                return AnalysisResult(statement, True, False)
-
-            case AST.Emit(variable):
+            case Emit(variable):
                 self.analyze_variable_read(variable)
 
-                this_type = self.symbol_table[variable]
+                this_type = self._symbol_table[variable]
 
-                if self.emitted_type:
-                    if self.emitted_type != this_type:
+                if self._emitted_type:
+                    if self._emitted_type != this_type:
                         raise AnalysisError(
                             f"Found type-mismatch between emits. This emits {this_type.source!r}...",
                             statement.location,
-                            f"...and this emits {self.emitted_type.source!r}.",
-                            self.emitted_type.location,
+                            f"...and this emits {self._emitted_type.source!r}.",
+                            self._emitted_type.location,
                         )
                 else:
-                    self.emitted_type = this_type
+                    self._emitted_type = this_type
                     #! [WARN] This may clash with other things!
-                    self.emitted_type.location = statement.location
+                    self._emitted_type.location = statement.location
 
-                return AnalysisResult(statement, False, False)
+            case Conditional(condition, true_branch, false_branch):
+                self._add_feature(Feature.BRANCHING)
 
-            case AST.Conditional(condition, true_branch, false_branch):
                 self.analyze_variable_read(condition)
+                self.analyze_statement(true_branch)
+                self.analyze_statement(false_branch)
 
-                true_result = self.analyze_statement(true_branch)
-                false_result = self.analyze_statement(false_branch)
+            case Loop(label, body):
+                self._add_feature(Feature.ITERATING)
 
-                statement.true_branch = true_result.statement
-                statement.false_branch = false_result.statement
+                if label in self._loop_labels:
+                    other_instance: Label = next(
+                        other_instance
+                        for other_instance in self._loop_labels
+                        if label == other_instance
+                    )
 
-                return AnalysisResult(
-                    statement,
-                    true_result.stopped and false_result.stopped,
-                    true_result.elidable and false_result.elidable,
-                )
+                    raise AnalysisError(
+                        f"Found duplicate loop label {label.identifier!r}.",
+                        label.location,
+                        "Already used at:",
+                        other_instance.location,
+                    )
+
+                self._loop_labels.add(label)
+                self._loop_label_scope.append(label)
+
+                self.analyze_statement(body)
+
+                last_label = self._loop_label_scope.pop()
+                assert label == last_label
+
+            case Break(label) | Continue(label):
+                if label not in self._loop_labels:
+                    raise AnalysisError(
+                        f"Found loop control with unknown loop label {label.identifier!r}.",
+                        statement.location,
+                    )
+                if label not in self._loop_label_scope:
+                    raise AnalysisError(
+                        f"Found loop control with out-of-scope loop label {label.identifier!r}.",
+                        statement.location,
+                    )
 
             case _:
                 raise AnalysisError(
                     "Found unknown statement.", statement.location
                 )
 
-    def analyze_expression(self, expression: common.Expression):
+    def analyze_expression(self, expression: Expression):
         for variable in expression.arguments:
             self.analyze_variable_read(variable)
 
-    def analyze_variable_read(self, variable: common.Identifier):
-        if variable not in self.bound_symbols:
+    def analyze_variable_read(self, variable: Variable):
+        if variable not in self._bound_symbols:
             raise AnalysisError(
                 f"Found read from uninitialised variable {variable.identifier!r}.",
                 variable.location,
             )
 
-    def analyze_variable_write(self, variable: common.Identifier):
-        if variable not in self.symbol_table:
+    def analyze_variable_write(self, variable: Variable):
+        if variable not in self._symbol_table:
             raise AnalysisError(
                 f"Found write to undeclared variable {variable.identifier!r}.",
                 variable.location,
             )
 
-        self.bound_symbols.add(variable)
+        self._bound_symbols.add(variable)

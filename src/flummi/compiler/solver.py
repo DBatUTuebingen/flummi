@@ -1,53 +1,66 @@
 from dataclasses import dataclass
 
-from ..IR import CFP, common
-from ..library import utils, errors
-from . import names
+from flummi.compiler.analyzer import AnalysisResult
+
+from ..IR.CFP import (
+    Program,
+    Primitive,
+    Start,
+    Assignment,
+    Emit,
+    Where,
+    GoTo,
+    Variable,
+    Label,
+    Expression,
+)
+
+from ..library import utils, graph
+from .names import SystemVariable
 
 __all__ = ("solve",)
 
 
+type PerLabel[T] = dict[Label, T]
+
+
+@dataclass(frozen=True, slots=True)
+class DataflowResult:
+    inputs_of: PerLabel[set[Variable]]
+    outputs_of: PerLabel[set[Variable]]
+
+
+def solve(program: Program, analysis: AnalysisResult) -> DataflowResult:
+    return Solver(program, analysis).run()
+
+
 @dataclass
-class Dataflow:
-    inputs: dict[CFP.Label, set[common.Identifier]]
-    outputs: dict[CFP.Label, set[common.Identifier]]
+class Solver:
+    _program: Program
+    _analysis: AnalysisResult
 
-
-def solve(program: CFP.Program) -> Dataflow:
-    return DataflowSolver().solve_program(program)
-
-
-@dataclass
-class DataflowSolver:
-    def solve_program(self, program: CFP.Program) -> Dataflow:
-        cfp = program.body
-
-        inputs, outputs = self.live_variable_analysis(cfp)
-
-        return Dataflow(inputs, outputs)
-
-    @staticmethod
-    def live_variable_analysis(
-        cfp: CFP.Graph,
-    ) -> tuple[
-        dict[CFP.Label, set[common.Identifier]],
-        dict[CFP.Label, set[common.Identifier]],
-    ]:
+    def run(self) -> DataflowResult:
+        cfp = self._program.body
         inputs = {
-            label: DataflowSolver.uses(primitive)
+            label: self.uses(primitive)
             for label, primitive in cfp.primitives.items()
         }
         outputs = {
-            label: DataflowSolver.binds(primitive)
+            label: self.binds(primitive)
             for label, primitive in cfp.primitives.items()
         }
+
+        all_successors_of = graph.merge(
+            cfp.successors_of,
+            cfp.virtual_successors_of,
+        )
 
         changed = True
         while changed:
             changed = False
             for label in cfp.primitives:
                 new_outputs = utils.union(
-                    inputs[successor] for successor in cfp.transitions[label]
+                    inputs[successor] for successor in all_successors_of[label]
                 )
 
                 new_outputs -= outputs[label]
@@ -59,42 +72,41 @@ class DataflowSolver:
                 inputs[label] |= new_outputs
                 outputs[label] |= new_outputs
 
-        return inputs, outputs
+        return DataflowResult(inputs, outputs)
 
-    @staticmethod
-    def uses(primitive: CFP.Primitive) -> set[common.Identifier]:
+    def uses(self, primitive: Primitive) -> set[Variable]:
         match primitive:
-            case CFP.Assignment(_, common.Expression(_, variables)):
-                return {*variables, CONTROL(primitive.location)}
+            case Start():
+                return {self._analysis.system_variables[SystemVariable.LABEL]}
 
-            case CFP.Emit(variable):
+            case Assignment(_, Expression(_, variables)):
+                return {
+                    *variables,
+                    self._analysis.system_variables[SystemVariable.CONTROL],
+                }
+
+            case Emit(variable):
                 return {variable}
 
-            case CFP.Where(variable, _):
+            case Where(variable, _):
                 return {variable}
 
             case _:
-                return {CONTROL(primitive.location)}
+                return {self._analysis.system_variables[SystemVariable.CONTROL]}
 
-    @staticmethod
-    def binds(primitive: CFP.Primitive) -> set[common.Identifier]:
+    def binds(self, primitive: Primitive) -> set[Variable]:
         match primitive:
-            case CFP.Start():
-                return {CONTROL(primitive.location)}
+            case Start():
+                return {self._analysis.system_variables[SystemVariable.CONTROL]}
 
-            case CFP.Assignment(variable, _):
+            case Assignment(variable, _):
                 return {variable}
 
-            case CFP.Emit(_):
-                return {RESULT(primitive.location)}
+            case Emit(_):
+                return {self._analysis.system_variables[SystemVariable.RESULT]}
+
+            case GoTo():
+                return {self._analysis.system_variables[SystemVariable.LABEL]}
 
             case _:
                 return set()
-
-
-def RESULT(location: errors.Location) -> common.Identifier:
-    return common.Identifier(names.result, location=location)
-
-
-def CONTROL(location: errors.Location) -> common.Identifier:
-    return common.Identifier(names.control, location=location)

@@ -1,11 +1,17 @@
 from textwrap import dedent
 
-from ..IR.AST import (
-    Declaration,
+from ..IR.common import (
     Expression,
     Type,
     Variable,
+    Label,
+)
+from ..IR.AST import (
+    Declaration,
+    Break,
     Conditional,
+    Continue,
+    Loop,
     Program,
     Statement,
     Block,
@@ -46,6 +52,9 @@ class Tokens(parser.Tokens):
     ELSE = r"ELSE"
     DECLARE = r"DECLARE"
     COLON = r":"
+    LOOP = r"LOOP"
+    CONTINUE = r"CONTINUE"
+    BREAK = r"BREAK"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -77,6 +86,11 @@ class Parser(parser.Parser[Tokens]):
         identifier = self.expectv(Tokens.IDENTIFIER)
         return Variable(location=location, identifier=identifier)
 
+    def parse_label(self) -> Label:
+        location = self.current.location
+        identifier = self.expectv(Tokens.IDENTIFIER)
+        return Label(location=location, identifier=identifier)
+
     def parse_type(self) -> Type:
         location = self.current.location
         value = self.expectv(Tokens.SQL)[1:-1]
@@ -102,6 +116,12 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_assignment()
         elif self.lookahead(Tokens.IF):
             return self.parse_conditional()
+        elif self.lookahead(Tokens.LOOP):
+            return self.parse_loop()
+        elif self.lookahead(Tokens.CONTINUE):
+            return self.parse_continue()
+        elif self.lookahead(Tokens.BREAK):
+            return self.parse_break()
         else:
             raise self.error("Expected statement.")
 
@@ -163,4 +183,33 @@ class Parser(parser.Parser[Tokens]):
             condition=condition,
             true_branch=true_branch,
             false_branch=false_branch,
+        )
+
+    def parse_loop(self) -> Loop:
+        location = self.current.location
+        self.expect(Tokens.LOOP)
+        label = self.parse_label()
+        body = self.parse_statement()
+        return Loop(
+            location=location,
+            label=label,
+            body=body,
+        )
+
+    def parse_continue(self) -> Continue:
+        location = self.current.location
+        self.expect(Tokens.CONTINUE)
+        label = self.parse_label()
+        return Continue(
+            location=location,
+            label=label,
+        )
+
+    def parse_break(self) -> Break:
+        location = self.current.location
+        self.expect(Tokens.BREAK)
+        label = self.parse_label()
+        return Break(
+            location=location,
+            label=label,
         )

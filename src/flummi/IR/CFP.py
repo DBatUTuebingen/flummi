@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass
 
-from . import common
+from .common import Located, Label, Variable, Expression, Program as BaseProgram
 from ..library import graph
 
 
@@ -15,20 +15,23 @@ __all__ = (
     "Emit",
     "Where",
     "Merge",
+    "GoTo",
+    "Label",
+    "Variable",
+    "Expression",
 )
 
 
-Label = common.Identifier
-
-
 @dataclass
-class Graph(common.Located):
+class Graph(Located):
+    entry_label: Label
     primitives: dict[Label, Primitive]
-    transitions: graph.Graph[Label]
+    successors_of: graph.Graph[Label]
+    virtual_successors_of: graph.Graph[Label]
 
 
 @dataclass
-class Primitive(common.Located, ABC): ...
+class Primitive(Located, ABC): ...
 
 
 @dataclass
@@ -37,18 +40,18 @@ class Start(Primitive): ...
 
 @dataclass
 class Assignment(Primitive):
-    variable: common.Identifier
-    expression: common.Expression
+    variable: Variable
+    expression: Expression
 
 
 @dataclass
 class Emit(Primitive):
-    variable: common.Identifier
+    variable: Variable
 
 
 @dataclass
 class Where(Primitive):
-    condition: common.Identifier
+    condition: Variable
     inverted: bool
 
 
@@ -56,4 +59,9 @@ class Where(Primitive):
 class Merge(Primitive): ...
 
 
-Program = common.Program[Graph]
+@dataclass
+class GoTo(Primitive):
+    label: Label
+
+
+Program = BaseProgram[Graph]

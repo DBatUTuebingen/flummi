@@ -15,7 +15,7 @@ def merge[A, B](a: Graph[A], b: Graph[B]) -> Graph[A | B]:
 
     for label in a.keys() | b.keys():
         new[label] = (
-            a.get(label, default=set[A]()) | b.get(label, default=set[B]())  # pyright: ignore[reportCallIssue]
+            a.get(label, set[A]()) | b.get(label, set[B]())  # pyright: ignore[reportCallIssue, reportArgumentType]
         )
         #! [note] We ignore the "call issue" here since PyLance is to weak to
         #!        detect implicit subtyping...

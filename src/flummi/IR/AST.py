@@ -1,12 +1,16 @@
 from abc import ABC
 from dataclasses import dataclass
 
-from . import common
+from .common import (
+    Variable,
+    Label,
+    Expression,
+    Type,
+    Located,
+    Program as BaseProgram,
+)
 
 __all__ = (
-    "Variable",
-    "Expression",
-    "Type",
     "Program",
     "Statement",
     "Block",
@@ -16,14 +20,17 @@ __all__ = (
     "NoOp",
     "Conditional",
     "Declaration",
+    "Loop",
+    "Continue",
+    "Break",
+    "Label",
+    "Variable",
+    "Expression",
+    "Type",
 )
 
-Variable = common.Identifier
-Expression = common.Expression
-Type = common.Type
 
-
-class Statement(common.Located, ABC): ...
+class Statement(Located, ABC): ...
 
 
 @dataclass
@@ -63,4 +70,20 @@ class Conditional(Statement):
     false_branch: Statement
 
 
-Program = common.Program[Statement]
+@dataclass
+class Loop(Statement):
+    label: Label
+    body: Statement
+
+
+@dataclass
+class Continue(Statement):
+    label: Label
+
+
+@dataclass
+class Break(Statement):
+    label: Label
+
+
+Program = BaseProgram[Statement]

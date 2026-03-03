@@ -1,10 +1,21 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from flummi.compiler.analyzer import SymbolTable
+from .allocator import AllocationResult
+from .analyzer import AnalysisResult, Feature
 
-from . import names
-from .solver import Dataflow
-from ..IR import CFP
+from .names import Names, SystemVariable
+from .solver import DataflowResult
+from ..IR.CFP import (
+    Program,
+    Primitive,
+    Start,
+    Assignment,
+    Emit,
+    Where,
+    Merge,
+    GoTo,
+    Label,
+)
 from ..library import sql, graph
 
 
@@ -12,51 +23,185 @@ __all__ = ("generate",)
 
 
 def generate(
-    program: CFP.Program, dataflow: Dataflow, symbol_table: SymbolTable
+    program: Program,
+    analysis: AnalysisResult,
+    dataflow: DataflowResult,
+    allocation: AllocationResult,
 ) -> str:
-    return CodeGenerator(dataflow, symbol_table).gen_program(program)
+    return CodeGenerator(
+        dataflow,
+        allocation,
+        analysis,
+    ).gen_program(program)
 
 
 @dataclass
 class CodeGenerator:
-    dataflow: Dataflow
-    symbol_table: SymbolTable
+    _dataflow: DataflowResult
+    _allocation: AllocationResult
+    _analysis: AnalysisResult
 
-    def gen_program(self, program: CFP.Program) -> sql.SQL:
+    _linear: bool = field(init=False)
+
+    def __post_init__(self):
+        self._linear = Feature.ITERATING not in self._analysis.features
+
+    def gen_program(self, program: Program) -> sql.SQL:
+        if self._linear:
+            return self.gen_linear_program(program)
+        else:
+            return self.gen_nonlinear_program(program)
+
+    def gen_linear_program(self, program: Program) -> sql.SQL:
         cfp = program.body
-        predecessors = graph.invert(cfp.transitions)
+        predecessors_of = graph.invert(cfp.successors_of)
 
         ctes = [
             self.gen_primitive(
-                cfp.primitives[label], predecessors[label], label
+                cfp.primitives[label],
+                predecessors_of[label],
+                label,
             )
-            for label in graph.topological_order(cfp.transitions)
+            for label in graph.topological_order(cfp.successors_of)
         ]
 
-        return sql.with_ctes(
-            ctes=ctes,
-            body=sql.union_all(
-                [
-                    sql.select(
-                        select_list=[
-                            sql.variable(names.result, label.identifier)
-                        ],
-                        from_list=[sql.name(label.identifier)],
+        collectors = [
+            sql.select(
+                select_list=[
+                    sql.variable(SystemVariable.RESULT, label.identifier)
+                ],
+                from_list=[sql.name(label.identifier)],
+            )
+            for label, primitive in cfp.primitives.items()
+            if isinstance(primitive, Emit)
+        ]
+
+        return sql.with_ctes(ctes=ctes, body=sql.union_all(collectors))
+
+    def gen_nonlinear_program(self, program: Program) -> sql.SQL:
+        cfp = program.body
+        predecessors_of = graph.invert(cfp.successors_of)
+
+        ctes: list[sql.SQL] = []
+        collectors: list[sql.SQL] = []
+        for label in graph.topological_order(cfp.successors_of):
+            primitive = cfp.primitives[label]
+
+            ctes.append(
+                self.gen_primitive(
+                    cfp.primitives[label],
+                    predecessors_of[label],
+                    label,
+                )
+            )
+
+            match primitive:
+                case GoTo(target_label):
+                    collectors.append(
+                        sql.select(
+                            select_list=[
+                                sql.named(
+                                    sql.cast(
+                                        (
+                                            sql.NULL
+                                            if (
+                                                variable := self._allocation.at[
+                                                    target_label
+                                                ].variable_at(column)
+                                            )
+                                            is None
+                                            else sql.variable(
+                                                variable.identifier,
+                                                label.identifier,
+                                            )
+                                        ),
+                                        type.source,
+                                    ),
+                                    column,
+                                )
+                                for column, type in self._allocation.schema.items()
+                            ],
+                            from_list=[sql.name(label.identifier)],
+                        )
                     )
-                    for label, primitive in cfp.primitives.items()
-                    if isinstance(primitive, CFP.Emit)
-                ]
-            ),
+
+                case Emit(_):
+                    collectors.append(
+                        sql.select(
+                            select_list=[
+                                sql.named(
+                                    sql.cast(
+                                        (
+                                            sql.variable(
+                                                SystemVariable.RESULT,
+                                                label.identifier,
+                                            )
+                                            if column == SystemVariable.RESULT
+                                            else sql.NULL
+                                        ),
+                                        type.source,
+                                    ),
+                                    column,
+                                )
+                                for column, type in self._allocation.schema.items()
+                            ],
+                            from_list=[sql.name(label.identifier)],
+                        )
+                    )
+
+                case _:
+                    ...
+
+        recursive_anchor = sql.with_ctes(
+            ctes=ctes, body=sql.union_all(collectors)
+        )
+
+        base_anchor = sql.select(
+            select_list=[
+                sql.named(
+                    sql.cast(
+                        (
+                            sql.string(program.body.entry_label.identifier)
+                            if column == SystemVariable.LABEL
+                            else sql.NULL
+                        ),
+                        type.source,
+                    ),
+                    column,
+                )
+                for column, type in self._allocation.schema.items()
+            ]
+        )
+
+        recursive_cte = sql.cte(
+            name=Names.LOOP,
+            columns=list(self._allocation.schema),
+            body=sql.union_all([base_anchor, recursive_anchor]),
+        )
+
+        result_selection = sql.select(
+            select_list=[sql.variable(SystemVariable.RESULT, Names.LOOP)],
+            from_list=[sql.name(Names.LOOP)],
+            predicates=[
+                sql.variable(SystemVariable.LABEL, Names.LOOP) + " IS NULL"
+            ],
+        )
+
+        return (
+            sql.with_ctes(
+                ctes=[recursive_cte], recursive=True, body=result_selection
+            )
+            + ";"
         )
 
     def gen_primitive(
         self,
-        primitive: CFP.Primitive,
-        predecessors: set[CFP.Label],
-        label: CFP.Label,
+        primitive: Primitive,
+        predecessors: set[Label],
+        label: Label,
     ) -> sql.SQL:
         match primitive:
-            case CFP.Start():
+            case Start() if self._linear:
                 assert len(predecessors) == 0
 
                 body = sql.select(
@@ -65,11 +210,39 @@ class CodeGenerator:
                             "NULL",
                             output.identifier,
                         )
-                        for output in self.dataflow.outputs[label]
+                        for output in self._dataflow.outputs_of[label]
                     ],
                 )
 
-            case CFP.Assignment(variable, expression):
+            case Start() if not self._linear:
+                assert len(predecessors) == 0
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.variable(
+                                column,
+                                Names.LOOP,
+                            )
+                            if (
+                                column := self._allocation.at[label].column_for(
+                                    output
+                                )
+                            )
+                            else sql.NULL,
+                            output.identifier,
+                        )
+                        for output in self._dataflow.outputs_of[label]
+                    ],
+                    from_list=[sql.name(Names.LOOP)],
+                    predicates=[
+                        sql.variable(SystemVariable.LABEL, Names.LOOP)
+                        + " IS NOT DISTINCT FROM "
+                        + sql.string(label.identifier)
+                    ],
+                )
+
+            case Assignment(variable, expression):
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
@@ -88,7 +261,7 @@ class CodeGenerator:
                                         for argument in expression.arguments
                                     )
                                 ),
-                                self.symbol_table[variable].source,
+                                self._analysis.symbol_table[variable].source,
                             )
                             if output == variable
                             else sql.variable(
@@ -96,12 +269,12 @@ class CodeGenerator:
                             ),
                             output.identifier,
                         )
-                        for output in self.dataflow.outputs[label]
+                        for output in self._dataflow.outputs_of[label]
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                 )
 
-            case CFP.Emit(variable):
+            case Emit(variable):
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
@@ -111,18 +284,18 @@ class CodeGenerator:
                             sql.variable(
                                 variable.identifier, predecessor.identifier
                             )
-                            if output.identifier == names.result
+                            if output.identifier == SystemVariable.RESULT
                             else sql.variable(
                                 output.identifier, predecessor.identifier
                             ),
                             output.identifier,
                         )
-                        for output in self.dataflow.outputs[label]
+                        for output in self._dataflow.outputs_of[label]
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                 )
 
-            case CFP.Where(condition, inverted):
+            case Where(condition, inverted):
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
@@ -134,7 +307,7 @@ class CodeGenerator:
                             ),
                             output.identifier,
                         )
-                        for output in self.dataflow.outputs[label]
+                        for output in self._dataflow.outputs_of[label]
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                     predicates=[
@@ -144,7 +317,7 @@ class CodeGenerator:
                     ],
                 )
 
-            case CFP.Merge():
+            case Merge():
                 body = sql.union_all(
                     [
                         sql.select(
@@ -156,7 +329,7 @@ class CodeGenerator:
                                     ),
                                     output.identifier,
                                 )
-                                for output in self.dataflow.outputs[label]
+                                for output in self._dataflow.outputs_of[label]
                             ],
                             from_list=[sql.name(predecessor.identifier)],
                         )
@@ -164,13 +337,34 @@ class CodeGenerator:
                     ]
                 )
 
+            case GoTo(target_label):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        sql.named(
+                            sql.string(target_label.identifier)
+                            if output.identifier == SystemVariable.LABEL
+                            else sql.variable(
+                                output.identifier, predecessor.identifier
+                            ),
+                            output.identifier,
+                        )
+                        for output in self._dataflow.outputs_of[label]
+                    ],
+                    from_list=[sql.name(predecessor.identifier)],
+                )
+
             case _:
                 raise NotImplementedError()
 
-        return sql.cte(
+        cte = sql.cte(
             name=label.identifier,
             columns=[
-                output.identifier for output in self.dataflow.outputs[label]
+                output.identifier for output in self._dataflow.outputs_of[label]
             ],
             body=body,
         )
+
+        return cte

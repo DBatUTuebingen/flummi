@@ -4,7 +4,7 @@ from enum import Enum, auto, unique
 
 from flummi.library.utils import union
 
-from ..IR import common, AST, CFP
+from ..IR import AST, CFP
 
 from ..library import errors
 
@@ -31,8 +31,9 @@ class Multiplexing:
         default_factory=lambda: {
             AST.Stop: Multiplexing.Method.FAN,
             AST.Emit: Multiplexing.Method.FAN,
-            AST.Block: Multiplexing.Method.FAN,
             AST.NoOp: Multiplexing.Method.FAN,
+            AST.Break: Multiplexing.Method.FAN,
+            AST.Continue: Multiplexing.Method.FAN,
         }
     )
 
@@ -50,21 +51,28 @@ class Lowering:
     _edges: dict[CFP.Label, set[CFP.Label]] = field(
         init=False, default_factory=lambda: defaultdict(set)
     )
+    _virtual_edges: dict[CFP.Label, set[CFP.Label]] = field(
+        init=False, default_factory=lambda: defaultdict(set)
+    )
     _label_counters: dict[str, int] = field(
         init=False, default_factory=lambda: defaultdict(int)
     )
+    _loop_labels: dict[AST.Label, CFP.Label] = field(
+        init=False, default_factory=dict
+    )
+    _loop_exits: dict[CFP.Label, set[CFP.Label]] = field(
+        init=False, default_factory=lambda: defaultdict(set)
+    )
 
-    def _make_label(
-        self, name: str, location: errors.Location
-    ) -> common.Identifier:
+    def _make_label(self, name: str, location: errors.Location) -> CFP.Label:
         self._label_counters[name] += 1
-        return common.Identifier(
+        return CFP.Label(
             f"{name}.{self._label_counters[name]}",
             location=location,
         )
 
     def lower_program(self, program: AST.Program) -> CFP.Program:
-        entry_label = self.add_primitive(
+        entry_label = self._add_primitive(
             primitive=CFP.Start(
                 location=program.location,
             ),
@@ -75,14 +83,16 @@ class Lowering:
         _ = self.lower_statement({entry_label}, program.body)
 
         graph = CFP.Graph(
+            entry_label=entry_label,
             primitives=self._primitives,
-            transitions=self._edges,
+            successors_of=self._edges,
+            virtual_successors_of=self._virtual_edges,
             location=program.location,
         )
 
         return CFP.Program(body=graph, location=program.location)
 
-    def add_primitive(
+    def _add_primitive(
         self,
         primitive: CFP.Primitive,
         predecessors: set[CFP.Label],
@@ -96,6 +106,8 @@ class Lowering:
         self._edges[label] = set()
         for predecessor in predecessors:
             self._edges[predecessor].add(label)
+        if isinstance(primitive, CFP.GoTo):
+            self._virtual_edges[label].add(primitive.label)
         return label
 
     def lower_statement(
@@ -108,7 +120,7 @@ class Lowering:
             case 1:
                 match statement:
                     case AST.Assignment(variable, expression):
-                        this_label = self.add_primitive(
+                        this_label = self._add_primitive(
                             predecessors=predecessors,
                             primitive=CFP.Assignment(
                                 variable=variable,
@@ -122,8 +134,11 @@ class Lowering:
                     case AST.Stop():
                         return set()
 
+                    case AST.NoOp() | AST.Declaration():
+                        return predecessors
+
                     case AST.Emit(variable):
-                        this_label = self.add_primitive(
+                        this_label = self._add_primitive(
                             predecessors=predecessors,
                             primitive=CFP.Emit(
                                 variable=variable,
@@ -143,7 +158,7 @@ class Lowering:
                         return predecessors
 
                     case AST.Conditional(condition, true_branch, false_branch):
-                        where = self.add_primitive(
+                        where = self._add_primitive(
                             predecessors=predecessors,
                             primitive=CFP.Where(
                                 condition,
@@ -151,7 +166,7 @@ class Lowering:
                                 location=statement.location,
                             ),
                         )
-                        where_not = self.add_primitive(
+                        where_not = self._add_primitive(
                             predecessors=predecessors,
                             primitive=CFP.Where(
                                 condition,
@@ -168,6 +183,39 @@ class Lowering:
                             false_branch,
                         )
 
+                    case AST.Loop(label, body):
+                        loop_head = self._add_primitive(
+                            predecessors=set(),
+                            primitive=CFP.Start(location=statement.location),
+                        )
+
+                        self._loop_labels[label] = loop_head
+
+                        loop_tails = self.lower_statement(
+                            {loop_head} | predecessors, body
+                        )
+
+                        _ = self.lower_statement(
+                            loop_tails,
+                            AST.Continue(label, location=statement.location),
+                        )
+
+                        return self._loop_exits[label]
+
+                    case AST.Continue(label):
+                        _ = self._add_primitive(
+                            predecessors=predecessors,
+                            primitive=CFP.GoTo(
+                                self._loop_labels[label],
+                                location=statement.location,
+                            ),
+                        )
+                        return set()
+
+                    case AST.Break(label):
+                        self._loop_exits[label].update(predecessors)
+                        return set()
+
                     case _:
                         raise LoweringError(
                             "Encounted unexpected statement during lowering.",
@@ -183,7 +231,7 @@ class Lowering:
                         )
 
                     case Multiplexing.Method.MERGE:
-                        merge = self.add_primitive(
+                        merge = self._add_primitive(
                             predecessors=predecessors,
                             primitive=CFP.Merge(location=statement.location),
                         )
