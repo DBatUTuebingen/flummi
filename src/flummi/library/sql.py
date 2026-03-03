@@ -70,9 +70,7 @@ def select(
     query += indent1(",\n".join(map(dedent, select_list)), " " * 7)
 
     if from_list:
-        query += (
-            f"\nFROM   {indent1(',\n'.join(map(dedent, from_list)), ' ' * 7)}"
-        )
+        query += f"\nFROM   {indent1(',\n'.join(map(dedent, from_list)), ' ' * 7)}"
 
         if joins:
             query += "\n".join(dedent(join) for join in joins)
@@ -96,9 +94,7 @@ def select(
     return query
 
 
-def cte(
-    name: str, columns: list[str], body: SQL, materialize: bool = False
-) -> SQL:
+def cte(name: str, columns: list[str], body: SQL, materialize: bool = False) -> SQL:
     return (
         f"{_name(name)}({', '.join(map(_name, columns))}) AS{' MATERIALIZED' * materialize} (\n"
         + indent(dedent(body), "  ")

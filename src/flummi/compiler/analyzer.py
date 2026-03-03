@@ -85,7 +85,14 @@ class Analyzer:
     )
 
     def __post_init__(self):
-        self._add_system_variable(SystemVariable.CONTROL, "int")
+        self._add_system_variable(
+            SystemVariable.CONTROL,
+            "int",
+        )
+        self._add_system_variable(
+            SystemVariable.LABEL,
+            "text",
+        )
 
     def _add_feature(self, feature: Feature):
         if feature in self._features:
@@ -95,8 +102,10 @@ class Analyzer:
 
             match feature:
                 case Feature.ITERATING:
-                    self._add_system_variable(SystemVariable.LABEL, "text")
-                    self._add_system_variable(SystemVariable.ITERATION, "int")
+                    self._add_system_variable(
+                        SystemVariable.ITERATION,
+                        "int",
+                    )
 
                 case _:
                     ...
@@ -119,7 +128,8 @@ class Analyzer:
 
         if self._emitted_type is not None:
             self._add_system_variable(
-                SystemVariable.RESULT, self._emitted_type.source
+                SystemVariable.RESULT,
+                self._emitted_type.source,
             )
 
         return AnalysisResult(
@@ -149,9 +159,7 @@ class Analyzer:
 
             case Block(statements):
                 if not statements:
-                    raise AnalysisError(
-                        "Found empty block.", statement.location
-                    )
+                    raise AnalysisError("Found empty block.", statement.location)
 
                 self._add_feature(Feature.SEQUENCING)
 
@@ -228,9 +236,7 @@ class Analyzer:
                     )
 
             case _:
-                raise AnalysisError(
-                    "Found unknown statement.", statement.location
-                )
+                raise AnalysisError("Found unknown statement.", statement.location)
 
     def analyze_expression(self, expression: Expression):
         for variable in expression.arguments:

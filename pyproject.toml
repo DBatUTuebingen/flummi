@@ -5,9 +5,7 @@ description = "The Flummi Compile Prototype."
 readme = "README.md"
 authors = [{ email = "tim.fischer@uni-tuebingen.de" }]
 requires-python = ">=3.14"
-dependencies = [
-    "typer>=0.19.2",
-]
+dependencies = ["typer>=0.19.2"]
 
 [project.scripts]
 flummi = "flummi:cli"
@@ -15,3 +13,6 @@ flummi = "flummi:cli"
 [build-system]
 requires = ["uv_build>=0.8.22,<0.9.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["ruff>=0.15.4", "ty>=0.0.20"]

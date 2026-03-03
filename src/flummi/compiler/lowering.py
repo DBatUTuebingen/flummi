@@ -16,7 +16,7 @@ def lower(program: AST.Program, multiplexing: Multiplexing) -> CFP.Program:
     return Lowering(multiplexing).lower_program(program)
 
 
-class LoweringError(errors.PrettyError, ValueError): ...  # pyright: ignore[reportUnsafeMultipleInheritance]
+class LoweringError(errors.PrettyError, ValueError): ...
 
 
 @dataclass
@@ -57,9 +57,7 @@ class Lowering:
     _label_counters: dict[str, int] = field(
         init=False, default_factory=lambda: defaultdict(int)
     )
-    _loop_labels: dict[AST.Label, CFP.Label] = field(
-        init=False, default_factory=dict
-    )
+    _loop_labels: dict[AST.Label, CFP.Label] = field(init=False, default_factory=dict)
     _loop_exits: dict[CFP.Label, set[CFP.Label]] = field(
         init=False, default_factory=lambda: defaultdict(set)
     )

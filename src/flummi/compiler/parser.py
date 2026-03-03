@@ -27,7 +27,7 @@ from ..library import errors, parser
 __all__ = ("parse",)
 
 
-class ParserError(errors.PrettyError): ...
+class ParserError(errors.PrettyError, SyntaxError): ...
 
 
 def parse(source: str) -> Program:
@@ -71,9 +71,7 @@ class Parser(parser.Parser[Tokens]):
         if self.match(Tokens.RIGHT_BRACKET):
             free_variables = []
         else:
-            free_variables = list(
-                self.sequence(self.parse_variable, Tokens.COMMA)
-            )
+            free_variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
             self.expect(Tokens.RIGHT_BRACKET)
         return Expression(
             location=location,
@@ -166,9 +164,7 @@ class Parser(parser.Parser[Tokens]):
         variable = self.parse_variable()
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
-        return Assignment(
-            location=location, variable=variable, expression=expression
-        )
+        return Assignment(location=location, variable=variable, expression=expression)
 
     def parse_conditional(self) -> Conditional:
         location = self.current.location

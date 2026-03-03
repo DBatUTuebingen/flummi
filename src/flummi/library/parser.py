@@ -13,8 +13,8 @@ class TokensMeta(EnumMeta):
     def __new__(
         metacls, cls: str, bases: tuple[type, ...], classdict: EnumDict
     ) -> TokensMeta:
-        new_enum: EnumMeta = super().__new__(metacls, cls, bases, classdict)
-        return unique(new_enum)  # pyright: ignore[reportUnknownVariableType, reportArgumentType]
+        new_enum = super().__new__(metacls, cls, bases, classdict)
+        return unique(new_enum)  # ty:ignore[invalid-argument-type]
 
 
 class Tokens(StrEnum, metaclass=TokensMeta): ...
@@ -35,9 +35,7 @@ class Token[T: Tokens]:
 type Lexer[T: Tokens] = Callable[[str], Iterator[Token[T]]]
 
 
-def make_lexer[T: Tokens](
-    types: type[T], skip: set[T] | None = None
-) -> Lexer[T]:
+def make_lexer[T: Tokens](types: type[T], skip: set[T] | None = None) -> Lexer[T]:
     """Build a lexer for a given enum of token types.
 
     :param types: The enum to build the lexer for.
@@ -49,13 +47,11 @@ def make_lexer[T: Tokens](
     """
 
     def lex(code: str) -> Iterator[Token[T]]:
-        token_regex = r"|".join(
-            rf"(?P<{type.name}>{type.value})" for type in types
-        )
+        token_regex = r"|".join(rf"(?P<{type.name}>{type.value})" for type in types)
         line, line_start, column = 1, 0, 0
         for match in re.finditer(token_regex, code):
             assert match.lastgroup is not None
-            type = types[match.lastgroup]  # type: ignore
+            type = types[match.lastgroup]
             value = match.group()
             column = 1 + match.start() - line_start
 
@@ -71,7 +67,7 @@ def make_lexer[T: Tokens](
     return lex
 
 
-class ParseError(PrettyError, SyntaxError): ...  # pyright: ignore[reportUnsafeMultipleInheritance]
+class ParseError(PrettyError, SyntaxError): ...
 
 
 class Parser[T: Tokens]:
@@ -218,7 +214,7 @@ class Parser[T: Tokens]:
         """
         _ = self.expectv(type, msg)
 
-    def expectv(self, type: T, msg: str | None = None) -> str:  # type: ignore
+    def expectv(self, type: T, msg: str | None = None) -> str:
         """Advances the parser if the current token is of a given type and
         extracts its value, otherwise throw an error.
 

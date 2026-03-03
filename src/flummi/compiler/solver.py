@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from flummi.compiler.analyzer import AnalysisResult
-
 from ..IR.CFP import (
     Program,
     Primitive,
@@ -16,6 +14,7 @@ from ..IR.CFP import (
 )
 
 from ..library import utils, graph
+from .analyzer import AnalysisResult
 from .names import SystemVariable
 
 __all__ = ("solve",)
@@ -41,13 +40,11 @@ class Solver:
 
     def run(self) -> DataflowResult:
         cfp = self._program.body
-        inputs = {
-            label: self.uses(primitive)
-            for label, primitive in cfp.primitives.items()
+        inputs_of = {
+            label: self.uses(primitive) for label, primitive in cfp.primitives.items()
         }
-        outputs = {
-            label: self.binds(primitive)
-            for label, primitive in cfp.primitives.items()
+        outputs_of = {
+            label: self.binds(primitive) for label, primitive in cfp.primitives.items()
         }
 
         all_successors_of = graph.merge(
@@ -60,19 +57,19 @@ class Solver:
             changed = False
             for label in cfp.primitives:
                 new_outputs = utils.union(
-                    inputs[successor] for successor in all_successors_of[label]
+                    inputs_of[successor] for successor in all_successors_of[label]
                 )
 
-                new_outputs -= outputs[label]
+                new_outputs -= outputs_of[label]
 
                 if not new_outputs:
                     continue
 
                 changed = True
-                inputs[label] |= new_outputs
-                outputs[label] |= new_outputs
+                inputs_of[label] |= new_outputs
+                outputs_of[label] |= new_outputs
 
-        return DataflowResult(inputs, outputs)
+        return DataflowResult(inputs_of, outputs_of)
 
     def uses(self, primitive: Primitive) -> set[Variable]:
         match primitive:
@@ -81,15 +78,15 @@ class Solver:
 
             case Assignment(_, Expression(_, variables)):
                 return {
-                    *variables,
                     self._analysis.system_variables[SystemVariable.CONTROL],
+                    *variables,
                 }
 
-            case Emit(variable):
-                return {variable}
-
-            case Where(variable, _):
-                return {variable}
+            case Emit(variable) | Where(variable, _):
+                return {
+                    self._analysis.system_variables[SystemVariable.CONTROL],
+                    variable,
+                }
 
             case _:
                 return {self._analysis.system_variables[SystemVariable.CONTROL]}
@@ -100,13 +97,22 @@ class Solver:
                 return {self._analysis.system_variables[SystemVariable.CONTROL]}
 
             case Assignment(variable, _):
-                return {variable}
+                return {
+                    self._analysis.system_variables[SystemVariable.CONTROL],
+                    variable,
+                }
 
             case Emit(_):
                 return {self._analysis.system_variables[SystemVariable.RESULT]}
 
             case GoTo():
-                return {self._analysis.system_variables[SystemVariable.LABEL]}
+                return {
+                    self._analysis.system_variables[SystemVariable.CONTROL],
+                    self._analysis.system_variables[SystemVariable.LABEL],
+                }
+
+            case Where():
+                return {self._analysis.system_variables[SystemVariable.CONTROL]}
 
             case _:
                 return set()
