@@ -1,21 +1,17 @@
-from dataclasses import dataclass, field
 from collections import defaultdict
-
-
-from .names import SystemVariable, PROGRAM_VARIABLE
-from .analyzer import AnalysisResult
-from .solver import DataflowResult
+from dataclasses import dataclass, field
 
 from ..IR.CFP import (
+    Label,
     Program,
     Start,
     Variable,
-    Label,
 )
 from ..IR.common import Type
-
 from ..library import utils
-
+from .analyzer import AnalysisResult
+from .names import PROGRAM_VARIABLE, SystemVariable
+from .solver import DataflowResult
 
 __all__ = ("allocate",)
 
@@ -33,7 +29,8 @@ class Allocation:
 
     def __post_init__(self):
         self._column_allocation = {
-            column: variable for variable, column in self._variable_allocation.items()
+            column: variable
+            for variable, column in self._variable_allocation.items()
         }
 
     def column_for(self, variable: Variable) -> Column | None:
@@ -80,7 +77,10 @@ def allocate(
 
     for label in labels_to_allocate:
         for type, variables in utils.groupby(
-            iter(data_flow.inputs_of[label] - set(analysis.system_variables.values())),
+            iter(
+                data_flow.inputs_of[label]
+                - set(analysis.system_variables.values())
+            ),
             lambda variable: analysis.symbol_table[variable],
         ):
             variables = list(variables)
@@ -102,7 +102,10 @@ def allocate(
     for type, count in max_type_counts.items():
         offset_of[type] = offset
         schema.update(
-            {PROGRAM_VARIABLE.format(idx=offset + i): type for i in range(count)}
+            {
+                PROGRAM_VARIABLE.format(idx=offset + i): type
+                for i in range(count)
+            }
         )
         offset += count
 
@@ -113,7 +116,9 @@ def allocate(
     allocations = {
         label: Allocation(
             {
-                analysis.system_variables[SystemVariable.LABEL]: SystemVariable.LABEL,
+                analysis.system_variables[
+                    SystemVariable.LABEL
+                ]: SystemVariable.LABEL,
             }
             | {
                 variable: PROGRAM_VARIABLE.format(idx=offset_of[type] + i)

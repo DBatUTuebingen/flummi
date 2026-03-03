@@ -1,17 +1,15 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from ..library.errors import Location
 
 __all__ = (
-    "Located",
     "Expression",
     "Identifier",
-    "Variable",
     "Label",
-    "Type",
+    "Located",
     "Program",
+    "Type",
+    "Variable",
 )
 
 

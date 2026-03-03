@@ -1,23 +1,21 @@
 from dataclasses import dataclass, field
 
-from .allocator import AllocationResult
-from .analyzer import AnalysisResult, Feature
-
-from .names import Names, SystemVariable
-from .solver import DataflowResult
 from ..IR.CFP import (
-    Program,
-    Primitive,
-    Start,
     Assignment,
     Emit,
-    Where,
-    Merge,
     GoTo,
     Label,
+    Merge,
+    Primitive,
+    Program,
+    Start,
+    Where,
 )
-from ..library import sql, graph
-
+from ..library import graph, sql
+from .allocator import AllocationResult
+from .analyzer import AnalysisResult, Feature
+from .names import Names, SystemVariable
+from .solver import DataflowResult
 
 __all__ = ("generate",)
 
@@ -67,7 +65,9 @@ class CodeGenerator:
 
         collectors = [
             sql.select(
-                select_list=[sql.variable(SystemVariable.RESULT, label.identifier)],
+                select_list=[
+                    sql.variable(SystemVariable.RESULT, label.identifier)
+                ],
                 from_list=[sql.name(label.identifier)],
             )
             for label, primitive in cfp.primitives.items()
@@ -150,7 +150,9 @@ class CodeGenerator:
                 case _:
                     ...
 
-        recursive_anchor = sql.with_ctes(ctes=ctes, body=sql.union_all(collectors))
+        recursive_anchor = sql.with_ctes(
+            ctes=ctes, body=sql.union_all(collectors)
+        )
 
         base_anchor = sql.select(
             select_list=[
@@ -178,11 +180,15 @@ class CodeGenerator:
         result_selection = sql.select(
             select_list=[sql.variable(SystemVariable.RESULT, Names.LOOP)],
             from_list=[sql.name(Names.LOOP)],
-            predicates=[sql.variable(SystemVariable.LABEL, Names.LOOP) + " IS NULL"],
+            predicates=[
+                sql.variable(SystemVariable.LABEL, Names.LOOP) + " IS NULL"
+            ],
         )
 
         return (
-            sql.with_ctes(ctes=[recursive_cte], recursive=True, body=result_selection)
+            sql.with_ctes(
+                ctes=[recursive_cte], recursive=True, body=result_selection
+            )
             + ";"
         )
 
@@ -216,7 +222,11 @@ class CodeGenerator:
                                 column,
                                 Names.LOOP,
                             )
-                            if (column := self._allocation.at[label].column_for(output))
+                            if (
+                                column := self._allocation.at[label].column_for(
+                                    output
+                                )
+                            )
                             else sql.NULL,
                             output.identifier,
                         )
@@ -269,7 +279,9 @@ class CodeGenerator:
                 body = sql.select(
                     select_list=[
                         sql.named(
-                            sql.variable(variable.identifier, predecessor.identifier)
+                            sql.variable(
+                                variable.identifier, predecessor.identifier
+                            )
                             if output.identifier == SystemVariable.RESULT
                             else sql.variable(
                                 output.identifier, predecessor.identifier
@@ -288,7 +300,9 @@ class CodeGenerator:
                 body = sql.select(
                     select_list=[
                         sql.named(
-                            sql.variable(output.identifier, predecessor.identifier),
+                            sql.variable(
+                                output.identifier, predecessor.identifier
+                            ),
                             output.identifier,
                         )
                         for output in self._dataflow.outputs_of[label]
@@ -345,7 +359,9 @@ class CodeGenerator:
 
         cte = sql.cte(
             name=label.identifier,
-            columns=[output.identifier for output in self._dataflow.outputs_of[label]],
+            columns=[
+                output.identifier for output in self._dataflow.outputs_of[label]
+            ],
             body=body,
         )
 

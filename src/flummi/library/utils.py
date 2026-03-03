@@ -3,13 +3,19 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from _typeshed import SupportsRichComparison
 
-from collections.abc import Iterator, Iterable
+from collections.abc import Iterable, Iterator
 from functools import reduce
 from itertools import groupby as _groupby
 from typing import Callable
 
-
-__all__ = ("union", "indent1", "groupby", "unzip", "partition", "zipwith")
+__all__ = (
+    "groupby",
+    "indent1",
+    "partition",
+    "union",
+    "unzip",
+    "zipwith",
+)
 
 
 def union[T](sets: Iterator[Iterable[T]]) -> set[T]:

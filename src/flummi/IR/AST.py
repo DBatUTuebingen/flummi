@@ -2,31 +2,33 @@ from abc import ABC
 from dataclasses import dataclass
 
 from .common import (
-    Variable,
-    Label,
     Expression,
-    Type,
+    Label,
     Located,
+    Type,
+    Variable,
+)
+from .common import (
     Program as BaseProgram,
 )
 
 __all__ = (
+    "Assignment",
+    "Block",
+    "Break",
+    "Conditional",
+    "Continue",
+    "Declaration",
+    "Emit",
+    "Expression",
+    "Label",
+    "Loop",
+    "NoOp",
     "Program",
     "Statement",
-    "Block",
-    "Assignment",
     "Stop",
-    "Emit",
-    "NoOp",
-    "Conditional",
-    "Declaration",
-    "Loop",
-    "Continue",
-    "Break",
-    "Label",
-    "Variable",
-    "Expression",
     "Type",
+    "Variable",
 )
 
 

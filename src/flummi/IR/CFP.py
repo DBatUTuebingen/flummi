@@ -1,24 +1,24 @@
 from abc import ABC
 from dataclasses import dataclass
 
-from .common import Located, Label, Variable, Expression, Program as BaseProgram
 from ..library import graph
-
+from .common import Expression, Label, Located, Variable
+from .common import Program as BaseProgram
 
 __all__ = (
-    "Program",
-    "Label",
-    "Graph",
-    "Primitive",
-    "Start",
     "Assignment",
     "Emit",
-    "Where",
-    "Merge",
-    "GoTo",
-    "Label",
-    "Variable",
     "Expression",
+    "GoTo",
+    "Graph",
+    "Label",
+    "Label",
+    "Merge",
+    "Primitive",
+    "Program",
+    "Start",
+    "Variable",
+    "Where",
 )
 
 

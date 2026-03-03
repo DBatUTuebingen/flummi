@@ -16,3 +16,6 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = ["ruff>=0.15.4", "ty>=0.0.20"]
+
+[tool.ruff]
+line-length = 80

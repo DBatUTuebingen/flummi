@@ -1,12 +1,10 @@
-from __future__ import annotations
-
+import re
 from collections.abc import Iterator
 from dataclasses import dataclass
-from enum import StrEnum, unique, EnumMeta, EnumDict
-import re
+from enum import EnumDict, EnumMeta, StrEnum, unique
 from typing import Callable
 
-from .errors import PrettyError, Location
+from .errors import Location, PrettyError
 
 
 class TokensMeta(EnumMeta):
@@ -35,7 +33,9 @@ class Token[T: Tokens]:
 type Lexer[T: Tokens] = Callable[[str], Iterator[Token[T]]]
 
 
-def make_lexer[T: Tokens](types: type[T], skip: set[T] | None = None) -> Lexer[T]:
+def make_lexer[T: Tokens](
+    types: type[T], skip: set[T] | None = None
+) -> Lexer[T]:
     """Build a lexer for a given enum of token types.
 
     :param types: The enum to build the lexer for.
@@ -47,7 +47,9 @@ def make_lexer[T: Tokens](types: type[T], skip: set[T] | None = None) -> Lexer[T
     """
 
     def lex(code: str) -> Iterator[Token[T]]:
-        token_regex = r"|".join(rf"(?P<{type.name}>{type.value})" for type in types)
+        token_regex = r"|".join(
+            rf"(?P<{type.name}>{type.value})" for type in types
+        )
         line, line_start, column = 1, 0, 0
         for match in re.finditer(token_regex, code):
             assert match.lastgroup is not None

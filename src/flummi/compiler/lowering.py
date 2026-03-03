@@ -5,15 +5,9 @@ from enum import Enum, auto, unique
 from flummi.library.utils import union
 
 from ..IR import AST, CFP
-
 from ..library import errors
 
-
 __all__ = ("lower",)
-
-
-def lower(program: AST.Program, multiplexing: Multiplexing) -> CFP.Program:
-    return Lowering(multiplexing).lower_program(program)
 
 
 class LoweringError(errors.PrettyError, ValueError): ...
@@ -41,6 +35,13 @@ class Multiplexing:
         return self.overrides.get(type(statement), self.default)
 
 
+def lower(
+    program: AST.Program,
+    multiplexing: Multiplexing | None = None,
+) -> CFP.Program:
+    return Lowering(multiplexing or Multiplexing()).lower_program(program)
+
+
 @dataclass
 class Lowering:
     multiplexing: Multiplexing
@@ -57,7 +58,9 @@ class Lowering:
     _label_counters: dict[str, int] = field(
         init=False, default_factory=lambda: defaultdict(int)
     )
-    _loop_labels: dict[AST.Label, CFP.Label] = field(init=False, default_factory=dict)
+    _loop_labels: dict[AST.Label, CFP.Label] = field(
+        init=False, default_factory=dict
+    )
     _loop_exits: dict[CFP.Label, set[CFP.Label]] = field(
         init=False, default_factory=lambda: defaultdict(set)
     )

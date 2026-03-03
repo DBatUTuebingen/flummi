@@ -1,19 +1,18 @@
 from dataclasses import dataclass
 
 from ..IR.CFP import (
-    Program,
-    Primitive,
-    Start,
     Assignment,
     Emit,
-    Where,
-    GoTo,
-    Variable,
-    Label,
     Expression,
+    GoTo,
+    Label,
+    Primitive,
+    Program,
+    Start,
+    Variable,
+    Where,
 )
-
-from ..library import utils, graph
+from ..library import graph, utils
 from .analyzer import AnalysisResult
 from .names import SystemVariable
 
@@ -41,10 +40,12 @@ class Solver:
     def run(self) -> DataflowResult:
         cfp = self._program.body
         inputs_of = {
-            label: self.uses(primitive) for label, primitive in cfp.primitives.items()
+            label: self.uses(primitive)
+            for label, primitive in cfp.primitives.items()
         }
         outputs_of = {
-            label: self.binds(primitive) for label, primitive in cfp.primitives.items()
+            label: self.binds(primitive)
+            for label, primitive in cfp.primitives.items()
         }
 
         all_successors_of = graph.merge(
@@ -57,7 +58,8 @@ class Solver:
             changed = False
             for label in cfp.primitives:
                 new_outputs = utils.union(
-                    inputs_of[successor] for successor in all_successors_of[label]
+                    inputs_of[successor]
+                    for successor in all_successors_of[label]
                 )
 
                 new_outputs -= outputs_of[label]

@@ -1,25 +1,23 @@
 from dataclasses import dataclass, field
 from enum import Flag, auto, unique
 
-from .names import SystemVariable
-
 from ..IR.AST import (
+    Assignment,
+    Block,
+    Break,
+    Conditional,
+    Continue,
+    Declaration,
+    Emit,
+    Loop,
+    NoOp,
     Program,
     Statement,
-    Declaration,
-    Block,
-    NoOp,
     Stop,
-    Assignment,
-    Emit,
-    Conditional,
-    Loop,
-    Continue,
-    Break,
 )
-from ..IR.common import Variable, Type, Label, Expression
-
+from ..IR.common import Expression, Label, Type, Variable
 from ..library import errors
+from .names import SystemVariable
 
 __all__ = ("analyze",)
 
@@ -159,7 +157,9 @@ class Analyzer:
 
             case Block(statements):
                 if not statements:
-                    raise AnalysisError("Found empty block.", statement.location)
+                    raise AnalysisError(
+                        "Found empty block.", statement.location
+                    )
 
                 self._add_feature(Feature.SEQUENCING)
 
@@ -236,7 +236,9 @@ class Analyzer:
                     )
 
             case _:
-                raise AnalysisError("Found unknown statement.", statement.location)
+                raise AnalysisError(
+                    "Found unknown statement.", statement.location
+                )
 
     def analyze_expression(self, expression: Expression):
         for variable in expression.arguments:

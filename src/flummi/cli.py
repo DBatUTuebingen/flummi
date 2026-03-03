@@ -3,19 +3,17 @@ import sys
 from pathlib import Path
 from typing import Annotated
 
+import typer
+
+from .compiler.allocator import allocate
+from .compiler.analyzer import analyze
+from .compiler.generator import generate
+from .compiler.lowering import lower
+from .compiler.parser import parse
+from .compiler.solver import solve
 from .IR.CFP import Graph
 from .IR.pretty.render import render
-
-from .compiler.parser import parse
-from .compiler.analyzer import analyze
-from .compiler.lowering import Multiplexing, lower
-from .compiler.solver import solve
-from .compiler.allocator import allocate
-from .compiler.generator import generate
-
 from .library.errors import PrettyError
-
-import typer
 
 __all__ = ("cli",)
 
@@ -64,7 +62,7 @@ def compile(
 
         analysis = analyze(program)
 
-        lowered_program = lower(program, multiplexing=Multiplexing())
+        lowered_program = lower(program)
 
         if graph is not None:
             render_to_file(lowered_program.body, graph, dot)

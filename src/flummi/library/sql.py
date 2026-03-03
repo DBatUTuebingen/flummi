@@ -1,21 +1,21 @@
-from textwrap import indent, dedent
+from textwrap import dedent, indent
+
 from .utils import indent1
 
-
 __all__ = (
-    "SQL",
-    "NULL",
+    "cast",
+    "cte",
+    "lateral",
     "name",
     "named",
-    "string",
-    "variable",
-    "union_all",
-    "select",
-    "cte",
-    "with_ctes",
-    "cast",
-    "lateral",
+    "NULL",
     "paren",
+    "select",
+    "SQL",
+    "string",
+    "union_all",
+    "variable",
+    "with_ctes",
 )
 
 
@@ -70,7 +70,9 @@ def select(
     query += indent1(",\n".join(map(dedent, select_list)), " " * 7)
 
     if from_list:
-        query += f"\nFROM   {indent1(',\n'.join(map(dedent, from_list)), ' ' * 7)}"
+        query += (
+            f"\nFROM   {indent1(',\n'.join(map(dedent, from_list)), ' ' * 7)}"
+        )
 
         if joins:
             query += "\n".join(dedent(join) for join in joins)
@@ -94,7 +96,9 @@ def select(
     return query
 
 
-def cte(name: str, columns: list[str], body: SQL, materialize: bool = False) -> SQL:
+def cte(
+    name: str, columns: list[str], body: SQL, materialize: bool = False
+) -> SQL:
     return (
         f"{_name(name)}({', '.join(map(_name, columns))}) AS{' MATERIALIZED' * materialize} (\n"
         + indent(dedent(body), "  ")

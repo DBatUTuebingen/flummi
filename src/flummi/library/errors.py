@@ -2,8 +2,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import ClassVar
 
-
-__all__ = ("PrettyError", "Location")
+__all__ = ("Location", "PrettyError")
 
 
 @dataclass(unsafe_hash=True, order=True)

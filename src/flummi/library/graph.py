@@ -6,7 +6,6 @@ if TYPE_CHECKING:
 from collections.abc import Iterator
 from functools import reduce
 
-
 type Graph[A] = dict[A, set[A]]
 
 
@@ -49,11 +48,14 @@ def topological_order[A: SupportsRichComparison](
         stack = new_stack
 
 
-def compute_dominator_tree[A](successors: Graph[A], entry_labels: set[A]) -> Graph[A]:
+def compute_dominator_tree[A](
+    successors: Graph[A], entry_labels: set[A]
+) -> Graph[A]:
     predecessors = invert(successors)
 
     dom: Graph[A] = {
-        label: ({label} if label in entry_labels else set()) for label in successors
+        label: ({label} if label in entry_labels else set())
+        for label in successors
     }
 
     stack = list(successors.keys() - entry_labels)
@@ -77,7 +79,9 @@ def compute_dominator_tree[A](successors: Graph[A], entry_labels: set[A]) -> Gra
 def loop_heads[A](successors: Graph[A]) -> set[A]:
     predecessors = invert(successors)
 
-    entry_labels = {label for label, parents in predecessors.items() if not parents}
+    entry_labels = {
+        label for label, parents in predecessors.items() if not parents
+    }
 
     dom = compute_dominator_tree(successors, entry_labels)
 
