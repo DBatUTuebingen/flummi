@@ -31,7 +31,7 @@ NODE_STYLES: dict[type[CFP.Primitive], str] = {
 }
 
 
-def render[A](graph: CFP.Graph, *, font: str = "monospace") -> str:
+def render[A](graph: CFP.Plan, *, font: str = "monospace") -> str:
     nodes = (
         NODE_TEMPLATE.format(
             label=label.identifier,

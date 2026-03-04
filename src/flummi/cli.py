@@ -5,13 +5,13 @@ from typing import Annotated
 
 import typer
 
-from .compiler.allocator import allocate
-from .compiler.analyzer import analyze
-from .compiler.generator import generate
+from .compiler.allocation import allocate
+from .compiler.analysis import analyze
+from .compiler.generation import generate
 from .compiler.lowering import lower
-from .compiler.parser import parse
-from .compiler.solver import solve
-from .IR.CFP import Graph
+from .compiler.parsing import parse
+from .compiler.solving import solve
+from .IR.CFP import Plan
 from .IR.pretty.render import render
 from .library.errors import PrettyError
 
@@ -84,7 +84,7 @@ def compile(
         print(sql)
 
 
-def render_to_file(graph: Graph, path: Path, command: str = "dot"):
+def render_to_file(graph: Plan, path: Path, command: str = "dot"):
     _ = subprocess.run(
         args=[command, "-T", path.suffix[1:] or "png", "-o", path.absolute()],
         input=render(graph).encode(),

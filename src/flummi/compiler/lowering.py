@@ -87,7 +87,7 @@ class Lowering:
 
         _ = self.lower_statement({entry_label}, program.body)
 
-        graph = CFP.Graph(
+        graph = CFP.Plan(
             entry_label=entry_label,
             primitives=self._primitives,
             successors_of=self._edges,

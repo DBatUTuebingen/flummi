@@ -9,9 +9,9 @@ from ..IR.CFP import (
 )
 from ..IR.common import Type
 from ..library import utils
-from .analyzer import AnalysisResult
+from .analysis import AnalysisResult
 from .names import PROGRAM_VARIABLE, SystemVariable
-from .solver import DataflowResult
+from .solving import DataflowResult
 
 __all__ = ("allocate",)
 

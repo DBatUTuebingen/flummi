@@ -14,10 +14,10 @@ from ..IR.CFP import (
     Where,
 )
 from ..library import graph, sql
-from .allocator import AllocationResult
-from .analyzer import AnalysisResult, Feature
+from .allocation import AllocationResult
+from .analysis import AnalysisResult, Feature
 from .names import Names, SystemVariable
-from .solver import DataflowResult
+from .solving import DataflowResult
 
 __all__ = ("generate",)
 

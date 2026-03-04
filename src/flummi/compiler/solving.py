@@ -15,7 +15,7 @@ from ..IR.CFP import (
     Where,
 )
 from ..library import graph, utils
-from .analyzer import AnalysisResult
+from .analysis import AnalysisResult
 from .names import SystemVariable
 
 __all__ = ("solve",)

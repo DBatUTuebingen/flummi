@@ -12,10 +12,10 @@ __all__ = (
     "Fork",
     "Gather",
     "GoTo",
-    "Graph",
     "Label",
     "Label",
     "Merge",
+    "Plan",
     "Primitive",
     "Program",
     "Start",
@@ -25,7 +25,7 @@ __all__ = (
 
 
 @dataclass
-class Graph(Located):
+class Plan(Located):
     entry_label: Label
     primitives: dict[Label, Primitive]
     successors_of: graph.Graph[Label]
@@ -78,4 +78,4 @@ class Gather(Primitive):
     keys: list[Variable]
 
 
-Program = BaseProgram[Graph]
+Program = BaseProgram[Plan]
