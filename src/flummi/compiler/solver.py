@@ -4,6 +4,8 @@ from ..IR.CFP import (
     Assignment,
     Emit,
     Expression,
+    Fork,
+    Gather,
     GoTo,
     Label,
     Primitive,
@@ -78,16 +80,28 @@ class Solver:
             case Start():
                 return {self._analysis.system_variables[SystemVariable.LABEL]}
 
-            case Assignment(_, Expression(_, variables)):
+            case Assignment(_, Expression(_, arguments)) | Fork(
+                _, Expression(_, arguments)
+            ):
                 return {
                     self._analysis.system_variables[SystemVariable.CONTROL],
-                    *variables,
+                    *arguments,
                 }
 
             case Emit(variable) | Where(variable, _):
                 return {
                     self._analysis.system_variables[SystemVariable.CONTROL],
                     variable,
+                }
+
+            case Gather(aggregates, keys):
+                return {
+                    self._analysis.system_variables[SystemVariable.CONTROL],
+                    *keys,
+                    *utils.union(
+                        expression.arguments
+                        for expression in aggregates.values()
+                    ),
                 }
 
             case _:
@@ -115,6 +129,19 @@ class Solver:
 
             case Where():
                 return {self._analysis.system_variables[SystemVariable.CONTROL]}
+
+            case Fork(arguments, _):
+                return {
+                    self._analysis.system_variables[SystemVariable.CONTROL],
+                    *arguments,
+                }
+
+            case Gather(aggregates, keys):
+                return {
+                    self._analysis.system_variables[SystemVariable.CONTROL],
+                    *aggregates,
+                    *keys,
+                }
 
             case _:
                 return set()

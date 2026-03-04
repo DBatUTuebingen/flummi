@@ -23,11 +23,15 @@ class Multiplexing:
     default: Method = Method.MERGE
     overrides: dict[type[AST.Statement], Method] = field(
         default_factory=lambda: {
-            AST.Stop: Multiplexing.Method.FAN,
-            AST.Emit: Multiplexing.Method.FAN,
-            AST.NoOp: Multiplexing.Method.FAN,
+            AST.Assignment: Multiplexing.Method.MERGE,
+            AST.Block: Multiplexing.Method.MERGE,
             AST.Break: Multiplexing.Method.FAN,
             AST.Continue: Multiplexing.Method.FAN,
+            AST.Declaration: Multiplexing.Method.FAN,
+            AST.Emit: Multiplexing.Method.FAN,
+            AST.Loop: Multiplexing.Method.FAN,
+            AST.NoOp: Multiplexing.Method.FAN,
+            AST.Stop: Multiplexing.Method.FAN,
         }
     )
 
@@ -216,6 +220,30 @@ class Lowering:
                     case AST.Break(label):
                         self._loop_exits[label].update(predecessors)
                         return set()
+
+                    case AST.Fork(variables, expression):
+                        this_label = self._add_primitive(
+                            predecessors=predecessors,
+                            primitive=CFP.Fork(
+                                variables=variables,
+                                expression=expression,
+                                location=statement.location,
+                            ),
+                        )
+
+                        return {this_label}
+
+                    case AST.Gather(aggregates, keys):
+                        this_label = self._add_primitive(
+                            predecessors=predecessors,
+                            primitive=CFP.Gather(
+                                aggregates=aggregates,
+                                keys=keys,
+                                location=statement.location,
+                            ),
+                        )
+
+                        return {this_label}
 
                     case _:
                         raise LoweringError(

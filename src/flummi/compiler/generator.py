@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from ..IR.CFP import (
     Assignment,
     Emit,
+    Fork,
+    Gather,
     GoTo,
     Label,
     Merge,
@@ -53,6 +55,10 @@ class CodeGenerator:
     def gen_linear_program(self, program: Program) -> sql.SQL:
         cfp = program.body
         predecessors_of = graph.invert(cfp.successors_of)
+
+        assert self._linear and all(
+            not isinstance(primitive, GoTo) for primitive in cfp.primitives
+        )
 
         ctes = [
             self.gen_primitive(
@@ -352,6 +358,96 @@ class CodeGenerator:
                         for output in self._dataflow.outputs_of[label]
                     ],
                     from_list=[sql.name(predecessor.identifier)],
+                )
+
+            case Fork(variables, expression):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        *(
+                            sql.named(
+                                sql.variable(
+                                    output.identifier,
+                                    Names.EXPRESSION,
+                                )
+                                if output in variables
+                                else sql.variable(
+                                    output.identifier, predecessor.identifier
+                                ),
+                                output.identifier,
+                            )
+                            for output in self._dataflow.outputs_of[label]
+                        ),
+                    ],
+                    from_list=[
+                        sql.name(predecessor.identifier),
+                        sql.named(
+                            sql.lateral(
+                                expression.source.format(
+                                    *(
+                                        sql.paren(
+                                            sql.variable(
+                                                argument.identifier,
+                                                predecessor.identifier,
+                                            )
+                                        )
+                                        for argument in expression.arguments
+                                    )
+                                )
+                            ),
+                            Names.EXPRESSION,
+                            [variable.identifier for variable in variables],
+                        ),
+                    ],
+                )
+
+            case Gather(aggregates, keys):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                keys.append(
+                    self._analysis.system_variables[SystemVariable.CONTROL]
+                )
+
+                body = sql.select(
+                    select_list=[
+                        *(
+                            sql.named(
+                                expression.source.format(
+                                    *(
+                                        sql.paren(
+                                            sql.variable(
+                                                argument.identifier,
+                                                predecessor.identifier,
+                                            )
+                                        )
+                                        for argument in expression.arguments
+                                    )
+                                )
+                                if (expression := aggregates.get(output))
+                                is not None
+                                else sql.variable(
+                                    output.identifier,
+                                    predecessor.identifier,
+                                )
+                                if output in keys
+                                else sql.NULL,
+                                output.identifier,
+                            )
+                            for output in self._dataflow.outputs_of[label]
+                        ),
+                    ],
+                    from_list=[sql.name(predecessor.identifier)],
+                    group_keys=[
+                        sql.variable(
+                            variable.identifier,
+                            predecessor.identifier,
+                        )
+                        for variable in keys
+                    ],
+                    having=[sql.call("COUNT", ["*"]) + " > 0"],
                 )
 
             case _:

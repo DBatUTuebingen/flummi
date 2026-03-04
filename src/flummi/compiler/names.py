@@ -13,3 +13,4 @@ PROGRAM_VARIABLE = "@prg#{idx}"
 
 class Names(StrEnum):
     LOOP = "@loop"
+    EXPRESSION = "@expression"

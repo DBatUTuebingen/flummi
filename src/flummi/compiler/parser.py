@@ -8,6 +8,8 @@ from ..IR.AST import (
     Continue,
     Declaration,
     Emit,
+    Fork,
+    Gather,
     Loop,
     NoOp,
     Program,
@@ -53,6 +55,9 @@ class Tokens(parser.Tokens):
     LOOP = r"LOOP"
     CONTINUE = r"CONTINUE"
     BREAK = r"BREAK"
+    FORK = r"FORK"
+    GATHER = r"GATHER"
+    BY = r"BY"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -120,6 +125,10 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_continue()
         elif self.lookahead(Tokens.BREAK):
             return self.parse_break()
+        elif self.lookahead(Tokens.FORK):
+            return self.parse_fork()
+        elif self.lookahead(Tokens.GATHER):
+            return self.parse_gather()
         else:
             raise self.error("Expected statement.")
 
@@ -211,3 +220,38 @@ class Parser(parser.Parser[Tokens]):
             location=location,
             label=label,
         )
+
+    def parse_fork(self) -> Fork:
+        location = self.current.location
+        self.expect(Tokens.FORK)
+        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        self.expect(Tokens.EQUALS)
+        expression = self.parse_expression()
+        return Fork(
+            variables=variables,
+            expression=expression,
+            location=location,
+        )
+
+    def parse_gather(self) -> Gather:
+        location = self.current.location
+        self.expect(Tokens.GATHER)
+        aggregates = dict(
+            self.sequence(self.parse_scalar_binding, Tokens.COMMA)
+        )
+        if self.match(Tokens.BY):
+            keys = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        else:
+            keys = []
+
+        return Gather(
+            aggregates=aggregates,
+            keys=keys,
+            location=location,
+        )
+
+    def parse_scalar_binding(self) -> tuple[Variable, Expression]:
+        variable = self.parse_variable()
+        self.expect(Tokens.EQUALS)
+        expression = self.parse_expression()
+        return variable, expression

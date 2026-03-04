@@ -9,6 +9,8 @@ __all__ = (
     "Assignment",
     "Emit",
     "Expression",
+    "Fork",
+    "Gather",
     "GoTo",
     "Graph",
     "Label",
@@ -62,6 +64,18 @@ class Merge(Primitive): ...
 @dataclass
 class GoTo(Primitive):
     label: Label
+
+
+@dataclass
+class Fork(Primitive):
+    variables: list[Variable]
+    expression: Expression
+
+
+@dataclass
+class Gather(Primitive):
+    aggregates: dict[Variable, Expression]
+    keys: list[Variable]
 
 
 Program = BaseProgram[Graph]

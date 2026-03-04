@@ -21,6 +21,8 @@ __all__ = (
     "Declaration",
     "Emit",
     "Expression",
+    "Fork",
+    "Gather",
     "Label",
     "Loop",
     "NoOp",
@@ -86,6 +88,18 @@ class Continue(Statement):
 @dataclass
 class Break(Statement):
     label: Label
+
+
+@dataclass
+class Fork(Statement):
+    variables: list[Variable]
+    expression: Expression
+
+
+@dataclass
+class Gather(Statement):
+    aggregates: dict[Variable, Expression]
+    keys: list[Variable]
 
 
 Program = BaseProgram[Statement]

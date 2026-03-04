@@ -9,6 +9,8 @@ from ..IR.AST import (
     Continue,
     Declaration,
     Emit,
+    Fork,
+    Gather,
     Loop,
     NoOp,
     Program,
@@ -234,6 +236,21 @@ class Analyzer:
                         f"Found loop control with out-of-scope loop label {label.identifier!r}.",
                         statement.location,
                     )
+
+            case Fork(variables, expression):
+                self.analyze_expression(expression)
+                for variable in variables:
+                    self.analyze_variable_write(variable)
+
+            case Gather(aggregates, keys):
+                for key in keys:
+                    self.analyze_variable_read(key)
+
+                for aggregate in aggregates.values():
+                    self.analyze_expression(aggregate)
+
+                for variable in aggregates:
+                    self.analyze_variable_write(variable)
 
             case _:
                 raise AnalysisError(
