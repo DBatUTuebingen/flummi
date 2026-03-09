@@ -2,10 +2,10 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, auto, unique
 
-from flummi.library.utils import union
-
 from ..IR import AST, CFP
 from ..library import errors
+from ..library.utils import union
+from .names import SystemVariable
 
 __all__ = ("lower",)
 
@@ -29,9 +29,12 @@ class Multiplexing:
             AST.Continue: Multiplexing.Method.FAN,
             AST.Declaration: Multiplexing.Method.FAN,
             AST.Emit: Multiplexing.Method.FAN,
+            AST.Fork: Multiplexing.Method.MERGE,
+            AST.Gather: Multiplexing.Method.MERGE,
             AST.Loop: Multiplexing.Method.FAN,
             AST.NoOp: Multiplexing.Method.FAN,
             AST.Stop: Multiplexing.Method.FAN,
+            AST.Sync: Multiplexing.Method.MERGE,
         }
     )
 
@@ -81,7 +84,6 @@ class Lowering:
             primitive=CFP.Start(
                 location=program.location,
             ),
-            predecessors=set(),
             name="start",
         )
 
@@ -100,7 +102,6 @@ class Lowering:
     def _add_primitive(
         self,
         primitive: CFP.Primitive,
-        predecessors: set[CFP.Label],
         name: str | None = None,
     ) -> CFP.Label:
         label = self._make_label(
@@ -109,47 +110,63 @@ class Lowering:
         )
         self._primitives[label] = primitive
         self._edges[label] = set()
-        for predecessor in predecessors:
-            self._edges[predecessor].add(label)
-        if isinstance(primitive, CFP.GoTo):
-            self._virtual_edges[label].add(primitive.label)
+        self._virtual_edges[label] = set()
         return label
+
+    def _add_edge(self, source: CFP.Label, sink: CFP.Label):
+        self._edges[source].add(sink)
+
+    def _add_virtual_edge(
+        self,
+        source: CFP.Label,
+        sink: CFP.Label,
+        location: errors.Location | None = None,
+    ):
+        goto_label = self._add_primitive(
+            CFP.GoTo(sink, location=location or source.location)
+        )
+        self._add_edge(source, goto_label)
+        self._virtual_edges[goto_label].add(sink)
 
     def lower_statement(
         self, predecessors: set[CFP.Label], statement: AST.Statement
     ) -> set[CFP.Label]:
-        match len(predecessors):
-            case 0:
+        match statement:
+            case AST.Stop():
                 return set()
 
-            case 1:
+            case AST.NoOp() | AST.Declaration():
+                return predecessors
+
+            case _ if len(predecessors) == 0:
+                return set()
+
+            case _ if len(predecessors) == 1:
+                predecessor = list(predecessors)[0]
+
                 match statement:
-                    case AST.Assignment(variable, expression):
+                    case AST.Assignment(probe_variable, expression):
                         this_label = self._add_primitive(
-                            predecessors=predecessors,
                             primitive=CFP.Assignment(
-                                variable=variable,
+                                variable=probe_variable,
                                 expression=expression,
                                 location=statement.location,
                             ),
                         )
 
+                        self._add_edge(predecessor, this_label)
+
                         return {this_label}
 
-                    case AST.Stop():
-                        return set()
-
-                    case AST.NoOp() | AST.Declaration():
-                        return predecessors
-
-                    case AST.Emit(variable):
+                    case AST.Emit(probe_variable):
                         this_label = self._add_primitive(
-                            predecessors=predecessors,
                             primitive=CFP.Emit(
-                                variable=variable,
+                                variable=probe_variable,
                                 location=statement.location,
                             ),
                         )
+
+                        self._add_edge(predecessor, this_label)
 
                         return predecessors
 
@@ -164,7 +181,6 @@ class Lowering:
 
                     case AST.Conditional(condition, true_branch, false_branch):
                         where = self._add_primitive(
-                            predecessors=predecessors,
                             primitive=CFP.Where(
                                 condition,
                                 inverted=False,
@@ -172,13 +188,15 @@ class Lowering:
                             ),
                         )
                         where_not = self._add_primitive(
-                            predecessors=predecessors,
                             primitive=CFP.Where(
                                 condition,
                                 inverted=True,
                                 location=statement.location,
                             ),
                         )
+
+                        self._add_edge(predecessor, where)
+                        self._add_edge(predecessor, where_not)
 
                         return self.lower_statement(
                             {where},
@@ -190,7 +208,6 @@ class Lowering:
 
                     case AST.Loop(label, body):
                         loop_head = self._add_primitive(
-                            predecessors=set(),
                             primitive=CFP.Start(location=statement.location),
                         )
 
@@ -208,13 +225,12 @@ class Lowering:
                         return self._loop_exits[label]
 
                     case AST.Continue(label):
-                        _ = self._add_primitive(
-                            predecessors=predecessors,
-                            primitive=CFP.GoTo(
-                                self._loop_labels[label],
-                                location=statement.location,
-                            ),
+                        self._add_virtual_edge(
+                            predecessor,
+                            self._loop_labels[label],
+                            location=statement.location,
                         )
+
                         return set()
 
                     case AST.Break(label):
@@ -223,7 +239,6 @@ class Lowering:
 
                     case AST.Fork(variables, expression):
                         this_label = self._add_primitive(
-                            predecessors=predecessors,
                             primitive=CFP.Fork(
                                 variables=variables,
                                 expression=expression,
@@ -231,11 +246,12 @@ class Lowering:
                             ),
                         )
 
+                        self._add_edge(predecessor, this_label)
+
                         return {this_label}
 
                     case AST.Gather(aggregates, keys):
                         this_label = self._add_primitive(
-                            predecessors=predecessors,
                             primitive=CFP.Gather(
                                 aggregates=aggregates,
                                 keys=keys,
@@ -243,7 +259,50 @@ class Lowering:
                             ),
                         )
 
+                        self._add_edge(predecessor, this_label)
+
                         return {this_label}
+
+                    case AST.Sync(keys):
+                        probe_variable: CFP.Variable = self._make_label(
+                            SystemVariable.PROBE, statement.location
+                        )
+
+                        start = self._add_primitive(
+                            primitive=CFP.Start(
+                                location=statement.location,
+                            ),
+                        )
+                        probe = self._add_primitive(
+                            primitive=CFP.IsSynced(
+                                variable=probe_variable,
+                                label=start,
+                                keys=keys,
+                                location=statement.location,
+                            ),
+                        )
+                        probe_success = self._add_primitive(
+                            primitive=CFP.Where(
+                                condition=probe_variable,
+                                inverted=False,
+                                location=statement.location,
+                            )
+                        )
+                        probe_failure = self._add_primitive(
+                            primitive=CFP.Where(
+                                condition=probe_variable,
+                                inverted=True,
+                                location=statement.location,
+                            )
+                        )
+
+                        self._add_virtual_edge(predecessor, start)
+                        self._add_edge(start, probe)
+                        self._add_edge(probe, probe_success)
+                        self._add_edge(probe, probe_failure)
+                        self._add_virtual_edge(probe_failure, start)
+
+                        return {probe_success}
 
                     case _:
                         raise LoweringError(
@@ -261,7 +320,8 @@ class Lowering:
 
                     case Multiplexing.Method.MERGE:
                         merge = self._add_primitive(
-                            predecessors=predecessors,
                             primitive=CFP.Merge(location=statement.location),
                         )
+                        for predecessor in predecessors:
+                            self._add_edge(predecessor, merge)
                         return self.lower_statement({merge}, statement)

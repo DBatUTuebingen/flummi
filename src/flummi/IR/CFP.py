@@ -12,6 +12,7 @@ __all__ = (
     "Fork",
     "Gather",
     "GoTo",
+    "IsSynced",
     "Label",
     "Label",
     "Merge",
@@ -75,6 +76,13 @@ class Fork(Primitive):
 @dataclass
 class Gather(Primitive):
     aggregates: dict[Variable, Expression]
+    keys: list[Variable]
+
+
+@dataclass
+class IsSynced(Primitive):
+    variable: Variable
+    label: Label
     keys: list[Variable]
 
 

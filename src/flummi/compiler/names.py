@@ -2,13 +2,14 @@ from enum import StrEnum
 
 
 class SystemVariable(StrEnum):
-    LABEL = "@label"
-    RESULT = "@result"
-    CONTROL = "@control"
-    ITERATION = "@iteration"
+    LABEL = "$label"
+    RESULT = "$result"
+    CONTROL = "$control"
+    ITERATION = "$iteration"
+    PROBE = "$probe"
 
 
-PROGRAM_VARIABLE = "@prg#{idx}"
+PROGRAM_VARIABLE = "$program#{idx}"
 
 
 class Names(StrEnum):

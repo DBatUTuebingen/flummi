@@ -15,6 +15,7 @@ from ..IR.AST import (
     Program,
     Statement,
     Stop,
+    Sync,
 )
 from ..IR.common import (
     Expression,
@@ -58,6 +59,7 @@ class Tokens(parser.Tokens):
     FORK = r"FORK"
     GATHER = r"GATHER"
     BY = r"BY"
+    SYNC = r"SYNC"
     IDENTIFIER = r"\w+"
     COMMENT = r"--[^\n]*"
     WHITESPACE = r"\s+"
@@ -129,6 +131,8 @@ class Parser(parser.Parser[Tokens]):
             return self.parse_fork()
         elif self.lookahead(Tokens.GATHER):
             return self.parse_gather()
+        elif self.lookahead(Tokens.SYNC):
+            return self.parse_sync()
         else:
             raise self.error("Expected statement.")
 
@@ -255,3 +259,17 @@ class Parser(parser.Parser[Tokens]):
         self.expect(Tokens.EQUALS)
         expression = self.parse_expression()
         return variable, expression
+
+    def parse_sync(self) -> Sync:
+        location = self.current.location
+        self.expect(Tokens.SYNC)
+
+        if self.match(Tokens.BY):
+            keys = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        else:
+            keys = []
+
+        return Sync(
+            keys=keys,
+            location=location,
+        )

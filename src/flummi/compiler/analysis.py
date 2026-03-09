@@ -16,6 +16,7 @@ from ..IR.AST import (
     Program,
     Statement,
     Stop,
+    Sync,
 )
 from ..IR.common import Expression, Label, Type, Variable
 from ..library import errors
@@ -93,22 +94,13 @@ class Analyzer:
             SystemVariable.LABEL,
             "text",
         )
+        self._add_system_variable(
+            SystemVariable.ITERATION,
+            "int",
+        )
 
     def _add_feature(self, feature: Feature):
-        if feature in self._features:
-            return
-        else:
-            self._features |= feature
-
-            match feature:
-                case Feature.ITERATING:
-                    self._add_system_variable(
-                        SystemVariable.ITERATION,
-                        "int",
-                    )
-
-                case _:
-                    ...
+        self._features |= feature
 
     def _add_system_variable(self, name: SystemVariable, type_source: str):
         variable = Variable(
@@ -251,6 +243,10 @@ class Analyzer:
 
                 for variable in aggregates:
                     self.analyze_variable_write(variable)
+
+            case Sync(keys):
+                for key in keys:
+                    self.analyze_variable_read(key)
 
             case _:
                 raise AnalysisError(

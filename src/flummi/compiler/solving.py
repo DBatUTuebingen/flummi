@@ -7,6 +7,7 @@ from ..IR.CFP import (
     Fork,
     Gather,
     GoTo,
+    IsSynced,
     Label,
     Primitive,
     Program,
@@ -78,24 +79,35 @@ class Solver:
     def uses(self, primitive: Primitive) -> set[Variable]:
         match primitive:
             case Start():
-                return {self._analysis.system_variables[SystemVariable.LABEL]}
+                return {
+                    self._analysis.system_variables[SystemVariable.LABEL],
+                    self._analysis.system_variables[SystemVariable.ITERATION],
+                }
 
-            case Assignment(_, Expression(_, arguments)) | Fork(
-                _, Expression(_, arguments)
+            case Assignment(
+                _,
+                Expression(_, arguments),
+            ) | Fork(
+                _,
+                Expression(_, arguments),
             ):
                 return {
                     self._analysis.system_variables[SystemVariable.CONTROL],
                     *arguments,
                 }
 
-            case Emit(variable) | Where(variable, _):
+            case Emit(variable):
                 return {
-                    self._analysis.system_variables[SystemVariable.CONTROL],
+                    self._analysis.system_variables[SystemVariable.ITERATION],
                     variable,
                 }
 
+            case Where(variable, _):
+                return {variable}
+
             case Gather(aggregates, keys):
                 return {
+                    # ? [info] basically a virtual key!
                     self._analysis.system_variables[SystemVariable.CONTROL],
                     *keys,
                     *utils.union(
@@ -104,40 +116,49 @@ class Solver:
                     ),
                 }
 
+            case IsSynced(_, _, keys):
+                return {*keys}
+
+            case GoTo(_):
+                return {
+                    self._analysis.system_variables[SystemVariable.ITERATION],
+                }
+
             case _:
                 return {self._analysis.system_variables[SystemVariable.CONTROL]}
 
     def binds(self, primitive: Primitive) -> set[Variable]:
         match primitive:
             case Start():
-                return {self._analysis.system_variables[SystemVariable.CONTROL]}
-
-            case Assignment(variable, _):
                 return {
                     self._analysis.system_variables[SystemVariable.CONTROL],
-                    variable,
+                    self._analysis.system_variables[SystemVariable.ITERATION],
                 }
 
+            case Assignment(variable, _) | IsSynced(variable, _, _):
+                return {variable}
+
             case Emit(_):
-                return {self._analysis.system_variables[SystemVariable.RESULT]}
+                return {
+                    self._analysis.system_variables[SystemVariable.RESULT],
+                    self._analysis.system_variables[SystemVariable.ITERATION],
+                }
 
             case GoTo():
                 return {
-                    self._analysis.system_variables[SystemVariable.CONTROL],
                     self._analysis.system_variables[SystemVariable.LABEL],
+                    self._analysis.system_variables[SystemVariable.ITERATION],
                 }
 
             case Where():
-                return {self._analysis.system_variables[SystemVariable.CONTROL]}
+                return set()
 
-            case Fork(arguments, _):
-                return {
-                    self._analysis.system_variables[SystemVariable.CONTROL],
-                    *arguments,
-                }
+            case Fork(variables, _):
+                return {*variables}
 
             case Gather(aggregates, keys):
                 return {
+                    # ? [info] basically a virtual key!
                     self._analysis.system_variables[SystemVariable.CONTROL],
                     *aggregates,
                     *keys,

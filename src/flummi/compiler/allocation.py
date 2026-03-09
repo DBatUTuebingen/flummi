@@ -51,7 +51,7 @@ def allocate(
     analysis: AnalysisResult,
     data_flow: DataflowResult,
 ) -> AllocationResult:
-    labels_to_allocate = [
+    labels_to_allocate: list[Label] = [
         label
         for label, primitive in program.body.primitives.items()
         if isinstance(primitive, Start)
@@ -113,7 +113,7 @@ def allocate(
     # we determined above. (The reverse mappings are generated automatically
     # elsewhere, thus we can focus on simply computing on direction here.)
 
-    allocations = {
+    allocations: dict[Label, Allocation] = {
         label: Allocation(
             {
                 analysis.system_variables[

@@ -12,6 +12,7 @@ from ..IR.CFP import (
     Program,
     Start,
     Where,
+    IsSynced,
 )
 from ..library import graph, sql
 from .allocation import AllocationResult
@@ -107,7 +108,14 @@ class CodeGenerator:
                                 sql.named(
                                     sql.cast(
                                         (
-                                            sql.NULL
+                                            sql.variable(
+                                                SystemVariable.ITERATION,
+                                                label.identifier,
+                                            )
+                                            + " + 1"
+                                            if column
+                                            == SystemVariable.ITERATION
+                                            else sql.NULL
                                             if (
                                                 variable := self._allocation.at[
                                                     target_label
@@ -137,10 +145,14 @@ class CodeGenerator:
                                     sql.cast(
                                         (
                                             sql.variable(
-                                                SystemVariable.RESULT,
+                                                column,
                                                 label.identifier,
                                             )
-                                            if column == SystemVariable.RESULT
+                                            if column
+                                            in {
+                                                SystemVariable.RESULT,
+                                                SystemVariable.ITERATION,
+                                            }
                                             else sql.NULL
                                         ),
                                         type.source,
@@ -167,6 +179,8 @@ class CodeGenerator:
                         (
                             sql.string(program.body.entry_label.identifier)
                             if column == SystemVariable.LABEL
+                            else "0"
+                            if column == SystemVariable.ITERATION
                             else sql.NULL
                         ),
                         type.source,
@@ -211,7 +225,9 @@ class CodeGenerator:
                 body = sql.select(
                     select_list=[
                         sql.named(
-                            "NULL",
+                            "0"
+                            if output.identifier == SystemVariable.ITERATION
+                            else sql.NULL,
                             output.identifier,
                         )
                         for output in self._dataflow.outputs_of[label]
@@ -225,6 +241,11 @@ class CodeGenerator:
                     select_list=[
                         sql.named(
                             sql.variable(
+                                SystemVariable.ITERATION,
+                                Names.LOOP,
+                            )
+                            if output.identifier == SystemVariable.ITERATION
+                            else sql.variable(
                                 column,
                                 Names.LOOP,
                             )
@@ -448,6 +469,75 @@ class CodeGenerator:
                         for variable in keys
                     ],
                     having=[sql.call("COUNT", ["*"]) + " > 0"],
+                )
+
+            case IsSynced(variable, sync_label, keys):
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                body = sql.select(
+                    select_list=[
+                        *(
+                            sql.named(
+                                (
+                                    sql.call(
+                                        "NOT EXISTS ",
+                                        [
+                                            sql.paren(
+                                                sql.select(
+                                                    select_list=[
+                                                        sql.NULL,
+                                                    ],
+                                                    from_list=[
+                                                        sql.name(Names.LOOP)
+                                                    ],
+                                                    predicates=[
+                                                        sql.variable(
+                                                            SystemVariable.LABEL,
+                                                            Names.LOOP,
+                                                        )
+                                                        + " <> "
+                                                        + sql.string(
+                                                            sync_label.identifier
+                                                        ),
+                                                        *(
+                                                            sql.variable(
+                                                                column,
+                                                                Names.LOOP,
+                                                            )
+                                                            + " = "
+                                                            + sql.variable(
+                                                                key.identifier,
+                                                                predecessor.identifier,
+                                                            )
+                                                            for key in keys
+                                                            if (
+                                                                column
+                                                                := self._allocation.at[
+                                                                    sync_label
+                                                                ].column_for(
+                                                                    key
+                                                                )
+                                                            )
+                                                            is not None
+                                                        ),
+                                                    ],
+                                                )
+                                            )
+                                        ],
+                                    )
+                                )
+                                if output == variable
+                                else sql.variable(
+                                    output.identifier,
+                                    predecessor.identifier,
+                                ),
+                                output.identifier,
+                            )
+                            for output in self._dataflow.outputs_of[label]
+                        ),
+                    ],
+                    from_list=[sql.name(predecessor.identifier)],
                 )
 
             case _:

@@ -29,6 +29,7 @@ __all__ = (
     "Program",
     "Statement",
     "Stop",
+    "Sync",
     "Type",
     "Variable",
 )
@@ -99,6 +100,11 @@ class Fork(Statement):
 @dataclass
 class Gather(Statement):
     aggregates: dict[Variable, Expression]
+    keys: list[Variable]
+
+
+@dataclass
+class Sync(Statement):
     keys: list[Variable]
 
 
