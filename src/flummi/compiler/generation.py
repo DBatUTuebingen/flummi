@@ -5,7 +5,7 @@ from ..IR.CFP import (
     Emit,
     Fork,
     Gather,
-    GoTo,
+    Jump,
     Label,
     Merge,
     Primitive,
@@ -58,7 +58,7 @@ class CodeGenerator:
         predecessors_of = graph.invert(cfp.successors_of)
 
         assert self._linear and all(
-            not isinstance(primitive, GoTo) for primitive in cfp.primitives
+            not isinstance(primitive, Jump) for primitive in cfp.primitives
         )
 
         ctes = [
@@ -101,7 +101,7 @@ class CodeGenerator:
             )
 
             match primitive:
-                case GoTo(target_label):
+                case Jump(target_label):
                     collectors.append(
                         sql.select(
                             select_list=[
@@ -362,7 +362,7 @@ class CodeGenerator:
                     ]
                 )
 
-            case GoTo(target_label):
+            case Jump(target_label):
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 

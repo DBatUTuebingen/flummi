@@ -123,7 +123,7 @@ class Lowering:
         location: errors.Location | None = None,
     ):
         goto_label = self._add_primitive(
-            CFP.GoTo(sink, location=location or source.location)
+            CFP.Jump(sink, location=location or source.location)
         )
         self._add_edge(source, goto_label)
         self._virtual_edges[goto_label].add(sink)

@@ -11,7 +11,7 @@ __all__ = (
     "Expression",
     "Fork",
     "Gather",
-    "GoTo",
+    "Jump",
     "IsSynced",
     "Label",
     "Label",
@@ -63,7 +63,7 @@ class Merge(Primitive): ...
 
 
 @dataclass
-class GoTo(Primitive):
+class Jump(Primitive):
     label: Label
 
 

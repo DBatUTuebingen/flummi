@@ -6,7 +6,7 @@ from ..IR.CFP import (
     Expression,
     Fork,
     Gather,
-    GoTo,
+    Jump,
     IsSynced,
     Label,
     Primitive,
@@ -119,7 +119,7 @@ class Solver:
             case IsSynced(_, _, keys):
                 return {*keys}
 
-            case GoTo(_):
+            case Jump(_):
                 return {
                     self._analysis.system_variables[SystemVariable.ITERATION],
                 }
@@ -144,7 +144,7 @@ class Solver:
                     self._analysis.system_variables[SystemVariable.ITERATION],
                 }
 
-            case GoTo():
+            case Jump():
                 return {
                     self._analysis.system_variables[SystemVariable.LABEL],
                     self._analysis.system_variables[SystemVariable.ITERATION],
