@@ -35,6 +35,7 @@ class Multiplexing:
             AST.NoOp: Multiplexing.Method.FAN,
             AST.Stop: Multiplexing.Method.FAN,
             AST.Sync: Multiplexing.Method.MERGE,
+            AST.Stop: Multiplexing.Method.FAN,
         }
     )
 
@@ -132,9 +133,6 @@ class Lowering:
         self, predecessors: set[CFP.Label], statement: AST.Statement
     ) -> set[CFP.Label]:
         match statement:
-            case AST.Stop():
-                return set()
-
             case AST.NoOp() | AST.Declaration():
                 return predecessors
 
@@ -145,6 +143,15 @@ class Lowering:
                 predecessor = list(predecessors)[0]
 
                 match statement:
+                    case AST.Stop():
+                        this_label = self._add_primitive(
+                            primitive=CFP.Stop(location=statement.location)
+                        )
+
+                        self._add_edge(predecessor, this_label)
+
+                        return set()
+
                     case AST.Assignment(probe_variable, expression):
                         this_label = self._add_primitive(
                             primitive=CFP.Assignment(

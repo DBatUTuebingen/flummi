@@ -11,6 +11,7 @@ from ..IR.CFP import (
     Primitive,
     Program,
     Start,
+    Stop,
     Where,
     IsSynced,
 )
@@ -218,6 +219,8 @@ class CodeGenerator:
         predecessors: set[Label],
         label: Label,
     ) -> sql.SQL:
+        outputs = self._dataflow.outputs_of[label]
+
         match primitive:
             case Start() if self._linear:
                 assert len(predecessors) == 0
@@ -230,7 +233,7 @@ class CodeGenerator:
                             else sql.NULL,
                             output.identifier,
                         )
-                        for output in self._dataflow.outputs_of[label]
+                        for output in outputs
                     ],
                 )
 
@@ -257,7 +260,7 @@ class CodeGenerator:
                             else sql.NULL,
                             output.identifier,
                         )
-                        for output in self._dataflow.outputs_of[label]
+                        for output in outputs
                     ],
                     from_list=[sql.name(Names.LOOP)],
                     predicates=[
@@ -265,6 +268,24 @@ class CodeGenerator:
                         + " IS NOT DISTINCT FROM "
                         + sql.string(label.identifier)
                     ],
+                )
+
+            case Stop():
+                assert len(predecessors) == 1
+                predecessor = list(predecessors)[0]
+
+                outputs = [
+                    self._analysis.system_variables[SystemVariable.CONTROL]
+                ]
+
+                body = sql.select(
+                    select_list=[
+                        sql.variable(
+                            SystemVariable.CONTROL, predecessor.identifier
+                        )
+                    ],
+                    from_list=[sql.name(predecessor.identifier)],
+                    predicates=["FALSE"],
                 )
 
             case Assignment(variable, expression):
@@ -294,7 +315,7 @@ class CodeGenerator:
                             ),
                             output.identifier,
                         )
-                        for output in self._dataflow.outputs_of[label]
+                        for output in outputs
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                 )
@@ -315,7 +336,7 @@ class CodeGenerator:
                             ),
                             output.identifier,
                         )
-                        for output in self._dataflow.outputs_of[label]
+                        for output in outputs
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                 )
@@ -332,7 +353,7 @@ class CodeGenerator:
                             ),
                             output.identifier,
                         )
-                        for output in self._dataflow.outputs_of[label]
+                        for output in outputs
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                     predicates=[
@@ -354,7 +375,7 @@ class CodeGenerator:
                                     ),
                                     output.identifier,
                                 )
-                                for output in self._dataflow.outputs_of[label]
+                                for output in outputs
                             ],
                             from_list=[sql.name(predecessor.identifier)],
                         )
@@ -376,7 +397,7 @@ class CodeGenerator:
                             ),
                             output.identifier,
                         )
-                        for output in self._dataflow.outputs_of[label]
+                        for output in outputs
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                 )
@@ -399,7 +420,7 @@ class CodeGenerator:
                                 ),
                                 output.identifier,
                             )
-                            for output in self._dataflow.outputs_of[label]
+                            for output in outputs
                         ),
                     ],
                     from_list=[
@@ -457,7 +478,7 @@ class CodeGenerator:
                                 else sql.NULL,
                                 output.identifier,
                             )
-                            for output in self._dataflow.outputs_of[label]
+                            for output in outputs
                         ),
                     ],
                     from_list=[sql.name(predecessor.identifier)],
@@ -534,7 +555,7 @@ class CodeGenerator:
                                 ),
                                 output.identifier,
                             )
-                            for output in self._dataflow.outputs_of[label]
+                            for output in outputs
                         ),
                     ],
                     from_list=[sql.name(predecessor.identifier)],
@@ -545,9 +566,7 @@ class CodeGenerator:
 
         cte = sql.cte(
             name=label.identifier,
-            columns=[
-                output.identifier for output in self._dataflow.outputs_of[label]
-            ],
+            columns=[output.identifier for output in outputs],
             body=body,
         )
 

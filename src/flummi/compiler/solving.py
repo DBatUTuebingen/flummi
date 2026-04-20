@@ -12,6 +12,7 @@ from ..IR.CFP import (
     Primitive,
     Program,
     Start,
+    Stop,
     Variable,
     Where,
 )
@@ -84,6 +85,11 @@ class Solver:
                     self._analysis.system_variables[SystemVariable.ITERATION],
                 }
 
+            case Stop():
+                return {
+                    self._analysis.system_variables[SystemVariable.CONTROL],
+                }
+
             case Assignment(
                 _,
                 Expression(_, arguments),
@@ -91,10 +97,7 @@ class Solver:
                 _,
                 Expression(_, arguments),
             ):
-                return {
-                    self._analysis.system_variables[SystemVariable.CONTROL],
-                    *arguments,
-                }
+                return {*arguments}
 
             case Emit(variable):
                 return {
@@ -125,7 +128,7 @@ class Solver:
                 }
 
             case _:
-                return {self._analysis.system_variables[SystemVariable.CONTROL]}
+                return set()
 
     def binds(self, primitive: Primitive) -> set[Variable]:
         match primitive:
@@ -149,9 +152,6 @@ class Solver:
                     self._analysis.system_variables[SystemVariable.LABEL],
                     self._analysis.system_variables[SystemVariable.ITERATION],
                 }
-
-            case Where():
-                return set()
 
             case Fork(variables, _):
                 return {*variables}

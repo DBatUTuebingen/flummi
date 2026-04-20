@@ -50,6 +50,7 @@ def allocate(
     program: Program,
     analysis: AnalysisResult,
     data_flow: DataflowResult,
+    naive: bool = True,
 ) -> AllocationResult:
     labels_to_allocate: list[Label] = [
         label
@@ -62,6 +63,28 @@ def allocate(
         for variable in analysis.system_variables.values()
         if variable.identifier != SystemVariable.CONTROL
     }
+
+    if naive:
+        schema = SYSTEM_SCHEMA
+        allocations = {}
+        for label in labels_to_allocate:
+            schema |= {
+                input.identifier: analysis.symbol_table[input]
+                for input in data_flow.inputs_of[label]
+            }
+            allocations[label] = Allocation(
+                {
+                    analysis.system_variables[
+                        SystemVariable.LABEL
+                    ]: SystemVariable.LABEL,
+                }
+                | {
+                    input: input.identifier
+                    for input in data_flow.inputs_of[label]
+                }
+            )
+
+        return AllocationResult(schema, allocations)
 
     # First, collect all "type siblings", i.e., groupings of like typed
     # variables, at each label we wish to perform column allocation for.

@@ -20,6 +20,7 @@ __all__ = (
     "Primitive",
     "Program",
     "Start",
+    "Stop",
     "Variable",
     "Where",
 )
@@ -39,6 +40,10 @@ class Primitive(Located, ABC): ...
 
 @dataclass
 class Start(Primitive): ...
+
+
+@dataclass
+class Stop(Primitive): ...
 
 
 @dataclass
