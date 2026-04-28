@@ -175,7 +175,7 @@ class Lowering:
 
                         self._add_edge(predecessor, this_label)
 
-                        return predecessors
+                        return {this_label}
 
                     case AST.Block(statements):
                         for statement in statements:
