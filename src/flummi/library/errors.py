@@ -10,33 +10,43 @@ class Location:
     line: int
     column: int
 
+    def __str__(self) -> str:
+        return f"{self.line}:{self.column}"
+
 
 class PrettyError(Exception):
+    base_exception: ClassVar[type[Exception]]
     lookahead: ClassVar[int] = 2
     lookbehind: ClassVar[int] = 2
 
     reasoning: Iterable[str | Location]
+    source: str | None = None
 
     def __init__(self, *reasoning: str | Location):
         self.reasoning = reasoning
         super().__init__()
 
-    def format(self, source: str) -> str:
+    def format(self) -> str:
         formatted_reasons = [f"{type(self).__name__}:"]
         for reason in self.reasoning:
             if isinstance(reason, Location):
                 formatted_reasons.append(
                     format_location(
-                        source,
+                        self.source,
                         reason,
                         lookahead=self.lookahead,
                         lookbehind=self.lookbehind,
                     )
+                    if self.source
+                    else f"<no source available>@{reason}"
                 )
             else:
                 formatted_reasons.append(reason)
 
         return "\n".join(formatted_reasons)
+
+    def __str__(self) -> str:
+        return self.format()
 
 
 def format_location(

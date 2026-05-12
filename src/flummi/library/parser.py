@@ -69,7 +69,8 @@ def make_lexer[T: Tokens](
     return lex
 
 
-class ParseError(PrettyError, SyntaxError): ...
+class ParserError(PrettyError):
+    base_exception = SyntaxError
 
 
 class Parser[T: Tokens]:
@@ -101,7 +102,7 @@ class Parser[T: Tokens]:
         :type msg: str
         :raises SyntaxError: The actual error.
         """
-        raise ParseError(msg, self.current.location)
+        raise ParserError(msg, self.current.location)
 
     def advance(self):
         """Advance the parser to the next token."""

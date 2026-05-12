@@ -42,7 +42,8 @@ class AnalysisResult:
     system_variables: dict[SystemVariable, Variable]
 
 
-class AnalysisError(errors.PrettyError): ...
+class AnalysisError(errors.PrettyError):
+    base_exception = ValueError
 
 
 def analyze(program: Program) -> AnalysisResult:

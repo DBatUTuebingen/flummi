@@ -23,12 +23,9 @@ from ..IR.common import (
     Type,
     Variable,
 )
-from ..library import errors, parser
+from ..library import parser
 
 __all__ = ("parse",)
-
-
-class ParserError(errors.PrettyError, SyntaxError): ...
 
 
 def parse(source: str) -> Program:

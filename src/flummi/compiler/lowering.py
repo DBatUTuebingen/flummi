@@ -10,7 +10,8 @@ from .names import SystemVariable
 __all__ = ("lower",)
 
 
-class LoweringError(errors.PrettyError, ValueError): ...
+class LoweringError(errors.PrettyError):
+    base_exception = ValueError
 
 
 @dataclass

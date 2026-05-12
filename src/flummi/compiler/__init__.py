@@ -1,7 +1,7 @@
-from functools import singledispatch
-
 from ..library.sql import SQL
+from ..library.errors import PrettyError
 from ..IR.AST import Program
+
 
 from .parsing import parse
 from .analysis import analyze
@@ -13,27 +13,26 @@ from .generation import generate
 __all__ = ("compile",)
 
 
-@singledispatch
-def compile(source: str | Program) -> SQL: ...
+def compile(program: str | Program, source: str | None = None) -> SQL:
+    try:
+        if isinstance(program, str):
+            source = program
+            program = parse(program)
 
+        analysis = analyze(program)
 
-@compile.register
-def _(source: str) -> SQL:
-    program = parse(source)
+        lowered_program = lower(program)
 
-    return compile(program)
+        dataflow = solve(lowered_program, analysis)
 
+        allocation = allocate(lowered_program, analysis, dataflow)
 
-@compile.register
-def _(program: Program) -> SQL:
-    analysis = analyze(program)
+        sql = generate(lowered_program, analysis, dataflow, allocation)
 
-    lowered_program = lower(program)
+        return sql
+    except PrettyError as e:
+        if not source:
+            raise ValueError("Found no source code in AST mode") from e
 
-    dataflow = solve(lowered_program, analysis)
-
-    allocation = allocate(lowered_program, analysis, dataflow)
-
-    sql = generate(lowered_program, analysis, dataflow, allocation)
-
-    return sql
+        e.source = source
+        raise e

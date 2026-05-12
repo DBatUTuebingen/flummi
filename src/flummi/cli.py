@@ -74,7 +74,8 @@ def compile(
         sql = generate(lowered_program, analysis, dataflow, allocation)
 
     except PrettyError as e:
-        print(e.format(source), file=sys.stderr)
+        e.source = source
+        print(e.format(), file=sys.stderr)
         sys.exit(1)
 
     if output:
