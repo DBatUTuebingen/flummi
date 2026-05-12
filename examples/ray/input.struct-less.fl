@@ -185,7 +185,7 @@
   DECLARE step : §int§;
   LET step = §0§[];
 
-  LOOP ray_loop {
+  LOOP {
     DECLARE color_r : §real§;
     DECLARE color_g : §real§;
     DECLARE color_b : §real§;
@@ -212,7 +212,7 @@
     LET normal_z = §0§[];  -- ⎭          ⎝0⎠
 
     LET id = §SELECT MAX(t.id) FROM triangles AS t§[];
-    LOOP triangle_loop {
+    LOOP {
       DECLARE triangle_material : §material§;
       DECLARE triangle_r        : §float8§;
       DECLARE triangle_g        : §float8§;
@@ -336,12 +336,12 @@
 
       LET condition = §{0} = 0§[id];
       IF condition
-      THEN BREAK triangle_loop
+      THEN BREAK
       ELSE LET id = §{0} - 1§[id]
     };
 
     LET id = §SELECT MAX(s.id) FROM spheres AS s§[];
-    LOOP sphere_loop {
+    LOOP {
       DECLARE sphere_material : §material§;
       DECLARE sphere_r        : §float8§;
       DECLARE sphere_g        : §float8§;
@@ -410,7 +410,7 @@
 
       LET condition = §{0} = 0§[id];
       IF condition
-      THEN BREAK sphere_loop
+      THEN BREAK
       ELSE LET id = §{0} - 1§[id]
     };
 
@@ -424,7 +424,7 @@
         LET pixel_g = §0§[];                  -- ⎪ Black out the color and be done with it.
         LET pixel_b = §0§[]                   -- ⎪
       } ELSE NOOP;                            -- ⎪
-      BREAK ray_loop                          -- ⎭
+      BREAK                                   -- ⎭
     } ELSE {
       LET condition = §{0} = 'l'§[material];
       IF condition
@@ -466,8 +466,8 @@
           IF condition                    -- ⎪
           THEN {                          -- ⎪ If shadows are enabled...
             LET shadow_ray = §true§[];    -- ⎬   ...fire off a shadow ray
-            CONTINUE ray_loop             -- ⎪   ...otherwise we are done here.
-          } ELSE BREAK ray_loop           -- ⎭
+            CONTINUE                      -- ⎪   ...otherwise we are done here.
+          } ELSE BREAK                    -- ⎭
         } ELSE {
           LET condition = §{0} = 'r'§[material];
           IF condition
@@ -493,13 +493,13 @@
             IF condition                                      -- ⎪
             THEN {                                            -- ⎪ If there are still some reflection passes...
               LET step = §{0} + 1§[step];                     -- ⎬   ...go in for another round
-              CONTINUE ray_loop                               -- ⎪   ...otherwise we are done here.
-            } ELSE BREAK ray_loop                             -- ⎭
+              CONTINUE                                        -- ⎪   ...otherwise we are done here.
+            } ELSE BREAK                                      -- ⎭
           } ELSE NOOP
         }
       }
     };
-    BREAK ray_loop
+    BREAK
   };
 
   DECLARE image : §text§;

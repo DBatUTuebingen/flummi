@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 from .common import (
     Expression,
-    Label,
     Located,
     Type,
     Variable,
@@ -23,7 +22,6 @@ __all__ = (
     "Expression",
     "Fork",
     "Gather",
-    "Label",
     "Loop",
     "NoOp",
     "Program",
@@ -77,18 +75,15 @@ class Conditional(Statement):
 
 @dataclass
 class Loop(Statement):
-    label: Label
     body: Statement
 
 
 @dataclass
-class Continue(Statement):
-    label: Label
+class Continue(Statement): ...
 
 
 @dataclass
-class Break(Statement):
-    label: Label
+class Break(Statement): ...
 
 
 @dataclass

@@ -196,30 +196,24 @@ class Parser(parser.Parser[Tokens]):
     def parse_loop(self) -> Loop:
         location = self.current.location
         self.expect(Tokens.LOOP)
-        label = self.parse_label()
         body = self.parse_statement()
         return Loop(
             location=location,
-            label=label,
             body=body,
         )
 
     def parse_continue(self) -> Continue:
         location = self.current.location
         self.expect(Tokens.CONTINUE)
-        label = self.parse_label()
         return Continue(
             location=location,
-            label=label,
         )
 
     def parse_break(self) -> Break:
         location = self.current.location
         self.expect(Tokens.BREAK)
-        label = self.parse_label()
         return Break(
             location=location,
-            label=label,
         )
 
     def parse_fork(self) -> Fork:

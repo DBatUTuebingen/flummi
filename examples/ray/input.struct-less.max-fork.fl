@@ -182,7 +182,7 @@
   DECLARE step : §int§;
   LET step = §0§[];
 
-  LOOP ray_loop {
+  LOOP          {
 
     LET length = §sqrt({0} ** 2 + {1} ** 2 + {2} ** 2)§[direction_x, direction_y, direction_z];  -- } length = |direction|
     LET direction_x = §{0} / {1}§[direction_x, length];  -- ⎫
@@ -462,7 +462,7 @@
         LET pixel_g = §0§[];                  -- ⎪ Black out the color and be done with it.
         LET pixel_b = §0§[]                   -- ⎪
       } ELSE NOOP;                            -- ⎪
-      BREAK ray_loop                          -- ⎭
+      BREAK                                   -- ⎭
     } ELSE {
       LET condition = §{0} = 'l'§[material];
       IF condition
@@ -504,8 +504,8 @@
           IF condition                    -- ⎪
           THEN {                          -- ⎪ If shadows are enabled...
             LET shadow_ray = §true§[];    -- ⎬   ...fire off a shadow ray
-            CONTINUE ray_loop             -- ⎪   ...otherwise we are done here.
-          } ELSE BREAK ray_loop           -- ⎭
+            CONTINUE                      -- ⎪   ...otherwise we are done here.
+          } ELSE BREAK                    -- ⎭
         } ELSE {
           LET condition = §{0} = 'r'§[material];
           IF condition
@@ -531,13 +531,13 @@
             IF condition                                      -- ⎪
             THEN {                                            -- ⎪ If there are still some reflection passes...
               LET step = §{0} + 1§[step];                     -- ⎬   ...go in for another round
-              CONTINUE ray_loop                               -- ⎪   ...otherwise we are done here.
-            } ELSE BREAK ray_loop                             -- ⎭
+              CONTINUE                                        -- ⎪   ...otherwise we are done here.
+            } ELSE BREAK                                      -- ⎭
           } ELSE NOOP
         }
       }
     };
-    BREAK ray_loop
+    BREAK
   };
 
   DECLARE result : §text§;

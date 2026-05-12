@@ -77,15 +77,6 @@ class Analyzer:
         default_factory=set,
     )
 
-    _loop_labels: set[Label] = field(
-        init=False,
-        default_factory=set,
-    )
-    _loop_label_scope: list[Label] = field(
-        init=False,
-        default_factory=list,
-    )
-
     def __post_init__(self):
         self._add_system_variable(
             SystemVariable.CONTROL,
@@ -161,7 +152,7 @@ class Analyzer:
                 for child_statement in statements:
                     self.analyze_statement(child_statement)
 
-            case NoOp() | Stop():
+            case NoOp() | Stop() | Break() | Continue():
                 return
 
             case Assignment(variable, expression):
@@ -193,42 +184,10 @@ class Analyzer:
                 self.analyze_statement(true_branch)
                 self.analyze_statement(false_branch)
 
-            case Loop(label, body):
+            case Loop(body):
                 self._add_feature(Feature.ITERATING)
 
-                if label in self._loop_labels:
-                    other_instance: Label = next(
-                        other_instance
-                        for other_instance in self._loop_labels
-                        if label == other_instance
-                    )
-
-                    raise AnalysisError(
-                        f"Found duplicate loop label {label.identifier!r}.",
-                        label.location,
-                        "Already used at:",
-                        other_instance.location,
-                    )
-
-                self._loop_labels.add(label)
-                self._loop_label_scope.append(label)
-
                 self.analyze_statement(body)
-
-                last_label = self._loop_label_scope.pop()
-                assert label == last_label
-
-            case Break(label) | Continue(label):
-                if label not in self._loop_labels:
-                    raise AnalysisError(
-                        f"Found loop control with unknown loop label {label.identifier!r}.",
-                        statement.location,
-                    )
-                if label not in self._loop_label_scope:
-                    raise AnalysisError(
-                        f"Found loop control with out-of-scope loop label {label.identifier!r}.",
-                        statement.location,
-                    )
 
             case Fork(variables, expression):
                 self.analyze_expression(expression)

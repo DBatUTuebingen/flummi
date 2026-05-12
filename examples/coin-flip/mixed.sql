@@ -1,133 +1,100 @@
 WITH
-  "start.1"("@ctrl") AS (
-    SELECT x AS "@ctrl"
-    from range(10_000_000) as _(x)
+  "start.1"("", "󰐤") AS (
+    SELECT NULL AS "",
+           0 AS "󰐤"
   ),
-  "assignment.1"("c", "@ctrl") AS (
-    SELECT CAST((random() >= 0.5) AS boolean) AS "c",
-           "start.1"."@ctrl" AS "@ctrl"
+  "assignment.1"("", "n", "󰐤") AS (
+    SELECT "start.1"."" AS "",
+           CAST((10) AS int) AS "n",
+           "start.1"."󰐤" AS "󰐤"
     FROM   "start.1"
   ),
-  "where.1"("@ctrl") AS (
-    SELECT "assignment.1"."@ctrl" AS "@ctrl"
-    FROM   "assignment.1"
-    WHERE  "assignment.1"."c" IS NOT DISTINCT FROM TRUE
+  "fork.1"("", "n", "i", "󰐤") AS (
+    SELECT "assignment.1"."" AS "",
+           "assignment.1"."n" AS "n",
+           "ℚ"."i" AS "i",
+           "assignment.1"."󰐤" AS "󰐤"
+    FROM   "assignment.1",
+           LATERAL (SELECT * FROM range(("assignment.1"."n"))) AS "ℚ"("i")
   ),
-  "where.2"("@ctrl") AS (
-    SELECT "assignment.1"."@ctrl" AS "@ctrl"
-    FROM   "assignment.1"
-    WHERE  "assignment.1"."c" IS DISTINCT FROM TRUE
+  "assignment.2"("c", "", "n", "󰐤") AS (
+    SELECT CAST((random() >= 0.5) AS boolean) AS "c",
+           "fork.1"."" AS "",
+           "fork.1"."n" AS "n",
+           "fork.1"."󰐤" AS "󰐤"
+    FROM   "fork.1"
   ),
-  "assignment.2"("@ctrl", "r") AS (
-    SELECT "where.1"."@ctrl" AS "@ctrl",
-           CAST(('tails') AS text) AS "r"
+  "where.1"("", "n", "󰐤") AS (
+    SELECT "assignment.2"."" AS "",
+           "assignment.2"."n" AS "n",
+           "assignment.2"."󰐤" AS "󰐤"
+    FROM   "assignment.2"
+    WHERE  "assignment.2"."c" IS NOT DISTINCT FROM TRUE
+  ),
+  "where.2"("", "n", "󰐤") AS (
+    SELECT "assignment.2"."" AS "",
+           "assignment.2"."n" AS "n",
+           "assignment.2"."󰐤" AS "󰐤"
+    FROM   "assignment.2"
+    WHERE  "assignment.2"."c" IS DISTINCT FROM TRUE
+  ),
+  "assignment.3"("s", "n", "", "󰐤") AS (
+    SELECT CAST(('tails') AS text) AS "s",
+           "where.1"."n" AS "n",
+           "where.1"."" AS "",
+           "where.1"."󰐤" AS "󰐤"
     FROM   "where.1"
   ),
-  "assignment.3"("@ctrl", "r") AS (
-    SELECT "where.2"."@ctrl" AS "@ctrl",
-           CAST(('heads') AS text) AS "r"
+  "assignment.4"("s", "n", "", "󰐤") AS (
+    SELECT CAST(('heads') AS text) AS "s",
+           "where.2"."n" AS "n",
+           "where.2"."" AS "",
+           "where.2"."󰐤" AS "󰐤"
     FROM   "where.2"
   ),
-  "emit.1"("@res") AS (
-    SELECT "assignment.2"."r" AS "@res"
-    FROM   "assignment.2"
-  ),
-  "emit.2"("@res") AS (
-    SELECT "assignment.3"."r" AS "@res"
-    FROM   "assignment.3"
-  ),
-  "merge.1"("@ctrl") AS (
-    (SELECT "assignment.2"."@ctrl" AS "@ctrl"
-     FROM   "assignment.2")
+  "merge.1"("n", "", "s", "󰐤") AS (
+    (SELECT "assignment.4"."n" AS "n",
+            "assignment.4"."" AS "",
+            "assignment.4"."s" AS "s",
+            "assignment.4"."󰐤" AS "󰐤"
+     FROM   "assignment.4")
       UNION ALL
-    (SELECT "assignment.3"."@ctrl" AS "@ctrl"
+    (SELECT "assignment.3"."n" AS "n",
+            "assignment.3"."" AS "",
+            "assignment.3"."s" AS "s",
+            "assignment.3"."󰐤" AS "󰐤"
      FROM   "assignment.3")
   ),
-  "assignment.4"("c", "@ctrl") AS (
-    SELECT CAST((random() >= 0.5) AS boolean) AS "c",
-           "merge.1"."@ctrl" AS "@ctrl"
+  "gather.1"("i", "s", "", "n", "󰐤") AS (
+    SELECT count(*) AS "i",
+           "merge.1"."s" AS "s",
+           "merge.1"."" AS "",
+           "merge.1"."n" AS "n",
+           NULL AS "󰐤"
     FROM   "merge.1"
+    GROUP  BY "merge.1"."s",
+              "merge.1"."n",
+              "merge.1".""
+    HAVING COUNT(*) > 0
   ),
-  "where.3"("@ctrl") AS (
-    SELECT "assignment.4"."@ctrl" AS "@ctrl"
-    FROM   "assignment.4"
-    WHERE  "assignment.4"."c" IS NOT DISTINCT FROM TRUE
+  "assignment.5"("", "i", "󰐤") AS (
+    SELECT "gather.1"."" AS "",
+           CAST((("gather.1"."i") / (("gather.1"."n") :: float)) AS int) AS "i",
+           "gather.1"."󰐤" AS "󰐤"
+    FROM   "gather.1"
   ),
-  "where.4"("@ctrl") AS (
-    SELECT "assignment.4"."@ctrl" AS "@ctrl"
-    FROM   "assignment.4"
-    WHERE  "assignment.4"."c" IS DISTINCT FROM TRUE
-  ),
-  "assignment.5"("@ctrl", "r") AS (
-    SELECT "where.3"."@ctrl" AS "@ctrl",
-           CAST(('tails') AS text) AS "r"
-    FROM   "where.3"
-  ),
-  "assignment.6"("@ctrl", "r") AS (
-    SELECT "where.4"."@ctrl" AS "@ctrl",
-           CAST(('heads') AS text) AS "r"
-    FROM   "where.4"
-  ),
-  "emit.3"("@res") AS (
-    SELECT "assignment.6"."r" AS "@res"
-    FROM   "assignment.6"
-  ),
-  "emit.4"("@res") AS (
-    SELECT "assignment.5"."r" AS "@res"
+  "gather.2"("", "i", "󰐤") AS (
+    SELECT "assignment.5"."" AS "",
+           avg(("assignment.5"."i")) AS "i",
+           NULL AS "󰐤"
     FROM   "assignment.5"
+    GROUP  BY "assignment.5".""
+    HAVING COUNT(*) > 0
   ),
-  "merge.2"("@ctrl") AS (
-    (SELECT "assignment.6"."@ctrl" AS "@ctrl"
-     FROM   "assignment.6")
-      UNION ALL
-    (SELECT "assignment.5"."@ctrl" AS "@ctrl"
-     FROM   "assignment.5")
-  ),
-  "assignment.7"("c", "@ctrl") AS (
-    SELECT CAST((random() >= 0.5) AS boolean) AS "c",
-           "merge.2"."@ctrl" AS "@ctrl"
-    FROM   "merge.2"
-  ),
-  "where.5"("@ctrl") AS (
-    SELECT "assignment.7"."@ctrl" AS "@ctrl"
-    FROM   "assignment.7"
-    WHERE  "assignment.7"."c" IS NOT DISTINCT FROM TRUE
-  ),
-  "where.6"("@ctrl") AS (
-    SELECT "assignment.7"."@ctrl" AS "@ctrl"
-    FROM   "assignment.7"
-    WHERE  "assignment.7"."c" IS DISTINCT FROM TRUE
-  ),
-  "assignment.8"("r") AS (
-    SELECT CAST(('tails') AS text) AS "r"
-    FROM   "where.5"
-  ),
-  "assignment.9"("r") AS (
-    SELECT CAST(('heads') AS text) AS "r"
-    FROM   "where.6"
-  ),
-  "emit.5"("@res") AS (
-    SELECT "assignment.9"."r" AS "@res"
-    FROM   "assignment.9"
-  ),
-  "emit.6"("@res") AS (
-    SELECT "assignment.8"."r" AS "@res"
-    FROM   "assignment.8"
+  "emit.1"("󰐤", "󱕍") AS (
+    SELECT "gather.2"."󰐤" AS "󰐤",
+           "gather.2"."i" AS "󱕍"
+    FROM   "gather.2"
   )
-(SELECT "emit.1"."@res"
+(SELECT "emit.1"."󱕍"
  FROM   "emit.1")
-  UNION ALL
-(SELECT "emit.2"."@res"
- FROM   "emit.2")
-  UNION ALL
-(SELECT "emit.3"."@res"
- FROM   "emit.3")
-  UNION ALL
-(SELECT "emit.4"."@res"
- FROM   "emit.4")
-  UNION ALL
-(SELECT "emit.5"."@res"
- FROM   "emit.5")
-  UNION ALL
-(SELECT "emit.6"."@res"
- FROM   "emit.6")

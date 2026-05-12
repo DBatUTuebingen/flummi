@@ -14,7 +14,7 @@ class LoweringError(errors.PrettyError):
     base_exception = ValueError
 
 
-@dataclass
+@dataclass(frozen=True)
 class Multiplexing:
     @unique
     class Method(Enum):
@@ -32,7 +32,7 @@ class Multiplexing:
             AST.Emit: Multiplexing.Method.FAN,
             AST.Fork: Multiplexing.Method.MERGE,
             AST.Gather: Multiplexing.Method.MERGE,
-            AST.Loop: Multiplexing.Method.FAN,
+            AST.Loop: Multiplexing.Method.MERGE,
             AST.NoOp: Multiplexing.Method.FAN,
             AST.Stop: Multiplexing.Method.FAN,
             AST.Sync: Multiplexing.Method.MERGE,
@@ -46,9 +46,9 @@ class Multiplexing:
 
 def lower(
     program: AST.Program,
-    multiplexing: Multiplexing | None = None,
+    multiplexing: Multiplexing = Multiplexing(),
 ) -> CFP.Program:
-    return Lowering(multiplexing or Multiplexing()).lower_program(program)
+    return Lowering(multiplexing).lower_program(program)
 
 
 @dataclass
@@ -67,12 +67,8 @@ class Lowering:
     _label_counters: dict[str, int] = field(
         init=False, default_factory=lambda: defaultdict(int)
     )
-    _loop_labels: dict[AST.Label, CFP.Label] = field(
-        init=False, default_factory=dict
-    )
-    _loop_exits: dict[CFP.Label, set[CFP.Label]] = field(
-        init=False, default_factory=lambda: defaultdict(set)
-    )
+    _loop_labels: list[CFP.Label] = field(init=False, default_factory=list)
+    _loop_exits: list[set[CFP.Label]] = field(init=False, default_factory=list)
 
     def _make_label(self, name: str, location: errors.Location) -> CFP.Label:
         self._label_counters[name] += 1
@@ -134,7 +130,7 @@ class Lowering:
         self, predecessors: set[CFP.Label], statement: AST.Statement
     ) -> set[CFP.Label]:
         match statement:
-            case AST.NoOp() | AST.Declaration():
+            case AST.NoOp() | AST.Declaration() | AST.Block([]):
                 return predecessors
 
             case _ if len(predecessors) == 0:
@@ -214,35 +210,37 @@ class Lowering:
                             false_branch,
                         )
 
-                    case AST.Loop(label, body):
+                    case AST.Loop(body):
                         loop_head = self._add_primitive(
                             primitive=CFP.Start(location=statement.location),
                         )
 
-                        self._loop_labels[label] = loop_head
+                        self._loop_labels.append(loop_head)
+                        self._loop_exits.append(set())
 
                         loop_tails = self.lower_statement(
-                            {loop_head} | predecessors, body
+                            {loop_head, predecessor}, body
                         )
 
                         _ = self.lower_statement(
                             loop_tails,
-                            AST.Continue(label, location=statement.location),
+                            AST.Continue(location=statement.location),
                         )
 
-                        return self._loop_exits[label]
+                        del self._loop_labels[-1]
+                        return self._loop_exits.pop()
 
-                    case AST.Continue(label):
+                    case AST.Continue():
                         self._add_virtual_edge(
                             predecessor,
-                            self._loop_labels[label],
+                            self._loop_labels[-1],
                             location=statement.location,
                         )
 
                         return set()
 
-                    case AST.Break(label):
-                        self._loop_exits[label].update(predecessors)
+                    case AST.Break():
+                        self._loop_exits[-1].add(predecessor)
                         return set()
 
                     case AST.Fork(variables, expression):
