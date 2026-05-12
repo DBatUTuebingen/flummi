@@ -1,4 +1,3 @@
-from .cli import cli
+from .compiler import compile
 
-if __name__ == "__main__":
-    cli()
+__all__ = ("compile",)

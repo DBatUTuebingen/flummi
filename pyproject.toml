@@ -1,14 +1,18 @@
 [project]
 name = "flummi"
 version = "0.1.0"
-description = "The Flummi Compile Prototype."
+description = "The Flummi Compiler Prototype."
 readme = "README.md"
-authors = [{ email = "tim.fischer@uni-tuebingen.de" }]
+authors = [{ name = "Tim Fischer", email = "tim.fischer@uni-tuebingen.de" }]
 requires-python = ">=3.14"
-dependencies = ["typer>=0.19.2"]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+
+[project.optional-dependencies]
+cli = ["typer>=0.19.2"]
 
 [project.scripts]
-flummi = "flummi:cli"
+flummi = "flummi.cli:cli"
 
 [build-system]
 requires = ["uv_build>=0.8.22,<0.9.0"]
