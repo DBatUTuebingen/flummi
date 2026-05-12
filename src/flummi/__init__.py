@@ -1,4 +1,4 @@
 from .compiler import compile
-from .IR import AST
+from . import IR
 
-__all__ = ("compile", "AST")
+__all__ = ("compile", "IR")
