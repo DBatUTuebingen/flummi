@@ -1,4 +1,7 @@
+from functools import singledispatch
+
 from ..library.sql import SQL
+from ..IR.AST import Program
 
 from .parsing import parse
 from .analysis import analyze
@@ -10,9 +13,19 @@ from .generation import generate
 __all__ = ("compile",)
 
 
-def compile(source: str) -> SQL:
+@singledispatch
+def compile(source: str | Program) -> SQL: ...
+
+
+@compile.register
+def _(source: str) -> SQL:
     program = parse(source)
 
+    return compile(program)
+
+
+@compile.register
+def _(program: Program) -> SQL:
     analysis = analyze(program)
 
     lowered_program = lower(program)
