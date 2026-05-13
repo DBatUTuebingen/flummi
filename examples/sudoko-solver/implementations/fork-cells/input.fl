@@ -18,7 +18,7 @@
     FROM   unnest({0}) WITH ORDINALITY AS _(value, cell)
   §[cells];
 
-  LOOP loop {
+  LOOP {
     FORK idx = §FROM unnest({0})§[empty_cells];
     LET  cell = §{0}[{1}]§[empty_cells, idx];
     LET  empty_cells = §{0}[:{1}] || {0}[{1}+2:]§[empty_cells, idx];
@@ -39,7 +39,7 @@
     ELSE STOP;
 
     LET done = §length({0}) = 0§[empty_cells];
-    IF done THEN BREAK loop ELSE NOOP
+    IF done THEN BREAK ELSE NOOP
   };
 
   EMIT cells;

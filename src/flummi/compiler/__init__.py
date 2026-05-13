@@ -7,7 +7,7 @@ from .parsing import parse
 from .analysis import analyze
 from .lowering import lower
 from .solving import solve
-from .allocation import allocate
+from .scheming import scheme
 from .generation import generate
 
 __all__ = ("compile",)
@@ -25,9 +25,9 @@ def compile(program: str | Program, source: str | None = None) -> SQL:
 
         dataflow = solve(lowered_program, analysis)
 
-        allocation = allocate(lowered_program, analysis, dataflow)
+        schema = scheme(lowered_program, analysis, dataflow)
 
-        sql = generate(lowered_program, analysis, dataflow, allocation)
+        sql = generate(lowered_program, analysis, dataflow, schema)
 
         return sql
     except PrettyError as e:

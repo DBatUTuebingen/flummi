@@ -19,13 +19,13 @@
   -- (just used in the output!)
   LET id = §row_number() OVER ()§[];
 
-  LOOP loop {
+  LOOP {
     -- get next empty cell
     LET cell = §list_position({0}, 0)-1 §[cells];
 
     -- if there is none, we are done!
     LET done = §{0} IS NULL§[cell];
-    IF done THEN BREAK loop ELSE NOOP;
+    IF done THEN BREAK ELSE NOOP;
 
     -- try all possible values at the same time
     FORK value = §FROM generate_series(1, 9)§[];

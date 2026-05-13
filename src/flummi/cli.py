@@ -5,7 +5,7 @@ from typing import Annotated
 
 import typer
 
-from .compiler.allocation import allocate
+from .compiler.scheming import scheme
 from .compiler.analysis import analyze
 from .compiler.generation import generate
 from .compiler.lowering import lower
@@ -69,9 +69,9 @@ def compile(
 
         dataflow = solve(lowered_program, analysis)
 
-        allocation = allocate(lowered_program, analysis, dataflow)
+        schema = scheme(lowered_program, analysis, dataflow)
 
-        sql = generate(lowered_program, analysis, dataflow, allocation)
+        sql = generate(lowered_program, analysis, dataflow, schema)
 
     except PrettyError as e:
         e.source = source

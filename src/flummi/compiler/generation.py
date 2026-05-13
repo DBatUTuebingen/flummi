@@ -16,7 +16,7 @@ from ..IR.CFP import (
     IsSynced,
 )
 from ..library import graph, sql
-from .allocation import AllocationResult
+from .scheming import Schema
 from .analysis import AnalysisResult, Feature
 from .names import Names, SystemVariable
 from .solving import DataflowResult
@@ -28,11 +28,11 @@ def generate(
     program: Program,
     analysis: AnalysisResult,
     dataflow: DataflowResult,
-    allocation: AllocationResult,
+    schema: Schema,
 ) -> str:
     return CodeGenerator(
         dataflow,
-        allocation,
+        schema,
         analysis,
     ).gen_program(program)
 
@@ -40,7 +40,7 @@ def generate(
 @dataclass
 class CodeGenerator:
     _dataflow: DataflowResult
-    _allocation: AllocationResult
+    _schema: Schema
     _analysis: AnalysisResult
 
     _linear: bool = field(init=False)
@@ -102,7 +102,7 @@ class CodeGenerator:
             )
 
             match primitive:
-                case Jump(target_label):
+                case Jump():
                     collectors.append(
                         sql.select(
                             select_list=[
@@ -117,14 +117,9 @@ class CodeGenerator:
                                             if column
                                             == SystemVariable.ITERATION
                                             else sql.NULL
-                                            if (
-                                                variable := self._allocation.at[
-                                                    target_label
-                                                ].variable_at(column)
-                                            )
-                                            is None
+                                            if column == SystemVariable.RESULT
                                             else sql.variable(
-                                                variable.identifier,
+                                                column,
                                                 label.identifier,
                                             )
                                         ),
@@ -132,7 +127,7 @@ class CodeGenerator:
                                     ),
                                     column,
                                 )
-                                for column, type in self._allocation.schema.items()
+                                for column, type in self._schema.items()
                             ],
                             from_list=[sql.name(label.identifier)],
                         )
@@ -160,7 +155,7 @@ class CodeGenerator:
                                     ),
                                     column,
                                 )
-                                for column, type in self._allocation.schema.items()
+                                for column, type in self._schema.items()
                             ],
                             from_list=[sql.name(label.identifier)],
                         )
@@ -188,13 +183,13 @@ class CodeGenerator:
                     ),
                     column,
                 )
-                for column, type in self._allocation.schema.items()
+                for column, type in self._schema.items()
             ]
         )
 
         recursive_cte = sql.cte(
             name=Names.LOOP,
-            columns=list(self._allocation.schema),
+            columns=list(self._schema),
             body=sql.union_all([base_anchor, recursive_anchor]),
         )
 
@@ -220,6 +215,7 @@ class CodeGenerator:
         label: Label,
     ) -> sql.SQL:
         outputs = self._dataflow.outputs_of[label]
+        cte_columns = [variable.identifier for variable in outputs]
 
         match primitive:
             case Start() if self._linear:
@@ -248,16 +244,12 @@ class CodeGenerator:
                                 Names.LOOP,
                             )
                             if output.identifier == SystemVariable.ITERATION
+                            else sql.NULL
+                            if output.identifier == SystemVariable.CONTROL
                             else sql.variable(
-                                column,
+                                output.identifier,
                                 Names.LOOP,
-                            )
-                            if (
-                                column := self._allocation.at[label].column_for(
-                                    output
-                                )
-                            )
-                            else sql.NULL,
+                            ),
                             output.identifier,
                         )
                         for output in outputs
@@ -274,9 +266,7 @@ class CodeGenerator:
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
-                outputs = [
-                    self._analysis.system_variables[SystemVariable.CONTROL]
-                ]
+                cte_columns = [SystemVariable.CONTROL.value]
 
                 body = sql.select(
                     select_list=[
@@ -387,17 +377,22 @@ class CodeGenerator:
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
+                cte_columns = list(
+                    self._schema.keys() - {SystemVariable.RESULT}
+                )
+                _outputs = {variable.identifier for variable in outputs}
+
                 body = sql.select(
                     select_list=[
                         sql.named(
                             sql.string(target_label.identifier)
-                            if output.identifier == SystemVariable.LABEL
-                            else sql.variable(
-                                output.identifier, predecessor.identifier
-                            ),
-                            output.identifier,
+                            if output == SystemVariable.LABEL
+                            else sql.variable(output, predecessor.identifier)
+                            if output in _outputs
+                            else sql.NULL,
+                            output,
                         )
-                        for output in outputs
+                        for output in cte_columns
                     ],
                     from_list=[sql.name(predecessor.identifier)],
                 )
@@ -523,7 +518,7 @@ class CodeGenerator:
                                                         ),
                                                         *(
                                                             sql.variable(
-                                                                column,
+                                                                key.identifier,
                                                                 Names.LOOP,
                                                             )
                                                             + " = "
@@ -532,15 +527,6 @@ class CodeGenerator:
                                                                 predecessor.identifier,
                                                             )
                                                             for key in keys
-                                                            if (
-                                                                column
-                                                                := self._allocation.at[
-                                                                    sync_label
-                                                                ].column_for(
-                                                                    key
-                                                                )
-                                                            )
-                                                            is not None
                                                         ),
                                                     ],
                                                 )
@@ -566,7 +552,7 @@ class CodeGenerator:
 
         cte = sql.cte(
             name=label.identifier,
-            columns=[output.identifier for output in outputs],
+            columns=cte_columns,
             body=body,
         )
 
