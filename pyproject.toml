@@ -1,7 +1,7 @@
 [project]
 name = "flummi"
 version = "0.1.0"
-description = "The Flummi Compiler Prototype."
+description = "A to-SQL Compiler Prototype."
 readme = "README.md"
 authors = [{ name = "Tim Fischer", email = "tim.fischer@uni-tuebingen.de" }]
 requires-python = ">=3.14"

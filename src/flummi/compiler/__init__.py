@@ -31,8 +31,5 @@ def compile(program: str | Program, source: str | None = None) -> SQL:
 
         return sql
     except PrettyError as e:
-        if not source:
-            raise ValueError("Found no source code in AST mode") from e
-
         e.source = source
         raise e

@@ -70,7 +70,9 @@ class Lowering:
     _loop_labels: list[CFP.Label] = field(init=False, default_factory=list)
     _loop_exits: list[set[CFP.Label]] = field(init=False, default_factory=list)
 
-    def _make_label(self, name: str, location: errors.Location) -> CFP.Label:
+    def _make_label(
+        self, name: str, location: errors.Location | None
+    ) -> CFP.Label:
         self._label_counters[name] += 1
         return CFP.Label(
             f"{name}.{self._label_counters[name]}",

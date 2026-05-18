@@ -15,7 +15,9 @@ __all__ = (
 
 @dataclass(kw_only=True, match_args=False, slots=True)
 class Located:
-    location: Location = field(hash=False, compare=False, repr=False)
+    location: Location | None = field(
+        hash=False, compare=False, repr=False, default=None
+    )
 
 
 @dataclass(unsafe_hash=True, order=True, slots=True)

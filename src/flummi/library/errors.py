@@ -19,17 +19,19 @@ class PrettyError(Exception):
     lookahead: ClassVar[int] = 2
     lookbehind: ClassVar[int] = 2
 
-    reasoning: Iterable[str | Location]
+    reasoning: Iterable[str | Location | None]
     source: str | None = None
 
-    def __init__(self, *reasoning: str | Location):
+    def __init__(self, *reasoning: str | Location | None):
         self.reasoning = reasoning
         super().__init__()
 
     def format(self) -> str:
         formatted_reasons = [f"{type(self).__name__}:"]
         for reason in self.reasoning:
-            if isinstance(reason, Location):
+            if reason is None:
+                formatted_reasons.append("<no code location available>")
+            elif isinstance(reason, Location):
                 formatted_reasons.append(
                     format_location(
                         self.source,
@@ -38,7 +40,7 @@ class PrettyError(Exception):
                         lookbehind=self.lookbehind,
                     )
                     if self.source
-                    else f"<no source available>@{reason}"
+                    else f"<no code available>@{reason}"
                 )
             else:
                 formatted_reasons.append(reason)

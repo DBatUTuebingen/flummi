@@ -18,7 +18,7 @@ from ..IR.AST import (
     Stop,
     Sync,
 )
-from ..IR.common import Expression, Label, Type, Variable
+from ..IR.common import Expression, Type, Variable
 from ..library import errors
 from .names import SystemVariable
 
