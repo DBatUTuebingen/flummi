@@ -5,7 +5,7 @@ _Flummi_ is a research compiler prototype for to-SQL compilation, implementing m
 
 ## Usage
 
-The flummi compiler in this repository can be used either as a _python library_ or directly as a _command line tool_. Either way, to use our compiler, you will need to add it to your local environment. We currently have no intention of publishing this as a package on [PyPI](https://pypi.org), so we recommend you install it as a `git` dependency via:
+The Flummi compiler in this repository can be used either as a _python library_ or directly as a _command line tool_. Either way, to use our compiler, you will need to add it to your local environment. We currently have no intention of publishing this as a package on [PyPI](https://pypi.org), so we recommend you install it as a `git` dependency via:
 
 ```bash
 pip install flummi@git+"<remote here>/flummi"
