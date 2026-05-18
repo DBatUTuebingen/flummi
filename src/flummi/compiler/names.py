@@ -2,11 +2,11 @@ from enum import StrEnum
 
 
 class SystemVariable(StrEnum):
-    LABEL = ""
-    RESULT = "󱕍"
-    CONTROL = ""
-    ITERATION = "󰐤"
-    PROBE = ""
+    LABEL = "🏷️"
+    RESULT = "📊"
+    CONTROL = "⚙️"
+    ITERATION = "#️⃣"
+    PROBE = "🔍"
 
 
 PROGRAM_VARIABLE = "$program#{idx}"

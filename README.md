@@ -76,9 +76,9 @@ As a tool, you can pass a Flummi source file to the compiler which in turn will 
 ```bash
 $ flummi input.fl [output.sql]
 WITH
-  "start.1"("󰐤", "") AS (
-    SELECT 0 AS "󰐤",
-           NULL AS ""
+  "start.1"("#️⃣", "⚙️") AS (
+    SELECT 0 AS "#️⃣",
+           NULL AS "⚙️"
   ),
 ...
 ```

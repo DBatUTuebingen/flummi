@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("", "󰐤", "󱕍", "origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z", "min_dist", "color_r", "material", "normal_x", "normal_z", "normal_y", "id", "color_g", "color_b", "image") AS (
-    (SELECT CAST(('start.1') AS text) AS "",
-            CAST((0) AS int) AS "󰐤",
-            CAST((NULL) AS text) AS "󱕍",
+  "🔄"("🏷️", "#️⃣", "📊", "origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z", "min_dist", "color_r", "material", "normal_x", "normal_z", "normal_y", "id", "color_g", "color_b", "image") AS (
+    (SELECT CAST(('start.1') AS text) AS "🏷️",
+            CAST((0) AS int) AS "#️⃣",
+            CAST((NULL) AS text) AS "📊",
             CAST((NULL) AS real) AS "origin_x",
             CAST((NULL) AS real) AS "direction_y",
             CAST((NULL) AS real) AS "light_z",
@@ -36,21 +36,21 @@ WITH RECURSIVE
             CAST((NULL) AS text) AS "image")
       UNION ALL
     (WITH
-       "start.1"("", "󰐤") AS (
-         SELECT NULL AS "",
-                "🔄"."󰐤" AS "󰐤"
+       "start.1"("⚙️", "#️⃣") AS (
+         SELECT NULL AS "⚙️",
+                "🔄"."#️⃣" AS "#️⃣"
          FROM   "🔄"
-         WHERE  "🔄"."" IS NOT DISTINCT FROM 'start.1'
+         WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.1'
        ),
-       "start.2"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "start.2"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "⚙️", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "🔄"."origin_x" AS "origin_x",
                 "🔄"."direction_y" AS "direction_y",
                 "🔄"."light_z" AS "light_z",
                 "🔄"."shadow_ray" AS "shadow_ray",
                 "🔄"."max_rec_depth" AS "max_rec_depth",
-                "🔄"."󰐤" AS "󰐤",
+                "🔄"."#️⃣" AS "#️⃣",
                 "🔄"."epsilon" AS "epsilon",
-                NULL AS "",
+                NULL AS "⚙️",
                 "🔄"."screen_y" AS "screen_y",
                 "🔄"."pixel_g" AS "pixel_g",
                 "🔄"."pixel_r" AS "pixel_r",
@@ -67,19 +67,19 @@ WITH RECURSIVE
                 "🔄"."image_width" AS "image_width",
                 "🔄"."origin_z" AS "origin_z"
          FROM   "🔄"
-         WHERE  "🔄"."" IS NOT DISTINCT FROM 'start.2'
+         WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.2'
        ),
-       "start.3"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "start.3"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "⚙️", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "🔄"."origin_x" AS "origin_x",
                 "🔄"."direction_y" AS "direction_y",
                 "🔄"."min_dist" AS "min_dist",
                 "🔄"."light_z" AS "light_z",
                 "🔄"."shadow_ray" AS "shadow_ray",
                 "🔄"."max_rec_depth" AS "max_rec_depth",
-                "🔄"."󰐤" AS "󰐤",
+                "🔄"."#️⃣" AS "#️⃣",
                 "🔄"."epsilon" AS "epsilon",
                 "🔄"."color_r" AS "color_r",
-                NULL AS "",
+                NULL AS "⚙️",
                 "🔄"."material" AS "material",
                 "🔄"."normal_x" AS "normal_x",
                 "🔄"."pixel_g" AS "pixel_g",
@@ -103,19 +103,19 @@ WITH RECURSIVE
                 "🔄"."image_width" AS "image_width",
                 "🔄"."origin_z" AS "origin_z"
          FROM   "🔄"
-         WHERE  "🔄"."" IS NOT DISTINCT FROM 'start.3'
+         WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.3'
        ),
-       "start.4"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "start.4"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "⚙️", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "🔄"."origin_x" AS "origin_x",
                 "🔄"."direction_y" AS "direction_y",
                 "🔄"."min_dist" AS "min_dist",
                 "🔄"."light_z" AS "light_z",
                 "🔄"."shadow_ray" AS "shadow_ray",
                 "🔄"."max_rec_depth" AS "max_rec_depth",
-                "🔄"."󰐤" AS "󰐤",
+                "🔄"."#️⃣" AS "#️⃣",
                 "🔄"."epsilon" AS "epsilon",
                 "🔄"."color_r" AS "color_r",
-                NULL AS "",
+                NULL AS "⚙️",
                 "🔄"."material" AS "material",
                 "🔄"."normal_x" AS "normal_x",
                 "🔄"."pixel_g" AS "pixel_g",
@@ -139,75 +139,75 @@ WITH RECURSIVE
                 "🔄"."image_width" AS "image_width",
                 "🔄"."origin_z" AS "origin_z"
          FROM   "🔄"
-         WHERE  "🔄"."" IS NOT DISTINCT FROM 'start.4'
+         WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.4'
        ),
-       "start.5"("", "screen_x", "screen_y", "image_height", "󰐤", "image_width", "image") AS (
-         SELECT NULL AS "",
+       "start.5"("⚙️", "screen_x", "screen_y", "image_height", "#️⃣", "image_width", "image") AS (
+         SELECT NULL AS "⚙️",
                 "🔄"."screen_x" AS "screen_x",
                 "🔄"."screen_y" AS "screen_y",
                 "🔄"."image_height" AS "image_height",
-                "🔄"."󰐤" AS "󰐤",
+                "🔄"."#️⃣" AS "#️⃣",
                 "🔄"."image_width" AS "image_width",
                 "🔄"."image" AS "image"
          FROM   "🔄"
-         WHERE  "🔄"."" IS NOT DISTINCT FROM 'start.5'
+         WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.5'
        ),
-       "assignment.1"("󰐤", "shadows") AS (
-         SELECT "start.1"."󰐤" AS "󰐤",
+       "assignment.1"("#️⃣", "shadows") AS (
+         SELECT "start.1"."#️⃣" AS "#️⃣",
                 CAST((true) AS bool) AS "shadows"
          FROM   "start.1"
        ),
-       "issynced.1"("image_height", "󰐤", "screen_y", "", "screen_x", ".1", "image_width", "image") AS (
+       "issynced.1"("image_height", "#️⃣", "screen_y", "⚙️", "screen_x", "🔍.1", "image_width", "image") AS (
          SELECT "start.5"."image_height" AS "image_height",
-                "start.5"."󰐤" AS "󰐤",
+                "start.5"."#️⃣" AS "#️⃣",
                 "start.5"."screen_y" AS "screen_y",
-                "start.5"."" AS "",
+                "start.5"."⚙️" AS "⚙️",
                 "start.5"."screen_x" AS "screen_x",
                 NOT EXISTS ((SELECT NULL
                              FROM   "🔄"
-                             WHERE  "🔄"."" <> 'start.5')) AS ".1",
+                             WHERE  "🔄"."🏷️" <> 'start.5')) AS "🔍.1",
                 "start.5"."image_width" AS "image_width",
                 "start.5"."image" AS "image"
          FROM   "start.5"
        ),
-       "assignment.2"("max_rec_depth", "󰐤", "shadows") AS (
+       "assignment.2"("max_rec_depth", "#️⃣", "shadows") AS (
          SELECT CAST((10) AS int) AS "max_rec_depth",
-                "assignment.1"."󰐤" AS "󰐤",
+                "assignment.1"."#️⃣" AS "#️⃣",
                 "assignment.1"."shadows" AS "shadows"
          FROM   "assignment.1"
        ),
-       "where.37"("", "screen_x", "screen_y", "image_height", "󰐤", "image_width", "image") AS (
-         SELECT "issynced.1"."" AS "",
+       "where.37"("⚙️", "screen_x", "screen_y", "image_height", "#️⃣", "image_width", "image") AS (
+         SELECT "issynced.1"."⚙️" AS "⚙️",
                 "issynced.1"."screen_x" AS "screen_x",
                 "issynced.1"."screen_y" AS "screen_y",
                 "issynced.1"."image_height" AS "image_height",
-                "issynced.1"."󰐤" AS "󰐤",
+                "issynced.1"."#️⃣" AS "#️⃣",
                 "issynced.1"."image_width" AS "image_width",
                 "issynced.1"."image" AS "image"
          FROM   "issynced.1"
-         WHERE  "issynced.1".".1" IS NOT DISTINCT FROM TRUE
+         WHERE  "issynced.1"."🔍.1" IS NOT DISTINCT FROM TRUE
        ),
-       "where.38"("screen_x", "screen_y", "image_height", "󰐤", "image_width", "image") AS (
+       "where.38"("screen_x", "screen_y", "image_height", "#️⃣", "image_width", "image") AS (
          SELECT "issynced.1"."screen_x" AS "screen_x",
                 "issynced.1"."screen_y" AS "screen_y",
                 "issynced.1"."image_height" AS "image_height",
-                "issynced.1"."󰐤" AS "󰐤",
+                "issynced.1"."#️⃣" AS "#️⃣",
                 "issynced.1"."image_width" AS "image_width",
                 "issynced.1"."image" AS "image"
          FROM   "issynced.1"
-         WHERE  "issynced.1".".1" IS DISTINCT FROM TRUE
+         WHERE  "issynced.1"."🔍.1" IS DISTINCT FROM TRUE
        ),
-       "assignment.3"("max_rec_depth", "󰐤", "shadows", "epsilon") AS (
+       "assignment.3"("max_rec_depth", "#️⃣", "shadows", "epsilon") AS (
          SELECT "assignment.2"."max_rec_depth" AS "max_rec_depth",
-                "assignment.2"."󰐤" AS "󰐤",
+                "assignment.2"."#️⃣" AS "#️⃣",
                 "assignment.2"."shadows" AS "shadows",
                 CAST((0.000001) AS real) AS "epsilon"
          FROM   "assignment.2"
        ),
-       "gather.1"("", "image_height", "󰐤", "image_width", "image") AS (
-         SELECT "where.37"."" AS "",
+       "gather.1"("⚙️", "image_height", "#️⃣", "image_width", "image") AS (
+         SELECT "where.37"."⚙️" AS "⚙️",
                 "where.37"."image_height" AS "image_height",
-                NULL AS "󰐤",
+                NULL AS "#️⃣",
                 "where.37"."image_width" AS "image_width",
                 E'P3\n' || ("where.37"."image_width") :: text || ' ' || ("where.37"."image_height") :: text || E'\n255\n' ||
                 string_agg(("where.37"."image"), E'\n' ORDER BY ("where.37"."screen_y"), ("where.37"."screen_x"))
@@ -215,14 +215,14 @@ WITH RECURSIVE
          FROM   "where.37"
          GROUP  BY "where.37"."image_width",
                    "where.37"."image_height",
-                   "where.37".""
+                   "where.37"."⚙️"
          HAVING COUNT(*) > 0
        ),
-       "jump.6"("pixel_r", "color_b", "direction_z", "󰐤", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
+       "jump.6"("pixel_r", "color_b", "direction_z", "#️⃣", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "🏷️", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
          SELECT NULL AS "pixel_r",
                 NULL AS "color_b",
                 NULL AS "direction_z",
-                "where.38"."󰐤" AS "󰐤",
+                "where.38"."#️⃣" AS "#️⃣",
                 NULL AS "origin_x",
                 "where.38"."image_width" AS "image_width",
                 NULL AS "step",
@@ -237,7 +237,7 @@ WITH RECURSIVE
                 NULL AS "origin_y",
                 NULL AS "pixel_g",
                 NULL AS "normal_y",
-                'start.5' AS "",
+                'start.5' AS "🏷️",
                 NULL AS "origin_z",
                 NULL AS "epsilon",
                 NULL AS "light_z",
@@ -254,19 +254,19 @@ WITH RECURSIVE
                 NULL AS "light_x"
          FROM   "where.38"
        ),
-       "emit.1"("󱕍", "󰐤", "") AS (
-         SELECT "gather.1"."image" AS "󱕍",
-                "gather.1"."󰐤" AS "󰐤",
-                "gather.1"."" AS ""
+       "emit.1"("📊", "#️⃣", "⚙️") AS (
+         SELECT "gather.1"."image" AS "📊",
+                "gather.1"."#️⃣" AS "#️⃣",
+                "gather.1"."⚙️" AS "⚙️"
          FROM   "gather.1"
        ),
-       "fork.1"("light_x", "shadows", "light_z", "light_y", "max_rec_depth", "󰐤", "epsilon") AS (
+       "fork.1"("light_x", "shadows", "light_z", "light_y", "max_rec_depth", "#️⃣", "epsilon") AS (
          SELECT "ℚ"."light_x" AS "light_x",
                 "assignment.3"."shadows" AS "shadows",
                 "ℚ"."light_z" AS "light_z",
                 "ℚ"."light_y" AS "light_y",
                 "assignment.3"."max_rec_depth" AS "max_rec_depth",
-                "assignment.3"."󰐤" AS "󰐤",
+                "assignment.3"."#️⃣" AS "#️⃣",
                 "assignment.3"."epsilon" AS "epsilon"
          FROM   "assignment.3",
                 LATERAL (SELECT center_x,
@@ -275,40 +275,40 @@ WITH RECURSIVE
                          FROM   spheres AS s
                          WHERE  material = 'l') AS "ℚ"("light_x", "light_y", "light_z")
        ),
-       "assignment.4"("epsilon", "shadows", "light_z", "light_y", "max_rec_depth", "󰐤", "image_width", "light_x") AS (
+       "assignment.4"("epsilon", "shadows", "light_z", "light_y", "max_rec_depth", "#️⃣", "image_width", "light_x") AS (
          SELECT "fork.1"."epsilon" AS "epsilon",
                 "fork.1"."shadows" AS "shadows",
                 "fork.1"."light_z" AS "light_z",
                 "fork.1"."light_y" AS "light_y",
                 "fork.1"."max_rec_depth" AS "max_rec_depth",
-                "fork.1"."󰐤" AS "󰐤",
+                "fork.1"."#️⃣" AS "#️⃣",
                 CAST((3480) AS int) AS "image_width",
                 "fork.1"."light_x" AS "light_x"
          FROM   "fork.1"
        ),
-       "stop.1"("") AS (
-         SELECT "emit.1".""
+       "stop.1"("⚙️") AS (
+         SELECT "emit.1"."⚙️"
          FROM   "emit.1"
          WHERE  FALSE
        ),
-       "assignment.5"("light_z", "light_y", "image_height", "max_rec_depth", "󰐤", "light_x", "epsilon", "image_width", "shadows") AS (
+       "assignment.5"("light_z", "light_y", "image_height", "max_rec_depth", "#️⃣", "light_x", "epsilon", "image_width", "shadows") AS (
          SELECT "assignment.4"."light_z" AS "light_z",
                 "assignment.4"."light_y" AS "light_y",
                 CAST((2160) AS int) AS "image_height",
                 "assignment.4"."max_rec_depth" AS "max_rec_depth",
-                "assignment.4"."󰐤" AS "󰐤",
+                "assignment.4"."#️⃣" AS "#️⃣",
                 "assignment.4"."light_x" AS "light_x",
                 "assignment.4"."epsilon" AS "epsilon",
                 "assignment.4"."image_width" AS "image_width",
                 "assignment.4"."shadows" AS "shadows"
          FROM   "assignment.4"
        ),
-       "assignment.6"("light_z", "light_y", "image_height", "max_rec_depth", "󰐤", "light_x", "epsilon", "fov", "image_width", "shadows") AS (
+       "assignment.6"("light_z", "light_y", "image_height", "max_rec_depth", "#️⃣", "light_x", "epsilon", "fov", "image_width", "shadows") AS (
          SELECT "assignment.5"."light_z" AS "light_z",
                 "assignment.5"."light_y" AS "light_y",
                 "assignment.5"."image_height" AS "image_height",
                 "assignment.5"."max_rec_depth" AS "max_rec_depth",
-                "assignment.5"."󰐤" AS "󰐤",
+                "assignment.5"."#️⃣" AS "#️⃣",
                 "assignment.5"."light_x" AS "light_x",
                 "assignment.5"."epsilon" AS "epsilon",
                 CAST((radians(120)) AS real) AS "fov",
@@ -316,12 +316,12 @@ WITH RECURSIVE
                 "assignment.5"."shadows" AS "shadows"
          FROM   "assignment.5"
        ),
-       "assignment.7"("light_z", "light_y", "image_height", "max_rec_depth", "󰐤", "light_x", "epsilon", "image_aspect_ratio", "image_width", "shadows") AS (
+       "assignment.7"("light_z", "light_y", "image_height", "max_rec_depth", "#️⃣", "light_x", "epsilon", "image_aspect_ratio", "image_width", "shadows") AS (
          SELECT "assignment.6"."light_z" AS "light_z",
                 "assignment.6"."light_y" AS "light_y",
                 "assignment.6"."image_height" AS "image_height",
                 "assignment.6"."max_rec_depth" AS "max_rec_depth",
-                "assignment.6"."󰐤" AS "󰐤",
+                "assignment.6"."#️⃣" AS "#️⃣",
                 "assignment.6"."light_x" AS "light_x",
                 "assignment.6"."epsilon" AS "epsilon",
                 CAST((("assignment.6"."image_width") / ("assignment.6"."image_height")) AS real) AS "image_aspect_ratio",
@@ -329,12 +329,12 @@ WITH RECURSIVE
                 "assignment.6"."shadows" AS "shadows"
          FROM   "assignment.6"
        ),
-       "assignment.8"("light_z", "light_y", "image_height", "max_rec_depth", "󰐤", "light_x", "epsilon", "image_aspect_ratio", "viewport_height", "image_width", "shadows") AS (
+       "assignment.8"("light_z", "light_y", "image_height", "max_rec_depth", "#️⃣", "light_x", "epsilon", "image_aspect_ratio", "viewport_height", "image_width", "shadows") AS (
          SELECT "assignment.7"."light_z" AS "light_z",
                 "assignment.7"."light_y" AS "light_y",
                 "assignment.7"."image_height" AS "image_height",
                 "assignment.7"."max_rec_depth" AS "max_rec_depth",
-                "assignment.7"."󰐤" AS "󰐤",
+                "assignment.7"."#️⃣" AS "#️⃣",
                 "assignment.7"."light_x" AS "light_x",
                 "assignment.7"."epsilon" AS "epsilon",
                 "assignment.7"."image_aspect_ratio" AS "image_aspect_ratio",
@@ -343,12 +343,12 @@ WITH RECURSIVE
                 "assignment.7"."shadows" AS "shadows"
          FROM   "assignment.7"
        ),
-       "assignment.9"("light_z", "light_y", "image_height", "max_rec_depth", "󰐤", "light_x", "epsilon", "viewport_height", "image_width", "shadows", "viewport_width") AS (
+       "assignment.9"("light_z", "light_y", "image_height", "max_rec_depth", "#️⃣", "light_x", "epsilon", "viewport_height", "image_width", "shadows", "viewport_width") AS (
          SELECT "assignment.8"."light_z" AS "light_z",
                 "assignment.8"."light_y" AS "light_y",
                 "assignment.8"."image_height" AS "image_height",
                 "assignment.8"."max_rec_depth" AS "max_rec_depth",
-                "assignment.8"."󰐤" AS "󰐤",
+                "assignment.8"."#️⃣" AS "#️⃣",
                 "assignment.8"."light_x" AS "light_x",
                 "assignment.8"."epsilon" AS "epsilon",
                 "assignment.8"."viewport_height" AS "viewport_height",
@@ -357,13 +357,13 @@ WITH RECURSIVE
                 CAST((("assignment.8"."viewport_height") * ("assignment.8"."image_aspect_ratio")) AS real) AS "viewport_width"
          FROM   "assignment.8"
        ),
-       "assignment.10"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "󰐤", "light_x", "epsilon", "viewport_height", "image_width", "shadows", "viewport_width") AS (
+       "assignment.10"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "#️⃣", "light_x", "epsilon", "viewport_height", "image_width", "shadows", "viewport_width") AS (
          SELECT "assignment.9"."light_z" AS "light_z",
                 "assignment.9"."light_y" AS "light_y",
                 "assignment.9"."image_height" AS "image_height",
                 "assignment.9"."max_rec_depth" AS "max_rec_depth",
                 CAST((0) AS real) AS "position_x",
-                "assignment.9"."󰐤" AS "󰐤",
+                "assignment.9"."#️⃣" AS "#️⃣",
                 "assignment.9"."light_x" AS "light_x",
                 "assignment.9"."epsilon" AS "epsilon",
                 "assignment.9"."viewport_height" AS "viewport_height",
@@ -372,13 +372,13 @@ WITH RECURSIVE
                 "assignment.9"."viewport_width" AS "viewport_width"
          FROM   "assignment.9"
        ),
-       "assignment.11"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "󰐤", "epsilon", "viewport_height", "light_x", "position_y", "image_width", "shadows", "viewport_width") AS (
+       "assignment.11"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "#️⃣", "epsilon", "viewport_height", "light_x", "position_y", "image_width", "shadows", "viewport_width") AS (
          SELECT "assignment.10"."light_z" AS "light_z",
                 "assignment.10"."light_y" AS "light_y",
                 "assignment.10"."image_height" AS "image_height",
                 "assignment.10"."max_rec_depth" AS "max_rec_depth",
                 "assignment.10"."position_x" AS "position_x",
-                "assignment.10"."󰐤" AS "󰐤",
+                "assignment.10"."#️⃣" AS "#️⃣",
                 "assignment.10"."epsilon" AS "epsilon",
                 "assignment.10"."viewport_height" AS "viewport_height",
                 "assignment.10"."light_x" AS "light_x",
@@ -388,13 +388,13 @@ WITH RECURSIVE
                 "assignment.10"."viewport_width" AS "viewport_width"
          FROM   "assignment.10"
        ),
-       "assignment.12"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "󰐤", "epsilon", "viewport_height", "position_z", "light_x", "position_y", "image_width", "shadows", "viewport_width") AS (
+       "assignment.12"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "#️⃣", "epsilon", "viewport_height", "position_z", "light_x", "position_y", "image_width", "shadows", "viewport_width") AS (
          SELECT "assignment.11"."light_z" AS "light_z",
                 "assignment.11"."light_y" AS "light_y",
                 "assignment.11"."image_height" AS "image_height",
                 "assignment.11"."max_rec_depth" AS "max_rec_depth",
                 "assignment.11"."position_x" AS "position_x",
-                "assignment.11"."󰐤" AS "󰐤",
+                "assignment.11"."#️⃣" AS "#️⃣",
                 "assignment.11"."epsilon" AS "epsilon",
                 "assignment.11"."viewport_height" AS "viewport_height",
                 CAST((-4.5) AS real) AS "position_z",
@@ -405,13 +405,13 @@ WITH RECURSIVE
                 "assignment.11"."viewport_width" AS "viewport_width"
          FROM   "assignment.11"
        ),
-       "assignment.13"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "󰐤", "viewport_height", "epsilon", "position_z", "light_x", "position_y", "looking_at_x", "image_width", "shadows", "viewport_width") AS (
+       "assignment.13"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "#️⃣", "viewport_height", "epsilon", "position_z", "light_x", "position_y", "looking_at_x", "image_width", "shadows", "viewport_width") AS (
          SELECT "assignment.12"."light_z" AS "light_z",
                 "assignment.12"."light_y" AS "light_y",
                 "assignment.12"."image_height" AS "image_height",
                 "assignment.12"."max_rec_depth" AS "max_rec_depth",
                 "assignment.12"."position_x" AS "position_x",
-                "assignment.12"."󰐤" AS "󰐤",
+                "assignment.12"."#️⃣" AS "#️⃣",
                 "assignment.12"."viewport_height" AS "viewport_height",
                 "assignment.12"."epsilon" AS "epsilon",
                 "assignment.12"."position_z" AS "position_z",
@@ -423,13 +423,13 @@ WITH RECURSIVE
                 "assignment.12"."viewport_width" AS "viewport_width"
          FROM   "assignment.12"
        ),
-       "assignment.14"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "󰐤", "viewport_height", "epsilon", "position_z", "looking_at_y", "light_x", "position_y", "looking_at_x", "image_width", "shadows", "viewport_width") AS (
+       "assignment.14"("light_z", "light_y", "image_height", "max_rec_depth", "position_x", "#️⃣", "viewport_height", "epsilon", "position_z", "looking_at_y", "light_x", "position_y", "looking_at_x", "image_width", "shadows", "viewport_width") AS (
          SELECT "assignment.13"."light_z" AS "light_z",
                 "assignment.13"."light_y" AS "light_y",
                 "assignment.13"."image_height" AS "image_height",
                 "assignment.13"."max_rec_depth" AS "max_rec_depth",
                 "assignment.13"."position_x" AS "position_x",
-                "assignment.13"."󰐤" AS "󰐤",
+                "assignment.13"."#️⃣" AS "#️⃣",
                 "assignment.13"."viewport_height" AS "viewport_height",
                 "assignment.13"."epsilon" AS "epsilon",
                 "assignment.13"."position_z" AS "position_z",
@@ -442,14 +442,14 @@ WITH RECURSIVE
                 "assignment.13"."viewport_width" AS "viewport_width"
          FROM   "assignment.13"
        ),
-       "assignment.15"("image_width", "light_z", "light_y", "image_height", "max_rec_depth", "position_x", "󰐤", "viewport_height", "epsilon", "position_z", "looking_at_z", "light_x", "position_y", "looking_at_x", "looking_at_y", "shadows", "viewport_width") AS (
+       "assignment.15"("image_width", "light_z", "light_y", "image_height", "max_rec_depth", "position_x", "#️⃣", "viewport_height", "epsilon", "position_z", "looking_at_z", "light_x", "position_y", "looking_at_x", "looking_at_y", "shadows", "viewport_width") AS (
          SELECT "assignment.14"."image_width" AS "image_width",
                 "assignment.14"."light_z" AS "light_z",
                 "assignment.14"."light_y" AS "light_y",
                 "assignment.14"."image_height" AS "image_height",
                 "assignment.14"."max_rec_depth" AS "max_rec_depth",
                 "assignment.14"."position_x" AS "position_x",
-                "assignment.14"."󰐤" AS "󰐤",
+                "assignment.14"."#️⃣" AS "#️⃣",
                 "assignment.14"."viewport_height" AS "viewport_height",
                 "assignment.14"."epsilon" AS "epsilon",
                 "assignment.14"."position_z" AS "position_z",
@@ -462,7 +462,7 @@ WITH RECURSIVE
                 "assignment.14"."viewport_width" AS "viewport_width"
          FROM   "assignment.14"
        ),
-       "assignment.16"("image_width", "shadows", "light_z", "light_y", "image_height", "max_rec_depth", "position_x", "󰐤", "viewport_height", "epsilon", "position_z", "looking_at_z", "light_x", "position_y", "looking_at_x", "looking_at_y", "scene_up_x", "viewport_width") AS (
+       "assignment.16"("image_width", "shadows", "light_z", "light_y", "image_height", "max_rec_depth", "position_x", "#️⃣", "viewport_height", "epsilon", "position_z", "looking_at_z", "light_x", "position_y", "looking_at_x", "looking_at_y", "scene_up_x", "viewport_width") AS (
          SELECT "assignment.15"."image_width" AS "image_width",
                 "assignment.15"."shadows" AS "shadows",
                 "assignment.15"."light_z" AS "light_z",
@@ -470,7 +470,7 @@ WITH RECURSIVE
                 "assignment.15"."image_height" AS "image_height",
                 "assignment.15"."max_rec_depth" AS "max_rec_depth",
                 "assignment.15"."position_x" AS "position_x",
-                "assignment.15"."󰐤" AS "󰐤",
+                "assignment.15"."#️⃣" AS "#️⃣",
                 "assignment.15"."viewport_height" AS "viewport_height",
                 "assignment.15"."epsilon" AS "epsilon",
                 "assignment.15"."position_z" AS "position_z",
@@ -483,11 +483,11 @@ WITH RECURSIVE
                 "assignment.15"."viewport_width" AS "viewport_width"
          FROM   "assignment.15"
        ),
-       "assignment.17"("light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "looking_at_z", "looking_at_y", "position_y", "scene_up_x", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "looking_at_x", "scene_up_y", "image_width") AS (
+       "assignment.17"("light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "looking_at_z", "looking_at_y", "position_y", "scene_up_x", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "looking_at_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.16"."light_z" AS "light_z",
                 "assignment.16"."max_rec_depth" AS "max_rec_depth",
                 "assignment.16"."position_x" AS "position_x",
-                "assignment.16"."󰐤" AS "󰐤",
+                "assignment.16"."#️⃣" AS "#️⃣",
                 "assignment.16"."epsilon" AS "epsilon",
                 "assignment.16"."position_z" AS "position_z",
                 "assignment.16"."looking_at_z" AS "looking_at_z",
@@ -505,11 +505,11 @@ WITH RECURSIVE
                 "assignment.16"."image_width" AS "image_width"
          FROM   "assignment.16"
        ),
-       "assignment.18"("light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "looking_at_z", "looking_at_y", "scene_up_z", "position_y", "scene_up_x", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "looking_at_x", "scene_up_y", "image_width") AS (
+       "assignment.18"("light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "looking_at_z", "looking_at_y", "scene_up_z", "position_y", "scene_up_x", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "looking_at_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.17"."light_z" AS "light_z",
                 "assignment.17"."max_rec_depth" AS "max_rec_depth",
                 "assignment.17"."position_x" AS "position_x",
-                "assignment.17"."󰐤" AS "󰐤",
+                "assignment.17"."#️⃣" AS "#️⃣",
                 "assignment.17"."epsilon" AS "epsilon",
                 "assignment.17"."position_z" AS "position_z",
                 "assignment.17"."looking_at_z" AS "looking_at_z",
@@ -528,11 +528,11 @@ WITH RECURSIVE
                 "assignment.17"."image_width" AS "image_width"
          FROM   "assignment.17"
        ),
-       "assignment.19"("light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "looking_at_z", "looking_at_y", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.19"("light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "looking_at_z", "looking_at_y", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.18"."light_z" AS "light_z",
                 "assignment.18"."max_rec_depth" AS "max_rec_depth",
                 "assignment.18"."position_x" AS "position_x",
-                "assignment.18"."󰐤" AS "󰐤",
+                "assignment.18"."#️⃣" AS "#️⃣",
                 "assignment.18"."epsilon" AS "epsilon",
                 "assignment.18"."position_z" AS "position_z",
                 "assignment.18"."looking_at_z" AS "looking_at_z",
@@ -551,11 +551,11 @@ WITH RECURSIVE
                 "assignment.18"."image_width" AS "image_width"
          FROM   "assignment.18"
        ),
-       "assignment.20"("light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "looking_at_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.20"("light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "looking_at_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.19"."light_z" AS "light_z",
                 "assignment.19"."max_rec_depth" AS "max_rec_depth",
                 "assignment.19"."position_x" AS "position_x",
-                "assignment.19"."󰐤" AS "󰐤",
+                "assignment.19"."#️⃣" AS "#️⃣",
                 "assignment.19"."epsilon" AS "epsilon",
                 "assignment.19"."position_z" AS "position_z",
                 "assignment.19"."looking_at_z" AS "looking_at_z",
@@ -574,12 +574,12 @@ WITH RECURSIVE
                 "assignment.19"."image_width" AS "image_width"
          FROM   "assignment.19"
        ),
-       "assignment.21"("camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.21"("camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT CAST((("assignment.20"."position_z") - ("assignment.20"."looking_at_z")) AS real) AS "camera_forward_z",
                 "assignment.20"."light_z" AS "light_z",
                 "assignment.20"."max_rec_depth" AS "max_rec_depth",
                 "assignment.20"."position_x" AS "position_x",
-                "assignment.20"."󰐤" AS "󰐤",
+                "assignment.20"."#️⃣" AS "#️⃣",
                 "assignment.20"."epsilon" AS "epsilon",
                 "assignment.20"."position_z" AS "position_z",
                 "assignment.20"."scene_up_z" AS "scene_up_z",
@@ -597,13 +597,13 @@ WITH RECURSIVE
                 "assignment.20"."image_width" AS "image_width"
          FROM   "assignment.20"
        ),
-       "assignment.22"("length", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.22"("length", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT CAST((sqrt(("assignment.21"."camera_forward_x") ** 2 + ("assignment.21"."camera_forward_y") ** 2 + ("assignment.21"."camera_forward_z") ** 2)) AS real) AS "length",
                 "assignment.21"."camera_forward_z" AS "camera_forward_z",
                 "assignment.21"."light_z" AS "light_z",
                 "assignment.21"."max_rec_depth" AS "max_rec_depth",
                 "assignment.21"."position_x" AS "position_x",
-                "assignment.21"."󰐤" AS "󰐤",
+                "assignment.21"."#️⃣" AS "#️⃣",
                 "assignment.21"."epsilon" AS "epsilon",
                 "assignment.21"."position_z" AS "position_z",
                 "assignment.21"."scene_up_z" AS "scene_up_z",
@@ -621,13 +621,13 @@ WITH RECURSIVE
                 "assignment.21"."image_width" AS "image_width"
          FROM   "assignment.21"
        ),
-       "assignment.23"("length", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.23"("length", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.22"."length" AS "length",
                 "assignment.22"."camera_forward_z" AS "camera_forward_z",
                 "assignment.22"."light_z" AS "light_z",
                 "assignment.22"."max_rec_depth" AS "max_rec_depth",
                 "assignment.22"."position_x" AS "position_x",
-                "assignment.22"."󰐤" AS "󰐤",
+                "assignment.22"."#️⃣" AS "#️⃣",
                 "assignment.22"."epsilon" AS "epsilon",
                 "assignment.22"."position_z" AS "position_z",
                 "assignment.22"."scene_up_z" AS "scene_up_z",
@@ -645,13 +645,13 @@ WITH RECURSIVE
                 "assignment.22"."image_width" AS "image_width"
          FROM   "assignment.22"
        ),
-       "assignment.24"("length", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.24"("length", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.23"."length" AS "length",
                 "assignment.23"."camera_forward_z" AS "camera_forward_z",
                 "assignment.23"."light_z" AS "light_z",
                 "assignment.23"."max_rec_depth" AS "max_rec_depth",
                 "assignment.23"."position_x" AS "position_x",
-                "assignment.23"."󰐤" AS "󰐤",
+                "assignment.23"."#️⃣" AS "#️⃣",
                 "assignment.23"."epsilon" AS "epsilon",
                 "assignment.23"."position_z" AS "position_z",
                 "assignment.23"."scene_up_z" AS "scene_up_z",
@@ -669,13 +669,13 @@ WITH RECURSIVE
                 "assignment.23"."image_width" AS "image_width"
          FROM   "assignment.23"
        ),
-       "assignment.25"("length", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.25"("length", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.24"."length" AS "length",
                 CAST((("assignment.24"."camera_forward_z") / ("assignment.24"."length")) AS real) AS "camera_forward_z",
                 "assignment.24"."light_z" AS "light_z",
                 "assignment.24"."max_rec_depth" AS "max_rec_depth",
                 "assignment.24"."position_x" AS "position_x",
-                "assignment.24"."󰐤" AS "󰐤",
+                "assignment.24"."#️⃣" AS "#️⃣",
                 "assignment.24"."epsilon" AS "epsilon",
                 "assignment.24"."position_z" AS "position_z",
                 "assignment.24"."scene_up_z" AS "scene_up_z",
@@ -693,12 +693,12 @@ WITH RECURSIVE
                 "assignment.24"."image_width" AS "image_width"
          FROM   "assignment.24"
        ),
-       "assignment.26"("camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "focal_length", "camera_forward_y", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.26"("camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "scene_up_z", "position_y", "camera_forward_x", "scene_up_x", "focal_length", "camera_forward_y", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.25"."camera_forward_z" AS "camera_forward_z",
                 "assignment.25"."light_z" AS "light_z",
                 "assignment.25"."max_rec_depth" AS "max_rec_depth",
                 "assignment.25"."position_x" AS "position_x",
-                "assignment.25"."󰐤" AS "󰐤",
+                "assignment.25"."#️⃣" AS "#️⃣",
                 "assignment.25"."epsilon" AS "epsilon",
                 "assignment.25"."position_z" AS "position_z",
                 "assignment.25"."scene_up_z" AS "scene_up_z",
@@ -717,12 +717,12 @@ WITH RECURSIVE
                 "assignment.25"."image_width" AS "image_width"
          FROM   "assignment.25"
        ),
-       "assignment.27"("camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "scene_up_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "scene_up_x", "camera_forward_y", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.27"("camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "scene_up_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "scene_up_x", "camera_forward_y", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.26"."camera_forward_z" AS "camera_forward_z",
                 "assignment.26"."light_z" AS "light_z",
                 "assignment.26"."max_rec_depth" AS "max_rec_depth",
                 "assignment.26"."position_x" AS "position_x",
-                "assignment.26"."󰐤" AS "󰐤",
+                "assignment.26"."#️⃣" AS "#️⃣",
                 "assignment.26"."epsilon" AS "epsilon",
                 "assignment.26"."position_z" AS "position_z",
                 "assignment.26"."scene_up_z" AS "scene_up_z",
@@ -742,13 +742,13 @@ WITH RECURSIVE
                 "assignment.26"."image_width" AS "image_width"
          FROM   "assignment.26"
        ),
-       "assignment.28"("camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "scene_up_x", "camera_forward_y", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
+       "assignment.28"("camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "scene_up_x", "camera_forward_y", "viewport_width", "shadows", "light_y", "image_height", "viewport_height", "light_x", "scene_up_y", "image_width") AS (
          SELECT "assignment.27"."camera_forward_z" AS "camera_forward_z",
                 "assignment.27"."light_z" AS "light_z",
                 CAST((("assignment.27"."scene_up_z") * ("assignment.27"."camera_forward_x") - ("assignment.27"."scene_up_x") * ("assignment.27"."camera_forward_z")) AS real) AS "camera_right_y",
                 "assignment.27"."max_rec_depth" AS "max_rec_depth",
                 "assignment.27"."position_x" AS "position_x",
-                "assignment.27"."󰐤" AS "󰐤",
+                "assignment.27"."#️⃣" AS "#️⃣",
                 "assignment.27"."epsilon" AS "epsilon",
                 "assignment.27"."position_z" AS "position_z",
                 "assignment.27"."camera_right_x" AS "camera_right_x",
@@ -767,14 +767,14 @@ WITH RECURSIVE
                 "assignment.27"."image_width" AS "image_width"
          FROM   "assignment.27"
        ),
-       "assignment.29"("camera_right_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
+       "assignment.29"("camera_right_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
          SELECT CAST((("assignment.28"."scene_up_x") * ("assignment.28"."camera_forward_y") - ("assignment.28"."scene_up_y") * ("assignment.28"."camera_forward_x")) AS real) AS "camera_right_z",
                 "assignment.28"."camera_forward_z" AS "camera_forward_z",
                 "assignment.28"."light_z" AS "light_z",
                 "assignment.28"."camera_right_y" AS "camera_right_y",
                 "assignment.28"."max_rec_depth" AS "max_rec_depth",
                 "assignment.28"."position_x" AS "position_x",
-                "assignment.28"."󰐤" AS "󰐤",
+                "assignment.28"."#️⃣" AS "#️⃣",
                 "assignment.28"."epsilon" AS "epsilon",
                 "assignment.28"."position_z" AS "position_z",
                 "assignment.28"."camera_right_x" AS "camera_right_x",
@@ -791,7 +791,7 @@ WITH RECURSIVE
                 "assignment.28"."image_width" AS "image_width"
          FROM   "assignment.28"
        ),
-       "assignment.30"("camera_right_z", "length", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
+       "assignment.30"("camera_right_z", "length", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.29"."camera_right_z" AS "camera_right_z",
                 CAST((sqrt(("assignment.29"."camera_right_x") ** 2 + ("assignment.29"."camera_right_y") ** 2 + ("assignment.29"."camera_right_z") ** 2)) AS real) AS "length",
                 "assignment.29"."camera_forward_z" AS "camera_forward_z",
@@ -799,7 +799,7 @@ WITH RECURSIVE
                 "assignment.29"."camera_right_y" AS "camera_right_y",
                 "assignment.29"."max_rec_depth" AS "max_rec_depth",
                 "assignment.29"."position_x" AS "position_x",
-                "assignment.29"."󰐤" AS "󰐤",
+                "assignment.29"."#️⃣" AS "#️⃣",
                 "assignment.29"."epsilon" AS "epsilon",
                 "assignment.29"."position_z" AS "position_z",
                 "assignment.29"."camera_right_x" AS "camera_right_x",
@@ -816,7 +816,7 @@ WITH RECURSIVE
                 "assignment.29"."image_width" AS "image_width"
          FROM   "assignment.29"
        ),
-       "assignment.31"("camera_right_z", "length", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
+       "assignment.31"("camera_right_z", "length", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.30"."camera_right_z" AS "camera_right_z",
                 "assignment.30"."length" AS "length",
                 "assignment.30"."camera_forward_z" AS "camera_forward_z",
@@ -824,7 +824,7 @@ WITH RECURSIVE
                 "assignment.30"."camera_right_y" AS "camera_right_y",
                 "assignment.30"."max_rec_depth" AS "max_rec_depth",
                 "assignment.30"."position_x" AS "position_x",
-                "assignment.30"."󰐤" AS "󰐤",
+                "assignment.30"."#️⃣" AS "#️⃣",
                 "assignment.30"."epsilon" AS "epsilon",
                 "assignment.30"."position_z" AS "position_z",
                 CAST((("assignment.30"."camera_right_x") / ("assignment.30"."length")) AS real) AS "camera_right_x",
@@ -841,7 +841,7 @@ WITH RECURSIVE
                 "assignment.30"."image_width" AS "image_width"
          FROM   "assignment.30"
        ),
-       "assignment.32"("camera_right_z", "length", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
+       "assignment.32"("camera_right_z", "length", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.31"."camera_right_z" AS "camera_right_z",
                 "assignment.31"."length" AS "length",
                 "assignment.31"."camera_forward_z" AS "camera_forward_z",
@@ -849,7 +849,7 @@ WITH RECURSIVE
                 CAST((("assignment.31"."camera_right_y") / ("assignment.31"."length")) AS real) AS "camera_right_y",
                 "assignment.31"."max_rec_depth" AS "max_rec_depth",
                 "assignment.31"."position_x" AS "position_x",
-                "assignment.31"."󰐤" AS "󰐤",
+                "assignment.31"."#️⃣" AS "#️⃣",
                 "assignment.31"."epsilon" AS "epsilon",
                 "assignment.31"."position_z" AS "position_z",
                 "assignment.31"."camera_right_x" AS "camera_right_x",
@@ -866,14 +866,14 @@ WITH RECURSIVE
                 "assignment.31"."image_width" AS "image_width"
          FROM   "assignment.31"
        ),
-       "assignment.33"("camera_right_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
+       "assignment.33"("camera_right_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
          SELECT CAST((("assignment.32"."camera_right_z") / ("assignment.32"."length")) AS real) AS "camera_right_z",
                 "assignment.32"."camera_forward_z" AS "camera_forward_z",
                 "assignment.32"."light_z" AS "light_z",
                 "assignment.32"."camera_right_y" AS "camera_right_y",
                 "assignment.32"."max_rec_depth" AS "max_rec_depth",
                 "assignment.32"."position_x" AS "position_x",
-                "assignment.32"."󰐤" AS "󰐤",
+                "assignment.32"."#️⃣" AS "#️⃣",
                 "assignment.32"."epsilon" AS "epsilon",
                 "assignment.32"."position_z" AS "position_z",
                 "assignment.32"."camera_right_x" AS "camera_right_x",
@@ -890,7 +890,7 @@ WITH RECURSIVE
                 "assignment.32"."image_width" AS "image_width"
          FROM   "assignment.32"
        ),
-       "assignment.34"("camera_right_z", "camera_up_x", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
+       "assignment.34"("camera_right_z", "camera_up_x", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.33"."camera_right_z" AS "camera_right_z",
                 CAST((("assignment.33"."camera_forward_y") * ("assignment.33"."camera_right_z") - ("assignment.33"."camera_forward_z") * ("assignment.33"."camera_right_y")) AS real) AS "camera_up_x",
                 "assignment.33"."camera_forward_z" AS "camera_forward_z",
@@ -898,7 +898,7 @@ WITH RECURSIVE
                 "assignment.33"."camera_right_y" AS "camera_right_y",
                 "assignment.33"."max_rec_depth" AS "max_rec_depth",
                 "assignment.33"."position_x" AS "position_x",
-                "assignment.33"."󰐤" AS "󰐤",
+                "assignment.33"."#️⃣" AS "#️⃣",
                 "assignment.33"."epsilon" AS "epsilon",
                 "assignment.33"."position_z" AS "position_z",
                 "assignment.33"."camera_right_x" AS "camera_right_x",
@@ -915,7 +915,7 @@ WITH RECURSIVE
                 "assignment.33"."image_width" AS "image_width"
          FROM   "assignment.33"
        ),
-       "assignment.35"("camera_right_z", "camera_up_x", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
+       "assignment.35"("camera_right_z", "camera_up_x", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.34"."camera_right_z" AS "camera_right_z",
                 "assignment.34"."camera_up_x" AS "camera_up_x",
                 "assignment.34"."camera_forward_z" AS "camera_forward_z",
@@ -923,7 +923,7 @@ WITH RECURSIVE
                 "assignment.34"."camera_right_y" AS "camera_right_y",
                 "assignment.34"."max_rec_depth" AS "max_rec_depth",
                 "assignment.34"."position_x" AS "position_x",
-                "assignment.34"."󰐤" AS "󰐤",
+                "assignment.34"."#️⃣" AS "#️⃣",
                 "assignment.34"."epsilon" AS "epsilon",
                 "assignment.34"."position_z" AS "position_z",
                 "assignment.34"."camera_right_x" AS "camera_right_x",
@@ -941,7 +941,7 @@ WITH RECURSIVE
                 "assignment.34"."image_width" AS "image_width"
          FROM   "assignment.34"
        ),
-       "assignment.36"("camera_right_z", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
+       "assignment.36"("camera_right_z", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.35"."camera_right_z" AS "camera_right_z",
                 "assignment.35"."camera_up_x" AS "camera_up_x",
                 CAST((("assignment.35"."camera_forward_x") * ("assignment.35"."camera_right_y") - ("assignment.35"."camera_forward_y") * ("assignment.35"."camera_right_x")) AS real) AS "camera_up_z",
@@ -950,7 +950,7 @@ WITH RECURSIVE
                 "assignment.35"."camera_right_y" AS "camera_right_y",
                 "assignment.35"."max_rec_depth" AS "max_rec_depth",
                 "assignment.35"."position_x" AS "position_x",
-                "assignment.35"."󰐤" AS "󰐤",
+                "assignment.35"."#️⃣" AS "#️⃣",
                 "assignment.35"."epsilon" AS "epsilon",
                 "assignment.35"."position_z" AS "position_z",
                 "assignment.35"."camera_right_x" AS "camera_right_x",
@@ -968,7 +968,7 @@ WITH RECURSIVE
                 "assignment.35"."image_width" AS "image_width"
          FROM   "assignment.35"
        ),
-       "assignment.37"("camera_right_z", "length", "camera_up_z", "camera_up_x", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
+       "assignment.37"("camera_right_z", "length", "camera_up_z", "camera_up_x", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.36"."camera_right_z" AS "camera_right_z",
                 CAST((sqrt(("assignment.36"."camera_up_x") ** 2 + ("assignment.36"."camera_up_y") ** 2 + ("assignment.36"."camera_up_z") ** 2)) AS real) AS "length",
                 "assignment.36"."camera_up_z" AS "camera_up_z",
@@ -978,7 +978,7 @@ WITH RECURSIVE
                 "assignment.36"."camera_right_y" AS "camera_right_y",
                 "assignment.36"."max_rec_depth" AS "max_rec_depth",
                 "assignment.36"."position_x" AS "position_x",
-                "assignment.36"."󰐤" AS "󰐤",
+                "assignment.36"."#️⃣" AS "#️⃣",
                 "assignment.36"."epsilon" AS "epsilon",
                 "assignment.36"."position_z" AS "position_z",
                 "assignment.36"."camera_right_x" AS "camera_right_x",
@@ -996,7 +996,7 @@ WITH RECURSIVE
                 "assignment.36"."image_width" AS "image_width"
          FROM   "assignment.36"
        ),
-       "assignment.38"("camera_right_z", "length", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
+       "assignment.38"("camera_right_z", "length", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.37"."camera_right_z" AS "camera_right_z",
                 "assignment.37"."length" AS "length",
                 CAST((("assignment.37"."camera_up_x") / ("assignment.37"."length")) AS real) AS "camera_up_x",
@@ -1006,7 +1006,7 @@ WITH RECURSIVE
                 "assignment.37"."camera_right_y" AS "camera_right_y",
                 "assignment.37"."max_rec_depth" AS "max_rec_depth",
                 "assignment.37"."position_x" AS "position_x",
-                "assignment.37"."󰐤" AS "󰐤",
+                "assignment.37"."#️⃣" AS "#️⃣",
                 "assignment.37"."epsilon" AS "epsilon",
                 "assignment.37"."position_z" AS "position_z",
                 "assignment.37"."camera_right_x" AS "camera_right_x",
@@ -1024,7 +1024,7 @@ WITH RECURSIVE
                 "assignment.37"."image_width" AS "image_width"
          FROM   "assignment.37"
        ),
-       "assignment.39"("camera_right_z", "length", "camera_up_z", "camera_up_x", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
+       "assignment.39"("camera_right_z", "length", "camera_up_z", "camera_up_x", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.38"."camera_right_z" AS "camera_right_z",
                 "assignment.38"."length" AS "length",
                 "assignment.38"."camera_up_z" AS "camera_up_z",
@@ -1034,7 +1034,7 @@ WITH RECURSIVE
                 "assignment.38"."camera_right_y" AS "camera_right_y",
                 "assignment.38"."max_rec_depth" AS "max_rec_depth",
                 "assignment.38"."position_x" AS "position_x",
-                "assignment.38"."󰐤" AS "󰐤",
+                "assignment.38"."#️⃣" AS "#️⃣",
                 "assignment.38"."epsilon" AS "epsilon",
                 "assignment.38"."position_z" AS "position_z",
                 "assignment.38"."camera_right_x" AS "camera_right_x",
@@ -1052,7 +1052,7 @@ WITH RECURSIVE
                 "assignment.38"."image_width" AS "image_width"
          FROM   "assignment.38"
        ),
-       "assignment.40"("camera_right_z", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
+       "assignment.40"("camera_right_z", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "camera_right_x", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width") AS (
          SELECT "assignment.39"."camera_right_z" AS "camera_right_z",
                 "assignment.39"."camera_up_x" AS "camera_up_x",
                 CAST((("assignment.39"."camera_up_z") / ("assignment.39"."length")) AS real) AS "camera_up_z",
@@ -1061,7 +1061,7 @@ WITH RECURSIVE
                 "assignment.39"."camera_right_y" AS "camera_right_y",
                 "assignment.39"."max_rec_depth" AS "max_rec_depth",
                 "assignment.39"."position_x" AS "position_x",
-                "assignment.39"."󰐤" AS "󰐤",
+                "assignment.39"."#️⃣" AS "#️⃣",
                 "assignment.39"."epsilon" AS "epsilon",
                 "assignment.39"."position_z" AS "position_z",
                 "assignment.39"."camera_right_x" AS "camera_right_x",
@@ -1079,7 +1079,7 @@ WITH RECURSIVE
                 "assignment.39"."image_width" AS "image_width"
          FROM   "assignment.39"
        ),
-       "assignment.41"("camera_right_z", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width", "viewport_horizontal_x") AS (
+       "assignment.41"("camera_right_z", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "camera_right_y", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "image_width", "viewport_horizontal_x") AS (
          SELECT "assignment.40"."camera_right_z" AS "camera_right_z",
                 "assignment.40"."camera_up_x" AS "camera_up_x",
                 "assignment.40"."camera_up_z" AS "camera_up_z",
@@ -1088,7 +1088,7 @@ WITH RECURSIVE
                 "assignment.40"."camera_right_y" AS "camera_right_y",
                 "assignment.40"."max_rec_depth" AS "max_rec_depth",
                 "assignment.40"."position_x" AS "position_x",
-                "assignment.40"."󰐤" AS "󰐤",
+                "assignment.40"."#️⃣" AS "#️⃣",
                 "assignment.40"."epsilon" AS "epsilon",
                 "assignment.40"."position_z" AS "position_z",
                 "assignment.40"."position_y" AS "position_y",
@@ -1106,7 +1106,7 @@ WITH RECURSIVE
                 CAST((("assignment.40"."viewport_width") * ("assignment.40"."camera_right_x")) AS real) AS "viewport_horizontal_x"
          FROM   "assignment.40"
        ),
-       "assignment.42"("camera_right_z", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
+       "assignment.42"("camera_right_z", "camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "position_y", "camera_forward_x", "focal_length", "viewport_width", "camera_forward_y", "shadows", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
          SELECT "assignment.41"."camera_right_z" AS "camera_right_z",
                 "assignment.41"."camera_up_x" AS "camera_up_x",
                 "assignment.41"."camera_up_z" AS "camera_up_z",
@@ -1114,7 +1114,7 @@ WITH RECURSIVE
                 "assignment.41"."light_z" AS "light_z",
                 "assignment.41"."max_rec_depth" AS "max_rec_depth",
                 "assignment.41"."position_x" AS "position_x",
-                "assignment.41"."󰐤" AS "󰐤",
+                "assignment.41"."#️⃣" AS "#️⃣",
                 "assignment.41"."epsilon" AS "epsilon",
                 "assignment.41"."position_z" AS "position_z",
                 "assignment.41"."position_y" AS "position_y",
@@ -1133,14 +1133,14 @@ WITH RECURSIVE
                 "assignment.41"."viewport_horizontal_x" AS "viewport_horizontal_x"
          FROM   "assignment.41"
        ),
-       "assignment.43"("camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "position_y", "camera_forward_x", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
+       "assignment.43"("camera_up_x", "camera_up_z", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "position_y", "camera_forward_x", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
          SELECT "assignment.42"."camera_up_x" AS "camera_up_x",
                 "assignment.42"."camera_up_z" AS "camera_up_z",
                 "assignment.42"."camera_forward_z" AS "camera_forward_z",
                 "assignment.42"."light_z" AS "light_z",
                 "assignment.42"."max_rec_depth" AS "max_rec_depth",
                 "assignment.42"."position_x" AS "position_x",
-                "assignment.42"."󰐤" AS "󰐤",
+                "assignment.42"."#️⃣" AS "#️⃣",
                 "assignment.42"."epsilon" AS "epsilon",
                 "assignment.42"."position_z" AS "position_z",
                 "assignment.42"."position_y" AS "position_y",
@@ -1159,13 +1159,13 @@ WITH RECURSIVE
                 "assignment.42"."viewport_horizontal_x" AS "viewport_horizontal_x"
          FROM   "assignment.42"
        ),
-       "assignment.44"("camera_up_z", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "position_y", "camera_forward_x", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "viewport_vertical_x", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
+       "assignment.44"("camera_up_z", "camera_forward_z", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "position_y", "camera_forward_x", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "viewport_vertical_x", "light_y", "image_height", "camera_up_y", "viewport_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
          SELECT "assignment.43"."camera_up_z" AS "camera_up_z",
                 "assignment.43"."camera_forward_z" AS "camera_forward_z",
                 "assignment.43"."light_z" AS "light_z",
                 "assignment.43"."max_rec_depth" AS "max_rec_depth",
                 "assignment.43"."position_x" AS "position_x",
-                "assignment.43"."󰐤" AS "󰐤",
+                "assignment.43"."#️⃣" AS "#️⃣",
                 "assignment.43"."epsilon" AS "epsilon",
                 "assignment.43"."position_z" AS "position_z",
                 "assignment.43"."position_y" AS "position_y",
@@ -1185,14 +1185,14 @@ WITH RECURSIVE
                 "assignment.43"."viewport_horizontal_x" AS "viewport_horizontal_x"
          FROM   "assignment.43"
        ),
-       "assignment.45"("camera_up_z", "camera_forward_z", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "󰐤", "epsilon", "position_z", "position_y", "camera_forward_x", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "viewport_vertical_x", "light_y", "image_height", "viewport_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
+       "assignment.45"("camera_up_z", "camera_forward_z", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "#️⃣", "epsilon", "position_z", "position_y", "camera_forward_x", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "viewport_vertical_x", "light_y", "image_height", "viewport_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
          SELECT "assignment.44"."camera_up_z" AS "camera_up_z",
                 "assignment.44"."camera_forward_z" AS "camera_forward_z",
                 CAST((("assignment.44"."viewport_height") * -("assignment.44"."camera_up_y")) AS real) AS "viewport_vertical_y",
                 "assignment.44"."light_z" AS "light_z",
                 "assignment.44"."max_rec_depth" AS "max_rec_depth",
                 "assignment.44"."position_x" AS "position_x",
-                "assignment.44"."󰐤" AS "󰐤",
+                "assignment.44"."#️⃣" AS "#️⃣",
                 "assignment.44"."epsilon" AS "epsilon",
                 "assignment.44"."position_z" AS "position_z",
                 "assignment.44"."position_y" AS "position_y",
@@ -1211,14 +1211,14 @@ WITH RECURSIVE
                 "assignment.44"."viewport_horizontal_x" AS "viewport_horizontal_x"
          FROM   "assignment.44"
        ),
-       "assignment.46"("camera_forward_z", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "position_z", "position_y", "camera_forward_x", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "viewport_vertical_x", "light_y", "image_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
+       "assignment.46"("camera_forward_z", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "position_z", "position_y", "camera_forward_x", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "viewport_vertical_x", "light_y", "image_height", "light_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
          SELECT "assignment.45"."camera_forward_z" AS "camera_forward_z",
                 "assignment.45"."viewport_vertical_y" AS "viewport_vertical_y",
                 "assignment.45"."light_z" AS "light_z",
                 "assignment.45"."max_rec_depth" AS "max_rec_depth",
                 "assignment.45"."position_x" AS "position_x",
                 CAST((("assignment.45"."viewport_height") * -("assignment.45"."camera_up_z")) AS real) AS "viewport_vertical_z",
-                "assignment.45"."󰐤" AS "󰐤",
+                "assignment.45"."#️⃣" AS "#️⃣",
                 "assignment.45"."epsilon" AS "epsilon",
                 "assignment.45"."position_z" AS "position_z",
                 "assignment.45"."position_y" AS "position_y",
@@ -1236,14 +1236,14 @@ WITH RECURSIVE
                 "assignment.45"."viewport_horizontal_x" AS "viewport_horizontal_x"
          FROM   "assignment.45"
        ),
-       "assignment.47"("camera_forward_z", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "position_z", "position_y", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "viewport_vertical_x", "light_y", "image_height", "light_x", "viewport_root_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
+       "assignment.47"("camera_forward_z", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "position_z", "position_y", "viewport_horizontal_z", "focal_length", "shadows", "camera_forward_y", "viewport_vertical_x", "light_y", "image_height", "light_x", "viewport_root_x", "viewport_horizontal_y", "image_width", "viewport_horizontal_x") AS (
          SELECT "assignment.46"."camera_forward_z" AS "camera_forward_z",
                 "assignment.46"."viewport_vertical_y" AS "viewport_vertical_y",
                 "assignment.46"."light_z" AS "light_z",
                 "assignment.46"."max_rec_depth" AS "max_rec_depth",
                 "assignment.46"."position_x" AS "position_x",
                 "assignment.46"."viewport_vertical_z" AS "viewport_vertical_z",
-                "assignment.46"."󰐤" AS "󰐤",
+                "assignment.46"."#️⃣" AS "#️⃣",
                 "assignment.46"."epsilon" AS "epsilon",
                 "assignment.46"."position_z" AS "position_z",
                 "assignment.46"."position_y" AS "position_y",
@@ -1261,7 +1261,7 @@ WITH RECURSIVE
                 "assignment.46"."viewport_horizontal_x" AS "viewport_horizontal_x"
          FROM   "assignment.46"
        ),
-       "assignment.48"("image_width", "camera_forward_z", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "position_z", "position_y", "focal_length", "shadows", "viewport_vertical_x", "light_y", "image_height", "light_x", "viewport_root_x", "viewport_horizontal_y", "viewport_root_y", "viewport_horizontal_z", "viewport_horizontal_x") AS (
+       "assignment.48"("image_width", "camera_forward_z", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "position_z", "position_y", "focal_length", "shadows", "viewport_vertical_x", "light_y", "image_height", "light_x", "viewport_root_x", "viewport_horizontal_y", "viewport_root_y", "viewport_horizontal_z", "viewport_horizontal_x") AS (
          SELECT "assignment.47"."image_width" AS "image_width",
                 "assignment.47"."camera_forward_z" AS "camera_forward_z",
                 "assignment.47"."viewport_vertical_y" AS "viewport_vertical_y",
@@ -1269,7 +1269,7 @@ WITH RECURSIVE
                 "assignment.47"."max_rec_depth" AS "max_rec_depth",
                 "assignment.47"."position_x" AS "position_x",
                 "assignment.47"."viewport_vertical_z" AS "viewport_vertical_z",
-                "assignment.47"."󰐤" AS "󰐤",
+                "assignment.47"."#️⃣" AS "#️⃣",
                 "assignment.47"."epsilon" AS "epsilon",
                 "assignment.47"."position_z" AS "position_z",
                 "assignment.47"."position_y" AS "position_y",
@@ -1286,13 +1286,13 @@ WITH RECURSIVE
                 "assignment.47"."viewport_horizontal_x" AS "viewport_horizontal_x"
          FROM   "assignment.47"
        ),
-       "assignment.49"("viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "position_z", "position_y", "viewport_horizontal_z", "shadows", "viewport_vertical_x", "light_y", "image_height", "light_x", "viewport_root_x", "viewport_horizontal_y", "viewport_root_z", "viewport_root_y", "image_width", "viewport_horizontal_x") AS (
+       "assignment.49"("viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "position_z", "position_y", "viewport_horizontal_z", "shadows", "viewport_vertical_x", "light_y", "image_height", "light_x", "viewport_root_x", "viewport_horizontal_y", "viewport_root_z", "viewport_root_y", "image_width", "viewport_horizontal_x") AS (
          SELECT "assignment.48"."viewport_vertical_y" AS "viewport_vertical_y",
                 "assignment.48"."light_z" AS "light_z",
                 "assignment.48"."max_rec_depth" AS "max_rec_depth",
                 "assignment.48"."position_x" AS "position_x",
                 "assignment.48"."viewport_vertical_z" AS "viewport_vertical_z",
-                "assignment.48"."󰐤" AS "󰐤",
+                "assignment.48"."#️⃣" AS "#️⃣",
                 "assignment.48"."epsilon" AS "epsilon",
                 "assignment.48"."position_z" AS "position_z",
                 "assignment.48"."position_y" AS "position_y",
@@ -1310,14 +1310,14 @@ WITH RECURSIVE
                 "assignment.48"."viewport_horizontal_x" AS "viewport_horizontal_x"
          FROM   "assignment.48"
        ),
-       "assignment.50"("image_width", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "position_z", "position_y", "shadows", "viewport_vertical_x", "light_y", "image_height", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_horizontal_y", "viewport_root_z", "viewport_root_y", "viewport_horizontal_z") AS (
+       "assignment.50"("image_width", "viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "position_z", "position_y", "shadows", "viewport_vertical_x", "light_y", "image_height", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_horizontal_y", "viewport_root_z", "viewport_root_y", "viewport_horizontal_z") AS (
          SELECT "assignment.49"."image_width" AS "image_width",
                 "assignment.49"."viewport_vertical_y" AS "viewport_vertical_y",
                 "assignment.49"."light_z" AS "light_z",
                 "assignment.49"."max_rec_depth" AS "max_rec_depth",
                 "assignment.49"."position_x" AS "position_x",
                 "assignment.49"."viewport_vertical_z" AS "viewport_vertical_z",
-                "assignment.49"."󰐤" AS "󰐤",
+                "assignment.49"."#️⃣" AS "#️⃣",
                 "assignment.49"."epsilon" AS "epsilon",
                 "assignment.49"."position_z" AS "position_z",
                 "assignment.49"."position_y" AS "position_y",
@@ -1334,13 +1334,13 @@ WITH RECURSIVE
                 "assignment.49"."viewport_horizontal_z" AS "viewport_horizontal_z"
          FROM   "assignment.49"
        ),
-       "assignment.51"("viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "position_z", "position_y", "viewport_horizontal_z", "shadows", "viewport_horizontal_offset_y", "viewport_vertical_x", "light_y", "image_height", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "assignment.51"("viewport_vertical_y", "light_z", "max_rec_depth", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "position_z", "position_y", "viewport_horizontal_z", "shadows", "viewport_horizontal_offset_y", "viewport_vertical_x", "light_y", "image_height", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT "assignment.50"."viewport_vertical_y" AS "viewport_vertical_y",
                 "assignment.50"."light_z" AS "light_z",
                 "assignment.50"."max_rec_depth" AS "max_rec_depth",
                 "assignment.50"."position_x" AS "position_x",
                 "assignment.50"."viewport_vertical_z" AS "viewport_vertical_z",
-                "assignment.50"."󰐤" AS "󰐤",
+                "assignment.50"."#️⃣" AS "#️⃣",
                 "assignment.50"."epsilon" AS "epsilon",
                 "assignment.50"."position_z" AS "position_z",
                 "assignment.50"."position_y" AS "position_y",
@@ -1358,13 +1358,13 @@ WITH RECURSIVE
                 "assignment.50"."image_width" AS "image_width"
          FROM   "assignment.50"
        ),
-       "assignment.52"("viewport_vertical_y", "light_z", "viewport_horizontal_offset_z", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "max_rec_depth", "position_z", "position_y", "shadows", "viewport_horizontal_offset_y", "viewport_vertical_x", "light_y", "image_height", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "assignment.52"("viewport_vertical_y", "light_z", "viewport_horizontal_offset_z", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "max_rec_depth", "position_z", "position_y", "shadows", "viewport_horizontal_offset_y", "viewport_vertical_x", "light_y", "image_height", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT "assignment.51"."viewport_vertical_y" AS "viewport_vertical_y",
                 "assignment.51"."light_z" AS "light_z",
                 CAST((("assignment.51"."viewport_horizontal_z") / ("assignment.51"."image_width")) AS real) AS "viewport_horizontal_offset_z",
                 "assignment.51"."position_x" AS "position_x",
                 "assignment.51"."viewport_vertical_z" AS "viewport_vertical_z",
-                "assignment.51"."󰐤" AS "󰐤",
+                "assignment.51"."#️⃣" AS "#️⃣",
                 "assignment.51"."epsilon" AS "epsilon",
                 "assignment.51"."max_rec_depth" AS "max_rec_depth",
                 "assignment.51"."position_z" AS "position_z",
@@ -1382,13 +1382,13 @@ WITH RECURSIVE
                 "assignment.51"."image_width" AS "image_width"
          FROM   "assignment.51"
        ),
-       "assignment.53"("viewport_vertical_y", "light_z", "viewport_horizontal_offset_z", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "max_rec_depth", "position_z", "position_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "assignment.53"("viewport_vertical_y", "light_z", "viewport_horizontal_offset_z", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "max_rec_depth", "position_z", "position_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT "assignment.52"."viewport_vertical_y" AS "viewport_vertical_y",
                 "assignment.52"."light_z" AS "light_z",
                 "assignment.52"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "assignment.52"."position_x" AS "position_x",
                 "assignment.52"."viewport_vertical_z" AS "viewport_vertical_z",
-                "assignment.52"."󰐤" AS "󰐤",
+                "assignment.52"."#️⃣" AS "#️⃣",
                 "assignment.52"."epsilon" AS "epsilon",
                 "assignment.52"."max_rec_depth" AS "max_rec_depth",
                 "assignment.52"."position_z" AS "position_z",
@@ -1406,12 +1406,12 @@ WITH RECURSIVE
                 "assignment.52"."image_width" AS "image_width"
          FROM   "assignment.52"
        ),
-       "assignment.54"("light_z", "viewport_horizontal_offset_z", "position_x", "viewport_vertical_z", "󰐤", "epsilon", "max_rec_depth", "position_z", "viewport_vertical_offset_y", "position_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "assignment.54"("light_z", "viewport_horizontal_offset_z", "position_x", "viewport_vertical_z", "#️⃣", "epsilon", "max_rec_depth", "position_z", "viewport_vertical_offset_y", "position_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT "assignment.53"."light_z" AS "light_z",
                 "assignment.53"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "assignment.53"."position_x" AS "position_x",
                 "assignment.53"."viewport_vertical_z" AS "viewport_vertical_z",
-                "assignment.53"."󰐤" AS "󰐤",
+                "assignment.53"."#️⃣" AS "#️⃣",
                 "assignment.53"."epsilon" AS "epsilon",
                 "assignment.53"."max_rec_depth" AS "max_rec_depth",
                 "assignment.53"."position_z" AS "position_z",
@@ -1430,11 +1430,11 @@ WITH RECURSIVE
                 "assignment.53"."image_width" AS "image_width"
          FROM   "assignment.53"
        ),
-       "assignment.55"("light_z", "viewport_horizontal_offset_z", "position_x", "󰐤", "max_rec_depth", "epsilon", "position_z", "viewport_vertical_offset_z", "position_y", "viewport_vertical_offset_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "assignment.55"("light_z", "viewport_horizontal_offset_z", "position_x", "#️⃣", "max_rec_depth", "epsilon", "position_z", "viewport_vertical_offset_z", "position_y", "viewport_vertical_offset_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT "assignment.54"."light_z" AS "light_z",
                 "assignment.54"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "assignment.54"."position_x" AS "position_x",
-                "assignment.54"."󰐤" AS "󰐤",
+                "assignment.54"."#️⃣" AS "#️⃣",
                 "assignment.54"."max_rec_depth" AS "max_rec_depth",
                 "assignment.54"."epsilon" AS "epsilon",
                 "assignment.54"."position_z" AS "position_z",
@@ -1454,11 +1454,11 @@ WITH RECURSIVE
                 "assignment.54"."image_width" AS "image_width"
          FROM   "assignment.54"
        ),
-       "fork.2"("light_z", "viewport_horizontal_offset_z", "position_x", "󰐤", "max_rec_depth", "epsilon", "position_z", "viewport_vertical_offset_y", "position_y", "viewport_vertical_offset_z", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "fork.2"("light_z", "viewport_horizontal_offset_z", "position_x", "#️⃣", "max_rec_depth", "epsilon", "position_z", "viewport_vertical_offset_y", "position_y", "viewport_vertical_offset_z", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT "assignment.55"."light_z" AS "light_z",
                 "assignment.55"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "assignment.55"."position_x" AS "position_x",
-                "assignment.55"."󰐤" AS "󰐤",
+                "assignment.55"."#️⃣" AS "#️⃣",
                 "assignment.55"."max_rec_depth" AS "max_rec_depth",
                 "assignment.55"."epsilon" AS "epsilon",
                 "assignment.55"."position_z" AS "position_z",
@@ -1480,11 +1480,11 @@ WITH RECURSIVE
          FROM   "assignment.55",
                 LATERAL (SELECT * FROM range(("assignment.55"."image_width"))) AS "ℚ"("screen_x")
        ),
-       "fork.3"("light_z", "viewport_horizontal_offset_z", "position_x", "󰐤", "max_rec_depth", "epsilon", "position_z", "viewport_vertical_offset_y", "position_y", "screen_y", "viewport_vertical_offset_z", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "fork.3"("light_z", "viewport_horizontal_offset_z", "position_x", "#️⃣", "max_rec_depth", "epsilon", "position_z", "viewport_vertical_offset_y", "position_y", "screen_y", "viewport_vertical_offset_z", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT "fork.2"."light_z" AS "light_z",
                 "fork.2"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "fork.2"."position_x" AS "position_x",
-                "fork.2"."󰐤" AS "󰐤",
+                "fork.2"."#️⃣" AS "#️⃣",
                 "fork.2"."max_rec_depth" AS "max_rec_depth",
                 "fork.2"."epsilon" AS "epsilon",
                 "fork.2"."position_z" AS "position_z",
@@ -1507,12 +1507,12 @@ WITH RECURSIVE
          FROM   "fork.2",
                 LATERAL (SELECT * FROM range(("fork.2"."image_height"))) AS "ℚ"("screen_y")
        ),
-       "assignment.56"("origin_x", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "󰐤", "epsilon", "position_z", "viewport_vertical_offset_y", "position_y", "screen_y", "viewport_vertical_offset_z", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "assignment.56"("origin_x", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "#️⃣", "epsilon", "position_z", "viewport_vertical_offset_y", "position_y", "screen_y", "viewport_vertical_offset_z", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT CAST((("fork.3"."position_x")) AS real) AS "origin_x",
                 "fork.3"."light_z" AS "light_z",
                 "fork.3"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "fork.3"."max_rec_depth" AS "max_rec_depth",
-                "fork.3"."󰐤" AS "󰐤",
+                "fork.3"."#️⃣" AS "#️⃣",
                 "fork.3"."epsilon" AS "epsilon",
                 "fork.3"."position_z" AS "position_z",
                 "fork.3"."viewport_vertical_offset_y" AS "viewport_vertical_offset_y",
@@ -1533,12 +1533,12 @@ WITH RECURSIVE
                 "fork.3"."image_width" AS "image_width"
          FROM   "fork.3"
        ),
-       "assignment.57"("origin_x", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "󰐤", "epsilon", "position_z", "viewport_vertical_offset_y", "viewport_vertical_offset_z", "screen_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "origin_y", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
+       "assignment.57"("origin_x", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "#️⃣", "epsilon", "position_z", "viewport_vertical_offset_y", "viewport_vertical_offset_z", "screen_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "origin_y", "viewport_horizontal_offset_x", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width") AS (
          SELECT "assignment.56"."origin_x" AS "origin_x",
                 "assignment.56"."light_z" AS "light_z",
                 "assignment.56"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "assignment.56"."max_rec_depth" AS "max_rec_depth",
-                "assignment.56"."󰐤" AS "󰐤",
+                "assignment.56"."#️⃣" AS "#️⃣",
                 "assignment.56"."epsilon" AS "epsilon",
                 "assignment.56"."position_z" AS "position_z",
                 "assignment.56"."viewport_vertical_offset_y" AS "viewport_vertical_offset_y",
@@ -1559,12 +1559,12 @@ WITH RECURSIVE
                 "assignment.56"."image_width" AS "image_width"
          FROM   "assignment.56"
        ),
-       "assignment.58"("origin_x", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "󰐤", "epsilon", "viewport_vertical_offset_y", "viewport_vertical_offset_z", "screen_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "origin_y", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width", "origin_z") AS (
+       "assignment.58"("origin_x", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "#️⃣", "epsilon", "viewport_vertical_offset_y", "viewport_vertical_offset_z", "screen_y", "shadows", "viewport_horizontal_offset_y", "light_y", "image_height", "viewport_vertical_offset_x", "viewport_horizontal_offset_x", "origin_y", "light_x", "viewport_root_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width", "origin_z") AS (
          SELECT "assignment.57"."origin_x" AS "origin_x",
                 "assignment.57"."light_z" AS "light_z",
                 "assignment.57"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "assignment.57"."max_rec_depth" AS "max_rec_depth",
-                "assignment.57"."󰐤" AS "󰐤",
+                "assignment.57"."#️⃣" AS "#️⃣",
                 "assignment.57"."epsilon" AS "epsilon",
                 "assignment.57"."viewport_vertical_offset_y" AS "viewport_vertical_offset_y",
                 "assignment.57"."viewport_vertical_offset_z" AS "viewport_vertical_offset_z",
@@ -1585,12 +1585,12 @@ WITH RECURSIVE
                 CAST((("assignment.57"."position_z")) AS real) AS "origin_z"
          FROM   "assignment.57"
        ),
-       "assignment.59"("origin_x", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "󰐤", "epsilon", "viewport_vertical_offset_y", "viewport_vertical_offset_z", "screen_y", "shadows", "pixel_center_x", "viewport_horizontal_offset_y", "light_y", "image_height", "origin_y", "light_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width", "origin_z") AS (
+       "assignment.59"("origin_x", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "#️⃣", "epsilon", "viewport_vertical_offset_y", "viewport_vertical_offset_z", "screen_y", "shadows", "pixel_center_x", "viewport_horizontal_offset_y", "light_y", "image_height", "origin_y", "light_x", "screen_x", "viewport_root_z", "viewport_root_y", "image_width", "origin_z") AS (
          SELECT "assignment.58"."origin_x" AS "origin_x",
                 "assignment.58"."light_z" AS "light_z",
                 "assignment.58"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "assignment.58"."max_rec_depth" AS "max_rec_depth",
-                "assignment.58"."󰐤" AS "󰐤",
+                "assignment.58"."#️⃣" AS "#️⃣",
                 "assignment.58"."epsilon" AS "epsilon",
                 "assignment.58"."viewport_vertical_offset_y" AS "viewport_vertical_offset_y",
                 "assignment.58"."viewport_vertical_offset_z" AS "viewport_vertical_offset_z",
@@ -1609,13 +1609,13 @@ WITH RECURSIVE
                 "assignment.58"."origin_z" AS "origin_z"
          FROM   "assignment.58"
        ),
-       "assignment.60"("origin_x", "pixel_center_y", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "󰐤", "epsilon", "viewport_vertical_offset_z", "screen_y", "shadows", "pixel_center_x", "light_y", "image_height", "origin_y", "light_x", "screen_x", "viewport_root_z", "image_width", "origin_z") AS (
+       "assignment.60"("origin_x", "pixel_center_y", "light_z", "viewport_horizontal_offset_z", "max_rec_depth", "#️⃣", "epsilon", "viewport_vertical_offset_z", "screen_y", "shadows", "pixel_center_x", "light_y", "image_height", "origin_y", "light_x", "screen_x", "viewport_root_z", "image_width", "origin_z") AS (
          SELECT "assignment.59"."origin_x" AS "origin_x",
                 CAST((("assignment.59"."viewport_root_y") + ("assignment.59"."screen_x") * ("assignment.59"."viewport_horizontal_offset_y") + ("assignment.59"."screen_y") * ("assignment.59"."viewport_vertical_offset_y")) AS real) AS "pixel_center_y",
                 "assignment.59"."light_z" AS "light_z",
                 "assignment.59"."viewport_horizontal_offset_z" AS "viewport_horizontal_offset_z",
                 "assignment.59"."max_rec_depth" AS "max_rec_depth",
-                "assignment.59"."󰐤" AS "󰐤",
+                "assignment.59"."#️⃣" AS "#️⃣",
                 "assignment.59"."epsilon" AS "epsilon",
                 "assignment.59"."viewport_vertical_offset_z" AS "viewport_vertical_offset_z",
                 "assignment.59"."screen_y" AS "screen_y",
@@ -1631,7 +1631,7 @@ WITH RECURSIVE
                 "assignment.59"."origin_z" AS "origin_z"
          FROM   "assignment.59"
        ),
-       "assignment.61"("origin_x", "pixel_center_x", "pixel_center_y", "light_y", "image_height", "origin_y", "light_z", "󰐤", "pixel_center_z", "epsilon", "light_x", "max_rec_depth", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
+       "assignment.61"("origin_x", "pixel_center_x", "pixel_center_y", "light_y", "image_height", "origin_y", "light_z", "#️⃣", "pixel_center_z", "epsilon", "light_x", "max_rec_depth", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
          SELECT "assignment.60"."origin_x" AS "origin_x",
                 "assignment.60"."pixel_center_x" AS "pixel_center_x",
                 "assignment.60"."pixel_center_y" AS "pixel_center_y",
@@ -1639,7 +1639,7 @@ WITH RECURSIVE
                 "assignment.60"."image_height" AS "image_height",
                 "assignment.60"."origin_y" AS "origin_y",
                 "assignment.60"."light_z" AS "light_z",
-                "assignment.60"."󰐤" AS "󰐤",
+                "assignment.60"."#️⃣" AS "#️⃣",
                 CAST((("assignment.60"."viewport_root_z") + ("assignment.60"."screen_x") * ("assignment.60"."viewport_horizontal_offset_z") + ("assignment.60"."screen_y") * ("assignment.60"."viewport_vertical_offset_z")) AS real) AS "pixel_center_z",
                 "assignment.60"."epsilon" AS "epsilon",
                 "assignment.60"."light_x" AS "light_x",
@@ -1651,7 +1651,7 @@ WITH RECURSIVE
                 "assignment.60"."origin_z" AS "origin_z"
          FROM   "assignment.60"
        ),
-       "assignment.62"("origin_x", "direction_x", "pixel_center_y", "light_y", "image_height", "origin_y", "light_z", "󰐤", "pixel_center_z", "epsilon", "light_x", "max_rec_depth", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
+       "assignment.62"("origin_x", "direction_x", "pixel_center_y", "light_y", "image_height", "origin_y", "light_z", "#️⃣", "pixel_center_z", "epsilon", "light_x", "max_rec_depth", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
          SELECT "assignment.61"."origin_x" AS "origin_x",
                 CAST((("assignment.61"."pixel_center_x") - ("assignment.61"."origin_x")) AS real) AS "direction_x",
                 "assignment.61"."pixel_center_y" AS "pixel_center_y",
@@ -1659,7 +1659,7 @@ WITH RECURSIVE
                 "assignment.61"."image_height" AS "image_height",
                 "assignment.61"."origin_y" AS "origin_y",
                 "assignment.61"."light_z" AS "light_z",
-                "assignment.61"."󰐤" AS "󰐤",
+                "assignment.61"."#️⃣" AS "#️⃣",
                 "assignment.61"."pixel_center_z" AS "pixel_center_z",
                 "assignment.61"."epsilon" AS "epsilon",
                 "assignment.61"."light_x" AS "light_x",
@@ -1671,7 +1671,7 @@ WITH RECURSIVE
                 "assignment.61"."origin_z" AS "origin_z"
          FROM   "assignment.61"
        ),
-       "assignment.63"("origin_x", "direction_y", "direction_x", "light_z", "light_y", "image_height", "origin_y", "max_rec_depth", "󰐤", "pixel_center_z", "epsilon", "light_x", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
+       "assignment.63"("origin_x", "direction_y", "direction_x", "light_z", "light_y", "image_height", "origin_y", "max_rec_depth", "#️⃣", "pixel_center_z", "epsilon", "light_x", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
          SELECT "assignment.62"."origin_x" AS "origin_x",
                 CAST((("assignment.62"."pixel_center_y") - ("assignment.62"."origin_y")) AS real) AS "direction_y",
                 "assignment.62"."direction_x" AS "direction_x",
@@ -1680,7 +1680,7 @@ WITH RECURSIVE
                 "assignment.62"."image_height" AS "image_height",
                 "assignment.62"."origin_y" AS "origin_y",
                 "assignment.62"."max_rec_depth" AS "max_rec_depth",
-                "assignment.62"."󰐤" AS "󰐤",
+                "assignment.62"."#️⃣" AS "#️⃣",
                 "assignment.62"."pixel_center_z" AS "pixel_center_z",
                 "assignment.62"."epsilon" AS "epsilon",
                 "assignment.62"."light_x" AS "light_x",
@@ -1691,7 +1691,7 @@ WITH RECURSIVE
                 "assignment.62"."origin_z" AS "origin_z"
          FROM   "assignment.62"
        ),
-       "assignment.64"("origin_x", "direction_y", "direction_x", "direction_z", "light_z", "light_y", "image_height", "origin_y", "max_rec_depth", "󰐤", "epsilon", "light_x", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
+       "assignment.64"("origin_x", "direction_y", "direction_x", "direction_z", "light_z", "light_y", "image_height", "origin_y", "max_rec_depth", "#️⃣", "epsilon", "light_x", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
          SELECT "assignment.63"."origin_x" AS "origin_x",
                 "assignment.63"."direction_y" AS "direction_y",
                 "assignment.63"."direction_x" AS "direction_x",
@@ -1701,7 +1701,7 @@ WITH RECURSIVE
                 "assignment.63"."image_height" AS "image_height",
                 "assignment.63"."origin_y" AS "origin_y",
                 "assignment.63"."max_rec_depth" AS "max_rec_depth",
-                "assignment.63"."󰐤" AS "󰐤",
+                "assignment.63"."#️⃣" AS "#️⃣",
                 "assignment.63"."epsilon" AS "epsilon",
                 "assignment.63"."light_x" AS "light_x",
                 "assignment.63"."screen_x" AS "screen_x",
@@ -1711,7 +1711,7 @@ WITH RECURSIVE
                 "assignment.63"."origin_z" AS "origin_z"
          FROM   "assignment.63"
        ),
-       "assignment.65"("origin_x", "direction_y", "direction_x", "direction_z", "light_z", "light_y", "shadow_ray", "origin_y", "image_height", "󰐤", "max_rec_depth", "epsilon", "light_x", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
+       "assignment.65"("origin_x", "direction_y", "direction_x", "direction_z", "light_z", "light_y", "shadow_ray", "origin_y", "image_height", "#️⃣", "max_rec_depth", "epsilon", "light_x", "screen_x", "screen_y", "image_width", "shadows", "origin_z") AS (
          SELECT "assignment.64"."origin_x" AS "origin_x",
                 "assignment.64"."direction_y" AS "direction_y",
                 "assignment.64"."direction_x" AS "direction_x",
@@ -1721,7 +1721,7 @@ WITH RECURSIVE
                 CAST((false) AS bool) AS "shadow_ray",
                 "assignment.64"."origin_y" AS "origin_y",
                 "assignment.64"."image_height" AS "image_height",
-                "assignment.64"."󰐤" AS "󰐤",
+                "assignment.64"."#️⃣" AS "#️⃣",
                 "assignment.64"."max_rec_depth" AS "max_rec_depth",
                 "assignment.64"."epsilon" AS "epsilon",
                 "assignment.64"."light_x" AS "light_x",
@@ -1732,13 +1732,13 @@ WITH RECURSIVE
                 "assignment.64"."origin_z" AS "origin_z"
          FROM   "assignment.64"
        ),
-       "assignment.66"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_r", "shadows", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.66"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_r", "shadows", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.65"."origin_x" AS "origin_x",
                 "assignment.65"."direction_y" AS "direction_y",
                 "assignment.65"."light_z" AS "light_z",
                 "assignment.65"."shadow_ray" AS "shadow_ray",
                 "assignment.65"."max_rec_depth" AS "max_rec_depth",
-                "assignment.65"."󰐤" AS "󰐤",
+                "assignment.65"."#️⃣" AS "#️⃣",
                 "assignment.65"."epsilon" AS "epsilon",
                 "assignment.65"."screen_y" AS "screen_y",
                 CAST((0) AS real) AS "pixel_r",
@@ -1754,13 +1754,13 @@ WITH RECURSIVE
                 "assignment.65"."origin_z" AS "origin_z"
          FROM   "assignment.65"
        ),
-       "assignment.67"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.67"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.66"."origin_x" AS "origin_x",
                 "assignment.66"."direction_y" AS "direction_y",
                 "assignment.66"."light_z" AS "light_z",
                 "assignment.66"."shadow_ray" AS "shadow_ray",
                 "assignment.66"."max_rec_depth" AS "max_rec_depth",
-                "assignment.66"."󰐤" AS "󰐤",
+                "assignment.66"."#️⃣" AS "#️⃣",
                 "assignment.66"."epsilon" AS "epsilon",
                 "assignment.66"."screen_y" AS "screen_y",
                 CAST((0) AS real) AS "pixel_g",
@@ -1777,13 +1777,13 @@ WITH RECURSIVE
                 "assignment.66"."origin_z" AS "origin_z"
          FROM   "assignment.66"
        ),
-       "assignment.68"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.68"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.67"."origin_x" AS "origin_x",
                 "assignment.67"."direction_y" AS "direction_y",
                 "assignment.67"."light_z" AS "light_z",
                 "assignment.67"."shadow_ray" AS "shadow_ray",
                 "assignment.67"."max_rec_depth" AS "max_rec_depth",
-                "assignment.67"."󰐤" AS "󰐤",
+                "assignment.67"."#️⃣" AS "#️⃣",
                 "assignment.67"."epsilon" AS "epsilon",
                 "assignment.67"."screen_y" AS "screen_y",
                 "assignment.67"."pixel_g" AS "pixel_g",
@@ -1801,13 +1801,13 @@ WITH RECURSIVE
                 "assignment.67"."origin_z" AS "origin_z"
          FROM   "assignment.67"
        ),
-       "assignment.69"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.69"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.68"."origin_x" AS "origin_x",
                 "assignment.68"."direction_y" AS "direction_y",
                 "assignment.68"."light_z" AS "light_z",
                 "assignment.68"."shadow_ray" AS "shadow_ray",
                 "assignment.68"."max_rec_depth" AS "max_rec_depth",
-                "assignment.68"."󰐤" AS "󰐤",
+                "assignment.68"."#️⃣" AS "#️⃣",
                 "assignment.68"."epsilon" AS "epsilon",
                 "assignment.68"."screen_y" AS "screen_y",
                 "assignment.68"."pixel_g" AS "pixel_g",
@@ -1826,13 +1826,13 @@ WITH RECURSIVE
                 "assignment.68"."origin_z" AS "origin_z"
          FROM   "assignment.68"
        ),
-       "merge.1"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "merge.1"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          (SELECT "assignment.69"."origin_x" AS "origin_x",
                  "assignment.69"."direction_y" AS "direction_y",
                  "assignment.69"."light_z" AS "light_z",
                  "assignment.69"."shadow_ray" AS "shadow_ray",
                  "assignment.69"."max_rec_depth" AS "max_rec_depth",
-                 "assignment.69"."󰐤" AS "󰐤",
+                 "assignment.69"."#️⃣" AS "#️⃣",
                  "assignment.69"."epsilon" AS "epsilon",
                  "assignment.69"."screen_y" AS "screen_y",
                  "assignment.69"."pixel_g" AS "pixel_g",
@@ -1856,7 +1856,7 @@ WITH RECURSIVE
                  "start.2"."light_z" AS "light_z",
                  "start.2"."shadow_ray" AS "shadow_ray",
                  "start.2"."max_rec_depth" AS "max_rec_depth",
-                 "start.2"."󰐤" AS "󰐤",
+                 "start.2"."#️⃣" AS "#️⃣",
                  "start.2"."epsilon" AS "epsilon",
                  "start.2"."screen_y" AS "screen_y",
                  "start.2"."pixel_g" AS "pixel_g",
@@ -1875,13 +1875,13 @@ WITH RECURSIVE
                  "start.2"."origin_z" AS "origin_z"
           FROM   "start.2")
        ),
-       "assignment.70"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.70"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "merge.1"."origin_x" AS "origin_x",
                 "merge.1"."direction_y" AS "direction_y",
                 "merge.1"."light_z" AS "light_z",
                 "merge.1"."shadow_ray" AS "shadow_ray",
                 "merge.1"."max_rec_depth" AS "max_rec_depth",
-                "merge.1"."󰐤" AS "󰐤",
+                "merge.1"."#️⃣" AS "#️⃣",
                 "merge.1"."epsilon" AS "epsilon",
                 CAST((0) AS real) AS "color_r",
                 "merge.1"."screen_y" AS "screen_y",
@@ -1901,13 +1901,13 @@ WITH RECURSIVE
                 "merge.1"."origin_z" AS "origin_z"
          FROM   "merge.1"
        ),
-       "assignment.71"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.71"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.70"."origin_x" AS "origin_x",
                 "assignment.70"."direction_y" AS "direction_y",
                 "assignment.70"."light_z" AS "light_z",
                 "assignment.70"."shadow_ray" AS "shadow_ray",
                 "assignment.70"."max_rec_depth" AS "max_rec_depth",
-                "assignment.70"."󰐤" AS "󰐤",
+                "assignment.70"."#️⃣" AS "#️⃣",
                 "assignment.70"."epsilon" AS "epsilon",
                 "assignment.70"."color_r" AS "color_r",
                 "assignment.70"."screen_y" AS "screen_y",
@@ -1928,13 +1928,13 @@ WITH RECURSIVE
                 "assignment.70"."origin_z" AS "origin_z"
          FROM   "assignment.70"
        ),
-       "assignment.72"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.72"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.71"."origin_x" AS "origin_x",
                 "assignment.71"."direction_y" AS "direction_y",
                 "assignment.71"."light_z" AS "light_z",
                 "assignment.71"."shadow_ray" AS "shadow_ray",
                 "assignment.71"."max_rec_depth" AS "max_rec_depth",
-                "assignment.71"."󰐤" AS "󰐤",
+                "assignment.71"."#️⃣" AS "#️⃣",
                 "assignment.71"."epsilon" AS "epsilon",
                 "assignment.71"."color_r" AS "color_r",
                 "assignment.71"."screen_y" AS "screen_y",
@@ -1956,14 +1956,14 @@ WITH RECURSIVE
                 "assignment.71"."origin_z" AS "origin_z"
          FROM   "assignment.71"
        ),
-       "assignment.73"("length", "direction_y", "origin_x", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.73"("length", "direction_y", "origin_x", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT CAST((sqrt(("assignment.72"."direction_x") ** 2 + ("assignment.72"."direction_y") ** 2 + ("assignment.72"."direction_z") ** 2)) AS real) AS "length",
                 "assignment.72"."direction_y" AS "direction_y",
                 "assignment.72"."origin_x" AS "origin_x",
                 "assignment.72"."light_z" AS "light_z",
                 "assignment.72"."shadow_ray" AS "shadow_ray",
                 "assignment.72"."max_rec_depth" AS "max_rec_depth",
-                "assignment.72"."󰐤" AS "󰐤",
+                "assignment.72"."#️⃣" AS "#️⃣",
                 "assignment.72"."epsilon" AS "epsilon",
                 "assignment.72"."color_r" AS "color_r",
                 "assignment.72"."screen_y" AS "screen_y",
@@ -1985,14 +1985,14 @@ WITH RECURSIVE
                 "assignment.72"."origin_z" AS "origin_z"
          FROM   "assignment.72"
        ),
-       "assignment.74"("length", "direction_y", "origin_x", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.74"("length", "direction_y", "origin_x", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.73"."length" AS "length",
                 "assignment.73"."direction_y" AS "direction_y",
                 "assignment.73"."origin_x" AS "origin_x",
                 "assignment.73"."light_z" AS "light_z",
                 "assignment.73"."shadow_ray" AS "shadow_ray",
                 "assignment.73"."max_rec_depth" AS "max_rec_depth",
-                "assignment.73"."󰐤" AS "󰐤",
+                "assignment.73"."#️⃣" AS "#️⃣",
                 "assignment.73"."epsilon" AS "epsilon",
                 "assignment.73"."color_r" AS "color_r",
                 "assignment.73"."screen_y" AS "screen_y",
@@ -2014,14 +2014,14 @@ WITH RECURSIVE
                 "assignment.73"."origin_z" AS "origin_z"
          FROM   "assignment.73"
        ),
-       "assignment.75"("length", "direction_y", "origin_x", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.75"("length", "direction_y", "origin_x", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.74"."length" AS "length",
                 CAST((("assignment.74"."direction_y") / ("assignment.74"."length")) AS real) AS "direction_y",
                 "assignment.74"."origin_x" AS "origin_x",
                 "assignment.74"."light_z" AS "light_z",
                 "assignment.74"."shadow_ray" AS "shadow_ray",
                 "assignment.74"."max_rec_depth" AS "max_rec_depth",
-                "assignment.74"."󰐤" AS "󰐤",
+                "assignment.74"."#️⃣" AS "#️⃣",
                 "assignment.74"."epsilon" AS "epsilon",
                 "assignment.74"."color_r" AS "color_r",
                 "assignment.74"."screen_y" AS "screen_y",
@@ -2043,13 +2043,13 @@ WITH RECURSIVE
                 "assignment.74"."origin_z" AS "origin_z"
          FROM   "assignment.74"
        ),
-       "assignment.76"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.76"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.75"."origin_x" AS "origin_x",
                 "assignment.75"."direction_y" AS "direction_y",
                 "assignment.75"."light_z" AS "light_z",
                 "assignment.75"."shadow_ray" AS "shadow_ray",
                 "assignment.75"."max_rec_depth" AS "max_rec_depth",
-                "assignment.75"."󰐤" AS "󰐤",
+                "assignment.75"."#️⃣" AS "#️⃣",
                 "assignment.75"."epsilon" AS "epsilon",
                 "assignment.75"."color_r" AS "color_r",
                 "assignment.75"."screen_y" AS "screen_y",
@@ -2071,14 +2071,14 @@ WITH RECURSIVE
                 "assignment.75"."origin_z" AS "origin_z"
          FROM   "assignment.75"
        ),
-       "assignment.77"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.77"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.76"."origin_x" AS "origin_x",
                 "assignment.76"."direction_y" AS "direction_y",
                 CAST(('Infinity' :: real) AS real) AS "min_dist",
                 "assignment.76"."light_z" AS "light_z",
                 "assignment.76"."shadow_ray" AS "shadow_ray",
                 "assignment.76"."max_rec_depth" AS "max_rec_depth",
-                "assignment.76"."󰐤" AS "󰐤",
+                "assignment.76"."#️⃣" AS "#️⃣",
                 "assignment.76"."epsilon" AS "epsilon",
                 "assignment.76"."color_r" AS "color_r",
                 "assignment.76"."screen_y" AS "screen_y",
@@ -2100,14 +2100,14 @@ WITH RECURSIVE
                 "assignment.76"."origin_z" AS "origin_z"
          FROM   "assignment.76"
        ),
-       "assignment.78"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "pixel_g", "screen_y", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.78"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "pixel_g", "screen_y", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.77"."origin_x" AS "origin_x",
                 "assignment.77"."direction_y" AS "direction_y",
                 "assignment.77"."min_dist" AS "min_dist",
                 "assignment.77"."light_z" AS "light_z",
                 "assignment.77"."shadow_ray" AS "shadow_ray",
                 "assignment.77"."max_rec_depth" AS "max_rec_depth",
-                "assignment.77"."󰐤" AS "󰐤",
+                "assignment.77"."#️⃣" AS "#️⃣",
                 "assignment.77"."epsilon" AS "epsilon",
                 "assignment.77"."color_r" AS "color_r",
                 CAST(('n') AS material) AS "material",
@@ -2130,14 +2130,14 @@ WITH RECURSIVE
                 "assignment.77"."origin_z" AS "origin_z"
          FROM   "assignment.77"
        ),
-       "assignment.79"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "screen_y", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.79"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "screen_y", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.78"."origin_x" AS "origin_x",
                 "assignment.78"."direction_y" AS "direction_y",
                 "assignment.78"."min_dist" AS "min_dist",
                 "assignment.78"."light_z" AS "light_z",
                 "assignment.78"."shadow_ray" AS "shadow_ray",
                 "assignment.78"."max_rec_depth" AS "max_rec_depth",
-                "assignment.78"."󰐤" AS "󰐤",
+                "assignment.78"."#️⃣" AS "#️⃣",
                 "assignment.78"."epsilon" AS "epsilon",
                 "assignment.78"."color_r" AS "color_r",
                 "assignment.78"."material" AS "material",
@@ -2161,14 +2161,14 @@ WITH RECURSIVE
                 "assignment.78"."origin_z" AS "origin_z"
          FROM   "assignment.78"
        ),
-       "assignment.80"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "screen_y", "pixel_r", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.80"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "screen_y", "pixel_r", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.79"."origin_x" AS "origin_x",
                 "assignment.79"."direction_y" AS "direction_y",
                 "assignment.79"."min_dist" AS "min_dist",
                 "assignment.79"."light_z" AS "light_z",
                 "assignment.79"."shadow_ray" AS "shadow_ray",
                 "assignment.79"."max_rec_depth" AS "max_rec_depth",
-                "assignment.79"."󰐤" AS "󰐤",
+                "assignment.79"."#️⃣" AS "#️⃣",
                 "assignment.79"."epsilon" AS "epsilon",
                 "assignment.79"."color_r" AS "color_r",
                 "assignment.79"."material" AS "material",
@@ -2193,14 +2193,14 @@ WITH RECURSIVE
                 "assignment.79"."origin_z" AS "origin_z"
          FROM   "assignment.79"
        ),
-       "assignment.81"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.81"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.80"."origin_x" AS "origin_x",
                 "assignment.80"."direction_y" AS "direction_y",
                 "assignment.80"."min_dist" AS "min_dist",
                 "assignment.80"."light_z" AS "light_z",
                 "assignment.80"."shadow_ray" AS "shadow_ray",
                 "assignment.80"."max_rec_depth" AS "max_rec_depth",
-                "assignment.80"."󰐤" AS "󰐤",
+                "assignment.80"."#️⃣" AS "#️⃣",
                 "assignment.80"."epsilon" AS "epsilon",
                 "assignment.80"."color_r" AS "color_r",
                 "assignment.80"."material" AS "material",
@@ -2226,14 +2226,14 @@ WITH RECURSIVE
                 "assignment.80"."origin_z" AS "origin_z"
          FROM   "assignment.80"
        ),
-       "assignment.82"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.82"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.81"."origin_x" AS "origin_x",
                 "assignment.81"."direction_y" AS "direction_y",
                 "assignment.81"."min_dist" AS "min_dist",
                 "assignment.81"."light_z" AS "light_z",
                 "assignment.81"."shadow_ray" AS "shadow_ray",
                 "assignment.81"."max_rec_depth" AS "max_rec_depth",
-                "assignment.81"."󰐤" AS "󰐤",
+                "assignment.81"."#️⃣" AS "#️⃣",
                 "assignment.81"."epsilon" AS "epsilon",
                 "assignment.81"."color_r" AS "color_r",
                 "assignment.81"."material" AS "material",
@@ -2260,14 +2260,14 @@ WITH RECURSIVE
                 "assignment.81"."origin_z" AS "origin_z"
          FROM   "assignment.81"
        ),
-       "merge.2"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "merge.2"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          (SELECT "assignment.82"."origin_x" AS "origin_x",
                  "assignment.82"."direction_y" AS "direction_y",
                  "assignment.82"."min_dist" AS "min_dist",
                  "assignment.82"."light_z" AS "light_z",
                  "assignment.82"."shadow_ray" AS "shadow_ray",
                  "assignment.82"."max_rec_depth" AS "max_rec_depth",
-                 "assignment.82"."󰐤" AS "󰐤",
+                 "assignment.82"."#️⃣" AS "#️⃣",
                  "assignment.82"."epsilon" AS "epsilon",
                  "assignment.82"."color_r" AS "color_r",
                  "assignment.82"."material" AS "material",
@@ -2300,7 +2300,7 @@ WITH RECURSIVE
                  "start.3"."light_z" AS "light_z",
                  "start.3"."shadow_ray" AS "shadow_ray",
                  "start.3"."max_rec_depth" AS "max_rec_depth",
-                 "start.3"."󰐤" AS "󰐤",
+                 "start.3"."#️⃣" AS "#️⃣",
                  "start.3"."epsilon" AS "epsilon",
                  "start.3"."color_r" AS "color_r",
                  "start.3"."material" AS "material",
@@ -2327,12 +2327,12 @@ WITH RECURSIVE
                  "start.3"."origin_z" AS "origin_z"
           FROM   "start.3")
        ),
-       "fork.4"("triangle_p3_z", "triangle_p2_y", "triangle_r", "light_z", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p3_x", "triangle_b", "triangle_p1_y", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "triangle_p2_z", "image_height", "id", "triangle_p1_z", "triangle_p2_x", "triangle_p3_y", "image_width", "origin_z") AS (
+       "fork.4"("triangle_p3_z", "triangle_p2_y", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p3_x", "triangle_b", "triangle_p1_y", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "triangle_p2_z", "image_height", "id", "triangle_p1_z", "triangle_p2_x", "triangle_p3_y", "image_width", "origin_z") AS (
          SELECT "ℚ"."triangle_p3_z" AS "triangle_p3_z",
                 "ℚ"."triangle_p2_y" AS "triangle_p2_y",
                 "ℚ"."triangle_r" AS "triangle_r",
                 "merge.2"."light_z" AS "light_z",
-                "merge.2"."󰐤" AS "󰐤",
+                "merge.2"."#️⃣" AS "#️⃣",
                 "merge.2"."epsilon" AS "epsilon",
                 "merge.2"."material" AS "material",
                 "merge.2"."normal_x" AS "normal_x",
@@ -2389,12 +2389,12 @@ WITH RECURSIVE
                          FROM   triangles AS t
                          WHERE  t.id = ("merge.2"."id")) AS "ℚ"("triangle_material", "triangle_r", "triangle_g", "triangle_b", "triangle_p1_x", "triangle_p1_y", "triangle_p1_z", "triangle_p2_x", "triangle_p2_y", "triangle_p2_z", "triangle_p3_x", "triangle_p3_y", "triangle_p3_z")
        ),
-       "assignment.83"("triangle_p3_z", "triangle_p2_y", "light_z", "triangle_r", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p3_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "triangle_p2_z", "image_height", "id", "triangle_p1_z", "triangle_p3_y", "image_width", "origin_z") AS (
+       "assignment.83"("triangle_p3_z", "triangle_p2_y", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p3_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "triangle_p2_z", "image_height", "id", "triangle_p1_z", "triangle_p3_y", "image_width", "origin_z") AS (
          SELECT "fork.4"."triangle_p3_z" AS "triangle_p3_z",
                 "fork.4"."triangle_p2_y" AS "triangle_p2_y",
                 "fork.4"."light_z" AS "light_z",
                 "fork.4"."triangle_r" AS "triangle_r",
-                "fork.4"."󰐤" AS "󰐤",
+                "fork.4"."#️⃣" AS "#️⃣",
                 "fork.4"."epsilon" AS "epsilon",
                 "fork.4"."material" AS "material",
                 "fork.4"."normal_x" AS "normal_x",
@@ -2436,11 +2436,11 @@ WITH RECURSIVE
                 "fork.4"."origin_z" AS "origin_z"
          FROM   "fork.4"
        ),
-       "assignment.84"("triangle_p3_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p3_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "triangle_p2_z", "image_height", "id", "triangle_p1_z", "triangle_p3_y", "image_width", "origin_z") AS (
+       "assignment.84"("triangle_p3_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p3_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "triangle_p2_z", "image_height", "id", "triangle_p1_z", "triangle_p3_y", "image_width", "origin_z") AS (
          SELECT "assignment.83"."triangle_p3_z" AS "triangle_p3_z",
                 "assignment.83"."light_z" AS "light_z",
                 "assignment.83"."triangle_r" AS "triangle_r",
-                "assignment.83"."󰐤" AS "󰐤",
+                "assignment.83"."#️⃣" AS "#️⃣",
                 "assignment.83"."epsilon" AS "epsilon",
                 "assignment.83"."material" AS "material",
                 "assignment.83"."normal_x" AS "normal_x",
@@ -2483,11 +2483,11 @@ WITH RECURSIVE
                 "assignment.83"."origin_z" AS "origin_z"
          FROM   "assignment.83"
        ),
-       "assignment.85"("triangle_p3_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "e1_z", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p3_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p3_y", "triangle_p1_z", "image_width", "origin_z") AS (
+       "assignment.85"("triangle_p3_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "e1_z", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p3_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p3_y", "triangle_p1_z", "image_width", "origin_z") AS (
          SELECT "assignment.84"."triangle_p3_z" AS "triangle_p3_z",
                 "assignment.84"."light_z" AS "light_z",
                 "assignment.84"."triangle_r" AS "triangle_r",
-                "assignment.84"."󰐤" AS "󰐤",
+                "assignment.84"."#️⃣" AS "#️⃣",
                 "assignment.84"."epsilon" AS "epsilon",
                 "assignment.84"."material" AS "material",
                 CAST((("assignment.84"."triangle_p2_z") - ("assignment.84"."triangle_p1_z")) AS real) AS "e1_z",
@@ -2530,11 +2530,11 @@ WITH RECURSIVE
                 "assignment.84"."origin_z" AS "origin_z"
          FROM   "assignment.84"
        ),
-       "assignment.86"("triangle_p3_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "e1_z", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p3_y", "triangle_p1_z", "image_width", "origin_z") AS (
+       "assignment.86"("triangle_p3_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "e1_z", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p3_y", "triangle_p1_z", "image_width", "origin_z") AS (
          SELECT "assignment.85"."triangle_p3_z" AS "triangle_p3_z",
                 "assignment.85"."light_z" AS "light_z",
                 "assignment.85"."triangle_r" AS "triangle_r",
-                "assignment.85"."󰐤" AS "󰐤",
+                "assignment.85"."#️⃣" AS "#️⃣",
                 "assignment.85"."epsilon" AS "epsilon",
                 "assignment.85"."material" AS "material",
                 "assignment.85"."e1_z" AS "e1_z",
@@ -2577,11 +2577,11 @@ WITH RECURSIVE
                 "assignment.85"."origin_z" AS "origin_z"
          FROM   "assignment.85"
        ),
-       "assignment.87"("triangle_p3_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "image_width", "origin_z") AS (
+       "assignment.87"("triangle_p3_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "image_width", "origin_z") AS (
          SELECT "assignment.86"."triangle_p3_z" AS "triangle_p3_z",
                 "assignment.86"."light_z" AS "light_z",
                 "assignment.86"."triangle_r" AS "triangle_r",
-                "assignment.86"."󰐤" AS "󰐤",
+                "assignment.86"."#️⃣" AS "#️⃣",
                 "assignment.86"."epsilon" AS "epsilon",
                 "assignment.86"."material" AS "material",
                 "assignment.86"."e1_z" AS "e1_z",
@@ -2624,11 +2624,11 @@ WITH RECURSIVE
                 "assignment.86"."origin_z" AS "origin_z"
          FROM   "assignment.86"
        ),
-       "assignment.88"("e2_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "image_width", "origin_z") AS (
+       "assignment.88"("e2_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "image_width", "origin_z") AS (
          SELECT CAST((("assignment.87"."triangle_p3_z") - ("assignment.87"."triangle_p1_z")) AS real) AS "e2_z",
                 "assignment.87"."light_z" AS "light_z",
                 "assignment.87"."triangle_r" AS "triangle_r",
-                "assignment.87"."󰐤" AS "󰐤",
+                "assignment.87"."#️⃣" AS "#️⃣",
                 "assignment.87"."epsilon" AS "epsilon",
                 "assignment.87"."material" AS "material",
                 "assignment.87"."e1_z" AS "e1_z",
@@ -2671,11 +2671,11 @@ WITH RECURSIVE
                 "assignment.87"."origin_z" AS "origin_z"
          FROM   "assignment.87"
        ),
-       "assignment.89"("e2_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "image_width", "origin_z") AS (
+       "assignment.89"("e2_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "image_width", "origin_z") AS (
          SELECT "assignment.88"."e2_z" AS "e2_z",
                 "assignment.88"."light_z" AS "light_z",
                 "assignment.88"."triangle_r" AS "triangle_r",
-                "assignment.88"."󰐤" AS "󰐤",
+                "assignment.88"."#️⃣" AS "#️⃣",
                 "assignment.88"."epsilon" AS "epsilon",
                 "assignment.88"."material" AS "material",
                 "assignment.88"."e1_z" AS "e1_z",
@@ -2719,11 +2719,11 @@ WITH RECURSIVE
                 "assignment.88"."origin_z" AS "origin_z"
          FROM   "assignment.88"
        ),
-       "assignment.90"("e2_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_y", "image_width", "origin_z") AS (
+       "assignment.90"("e2_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_y", "image_width", "origin_z") AS (
          SELECT "assignment.89"."e2_z" AS "e2_z",
                 "assignment.89"."light_z" AS "light_z",
                 "assignment.89"."triangle_r" AS "triangle_r",
-                "assignment.89"."󰐤" AS "󰐤",
+                "assignment.89"."#️⃣" AS "#️⃣",
                 "assignment.89"."epsilon" AS "epsilon",
                 "assignment.89"."material" AS "material",
                 "assignment.89"."e1_z" AS "e1_z",
@@ -2768,11 +2768,11 @@ WITH RECURSIVE
                 "assignment.89"."origin_z" AS "origin_z"
          FROM   "assignment.89"
        ),
-       "assignment.91"("e2_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_z", "P_y", "image_width", "origin_z") AS (
+       "assignment.91"("e2_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_z", "P_y", "image_width", "origin_z") AS (
          SELECT "assignment.90"."e2_z" AS "e2_z",
                 "assignment.90"."light_z" AS "light_z",
                 "assignment.90"."triangle_r" AS "triangle_r",
-                "assignment.90"."󰐤" AS "󰐤",
+                "assignment.90"."#️⃣" AS "#️⃣",
                 "assignment.90"."epsilon" AS "epsilon",
                 "assignment.90"."material" AS "material",
                 "assignment.90"."e1_z" AS "e1_z",
@@ -2818,11 +2818,11 @@ WITH RECURSIVE
                 "assignment.90"."origin_z" AS "origin_z"
          FROM   "assignment.90"
        ),
-       "assignment.92"("e2_z", "light_z", "triangle_r", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_z", "P_y", "image_width", "origin_z") AS (
+       "assignment.92"("e2_z", "light_z", "triangle_r", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_z", "P_y", "image_width", "origin_z") AS (
          SELECT "assignment.91"."e2_z" AS "e2_z",
                 "assignment.91"."light_z" AS "light_z",
                 "assignment.91"."triangle_r" AS "triangle_r",
-                "assignment.91"."󰐤" AS "󰐤",
+                "assignment.91"."#️⃣" AS "#️⃣",
                 "assignment.91"."epsilon" AS "epsilon",
                 "assignment.91"."material" AS "material",
                 "assignment.91"."e1_z" AS "e1_z",
@@ -2869,11 +2869,11 @@ WITH RECURSIVE
                 "assignment.91"."origin_z" AS "origin_z"
          FROM   "assignment.91"
        ),
-       "assignment.93"("e2_z", "light_z", "triangle_r", "󰐤", "epsilon", "condition", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_z", "P_y", "image_width", "origin_z") AS (
+       "assignment.93"("e2_z", "light_z", "triangle_r", "#️⃣", "epsilon", "condition", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_z", "P_y", "image_width", "origin_z") AS (
          SELECT "assignment.92"."e2_z" AS "e2_z",
                 "assignment.92"."light_z" AS "light_z",
                 "assignment.92"."triangle_r" AS "triangle_r",
-                "assignment.92"."󰐤" AS "󰐤",
+                "assignment.92"."#️⃣" AS "#️⃣",
                 "assignment.92"."epsilon" AS "epsilon",
                 CAST((abs(("assignment.92"."det")) <= ("assignment.92"."epsilon")) AS bool) AS "condition",
                 "assignment.92"."material" AS "material",
@@ -2921,14 +2921,14 @@ WITH RECURSIVE
                 "assignment.92"."origin_z" AS "origin_z"
          FROM   "assignment.92"
        ),
-       "where.1"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.1"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.93"."origin_x" AS "origin_x",
                 "assignment.93"."direction_y" AS "direction_y",
                 "assignment.93"."min_dist" AS "min_dist",
                 "assignment.93"."light_z" AS "light_z",
                 "assignment.93"."shadow_ray" AS "shadow_ray",
                 "assignment.93"."max_rec_depth" AS "max_rec_depth",
-                "assignment.93"."󰐤" AS "󰐤",
+                "assignment.93"."#️⃣" AS "#️⃣",
                 "assignment.93"."epsilon" AS "epsilon",
                 "assignment.93"."color_r" AS "color_r",
                 "assignment.93"."material" AS "material",
@@ -2956,11 +2956,11 @@ WITH RECURSIVE
          FROM   "assignment.93"
          WHERE  "assignment.93"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.2"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_z", "P_y", "image_width", "origin_z") AS (
+       "where.2"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "triangle_p1_x", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "P_z", "P_y", "image_width", "origin_z") AS (
          SELECT "assignment.93"."e2_z" AS "e2_z",
                 "assignment.93"."triangle_r" AS "triangle_r",
                 "assignment.93"."light_z" AS "light_z",
-                "assignment.93"."󰐤" AS "󰐤",
+                "assignment.93"."#️⃣" AS "#️⃣",
                 "assignment.93"."epsilon" AS "epsilon",
                 "assignment.93"."material" AS "material",
                 "assignment.93"."e1_z" AS "e1_z",
@@ -3008,11 +3008,11 @@ WITH RECURSIVE
          FROM   "assignment.93"
          WHERE  "assignment.93"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.94"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "T1_x", "P_z", "P_y", "image_width", "origin_z") AS (
+       "assignment.94"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_p1_y", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "T1_x", "P_z", "P_y", "image_width", "origin_z") AS (
          SELECT "where.2"."e2_z" AS "e2_z",
                 "where.2"."triangle_r" AS "triangle_r",
                 "where.2"."light_z" AS "light_z",
-                "where.2"."󰐤" AS "󰐤",
+                "where.2"."#️⃣" AS "#️⃣",
                 "where.2"."epsilon" AS "epsilon",
                 "where.2"."material" AS "material",
                 "where.2"."e1_z" AS "e1_z",
@@ -3059,11 +3059,11 @@ WITH RECURSIVE
                 "where.2"."origin_z" AS "origin_z"
          FROM   "where.2"
        ),
-       "assignment.95"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "T1_x", "P_z", "P_y", "image_width", "origin_z") AS (
+       "assignment.95"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "triangle_p1_z", "T1_x", "P_z", "P_y", "image_width", "origin_z") AS (
          SELECT "assignment.94"."e2_z" AS "e2_z",
                 "assignment.94"."triangle_r" AS "triangle_r",
                 "assignment.94"."light_z" AS "light_z",
-                "assignment.94"."󰐤" AS "󰐤",
+                "assignment.94"."#️⃣" AS "#️⃣",
                 "assignment.94"."epsilon" AS "epsilon",
                 "assignment.94"."material" AS "material",
                 "assignment.94"."e1_z" AS "e1_z",
@@ -3110,11 +3110,11 @@ WITH RECURSIVE
                 "assignment.94"."origin_z" AS "origin_z"
          FROM   "assignment.94"
        ),
-       "assignment.96"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "T1_z", "T1_x", "P_z", "P_y", "image_width", "origin_z") AS (
+       "assignment.96"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "P_x", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "T1_z", "T1_x", "P_z", "P_y", "image_width", "origin_z") AS (
          SELECT "assignment.95"."e2_z" AS "e2_z",
                 "assignment.95"."triangle_r" AS "triangle_r",
                 "assignment.95"."light_z" AS "light_z",
-                "assignment.95"."󰐤" AS "󰐤",
+                "assignment.95"."#️⃣" AS "#️⃣",
                 "assignment.95"."epsilon" AS "epsilon",
                 "assignment.95"."material" AS "material",
                 "assignment.95"."e1_z" AS "e1_z",
@@ -3161,11 +3161,11 @@ WITH RECURSIVE
                 "assignment.95"."origin_z" AS "origin_z"
          FROM   "assignment.95"
        ),
-       "assignment.97"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_z", "T1_x", "image_width", "origin_z") AS (
+       "assignment.97"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_z", "T1_x", "image_width", "origin_z") AS (
          SELECT "assignment.96"."e2_z" AS "e2_z",
                 "assignment.96"."triangle_r" AS "triangle_r",
                 "assignment.96"."light_z" AS "light_z",
-                "assignment.96"."󰐤" AS "󰐤",
+                "assignment.96"."#️⃣" AS "#️⃣",
                 "assignment.96"."epsilon" AS "epsilon",
                 "assignment.96"."material" AS "material",
                 "assignment.96"."e1_z" AS "e1_z",
@@ -3210,11 +3210,11 @@ WITH RECURSIVE
                 "assignment.96"."origin_z" AS "origin_z"
          FROM   "assignment.96"
        ),
-       "assignment.98"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "condition", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_z", "T1_x", "image_width", "origin_z") AS (
+       "assignment.98"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "condition", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_z", "T1_x", "image_width", "origin_z") AS (
          SELECT "assignment.97"."e2_z" AS "e2_z",
                 "assignment.97"."triangle_r" AS "triangle_r",
                 "assignment.97"."light_z" AS "light_z",
-                "assignment.97"."󰐤" AS "󰐤",
+                "assignment.97"."#️⃣" AS "#️⃣",
                 "assignment.97"."epsilon" AS "epsilon",
                 CAST((("assignment.97"."u") NOT BETWEEN 0 AND 1) AS bool) AS "condition",
                 "assignment.97"."material" AS "material",
@@ -3260,14 +3260,14 @@ WITH RECURSIVE
                 "assignment.97"."origin_z" AS "origin_z"
          FROM   "assignment.97"
        ),
-       "where.3"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.3"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.98"."origin_x" AS "origin_x",
                 "assignment.98"."direction_y" AS "direction_y",
                 "assignment.98"."min_dist" AS "min_dist",
                 "assignment.98"."light_z" AS "light_z",
                 "assignment.98"."shadow_ray" AS "shadow_ray",
                 "assignment.98"."max_rec_depth" AS "max_rec_depth",
-                "assignment.98"."󰐤" AS "󰐤",
+                "assignment.98"."#️⃣" AS "#️⃣",
                 "assignment.98"."epsilon" AS "epsilon",
                 "assignment.98"."color_r" AS "color_r",
                 "assignment.98"."material" AS "material",
@@ -3295,11 +3295,11 @@ WITH RECURSIVE
          FROM   "assignment.98"
          WHERE  "assignment.98"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.4"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_z", "T1_x", "image_width", "origin_z") AS (
+       "where.4"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_z", "T1_x", "image_width", "origin_z") AS (
          SELECT "assignment.98"."e2_z" AS "e2_z",
                 "assignment.98"."triangle_r" AS "triangle_r",
                 "assignment.98"."light_z" AS "light_z",
-                "assignment.98"."󰐤" AS "󰐤",
+                "assignment.98"."#️⃣" AS "#️⃣",
                 "assignment.98"."epsilon" AS "epsilon",
                 "assignment.98"."material" AS "material",
                 "assignment.98"."e1_z" AS "e1_z",
@@ -3345,11 +3345,11 @@ WITH RECURSIVE
          FROM   "assignment.98"
          WHERE  "assignment.98"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.99"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_z", "T1_x", "image_width", "origin_z") AS (
+       "assignment.99"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_z", "T1_x", "image_width", "origin_z") AS (
          SELECT "where.4"."e2_z" AS "e2_z",
                 "where.4"."triangle_r" AS "triangle_r",
                 "where.4"."light_z" AS "light_z",
-                "where.4"."󰐤" AS "󰐤",
+                "where.4"."#️⃣" AS "#️⃣",
                 "where.4"."epsilon" AS "epsilon",
                 "where.4"."material" AS "material",
                 "where.4"."e1_z" AS "e1_z",
@@ -3395,12 +3395,12 @@ WITH RECURSIVE
                 "where.4"."origin_z" AS "origin_z"
          FROM   "where.4"
        ),
-       "assignment.100"("Q_y", "e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_x", "image_width", "origin_z") AS (
+       "assignment.100"("Q_y", "e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "T1_y", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "T1_x", "image_width", "origin_z") AS (
          SELECT CAST((("assignment.99"."T1_z") * ("assignment.99"."e1_x") - ("assignment.99"."T1_x") * ("assignment.99"."e1_z")) AS real) AS "Q_y",
                 "assignment.99"."e2_z" AS "e2_z",
                 "assignment.99"."triangle_r" AS "triangle_r",
                 "assignment.99"."light_z" AS "light_z",
-                "assignment.99"."󰐤" AS "󰐤",
+                "assignment.99"."#️⃣" AS "#️⃣",
                 "assignment.99"."epsilon" AS "epsilon",
                 "assignment.99"."material" AS "material",
                 "assignment.99"."e1_z" AS "e1_z",
@@ -3445,12 +3445,12 @@ WITH RECURSIVE
                 "assignment.99"."origin_z" AS "origin_z"
          FROM   "assignment.99"
        ),
-       "assignment.101"("Q_y", "e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "Q_z", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
+       "assignment.101"("Q_y", "e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "Q_z", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
          SELECT "assignment.100"."Q_y" AS "Q_y",
                 "assignment.100"."e2_z" AS "e2_z",
                 "assignment.100"."triangle_r" AS "triangle_r",
                 "assignment.100"."light_z" AS "light_z",
-                "assignment.100"."󰐤" AS "󰐤",
+                "assignment.100"."#️⃣" AS "#️⃣",
                 "assignment.100"."epsilon" AS "epsilon",
                 "assignment.100"."material" AS "material",
                 "assignment.100"."e1_z" AS "e1_z",
@@ -3494,12 +3494,12 @@ WITH RECURSIVE
                 "assignment.100"."origin_z" AS "origin_z"
          FROM   "assignment.100"
        ),
-       "assignment.102"("Q_y", "e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "Q_z", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "v", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
+       "assignment.102"("Q_y", "e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "Q_z", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "v", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "u", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
          SELECT "assignment.101"."Q_y" AS "Q_y",
                 "assignment.101"."e2_z" AS "e2_z",
                 "assignment.101"."triangle_r" AS "triangle_r",
                 "assignment.101"."light_z" AS "light_z",
-                "assignment.101"."󰐤" AS "󰐤",
+                "assignment.101"."#️⃣" AS "#️⃣",
                 "assignment.101"."epsilon" AS "epsilon",
                 "assignment.101"."material" AS "material",
                 "assignment.101"."e1_z" AS "e1_z",
@@ -3544,12 +3544,12 @@ WITH RECURSIVE
                 "assignment.101"."origin_z" AS "origin_z"
          FROM   "assignment.101"
        ),
-       "assignment.103"("Q_y", "e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "condition", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "Q_z", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
+       "assignment.103"("Q_y", "e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "condition", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "Q_z", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
          SELECT "assignment.102"."Q_y" AS "Q_y",
                 "assignment.102"."e2_z" AS "e2_z",
                 "assignment.102"."triangle_r" AS "triangle_r",
                 "assignment.102"."light_z" AS "light_z",
-                "assignment.102"."󰐤" AS "󰐤",
+                "assignment.102"."#️⃣" AS "#️⃣",
                 "assignment.102"."epsilon" AS "epsilon",
                 CAST((0 > ("assignment.102"."v") OR ("assignment.102"."v") + ("assignment.102"."u") > 1) AS bool) AS "condition",
                 "assignment.102"."material" AS "material",
@@ -3593,14 +3593,14 @@ WITH RECURSIVE
                 "assignment.102"."origin_z" AS "origin_z"
          FROM   "assignment.102"
        ),
-       "where.5"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.5"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.103"."origin_x" AS "origin_x",
                 "assignment.103"."direction_y" AS "direction_y",
                 "assignment.103"."min_dist" AS "min_dist",
                 "assignment.103"."light_z" AS "light_z",
                 "assignment.103"."shadow_ray" AS "shadow_ray",
                 "assignment.103"."max_rec_depth" AS "max_rec_depth",
-                "assignment.103"."󰐤" AS "󰐤",
+                "assignment.103"."#️⃣" AS "#️⃣",
                 "assignment.103"."epsilon" AS "epsilon",
                 "assignment.103"."color_r" AS "color_r",
                 "assignment.103"."material" AS "material",
@@ -3628,12 +3628,12 @@ WITH RECURSIVE
          FROM   "assignment.103"
          WHERE  "assignment.103"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.6"("Q_y", "e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "Q_z", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
+       "where.6"("Q_y", "e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "Q_z", "screen_y", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "det", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "Q_x", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
          SELECT "assignment.103"."Q_y" AS "Q_y",
                 "assignment.103"."e2_z" AS "e2_z",
                 "assignment.103"."triangle_r" AS "triangle_r",
                 "assignment.103"."light_z" AS "light_z",
-                "assignment.103"."󰐤" AS "󰐤",
+                "assignment.103"."#️⃣" AS "#️⃣",
                 "assignment.103"."epsilon" AS "epsilon",
                 "assignment.103"."material" AS "material",
                 "assignment.103"."e1_z" AS "e1_z",
@@ -3677,11 +3677,11 @@ WITH RECURSIVE
          FROM   "assignment.103"
          WHERE  "assignment.103"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.104"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "dist", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
+       "assignment.104"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "dist", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
          SELECT "where.6"."e2_z" AS "e2_z",
                 "where.6"."triangle_r" AS "triangle_r",
                 "where.6"."light_z" AS "light_z",
-                "where.6"."󰐤" AS "󰐤",
+                "where.6"."#️⃣" AS "#️⃣",
                 "where.6"."epsilon" AS "epsilon",
                 "where.6"."material" AS "material",
                 "where.6"."e1_z" AS "e1_z",
@@ -3722,11 +3722,11 @@ WITH RECURSIVE
                 "where.6"."origin_z" AS "origin_z"
          FROM   "where.6"
        ),
-       "assignment.105"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "condition", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "dist", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
+       "assignment.105"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "condition", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "direction_x", "e2_x", "direction_z", "dist", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "triangle_material", "normal_y", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
          SELECT "assignment.104"."e2_z" AS "e2_z",
                 "assignment.104"."triangle_r" AS "triangle_r",
                 "assignment.104"."light_z" AS "light_z",
-                "assignment.104"."󰐤" AS "󰐤",
+                "assignment.104"."#️⃣" AS "#️⃣",
                 "assignment.104"."epsilon" AS "epsilon",
                 CAST((("assignment.104"."dist") <= ("assignment.104"."epsilon") OR ("assignment.104"."dist") >= ("assignment.104"."min_dist")) AS bool) AS "condition",
                 "assignment.104"."material" AS "material",
@@ -3768,14 +3768,14 @@ WITH RECURSIVE
                 "assignment.104"."origin_z" AS "origin_z"
          FROM   "assignment.104"
        ),
-       "where.7"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.7"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.105"."origin_x" AS "origin_x",
                 "assignment.105"."direction_y" AS "direction_y",
                 "assignment.105"."min_dist" AS "min_dist",
                 "assignment.105"."light_z" AS "light_z",
                 "assignment.105"."shadow_ray" AS "shadow_ray",
                 "assignment.105"."max_rec_depth" AS "max_rec_depth",
-                "assignment.105"."󰐤" AS "󰐤",
+                "assignment.105"."#️⃣" AS "#️⃣",
                 "assignment.105"."epsilon" AS "epsilon",
                 "assignment.105"."color_r" AS "color_r",
                 "assignment.105"."material" AS "material",
@@ -3803,7 +3803,7 @@ WITH RECURSIVE
          FROM   "assignment.105"
          WHERE  "assignment.105"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.8"("e2_z", "direction_y", "origin_x", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "e1_z", "e2_y", "triangle_material", "pixel_g", "screen_y", "pixel_r", "triangle_g", "shadows", "step", "pixel_b", "direction_x", "e2_x", "e1_x", "dist", "direction_z", "light_y", "e1_y", "origin_y", "image_height", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "where.8"("e2_z", "direction_y", "origin_x", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "e1_z", "e2_y", "triangle_material", "pixel_g", "screen_y", "pixel_r", "triangle_g", "shadows", "step", "pixel_b", "direction_x", "e2_x", "e1_x", "dist", "direction_z", "light_y", "e1_y", "origin_y", "image_height", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.105"."e2_z" AS "e2_z",
                 "assignment.105"."direction_y" AS "direction_y",
                 "assignment.105"."origin_x" AS "origin_x",
@@ -3811,7 +3811,7 @@ WITH RECURSIVE
                 "assignment.105"."light_z" AS "light_z",
                 "assignment.105"."shadow_ray" AS "shadow_ray",
                 "assignment.105"."max_rec_depth" AS "max_rec_depth",
-                "assignment.105"."󰐤" AS "󰐤",
+                "assignment.105"."#️⃣" AS "#️⃣",
                 "assignment.105"."epsilon" AS "epsilon",
                 "assignment.105"."color_r" AS "color_r",
                 "assignment.105"."e1_z" AS "e1_z",
@@ -3844,7 +3844,7 @@ WITH RECURSIVE
          FROM   "assignment.105"
          WHERE  "assignment.105"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.106"("e2_z", "direction_y", "origin_x", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "e1_z", "e2_y", "pixel_g", "screen_y", "pixel_r", "triangle_g", "shadows", "step", "pixel_b", "direction_x", "e2_x", "e1_x", "dist", "direction_z", "light_y", "e1_y", "origin_y", "image_height", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.106"("e2_z", "direction_y", "origin_x", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "e1_z", "e2_y", "pixel_g", "screen_y", "pixel_r", "triangle_g", "shadows", "step", "pixel_b", "direction_x", "e2_x", "e1_x", "dist", "direction_z", "light_y", "e1_y", "origin_y", "image_height", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "where.8"."e2_z" AS "e2_z",
                 "where.8"."direction_y" AS "direction_y",
                 "where.8"."origin_x" AS "origin_x",
@@ -3852,7 +3852,7 @@ WITH RECURSIVE
                 "where.8"."light_z" AS "light_z",
                 "where.8"."shadow_ray" AS "shadow_ray",
                 "where.8"."max_rec_depth" AS "max_rec_depth",
-                "where.8"."󰐤" AS "󰐤",
+                "where.8"."#️⃣" AS "#️⃣",
                 "where.8"."epsilon" AS "epsilon",
                 "where.8"."color_r" AS "color_r",
                 CAST((("where.8"."triangle_material")) AS material) AS "material",
@@ -3884,7 +3884,7 @@ WITH RECURSIVE
                 "where.8"."origin_z" AS "origin_z"
          FROM   "where.8"
        ),
-       "assignment.107"("e2_z", "direction_y", "min_dist", "origin_x", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "e1_z", "e2_y", "pixel_g", "screen_y", "pixel_r", "triangle_g", "shadows", "step", "pixel_b", "direction_x", "e2_x", "e1_x", "direction_z", "light_y", "e1_y", "origin_y", "image_height", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.107"("e2_z", "direction_y", "min_dist", "origin_x", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "e1_z", "e2_y", "pixel_g", "screen_y", "pixel_r", "triangle_g", "shadows", "step", "pixel_b", "direction_x", "e2_x", "e1_x", "direction_z", "light_y", "e1_y", "origin_y", "image_height", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.106"."e2_z" AS "e2_z",
                 "assignment.106"."direction_y" AS "direction_y",
                 CAST((("assignment.106"."dist")) AS real) AS "min_dist",
@@ -3893,7 +3893,7 @@ WITH RECURSIVE
                 "assignment.106"."light_z" AS "light_z",
                 "assignment.106"."shadow_ray" AS "shadow_ray",
                 "assignment.106"."max_rec_depth" AS "max_rec_depth",
-                "assignment.106"."󰐤" AS "󰐤",
+                "assignment.106"."#️⃣" AS "#️⃣",
                 "assignment.106"."epsilon" AS "epsilon",
                 "assignment.106"."color_r" AS "color_r",
                 "assignment.106"."material" AS "material",
@@ -3924,11 +3924,11 @@ WITH RECURSIVE
                 "assignment.106"."origin_z" AS "origin_z"
          FROM   "assignment.106"
        ),
-       "assignment.108"("e2_z", "triangle_r", "light_z", "󰐤", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "screen_y", "pixel_r", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
+       "assignment.108"("e2_z", "triangle_r", "light_z", "#️⃣", "epsilon", "material", "e1_z", "e2_y", "normal_x", "pixel_g", "screen_y", "pixel_r", "triangle_g", "direction_x", "e2_x", "direction_z", "light_y", "e1_y", "origin_y", "color_g", "light_x", "color_b", "screen_x", "triangle_b", "origin_x", "direction_y", "min_dist", "shadow_ray", "max_rec_depth", "color_r", "shadows", "step", "pixel_b", "e1_x", "image_height", "id", "image_width", "origin_z") AS (
          SELECT "assignment.107"."e2_z" AS "e2_z",
                 "assignment.107"."triangle_r" AS "triangle_r",
                 "assignment.107"."light_z" AS "light_z",
-                "assignment.107"."󰐤" AS "󰐤",
+                "assignment.107"."#️⃣" AS "#️⃣",
                 "assignment.107"."epsilon" AS "epsilon",
                 "assignment.107"."material" AS "material",
                 "assignment.107"."e1_z" AS "e1_z",
@@ -3965,7 +3965,7 @@ WITH RECURSIVE
                 "assignment.107"."origin_z" AS "origin_z"
          FROM   "assignment.107"
        ),
-       "assignment.109"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "e2_y", "normal_x", "pixel_g", "screen_y", "pixel_r", "triangle_g", "normal_y", "shadows", "step", "pixel_b", "direction_x", "e2_x", "e1_x", "direction_z", "light_y", "e1_y", "origin_y", "image_height", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.109"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "e2_y", "normal_x", "pixel_g", "screen_y", "pixel_r", "triangle_g", "normal_y", "shadows", "step", "pixel_b", "direction_x", "e2_x", "e1_x", "direction_z", "light_y", "e1_y", "origin_y", "image_height", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.108"."origin_x" AS "origin_x",
                 "assignment.108"."direction_y" AS "direction_y",
                 "assignment.108"."min_dist" AS "min_dist",
@@ -3973,7 +3973,7 @@ WITH RECURSIVE
                 "assignment.108"."light_z" AS "light_z",
                 "assignment.108"."shadow_ray" AS "shadow_ray",
                 "assignment.108"."max_rec_depth" AS "max_rec_depth",
-                "assignment.108"."󰐤" AS "󰐤",
+                "assignment.108"."#️⃣" AS "#️⃣",
                 "assignment.108"."epsilon" AS "epsilon",
                 "assignment.108"."color_r" AS "color_r",
                 "assignment.108"."material" AS "material",
@@ -4005,7 +4005,7 @@ WITH RECURSIVE
                 "assignment.108"."origin_z" AS "origin_z"
          FROM   "assignment.108"
        ),
-       "assignment.110"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.110"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.109"."origin_x" AS "origin_x",
                 "assignment.109"."direction_y" AS "direction_y",
                 "assignment.109"."min_dist" AS "min_dist",
@@ -4013,7 +4013,7 @@ WITH RECURSIVE
                 "assignment.109"."light_z" AS "light_z",
                 "assignment.109"."shadow_ray" AS "shadow_ray",
                 "assignment.109"."max_rec_depth" AS "max_rec_depth",
-                "assignment.109"."󰐤" AS "󰐤",
+                "assignment.109"."#️⃣" AS "#️⃣",
                 "assignment.109"."epsilon" AS "epsilon",
                 "assignment.109"."color_r" AS "color_r",
                 "assignment.109"."material" AS "material",
@@ -4042,7 +4042,7 @@ WITH RECURSIVE
                 "assignment.109"."origin_z" AS "origin_z"
          FROM   "assignment.109"
        ),
-       "assignment.111"("length", "direction_y", "origin_x", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.111"("length", "direction_y", "origin_x", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT CAST((sqrt(("assignment.110"."normal_x") ** 2 + ("assignment.110"."normal_y") ** 2 + ("assignment.110"."normal_z") ** 2)) AS real) AS "length",
                 "assignment.110"."direction_y" AS "direction_y",
                 "assignment.110"."origin_x" AS "origin_x",
@@ -4051,7 +4051,7 @@ WITH RECURSIVE
                 "assignment.110"."light_z" AS "light_z",
                 "assignment.110"."shadow_ray" AS "shadow_ray",
                 "assignment.110"."max_rec_depth" AS "max_rec_depth",
-                "assignment.110"."󰐤" AS "󰐤",
+                "assignment.110"."#️⃣" AS "#️⃣",
                 "assignment.110"."epsilon" AS "epsilon",
                 "assignment.110"."color_r" AS "color_r",
                 "assignment.110"."material" AS "material",
@@ -4080,7 +4080,7 @@ WITH RECURSIVE
                 "assignment.110"."origin_z" AS "origin_z"
          FROM   "assignment.110"
        ),
-       "assignment.112"("length", "direction_y", "origin_x", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.112"("length", "direction_y", "origin_x", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.111"."length" AS "length",
                 "assignment.111"."direction_y" AS "direction_y",
                 "assignment.111"."origin_x" AS "origin_x",
@@ -4089,7 +4089,7 @@ WITH RECURSIVE
                 "assignment.111"."light_z" AS "light_z",
                 "assignment.111"."shadow_ray" AS "shadow_ray",
                 "assignment.111"."max_rec_depth" AS "max_rec_depth",
-                "assignment.111"."󰐤" AS "󰐤",
+                "assignment.111"."#️⃣" AS "#️⃣",
                 "assignment.111"."epsilon" AS "epsilon",
                 "assignment.111"."color_r" AS "color_r",
                 "assignment.111"."material" AS "material",
@@ -4118,7 +4118,7 @@ WITH RECURSIVE
                 "assignment.111"."origin_z" AS "origin_z"
          FROM   "assignment.111"
        ),
-       "assignment.113"("length", "direction_y", "origin_x", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.113"("length", "direction_y", "origin_x", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.112"."length" AS "length",
                 "assignment.112"."direction_y" AS "direction_y",
                 "assignment.112"."origin_x" AS "origin_x",
@@ -4127,7 +4127,7 @@ WITH RECURSIVE
                 "assignment.112"."light_z" AS "light_z",
                 "assignment.112"."shadow_ray" AS "shadow_ray",
                 "assignment.112"."max_rec_depth" AS "max_rec_depth",
-                "assignment.112"."󰐤" AS "󰐤",
+                "assignment.112"."#️⃣" AS "#️⃣",
                 "assignment.112"."epsilon" AS "epsilon",
                 "assignment.112"."color_r" AS "color_r",
                 "assignment.112"."material" AS "material",
@@ -4156,7 +4156,7 @@ WITH RECURSIVE
                 "assignment.112"."origin_z" AS "origin_z"
          FROM   "assignment.112"
        ),
-       "assignment.114"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.114"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.113"."origin_x" AS "origin_x",
                 "assignment.113"."direction_y" AS "direction_y",
                 "assignment.113"."min_dist" AS "min_dist",
@@ -4164,7 +4164,7 @@ WITH RECURSIVE
                 "assignment.113"."light_z" AS "light_z",
                 "assignment.113"."shadow_ray" AS "shadow_ray",
                 "assignment.113"."max_rec_depth" AS "max_rec_depth",
-                "assignment.113"."󰐤" AS "󰐤",
+                "assignment.113"."#️⃣" AS "#️⃣",
                 "assignment.113"."epsilon" AS "epsilon",
                 "assignment.113"."color_r" AS "color_r",
                 "assignment.113"."material" AS "material",
@@ -4193,7 +4193,7 @@ WITH RECURSIVE
                 "assignment.113"."origin_z" AS "origin_z"
          FROM   "assignment.113"
        ),
-       "assignment.115"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.115"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.114"."origin_x" AS "origin_x",
                 "assignment.114"."direction_y" AS "direction_y",
                 "assignment.114"."min_dist" AS "min_dist",
@@ -4201,7 +4201,7 @@ WITH RECURSIVE
                 "assignment.114"."light_z" AS "light_z",
                 "assignment.114"."shadow_ray" AS "shadow_ray",
                 "assignment.114"."max_rec_depth" AS "max_rec_depth",
-                "assignment.114"."󰐤" AS "󰐤",
+                "assignment.114"."#️⃣" AS "#️⃣",
                 "assignment.114"."epsilon" AS "epsilon",
                 CAST((("assignment.114"."normal_x") * ("assignment.114"."direction_x") + ("assignment.114"."normal_y") * ("assignment.114"."direction_y") + ("assignment.114"."normal_z") * ("assignment.114"."direction_z") > 0) AS bool) AS "condition",
                 "assignment.114"."color_r" AS "color_r",
@@ -4231,7 +4231,7 @@ WITH RECURSIVE
                 "assignment.114"."origin_z" AS "origin_z"
          FROM   "assignment.114"
        ),
-       "where.10"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "where.10"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.115"."origin_x" AS "origin_x",
                 "assignment.115"."direction_y" AS "direction_y",
                 "assignment.115"."min_dist" AS "min_dist",
@@ -4239,7 +4239,7 @@ WITH RECURSIVE
                 "assignment.115"."light_z" AS "light_z",
                 "assignment.115"."shadow_ray" AS "shadow_ray",
                 "assignment.115"."max_rec_depth" AS "max_rec_depth",
-                "assignment.115"."󰐤" AS "󰐤",
+                "assignment.115"."#️⃣" AS "#️⃣",
                 "assignment.115"."epsilon" AS "epsilon",
                 "assignment.115"."color_r" AS "color_r",
                 "assignment.115"."material" AS "material",
@@ -4269,7 +4269,7 @@ WITH RECURSIVE
          FROM   "assignment.115"
          WHERE  "assignment.115"."condition" IS DISTINCT FROM TRUE
        ),
-       "where.9"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "where.9"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.115"."origin_x" AS "origin_x",
                 "assignment.115"."direction_y" AS "direction_y",
                 "assignment.115"."min_dist" AS "min_dist",
@@ -4277,7 +4277,7 @@ WITH RECURSIVE
                 "assignment.115"."light_z" AS "light_z",
                 "assignment.115"."shadow_ray" AS "shadow_ray",
                 "assignment.115"."max_rec_depth" AS "max_rec_depth",
-                "assignment.115"."󰐤" AS "󰐤",
+                "assignment.115"."#️⃣" AS "#️⃣",
                 "assignment.115"."epsilon" AS "epsilon",
                 "assignment.115"."color_r" AS "color_r",
                 "assignment.115"."material" AS "material",
@@ -4307,7 +4307,7 @@ WITH RECURSIVE
          FROM   "assignment.115"
          WHERE  "assignment.115"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "assignment.116"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.116"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "where.9"."origin_x" AS "origin_x",
                 "where.9"."direction_y" AS "direction_y",
                 "where.9"."min_dist" AS "min_dist",
@@ -4315,7 +4315,7 @@ WITH RECURSIVE
                 "where.9"."light_z" AS "light_z",
                 "where.9"."shadow_ray" AS "shadow_ray",
                 "where.9"."max_rec_depth" AS "max_rec_depth",
-                "where.9"."󰐤" AS "󰐤",
+                "where.9"."#️⃣" AS "#️⃣",
                 "where.9"."epsilon" AS "epsilon",
                 "where.9"."color_r" AS "color_r",
                 "where.9"."material" AS "material",
@@ -4344,7 +4344,7 @@ WITH RECURSIVE
                 "where.9"."origin_z" AS "origin_z"
          FROM   "where.9"
        ),
-       "assignment.117"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.117"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.116"."origin_x" AS "origin_x",
                 "assignment.116"."direction_y" AS "direction_y",
                 "assignment.116"."min_dist" AS "min_dist",
@@ -4352,7 +4352,7 @@ WITH RECURSIVE
                 "assignment.116"."light_z" AS "light_z",
                 "assignment.116"."shadow_ray" AS "shadow_ray",
                 "assignment.116"."max_rec_depth" AS "max_rec_depth",
-                "assignment.116"."󰐤" AS "󰐤",
+                "assignment.116"."#️⃣" AS "#️⃣",
                 "assignment.116"."epsilon" AS "epsilon",
                 "assignment.116"."color_r" AS "color_r",
                 "assignment.116"."material" AS "material",
@@ -4381,7 +4381,7 @@ WITH RECURSIVE
                 "assignment.116"."origin_z" AS "origin_z"
          FROM   "assignment.116"
        ),
-       "assignment.118"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.118"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.117"."origin_x" AS "origin_x",
                 "assignment.117"."direction_y" AS "direction_y",
                 "assignment.117"."min_dist" AS "min_dist",
@@ -4389,7 +4389,7 @@ WITH RECURSIVE
                 "assignment.117"."light_z" AS "light_z",
                 "assignment.117"."shadow_ray" AS "shadow_ray",
                 "assignment.117"."max_rec_depth" AS "max_rec_depth",
-                "assignment.117"."󰐤" AS "󰐤",
+                "assignment.117"."#️⃣" AS "#️⃣",
                 "assignment.117"."epsilon" AS "epsilon",
                 "assignment.117"."color_r" AS "color_r",
                 "assignment.117"."material" AS "material",
@@ -4418,7 +4418,7 @@ WITH RECURSIVE
                 "assignment.117"."origin_z" AS "origin_z"
          FROM   "assignment.117"
        ),
-       "merge.3"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "merge.3"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          (SELECT "where.10"."origin_x" AS "origin_x",
                  "where.10"."direction_y" AS "direction_y",
                  "where.10"."min_dist" AS "min_dist",
@@ -4426,7 +4426,7 @@ WITH RECURSIVE
                  "where.10"."light_z" AS "light_z",
                  "where.10"."shadow_ray" AS "shadow_ray",
                  "where.10"."max_rec_depth" AS "max_rec_depth",
-                 "where.10"."󰐤" AS "󰐤",
+                 "where.10"."#️⃣" AS "#️⃣",
                  "where.10"."epsilon" AS "epsilon",
                  "where.10"."color_r" AS "color_r",
                  "where.10"."material" AS "material",
@@ -4462,7 +4462,7 @@ WITH RECURSIVE
                  "assignment.118"."light_z" AS "light_z",
                  "assignment.118"."shadow_ray" AS "shadow_ray",
                  "assignment.118"."max_rec_depth" AS "max_rec_depth",
-                 "assignment.118"."󰐤" AS "󰐤",
+                 "assignment.118"."#️⃣" AS "#️⃣",
                  "assignment.118"."epsilon" AS "epsilon",
                  "assignment.118"."color_r" AS "color_r",
                  "assignment.118"."material" AS "material",
@@ -4491,7 +4491,7 @@ WITH RECURSIVE
                  "assignment.118"."origin_z" AS "origin_z"
           FROM   "assignment.118")
        ),
-       "assignment.119"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.119"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "merge.3"."origin_x" AS "origin_x",
                 "merge.3"."direction_y" AS "direction_y",
                 "merge.3"."min_dist" AS "min_dist",
@@ -4499,7 +4499,7 @@ WITH RECURSIVE
                 "merge.3"."light_z" AS "light_z",
                 "merge.3"."shadow_ray" AS "shadow_ray",
                 "merge.3"."max_rec_depth" AS "max_rec_depth",
-                "merge.3"."󰐤" AS "󰐤",
+                "merge.3"."#️⃣" AS "#️⃣",
                 "merge.3"."epsilon" AS "epsilon",
                 CAST((("merge.3"."material") = 'm') AS bool) AS "condition",
                 "merge.3"."color_r" AS "color_r",
@@ -4529,7 +4529,7 @@ WITH RECURSIVE
                 "merge.3"."origin_z" AS "origin_z"
          FROM   "merge.3"
        ),
-       "where.11"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "light_x", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "where.11"("origin_x", "direction_y", "min_dist", "triangle_r", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "light_x", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.119"."origin_x" AS "origin_x",
                 "assignment.119"."direction_y" AS "direction_y",
                 "assignment.119"."min_dist" AS "min_dist",
@@ -4537,7 +4537,7 @@ WITH RECURSIVE
                 "assignment.119"."light_z" AS "light_z",
                 "assignment.119"."shadow_ray" AS "shadow_ray",
                 "assignment.119"."max_rec_depth" AS "max_rec_depth",
-                "assignment.119"."󰐤" AS "󰐤",
+                "assignment.119"."#️⃣" AS "#️⃣",
                 "assignment.119"."epsilon" AS "epsilon",
                 "assignment.119"."material" AS "material",
                 "assignment.119"."normal_x" AS "normal_x",
@@ -4564,14 +4564,14 @@ WITH RECURSIVE
          FROM   "assignment.119"
          WHERE  "assignment.119"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.12"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.12"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.119"."origin_x" AS "origin_x",
                 "assignment.119"."direction_y" AS "direction_y",
                 "assignment.119"."min_dist" AS "min_dist",
                 "assignment.119"."light_z" AS "light_z",
                 "assignment.119"."shadow_ray" AS "shadow_ray",
                 "assignment.119"."max_rec_depth" AS "max_rec_depth",
-                "assignment.119"."󰐤" AS "󰐤",
+                "assignment.119"."#️⃣" AS "#️⃣",
                 "assignment.119"."epsilon" AS "epsilon",
                 "assignment.119"."color_r" AS "color_r",
                 "assignment.119"."material" AS "material",
@@ -4599,14 +4599,14 @@ WITH RECURSIVE
          FROM   "assignment.119"
          WHERE  "assignment.119"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.120"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "light_x", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.120"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "triangle_g", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "light_x", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "where.11"."origin_x" AS "origin_x",
                 "where.11"."direction_y" AS "direction_y",
                 "where.11"."min_dist" AS "min_dist",
                 "where.11"."light_z" AS "light_z",
                 "where.11"."shadow_ray" AS "shadow_ray",
                 "where.11"."max_rec_depth" AS "max_rec_depth",
-                "where.11"."󰐤" AS "󰐤",
+                "where.11"."#️⃣" AS "#️⃣",
                 "where.11"."epsilon" AS "epsilon",
                 CAST((("where.11"."triangle_r")) AS real) AS "color_r",
                 "where.11"."material" AS "material",
@@ -4633,14 +4633,14 @@ WITH RECURSIVE
                 "where.11"."origin_z" AS "origin_z"
          FROM   "where.11"
        ),
-       "assignment.121"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "screen_x", "image_width", "triangle_b", "origin_z") AS (
+       "assignment.121"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "screen_x", "image_width", "triangle_b", "origin_z") AS (
          SELECT "assignment.120"."origin_x" AS "origin_x",
                 "assignment.120"."direction_y" AS "direction_y",
                 "assignment.120"."min_dist" AS "min_dist",
                 "assignment.120"."light_z" AS "light_z",
                 "assignment.120"."shadow_ray" AS "shadow_ray",
                 "assignment.120"."max_rec_depth" AS "max_rec_depth",
-                "assignment.120"."󰐤" AS "󰐤",
+                "assignment.120"."#️⃣" AS "#️⃣",
                 "assignment.120"."epsilon" AS "epsilon",
                 "assignment.120"."color_r" AS "color_r",
                 "assignment.120"."material" AS "material",
@@ -4667,14 +4667,14 @@ WITH RECURSIVE
                 "assignment.120"."origin_z" AS "origin_z"
          FROM   "assignment.120"
        ),
-       "assignment.122"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.122"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.121"."origin_x" AS "origin_x",
                 "assignment.121"."direction_y" AS "direction_y",
                 "assignment.121"."min_dist" AS "min_dist",
                 "assignment.121"."light_z" AS "light_z",
                 "assignment.121"."shadow_ray" AS "shadow_ray",
                 "assignment.121"."max_rec_depth" AS "max_rec_depth",
-                "assignment.121"."󰐤" AS "󰐤",
+                "assignment.121"."#️⃣" AS "#️⃣",
                 "assignment.121"."epsilon" AS "epsilon",
                 "assignment.121"."color_r" AS "color_r",
                 "assignment.121"."material" AS "material",
@@ -4701,14 +4701,14 @@ WITH RECURSIVE
                 "assignment.121"."origin_z" AS "origin_z"
          FROM   "assignment.121"
        ),
-       "merge.4"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "merge.4"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          (SELECT "assignment.122"."origin_x" AS "origin_x",
                  "assignment.122"."direction_y" AS "direction_y",
                  "assignment.122"."min_dist" AS "min_dist",
                  "assignment.122"."light_z" AS "light_z",
                  "assignment.122"."shadow_ray" AS "shadow_ray",
                  "assignment.122"."max_rec_depth" AS "max_rec_depth",
-                 "assignment.122"."󰐤" AS "󰐤",
+                 "assignment.122"."#️⃣" AS "#️⃣",
                  "assignment.122"."epsilon" AS "epsilon",
                  "assignment.122"."color_r" AS "color_r",
                  "assignment.122"."material" AS "material",
@@ -4741,7 +4741,7 @@ WITH RECURSIVE
                  "where.7"."light_z" AS "light_z",
                  "where.7"."shadow_ray" AS "shadow_ray",
                  "where.7"."max_rec_depth" AS "max_rec_depth",
-                 "where.7"."󰐤" AS "󰐤",
+                 "where.7"."#️⃣" AS "#️⃣",
                  "where.7"."epsilon" AS "epsilon",
                  "where.7"."color_r" AS "color_r",
                  "where.7"."material" AS "material",
@@ -4774,7 +4774,7 @@ WITH RECURSIVE
                  "where.5"."light_z" AS "light_z",
                  "where.5"."shadow_ray" AS "shadow_ray",
                  "where.5"."max_rec_depth" AS "max_rec_depth",
-                 "where.5"."󰐤" AS "󰐤",
+                 "where.5"."#️⃣" AS "#️⃣",
                  "where.5"."epsilon" AS "epsilon",
                  "where.5"."color_r" AS "color_r",
                  "where.5"."material" AS "material",
@@ -4807,7 +4807,7 @@ WITH RECURSIVE
                  "where.3"."light_z" AS "light_z",
                  "where.3"."shadow_ray" AS "shadow_ray",
                  "where.3"."max_rec_depth" AS "max_rec_depth",
-                 "where.3"."󰐤" AS "󰐤",
+                 "where.3"."#️⃣" AS "#️⃣",
                  "where.3"."epsilon" AS "epsilon",
                  "where.3"."color_r" AS "color_r",
                  "where.3"."material" AS "material",
@@ -4840,7 +4840,7 @@ WITH RECURSIVE
                  "where.12"."light_z" AS "light_z",
                  "where.12"."shadow_ray" AS "shadow_ray",
                  "where.12"."max_rec_depth" AS "max_rec_depth",
-                 "where.12"."󰐤" AS "󰐤",
+                 "where.12"."#️⃣" AS "#️⃣",
                  "where.12"."epsilon" AS "epsilon",
                  "where.12"."color_r" AS "color_r",
                  "where.12"."material" AS "material",
@@ -4873,7 +4873,7 @@ WITH RECURSIVE
                  "where.1"."light_z" AS "light_z",
                  "where.1"."shadow_ray" AS "shadow_ray",
                  "where.1"."max_rec_depth" AS "max_rec_depth",
-                 "where.1"."󰐤" AS "󰐤",
+                 "where.1"."#️⃣" AS "#️⃣",
                  "where.1"."epsilon" AS "epsilon",
                  "where.1"."color_r" AS "color_r",
                  "where.1"."material" AS "material",
@@ -4900,14 +4900,14 @@ WITH RECURSIVE
                  "where.1"."origin_z" AS "origin_z"
           FROM   "where.1")
        ),
-       "assignment.123"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.123"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "merge.4"."origin_x" AS "origin_x",
                 "merge.4"."direction_y" AS "direction_y",
                 "merge.4"."min_dist" AS "min_dist",
                 "merge.4"."light_z" AS "light_z",
                 "merge.4"."shadow_ray" AS "shadow_ray",
                 "merge.4"."max_rec_depth" AS "max_rec_depth",
-                "merge.4"."󰐤" AS "󰐤",
+                "merge.4"."#️⃣" AS "#️⃣",
                 "merge.4"."epsilon" AS "epsilon",
                 CAST((("merge.4"."id") = 0) AS bool) AS "condition",
                 "merge.4"."color_r" AS "color_r",
@@ -4935,14 +4935,14 @@ WITH RECURSIVE
                 "merge.4"."origin_z" AS "origin_z"
          FROM   "merge.4"
        ),
-       "where.13"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.13"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.123"."origin_x" AS "origin_x",
                 "assignment.123"."direction_y" AS "direction_y",
                 "assignment.123"."min_dist" AS "min_dist",
                 "assignment.123"."light_z" AS "light_z",
                 "assignment.123"."shadow_ray" AS "shadow_ray",
                 "assignment.123"."max_rec_depth" AS "max_rec_depth",
-                "assignment.123"."󰐤" AS "󰐤",
+                "assignment.123"."#️⃣" AS "#️⃣",
                 "assignment.123"."epsilon" AS "epsilon",
                 "assignment.123"."color_r" AS "color_r",
                 "assignment.123"."material" AS "material",
@@ -4969,14 +4969,14 @@ WITH RECURSIVE
          FROM   "assignment.123"
          WHERE  "assignment.123"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.14"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.14"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.123"."origin_x" AS "origin_x",
                 "assignment.123"."direction_y" AS "direction_y",
                 "assignment.123"."min_dist" AS "min_dist",
                 "assignment.123"."light_z" AS "light_z",
                 "assignment.123"."shadow_ray" AS "shadow_ray",
                 "assignment.123"."max_rec_depth" AS "max_rec_depth",
-                "assignment.123"."󰐤" AS "󰐤",
+                "assignment.123"."#️⃣" AS "#️⃣",
                 "assignment.123"."epsilon" AS "epsilon",
                 "assignment.123"."color_r" AS "color_r",
                 "assignment.123"."material" AS "material",
@@ -5004,14 +5004,14 @@ WITH RECURSIVE
          FROM   "assignment.123"
          WHERE  "assignment.123"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.124"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.124"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.14"."origin_x" AS "origin_x",
                 "where.14"."direction_y" AS "direction_y",
                 "where.14"."min_dist" AS "min_dist",
                 "where.14"."light_z" AS "light_z",
                 "where.14"."shadow_ray" AS "shadow_ray",
                 "where.14"."max_rec_depth" AS "max_rec_depth",
-                "where.14"."󰐤" AS "󰐤",
+                "where.14"."#️⃣" AS "#️⃣",
                 "where.14"."epsilon" AS "epsilon",
                 "where.14"."color_r" AS "color_r",
                 "where.14"."material" AS "material",
@@ -5038,14 +5038,14 @@ WITH RECURSIVE
                 "where.14"."origin_z" AS "origin_z"
          FROM   "where.14"
        ),
-       "assignment.125"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.125"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.13"."origin_x" AS "origin_x",
                 "where.13"."direction_y" AS "direction_y",
                 "where.13"."min_dist" AS "min_dist",
                 "where.13"."light_z" AS "light_z",
                 "where.13"."shadow_ray" AS "shadow_ray",
                 "where.13"."max_rec_depth" AS "max_rec_depth",
-                "where.13"."󰐤" AS "󰐤",
+                "where.13"."#️⃣" AS "#️⃣",
                 "where.13"."epsilon" AS "epsilon",
                 "where.13"."color_r" AS "color_r",
                 "where.13"."material" AS "material",
@@ -5072,11 +5072,11 @@ WITH RECURSIVE
                 "where.13"."origin_z" AS "origin_z"
          FROM   "where.13"
        ),
-       "jump.1"("pixel_r", "color_b", "direction_z", "󰐤", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
+       "jump.1"("pixel_r", "color_b", "direction_z", "#️⃣", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "🏷️", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
          SELECT "assignment.124"."pixel_r" AS "pixel_r",
                 "assignment.124"."color_b" AS "color_b",
                 "assignment.124"."direction_z" AS "direction_z",
-                "assignment.124"."󰐤" AS "󰐤",
+                "assignment.124"."#️⃣" AS "#️⃣",
                 "assignment.124"."origin_x" AS "origin_x",
                 "assignment.124"."image_width" AS "image_width",
                 "assignment.124"."step" AS "step",
@@ -5091,7 +5091,7 @@ WITH RECURSIVE
                 "assignment.124"."origin_y" AS "origin_y",
                 "assignment.124"."pixel_g" AS "pixel_g",
                 "assignment.124"."normal_y" AS "normal_y",
-                'start.3' AS "",
+                'start.3' AS "🏷️",
                 "assignment.124"."origin_z" AS "origin_z",
                 "assignment.124"."epsilon" AS "epsilon",
                 "assignment.124"."light_z" AS "light_z",
@@ -5108,14 +5108,14 @@ WITH RECURSIVE
                 "assignment.124"."light_x" AS "light_x"
          FROM   "assignment.124"
        ),
-       "merge.5"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "merge.5"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          (SELECT "assignment.125"."origin_x" AS "origin_x",
                  "assignment.125"."direction_y" AS "direction_y",
                  "assignment.125"."min_dist" AS "min_dist",
                  "assignment.125"."light_z" AS "light_z",
                  "assignment.125"."shadow_ray" AS "shadow_ray",
                  "assignment.125"."max_rec_depth" AS "max_rec_depth",
-                 "assignment.125"."󰐤" AS "󰐤",
+                 "assignment.125"."#️⃣" AS "#️⃣",
                  "assignment.125"."epsilon" AS "epsilon",
                  "assignment.125"."color_r" AS "color_r",
                  "assignment.125"."material" AS "material",
@@ -5148,7 +5148,7 @@ WITH RECURSIVE
                  "start.4"."light_z" AS "light_z",
                  "start.4"."shadow_ray" AS "shadow_ray",
                  "start.4"."max_rec_depth" AS "max_rec_depth",
-                 "start.4"."󰐤" AS "󰐤",
+                 "start.4"."#️⃣" AS "#️⃣",
                  "start.4"."epsilon" AS "epsilon",
                  "start.4"."color_r" AS "color_r",
                  "start.4"."material" AS "material",
@@ -5175,9 +5175,9 @@ WITH RECURSIVE
                  "start.4"."origin_z" AS "origin_z"
           FROM   "start.4")
        ),
-       "fork.5"("light_z", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "fork.5"("light_z", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "merge.5"."light_z" AS "light_z",
-                "merge.5"."󰐤" AS "󰐤",
+                "merge.5"."#️⃣" AS "#️⃣",
                 "merge.5"."epsilon" AS "epsilon",
                 "merge.5"."material" AS "material",
                 "merge.5"."normal_x" AS "normal_x",
@@ -5227,9 +5227,9 @@ WITH RECURSIVE
                          FROM   spheres AS s
                          WHERE  s.id = ("merge.5"."id")) AS "ℚ"("sphere_material", "sphere_r", "sphere_g", "sphere_b", "sphere_center_x", "sphere_center_y", "sphere_center_z", "sphere_radius")
        ),
-       "assignment.126"("light_z", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "L_x", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.126"("light_z", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "L_x", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "fork.5"."light_z" AS "light_z",
-                "fork.5"."󰐤" AS "󰐤",
+                "fork.5"."#️⃣" AS "#️⃣",
                 "fork.5"."epsilon" AS "epsilon",
                 "fork.5"."material" AS "material",
                 "fork.5"."normal_x" AS "normal_x",
@@ -5270,9 +5270,9 @@ WITH RECURSIVE
                 "fork.5"."origin_z" AS "origin_z"
          FROM   "fork.5"
        ),
-       "assignment.127"("light_z", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "L_x", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "L_y", "sphere_radius", "pixel_b", "step", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.127"("light_z", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "L_x", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "L_y", "sphere_radius", "pixel_b", "step", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "assignment.126"."light_z" AS "light_z",
-                "assignment.126"."󰐤" AS "󰐤",
+                "assignment.126"."#️⃣" AS "#️⃣",
                 "assignment.126"."epsilon" AS "epsilon",
                 "assignment.126"."material" AS "material",
                 "assignment.126"."normal_x" AS "normal_x",
@@ -5314,10 +5314,10 @@ WITH RECURSIVE
                 "assignment.126"."origin_z" AS "origin_z"
          FROM   "assignment.126"
        ),
-       "assignment.128"("L_z", "light_z", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "L_x", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "L_y", "sphere_radius", "pixel_b", "step", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.128"("L_z", "light_z", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "L_x", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "L_y", "sphere_radius", "pixel_b", "step", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT CAST((("assignment.127"."sphere_center_z") - ("assignment.127"."origin_z")) AS real) AS "L_z",
                 "assignment.127"."light_z" AS "light_z",
-                "assignment.127"."󰐤" AS "󰐤",
+                "assignment.127"."#️⃣" AS "#️⃣",
                 "assignment.127"."epsilon" AS "epsilon",
                 "assignment.127"."material" AS "material",
                 "assignment.127"."normal_x" AS "normal_x",
@@ -5359,11 +5359,11 @@ WITH RECURSIVE
                 "assignment.127"."origin_z" AS "origin_z"
          FROM   "assignment.127"
        ),
-       "assignment.129"("L_z", "tca", "light_z", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "L_x", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "L_y", "sphere_radius", "pixel_b", "step", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.129"("L_z", "tca", "light_z", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "L_x", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "L_y", "sphere_radius", "pixel_b", "step", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "assignment.128"."L_z" AS "L_z",
                 CAST((("assignment.128"."L_x") * ("assignment.128"."direction_x") + ("assignment.128"."L_y") * ("assignment.128"."direction_y") + ("assignment.128"."L_z") * ("assignment.128"."direction_z")) AS real) AS "tca",
                 "assignment.128"."light_z" AS "light_z",
-                "assignment.128"."󰐤" AS "󰐤",
+                "assignment.128"."#️⃣" AS "#️⃣",
                 "assignment.128"."epsilon" AS "epsilon",
                 "assignment.128"."material" AS "material",
                 "assignment.128"."normal_x" AS "normal_x",
@@ -5405,10 +5405,10 @@ WITH RECURSIVE
                 "assignment.128"."origin_z" AS "origin_z"
          FROM   "assignment.128"
        ),
-       "assignment.130"("tca", "light_z", "󰐤", "d2", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.130"("tca", "light_z", "#️⃣", "d2", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "assignment.129"."tca" AS "tca",
                 "assignment.129"."light_z" AS "light_z",
-                "assignment.129"."󰐤" AS "󰐤",
+                "assignment.129"."#️⃣" AS "#️⃣",
                 CAST((("assignment.129"."L_x") ** 2 + ("assignment.129"."L_y") ** 2 + ("assignment.129"."L_z") ** 2 - ("assignment.129"."tca") ** 2) AS real) AS "d2",
                 "assignment.129"."epsilon" AS "epsilon",
                 "assignment.129"."material" AS "material",
@@ -5449,10 +5449,10 @@ WITH RECURSIVE
                 "assignment.129"."origin_z" AS "origin_z"
          FROM   "assignment.129"
        ),
-       "assignment.131"("tca", "light_z", "󰐤", "d2", "epsilon", "condition", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.131"("tca", "light_z", "#️⃣", "d2", "epsilon", "condition", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "assignment.130"."tca" AS "tca",
                 "assignment.130"."light_z" AS "light_z",
-                "assignment.130"."󰐤" AS "󰐤",
+                "assignment.130"."#️⃣" AS "#️⃣",
                 "assignment.130"."d2" AS "d2",
                 "assignment.130"."epsilon" AS "epsilon",
                 CAST((("assignment.130"."d2") > ("assignment.130"."sphere_radius") ** 2) AS bool) AS "condition",
@@ -5494,14 +5494,14 @@ WITH RECURSIVE
                 "assignment.130"."origin_z" AS "origin_z"
          FROM   "assignment.130"
        ),
-       "where.15"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.15"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.131"."origin_x" AS "origin_x",
                 "assignment.131"."direction_y" AS "direction_y",
                 "assignment.131"."min_dist" AS "min_dist",
                 "assignment.131"."light_z" AS "light_z",
                 "assignment.131"."shadow_ray" AS "shadow_ray",
                 "assignment.131"."max_rec_depth" AS "max_rec_depth",
-                "assignment.131"."󰐤" AS "󰐤",
+                "assignment.131"."#️⃣" AS "#️⃣",
                 "assignment.131"."epsilon" AS "epsilon",
                 "assignment.131"."color_r" AS "color_r",
                 "assignment.131"."material" AS "material",
@@ -5529,10 +5529,10 @@ WITH RECURSIVE
          FROM   "assignment.131"
          WHERE  "assignment.131"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.16"("tca", "light_z", "󰐤", "d2", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "where.16"("tca", "light_z", "#️⃣", "d2", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "sphere_radius", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "assignment.131"."tca" AS "tca",
                 "assignment.131"."light_z" AS "light_z",
-                "assignment.131"."󰐤" AS "󰐤",
+                "assignment.131"."#️⃣" AS "#️⃣",
                 "assignment.131"."d2" AS "d2",
                 "assignment.131"."epsilon" AS "epsilon",
                 "assignment.131"."material" AS "material",
@@ -5574,10 +5574,10 @@ WITH RECURSIVE
          FROM   "assignment.131"
          WHERE  "assignment.131"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.132"("tca", "light_z", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "thc", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.132"("tca", "light_z", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "thc", "direction_z", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "where.16"."tca" AS "tca",
                 "where.16"."light_z" AS "light_z",
-                "where.16"."󰐤" AS "󰐤",
+                "where.16"."#️⃣" AS "#️⃣",
                 "where.16"."epsilon" AS "epsilon",
                 "where.16"."material" AS "material",
                 "where.16"."normal_x" AS "normal_x",
@@ -5617,9 +5617,9 @@ WITH RECURSIVE
                 "where.16"."origin_z" AS "origin_z"
          FROM   "where.16"
        ),
-       "assignment.133"("light_z", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "dist", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.133"("light_z", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "dist", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "assignment.132"."light_z" AS "light_z",
-                "assignment.132"."󰐤" AS "󰐤",
+                "assignment.132"."#️⃣" AS "#️⃣",
                 "assignment.132"."epsilon" AS "epsilon",
                 "assignment.132"."material" AS "material",
                 "assignment.132"."normal_x" AS "normal_x",
@@ -5659,9 +5659,9 @@ WITH RECURSIVE
                 "assignment.132"."origin_z" AS "origin_z"
          FROM   "assignment.132"
        ),
-       "assignment.134"("light_z", "󰐤", "epsilon", "condition", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "dist", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
+       "assignment.134"("light_z", "#️⃣", "epsilon", "condition", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "direction_x", "direction_z", "dist", "light_y", "origin_y", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "origin_x", "direction_y", "min_dist", "sphere_material", "shadow_ray", "max_rec_depth", "sphere_b", "color_r", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "image_height", "sphere_center_z", "id", "sphere_center_x", "image_width", "origin_z") AS (
          SELECT "assignment.133"."light_z" AS "light_z",
-                "assignment.133"."󰐤" AS "󰐤",
+                "assignment.133"."#️⃣" AS "#️⃣",
                 "assignment.133"."epsilon" AS "epsilon",
                 CAST((("assignment.133"."dist") NOT BETWEEN ("assignment.133"."epsilon") AND ("assignment.133"."min_dist")) AS bool) AS "condition",
                 "assignment.133"."material" AS "material",
@@ -5702,14 +5702,14 @@ WITH RECURSIVE
                 "assignment.133"."origin_z" AS "origin_z"
          FROM   "assignment.133"
        ),
-       "where.17"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.17"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.134"."origin_x" AS "origin_x",
                 "assignment.134"."direction_y" AS "direction_y",
                 "assignment.134"."min_dist" AS "min_dist",
                 "assignment.134"."light_z" AS "light_z",
                 "assignment.134"."shadow_ray" AS "shadow_ray",
                 "assignment.134"."max_rec_depth" AS "max_rec_depth",
-                "assignment.134"."󰐤" AS "󰐤",
+                "assignment.134"."#️⃣" AS "#️⃣",
                 "assignment.134"."epsilon" AS "epsilon",
                 "assignment.134"."color_r" AS "color_r",
                 "assignment.134"."material" AS "material",
@@ -5737,14 +5737,14 @@ WITH RECURSIVE
          FROM   "assignment.134"
          WHERE  "assignment.134"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.18"("origin_x", "direction_y", "sphere_material", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "pixel_g", "screen_y", "pixel_r", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "sphere_center_y", "sphere_center_x", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "where.18"("origin_x", "direction_y", "sphere_material", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "pixel_g", "screen_y", "pixel_r", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "sphere_center_y", "sphere_center_x", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.134"."origin_x" AS "origin_x",
                 "assignment.134"."direction_y" AS "direction_y",
                 "assignment.134"."sphere_material" AS "sphere_material",
                 "assignment.134"."light_z" AS "light_z",
                 "assignment.134"."shadow_ray" AS "shadow_ray",
                 "assignment.134"."max_rec_depth" AS "max_rec_depth",
-                "assignment.134"."󰐤" AS "󰐤",
+                "assignment.134"."#️⃣" AS "#️⃣",
                 "assignment.134"."epsilon" AS "epsilon",
                 "assignment.134"."sphere_b" AS "sphere_b",
                 "assignment.134"."color_r" AS "color_r",
@@ -5775,13 +5775,13 @@ WITH RECURSIVE
          FROM   "assignment.134"
          WHERE  "assignment.134"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.135"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "pixel_g", "screen_y", "pixel_r", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "sphere_center_y", "sphere_center_x", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.135"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "pixel_g", "screen_y", "pixel_r", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "sphere_center_y", "sphere_center_x", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "where.18"."origin_x" AS "origin_x",
                 "where.18"."direction_y" AS "direction_y",
                 "where.18"."light_z" AS "light_z",
                 "where.18"."shadow_ray" AS "shadow_ray",
                 "where.18"."max_rec_depth" AS "max_rec_depth",
-                "where.18"."󰐤" AS "󰐤",
+                "where.18"."#️⃣" AS "#️⃣",
                 "where.18"."epsilon" AS "epsilon",
                 "where.18"."sphere_b" AS "sphere_b",
                 "where.18"."color_r" AS "color_r",
@@ -5812,14 +5812,14 @@ WITH RECURSIVE
                 "where.18"."origin_z" AS "origin_z"
          FROM   "where.18"
        ),
-       "assignment.136"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "pixel_g", "screen_y", "pixel_r", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "sphere_center_y", "sphere_center_x", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.136"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "pixel_g", "screen_y", "pixel_r", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "sphere_center_y", "sphere_center_x", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.135"."origin_x" AS "origin_x",
                 "assignment.135"."direction_y" AS "direction_y",
                 CAST((("assignment.135"."dist")) AS real) AS "min_dist",
                 "assignment.135"."light_z" AS "light_z",
                 "assignment.135"."shadow_ray" AS "shadow_ray",
                 "assignment.135"."max_rec_depth" AS "max_rec_depth",
-                "assignment.135"."󰐤" AS "󰐤",
+                "assignment.135"."#️⃣" AS "#️⃣",
                 "assignment.135"."epsilon" AS "epsilon",
                 "assignment.135"."sphere_b" AS "sphere_b",
                 "assignment.135"."color_r" AS "color_r",
@@ -5850,14 +5850,14 @@ WITH RECURSIVE
                 "assignment.135"."origin_z" AS "origin_z"
          FROM   "assignment.135"
        ),
-       "assignment.137"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "screen_y", "pixel_r", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.137"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "screen_y", "pixel_r", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "sphere_center_y", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.136"."origin_x" AS "origin_x",
                 "assignment.136"."direction_y" AS "direction_y",
                 "assignment.136"."min_dist" AS "min_dist",
                 "assignment.136"."light_z" AS "light_z",
                 "assignment.136"."shadow_ray" AS "shadow_ray",
                 "assignment.136"."max_rec_depth" AS "max_rec_depth",
-                "assignment.136"."󰐤" AS "󰐤",
+                "assignment.136"."#️⃣" AS "#️⃣",
                 "assignment.136"."epsilon" AS "epsilon",
                 "assignment.136"."sphere_b" AS "sphere_b",
                 "assignment.136"."color_r" AS "color_r",
@@ -5888,14 +5888,14 @@ WITH RECURSIVE
                 "assignment.136"."origin_z" AS "origin_z"
          FROM   "assignment.136"
        ),
-       "assignment.138"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "screen_y", "pixel_r", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.138"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "screen_y", "pixel_r", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "dist", "light_y", "image_height", "origin_y", "sphere_center_z", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.137"."origin_x" AS "origin_x",
                 "assignment.137"."direction_y" AS "direction_y",
                 "assignment.137"."min_dist" AS "min_dist",
                 "assignment.137"."light_z" AS "light_z",
                 "assignment.137"."shadow_ray" AS "shadow_ray",
                 "assignment.137"."max_rec_depth" AS "max_rec_depth",
-                "assignment.137"."󰐤" AS "󰐤",
+                "assignment.137"."#️⃣" AS "#️⃣",
                 "assignment.137"."epsilon" AS "epsilon",
                 "assignment.137"."sphere_b" AS "sphere_b",
                 "assignment.137"."color_r" AS "color_r",
@@ -5926,14 +5926,14 @@ WITH RECURSIVE
                 "assignment.137"."origin_z" AS "origin_z"
          FROM   "assignment.137"
        ),
-       "assignment.139"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.139"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.138"."origin_x" AS "origin_x",
                 "assignment.138"."direction_y" AS "direction_y",
                 "assignment.138"."min_dist" AS "min_dist",
                 "assignment.138"."light_z" AS "light_z",
                 "assignment.138"."shadow_ray" AS "shadow_ray",
                 "assignment.138"."max_rec_depth" AS "max_rec_depth",
-                "assignment.138"."󰐤" AS "󰐤",
+                "assignment.138"."#️⃣" AS "#️⃣",
                 "assignment.138"."epsilon" AS "epsilon",
                 "assignment.138"."sphere_b" AS "sphere_b",
                 "assignment.138"."color_r" AS "color_r",
@@ -5963,7 +5963,7 @@ WITH RECURSIVE
                 "assignment.138"."origin_z" AS "origin_z"
          FROM   "assignment.138"
        ),
-       "assignment.140"("length", "origin_x", "min_dist", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.140"("length", "origin_x", "min_dist", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT CAST((sqrt(("assignment.139"."normal_x") ** 2 + ("assignment.139"."normal_y") ** 2 + ("assignment.139"."normal_z") ** 2)) AS real) AS "length",
                 "assignment.139"."origin_x" AS "origin_x",
                 "assignment.139"."min_dist" AS "min_dist",
@@ -5971,7 +5971,7 @@ WITH RECURSIVE
                 "assignment.139"."light_z" AS "light_z",
                 "assignment.139"."shadow_ray" AS "shadow_ray",
                 "assignment.139"."max_rec_depth" AS "max_rec_depth",
-                "assignment.139"."󰐤" AS "󰐤",
+                "assignment.139"."#️⃣" AS "#️⃣",
                 "assignment.139"."epsilon" AS "epsilon",
                 "assignment.139"."sphere_b" AS "sphere_b",
                 "assignment.139"."color_r" AS "color_r",
@@ -6001,7 +6001,7 @@ WITH RECURSIVE
                 "assignment.139"."origin_z" AS "origin_z"
          FROM   "assignment.139"
        ),
-       "assignment.141"("length", "origin_x", "min_dist", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.141"("length", "origin_x", "min_dist", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.140"."length" AS "length",
                 "assignment.140"."origin_x" AS "origin_x",
                 "assignment.140"."min_dist" AS "min_dist",
@@ -6009,7 +6009,7 @@ WITH RECURSIVE
                 "assignment.140"."light_z" AS "light_z",
                 "assignment.140"."shadow_ray" AS "shadow_ray",
                 "assignment.140"."max_rec_depth" AS "max_rec_depth",
-                "assignment.140"."󰐤" AS "󰐤",
+                "assignment.140"."#️⃣" AS "#️⃣",
                 "assignment.140"."epsilon" AS "epsilon",
                 "assignment.140"."sphere_b" AS "sphere_b",
                 "assignment.140"."color_r" AS "color_r",
@@ -6039,7 +6039,7 @@ WITH RECURSIVE
                 "assignment.140"."origin_z" AS "origin_z"
          FROM   "assignment.140"
        ),
-       "assignment.142"("length", "origin_x", "min_dist", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.142"("length", "origin_x", "min_dist", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.141"."length" AS "length",
                 "assignment.141"."origin_x" AS "origin_x",
                 "assignment.141"."min_dist" AS "min_dist",
@@ -6047,7 +6047,7 @@ WITH RECURSIVE
                 "assignment.141"."light_z" AS "light_z",
                 "assignment.141"."shadow_ray" AS "shadow_ray",
                 "assignment.141"."max_rec_depth" AS "max_rec_depth",
-                "assignment.141"."󰐤" AS "󰐤",
+                "assignment.141"."#️⃣" AS "#️⃣",
                 "assignment.141"."epsilon" AS "epsilon",
                 "assignment.141"."sphere_b" AS "sphere_b",
                 "assignment.141"."color_r" AS "color_r",
@@ -6077,14 +6077,14 @@ WITH RECURSIVE
                 "assignment.141"."origin_z" AS "origin_z"
          FROM   "assignment.141"
        ),
-       "assignment.143"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.143"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.142"."origin_x" AS "origin_x",
                 "assignment.142"."direction_y" AS "direction_y",
                 "assignment.142"."min_dist" AS "min_dist",
                 "assignment.142"."light_z" AS "light_z",
                 "assignment.142"."shadow_ray" AS "shadow_ray",
                 "assignment.142"."max_rec_depth" AS "max_rec_depth",
-                "assignment.142"."󰐤" AS "󰐤",
+                "assignment.142"."#️⃣" AS "#️⃣",
                 "assignment.142"."epsilon" AS "epsilon",
                 "assignment.142"."sphere_b" AS "sphere_b",
                 "assignment.142"."color_r" AS "color_r",
@@ -6114,14 +6114,14 @@ WITH RECURSIVE
                 "assignment.142"."origin_z" AS "origin_z"
          FROM   "assignment.142"
        ),
-       "assignment.144"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.144"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.143"."origin_x" AS "origin_x",
                 "assignment.143"."direction_y" AS "direction_y",
                 "assignment.143"."min_dist" AS "min_dist",
                 "assignment.143"."light_z" AS "light_z",
                 "assignment.143"."shadow_ray" AS "shadow_ray",
                 "assignment.143"."max_rec_depth" AS "max_rec_depth",
-                "assignment.143"."󰐤" AS "󰐤",
+                "assignment.143"."#️⃣" AS "#️⃣",
                 "assignment.143"."epsilon" AS "epsilon",
                 "assignment.143"."sphere_b" AS "sphere_b",
                 CAST((("assignment.143"."material") = 'm') AS bool) AS "condition",
@@ -6152,14 +6152,14 @@ WITH RECURSIVE
                 "assignment.143"."origin_z" AS "origin_z"
          FROM   "assignment.143"
        ),
-       "where.19"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "light_x", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "where.19"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "sphere_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "light_x", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "assignment.144"."origin_x" AS "origin_x",
                 "assignment.144"."direction_y" AS "direction_y",
                 "assignment.144"."min_dist" AS "min_dist",
                 "assignment.144"."light_z" AS "light_z",
                 "assignment.144"."shadow_ray" AS "shadow_ray",
                 "assignment.144"."max_rec_depth" AS "max_rec_depth",
-                "assignment.144"."󰐤" AS "󰐤",
+                "assignment.144"."#️⃣" AS "#️⃣",
                 "assignment.144"."epsilon" AS "epsilon",
                 "assignment.144"."sphere_b" AS "sphere_b",
                 "assignment.144"."material" AS "material",
@@ -6187,14 +6187,14 @@ WITH RECURSIVE
          FROM   "assignment.144"
          WHERE  "assignment.144"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.20"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.20"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.144"."origin_x" AS "origin_x",
                 "assignment.144"."direction_y" AS "direction_y",
                 "assignment.144"."min_dist" AS "min_dist",
                 "assignment.144"."light_z" AS "light_z",
                 "assignment.144"."shadow_ray" AS "shadow_ray",
                 "assignment.144"."max_rec_depth" AS "max_rec_depth",
-                "assignment.144"."󰐤" AS "󰐤",
+                "assignment.144"."#️⃣" AS "#️⃣",
                 "assignment.144"."epsilon" AS "epsilon",
                 "assignment.144"."color_r" AS "color_r",
                 "assignment.144"."material" AS "material",
@@ -6222,14 +6222,14 @@ WITH RECURSIVE
          FROM   "assignment.144"
          WHERE  "assignment.144"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.145"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "light_x", "screen_x", "sphere_g", "image_width", "origin_z") AS (
+       "assignment.145"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "light_x", "screen_x", "sphere_g", "image_width", "origin_z") AS (
          SELECT "where.19"."origin_x" AS "origin_x",
                 "where.19"."direction_y" AS "direction_y",
                 "where.19"."min_dist" AS "min_dist",
                 "where.19"."light_z" AS "light_z",
                 "where.19"."shadow_ray" AS "shadow_ray",
                 "where.19"."max_rec_depth" AS "max_rec_depth",
-                "where.19"."󰐤" AS "󰐤",
+                "where.19"."#️⃣" AS "#️⃣",
                 "where.19"."epsilon" AS "epsilon",
                 "where.19"."sphere_b" AS "sphere_b",
                 CAST((("where.19"."sphere_r")) AS real) AS "color_r",
@@ -6256,14 +6256,14 @@ WITH RECURSIVE
                 "where.19"."origin_z" AS "origin_z"
          FROM   "where.19"
        ),
-       "assignment.146"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.146"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "sphere_b", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.145"."origin_x" AS "origin_x",
                 "assignment.145"."direction_y" AS "direction_y",
                 "assignment.145"."min_dist" AS "min_dist",
                 "assignment.145"."light_z" AS "light_z",
                 "assignment.145"."shadow_ray" AS "shadow_ray",
                 "assignment.145"."max_rec_depth" AS "max_rec_depth",
-                "assignment.145"."󰐤" AS "󰐤",
+                "assignment.145"."#️⃣" AS "#️⃣",
                 "assignment.145"."epsilon" AS "epsilon",
                 "assignment.145"."sphere_b" AS "sphere_b",
                 "assignment.145"."color_r" AS "color_r",
@@ -6290,14 +6290,14 @@ WITH RECURSIVE
                 "assignment.145"."origin_z" AS "origin_z"
          FROM   "assignment.145"
        ),
-       "assignment.147"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.147"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.146"."origin_x" AS "origin_x",
                 "assignment.146"."direction_y" AS "direction_y",
                 "assignment.146"."min_dist" AS "min_dist",
                 "assignment.146"."light_z" AS "light_z",
                 "assignment.146"."shadow_ray" AS "shadow_ray",
                 "assignment.146"."max_rec_depth" AS "max_rec_depth",
-                "assignment.146"."󰐤" AS "󰐤",
+                "assignment.146"."#️⃣" AS "#️⃣",
                 "assignment.146"."epsilon" AS "epsilon",
                 "assignment.146"."color_r" AS "color_r",
                 "assignment.146"."material" AS "material",
@@ -6324,14 +6324,14 @@ WITH RECURSIVE
                 "assignment.146"."origin_z" AS "origin_z"
          FROM   "assignment.146"
        ),
-       "merge.6"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "merge.6"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          (SELECT "where.17"."origin_x" AS "origin_x",
                  "where.17"."direction_y" AS "direction_y",
                  "where.17"."min_dist" AS "min_dist",
                  "where.17"."light_z" AS "light_z",
                  "where.17"."shadow_ray" AS "shadow_ray",
                  "where.17"."max_rec_depth" AS "max_rec_depth",
-                 "where.17"."󰐤" AS "󰐤",
+                 "where.17"."#️⃣" AS "#️⃣",
                  "where.17"."epsilon" AS "epsilon",
                  "where.17"."color_r" AS "color_r",
                  "where.17"."material" AS "material",
@@ -6364,7 +6364,7 @@ WITH RECURSIVE
                  "assignment.147"."light_z" AS "light_z",
                  "assignment.147"."shadow_ray" AS "shadow_ray",
                  "assignment.147"."max_rec_depth" AS "max_rec_depth",
-                 "assignment.147"."󰐤" AS "󰐤",
+                 "assignment.147"."#️⃣" AS "#️⃣",
                  "assignment.147"."epsilon" AS "epsilon",
                  "assignment.147"."color_r" AS "color_r",
                  "assignment.147"."material" AS "material",
@@ -6397,7 +6397,7 @@ WITH RECURSIVE
                  "where.20"."light_z" AS "light_z",
                  "where.20"."shadow_ray" AS "shadow_ray",
                  "where.20"."max_rec_depth" AS "max_rec_depth",
-                 "where.20"."󰐤" AS "󰐤",
+                 "where.20"."#️⃣" AS "#️⃣",
                  "where.20"."epsilon" AS "epsilon",
                  "where.20"."color_r" AS "color_r",
                  "where.20"."material" AS "material",
@@ -6430,7 +6430,7 @@ WITH RECURSIVE
                  "where.15"."light_z" AS "light_z",
                  "where.15"."shadow_ray" AS "shadow_ray",
                  "where.15"."max_rec_depth" AS "max_rec_depth",
-                 "where.15"."󰐤" AS "󰐤",
+                 "where.15"."#️⃣" AS "#️⃣",
                  "where.15"."epsilon" AS "epsilon",
                  "where.15"."color_r" AS "color_r",
                  "where.15"."material" AS "material",
@@ -6457,14 +6457,14 @@ WITH RECURSIVE
                  "where.15"."origin_z" AS "origin_z"
           FROM   "where.15")
        ),
-       "assignment.148"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.148"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "merge.6"."origin_x" AS "origin_x",
                 "merge.6"."direction_y" AS "direction_y",
                 "merge.6"."min_dist" AS "min_dist",
                 "merge.6"."light_z" AS "light_z",
                 "merge.6"."shadow_ray" AS "shadow_ray",
                 "merge.6"."max_rec_depth" AS "max_rec_depth",
-                "merge.6"."󰐤" AS "󰐤",
+                "merge.6"."#️⃣" AS "#️⃣",
                 "merge.6"."epsilon" AS "epsilon",
                 CAST((("merge.6"."id") = 0) AS bool) AS "condition",
                 "merge.6"."color_r" AS "color_r",
@@ -6492,14 +6492,14 @@ WITH RECURSIVE
                 "merge.6"."origin_z" AS "origin_z"
          FROM   "merge.6"
        ),
-       "where.21"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.21"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.148"."origin_x" AS "origin_x",
                 "assignment.148"."direction_y" AS "direction_y",
                 "assignment.148"."min_dist" AS "min_dist",
                 "assignment.148"."light_z" AS "light_z",
                 "assignment.148"."shadow_ray" AS "shadow_ray",
                 "assignment.148"."max_rec_depth" AS "max_rec_depth",
-                "assignment.148"."󰐤" AS "󰐤",
+                "assignment.148"."#️⃣" AS "#️⃣",
                 "assignment.148"."epsilon" AS "epsilon",
                 "assignment.148"."color_r" AS "color_r",
                 "assignment.148"."material" AS "material",
@@ -6526,14 +6526,14 @@ WITH RECURSIVE
          FROM   "assignment.148"
          WHERE  "assignment.148"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.22"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.22"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.148"."origin_x" AS "origin_x",
                 "assignment.148"."direction_y" AS "direction_y",
                 "assignment.148"."min_dist" AS "min_dist",
                 "assignment.148"."light_z" AS "light_z",
                 "assignment.148"."shadow_ray" AS "shadow_ray",
                 "assignment.148"."max_rec_depth" AS "max_rec_depth",
-                "assignment.148"."󰐤" AS "󰐤",
+                "assignment.148"."#️⃣" AS "#️⃣",
                 "assignment.148"."epsilon" AS "epsilon",
                 "assignment.148"."color_r" AS "color_r",
                 "assignment.148"."material" AS "material",
@@ -6561,14 +6561,14 @@ WITH RECURSIVE
          FROM   "assignment.148"
          WHERE  "assignment.148"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.149"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.149"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "id", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.22"."origin_x" AS "origin_x",
                 "where.22"."direction_y" AS "direction_y",
                 "where.22"."min_dist" AS "min_dist",
                 "where.22"."light_z" AS "light_z",
                 "where.22"."shadow_ray" AS "shadow_ray",
                 "where.22"."max_rec_depth" AS "max_rec_depth",
-                "where.22"."󰐤" AS "󰐤",
+                "where.22"."#️⃣" AS "#️⃣",
                 "where.22"."epsilon" AS "epsilon",
                 "where.22"."color_r" AS "color_r",
                 "where.22"."material" AS "material",
@@ -6595,14 +6595,14 @@ WITH RECURSIVE
                 "where.22"."origin_z" AS "origin_z"
          FROM   "where.22"
        ),
-       "assignment.150"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.150"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.21"."origin_x" AS "origin_x",
                 "where.21"."direction_y" AS "direction_y",
                 "where.21"."min_dist" AS "min_dist",
                 "where.21"."light_z" AS "light_z",
                 "where.21"."shadow_ray" AS "shadow_ray",
                 "where.21"."max_rec_depth" AS "max_rec_depth",
-                "where.21"."󰐤" AS "󰐤",
+                "where.21"."#️⃣" AS "#️⃣",
                 "where.21"."epsilon" AS "epsilon",
                 CAST((("where.21"."shadow_ray")) AS bool) AS "condition",
                 "where.21"."color_r" AS "color_r",
@@ -6629,11 +6629,11 @@ WITH RECURSIVE
                 "where.21"."origin_z" AS "origin_z"
          FROM   "where.21"
        ),
-       "jump.2"("pixel_r", "color_b", "direction_z", "󰐤", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
+       "jump.2"("pixel_r", "color_b", "direction_z", "#️⃣", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "🏷️", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
          SELECT "assignment.149"."pixel_r" AS "pixel_r",
                 "assignment.149"."color_b" AS "color_b",
                 "assignment.149"."direction_z" AS "direction_z",
-                "assignment.149"."󰐤" AS "󰐤",
+                "assignment.149"."#️⃣" AS "#️⃣",
                 "assignment.149"."origin_x" AS "origin_x",
                 "assignment.149"."image_width" AS "image_width",
                 "assignment.149"."step" AS "step",
@@ -6648,7 +6648,7 @@ WITH RECURSIVE
                 "assignment.149"."origin_y" AS "origin_y",
                 "assignment.149"."pixel_g" AS "pixel_g",
                 "assignment.149"."normal_y" AS "normal_y",
-                'start.4' AS "",
+                'start.4' AS "🏷️",
                 "assignment.149"."origin_z" AS "origin_z",
                 "assignment.149"."epsilon" AS "epsilon",
                 "assignment.149"."light_z" AS "light_z",
@@ -6665,10 +6665,10 @@ WITH RECURSIVE
                 "assignment.149"."light_x" AS "light_x"
          FROM   "assignment.149"
        ),
-       "where.23"("pixel_b", "image_height", "󰐤", "screen_y", "material", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "where.23"("pixel_b", "image_height", "#️⃣", "screen_y", "material", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          SELECT "assignment.150"."pixel_b" AS "pixel_b",
                 "assignment.150"."image_height" AS "image_height",
-                "assignment.150"."󰐤" AS "󰐤",
+                "assignment.150"."#️⃣" AS "#️⃣",
                 "assignment.150"."screen_y" AS "screen_y",
                 "assignment.150"."material" AS "material",
                 "assignment.150"."screen_x" AS "screen_x",
@@ -6678,14 +6678,14 @@ WITH RECURSIVE
          FROM   "assignment.150"
          WHERE  "assignment.150"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.24"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.24"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.150"."origin_x" AS "origin_x",
                 "assignment.150"."direction_y" AS "direction_y",
                 "assignment.150"."min_dist" AS "min_dist",
                 "assignment.150"."light_z" AS "light_z",
                 "assignment.150"."shadow_ray" AS "shadow_ray",
                 "assignment.150"."max_rec_depth" AS "max_rec_depth",
-                "assignment.150"."󰐤" AS "󰐤",
+                "assignment.150"."#️⃣" AS "#️⃣",
                 "assignment.150"."epsilon" AS "epsilon",
                 "assignment.150"."color_r" AS "color_r",
                 "assignment.150"."material" AS "material",
@@ -6712,10 +6712,10 @@ WITH RECURSIVE
          FROM   "assignment.150"
          WHERE  "assignment.150"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.151"("pixel_b", "image_height", "󰐤", "condition", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "assignment.151"("pixel_b", "image_height", "#️⃣", "condition", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          SELECT "where.23"."pixel_b" AS "pixel_b",
                 "where.23"."image_height" AS "image_height",
-                "where.23"."󰐤" AS "󰐤",
+                "where.23"."#️⃣" AS "#️⃣",
                 CAST((("where.23"."material") <> 'l') AS bool) AS "condition",
                 "where.23"."screen_y" AS "screen_y",
                 "where.23"."screen_x" AS "screen_x",
@@ -6724,14 +6724,14 @@ WITH RECURSIVE
                 "where.23"."image_width" AS "image_width"
          FROM   "where.23"
        ),
-       "assignment.155"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.155"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.24"."origin_x" AS "origin_x",
                 "where.24"."direction_y" AS "direction_y",
                 "where.24"."min_dist" AS "min_dist",
                 "where.24"."light_z" AS "light_z",
                 "where.24"."shadow_ray" AS "shadow_ray",
                 "where.24"."max_rec_depth" AS "max_rec_depth",
-                "where.24"."󰐤" AS "󰐤",
+                "where.24"."#️⃣" AS "#️⃣",
                 "where.24"."epsilon" AS "epsilon",
                 CAST((("where.24"."material") = 'l') AS bool) AS "condition",
                 "where.24"."color_r" AS "color_r",
@@ -6758,19 +6758,19 @@ WITH RECURSIVE
                 "where.24"."origin_z" AS "origin_z"
          FROM   "where.24"
        ),
-       "where.25"("screen_x", "screen_y", "image_height", "󰐤", "image_width") AS (
+       "where.25"("screen_x", "screen_y", "image_height", "#️⃣", "image_width") AS (
          SELECT "assignment.151"."screen_x" AS "screen_x",
                 "assignment.151"."screen_y" AS "screen_y",
                 "assignment.151"."image_height" AS "image_height",
-                "assignment.151"."󰐤" AS "󰐤",
+                "assignment.151"."#️⃣" AS "#️⃣",
                 "assignment.151"."image_width" AS "image_width"
          FROM   "assignment.151"
          WHERE  "assignment.151"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.26"("pixel_b", "image_height", "󰐤", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "where.26"("pixel_b", "image_height", "#️⃣", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          SELECT "assignment.151"."pixel_b" AS "pixel_b",
                 "assignment.151"."image_height" AS "image_height",
-                "assignment.151"."󰐤" AS "󰐤",
+                "assignment.151"."#️⃣" AS "#️⃣",
                 "assignment.151"."screen_y" AS "screen_y",
                 "assignment.151"."screen_x" AS "screen_x",
                 "assignment.151"."pixel_g" AS "pixel_g",
@@ -6779,23 +6779,23 @@ WITH RECURSIVE
          FROM   "assignment.151"
          WHERE  "assignment.151"."condition" IS DISTINCT FROM TRUE
        ),
-       "where.27"("screen_x", "screen_y", "image_height", "󰐤", "image_width") AS (
+       "where.27"("screen_x", "screen_y", "image_height", "#️⃣", "image_width") AS (
          SELECT "assignment.155"."screen_x" AS "screen_x",
                 "assignment.155"."screen_y" AS "screen_y",
                 "assignment.155"."image_height" AS "image_height",
-                "assignment.155"."󰐤" AS "󰐤",
+                "assignment.155"."#️⃣" AS "#️⃣",
                 "assignment.155"."image_width" AS "image_width"
          FROM   "assignment.155"
          WHERE  "assignment.155"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.28"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.28"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.155"."origin_x" AS "origin_x",
                 "assignment.155"."direction_y" AS "direction_y",
                 "assignment.155"."min_dist" AS "min_dist",
                 "assignment.155"."light_z" AS "light_z",
                 "assignment.155"."shadow_ray" AS "shadow_ray",
                 "assignment.155"."max_rec_depth" AS "max_rec_depth",
-                "assignment.155"."󰐤" AS "󰐤",
+                "assignment.155"."#️⃣" AS "#️⃣",
                 "assignment.155"."epsilon" AS "epsilon",
                 "assignment.155"."color_r" AS "color_r",
                 "assignment.155"."material" AS "material",
@@ -6822,32 +6822,32 @@ WITH RECURSIVE
          FROM   "assignment.155"
          WHERE  "assignment.155"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.152"("image_height", "screen_x", "screen_y", "pixel_r", "󰐤", "image_width") AS (
+       "assignment.152"("image_height", "screen_x", "screen_y", "pixel_r", "#️⃣", "image_width") AS (
          SELECT "where.25"."image_height" AS "image_height",
                 "where.25"."screen_x" AS "screen_x",
                 "where.25"."screen_y" AS "screen_y",
                 CAST((0) AS real) AS "pixel_r",
-                "where.25"."󰐤" AS "󰐤",
+                "where.25"."#️⃣" AS "#️⃣",
                 "where.25"."image_width" AS "image_width"
          FROM   "where.25"
        ),
-       "assignment.156"("image_height", "screen_x", "screen_y", "pixel_r", "󰐤", "image_width") AS (
+       "assignment.156"("image_height", "screen_x", "screen_y", "pixel_r", "#️⃣", "image_width") AS (
          SELECT "where.27"."image_height" AS "image_height",
                 "where.27"."screen_x" AS "screen_x",
                 "where.27"."screen_y" AS "screen_y",
                 CAST((1) AS real) AS "pixel_r",
-                "where.27"."󰐤" AS "󰐤",
+                "where.27"."#️⃣" AS "#️⃣",
                 "where.27"."image_width" AS "image_width"
          FROM   "where.27"
        ),
-       "assignment.159"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.159"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "color_r", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.28"."origin_x" AS "origin_x",
                 "where.28"."direction_y" AS "direction_y",
                 "where.28"."min_dist" AS "min_dist",
                 "where.28"."light_z" AS "light_z",
                 "where.28"."shadow_ray" AS "shadow_ray",
                 "where.28"."max_rec_depth" AS "max_rec_depth",
-                "where.28"."󰐤" AS "󰐤",
+                "where.28"."#️⃣" AS "#️⃣",
                 "where.28"."epsilon" AS "epsilon",
                 CAST((("where.28"."material") = 'm') AS bool) AS "condition",
                 "where.28"."color_r" AS "color_r",
@@ -6874,33 +6874,33 @@ WITH RECURSIVE
                 "where.28"."origin_z" AS "origin_z"
          FROM   "where.28"
        ),
-       "assignment.153"("screen_y", "image_height", "screen_x", "pixel_g", "pixel_r", "󰐤", "image_width") AS (
+       "assignment.153"("screen_y", "image_height", "screen_x", "pixel_g", "pixel_r", "#️⃣", "image_width") AS (
          SELECT "assignment.152"."screen_y" AS "screen_y",
                 "assignment.152"."image_height" AS "image_height",
                 "assignment.152"."screen_x" AS "screen_x",
                 CAST((0) AS real) AS "pixel_g",
                 "assignment.152"."pixel_r" AS "pixel_r",
-                "assignment.152"."󰐤" AS "󰐤",
+                "assignment.152"."#️⃣" AS "#️⃣",
                 "assignment.152"."image_width" AS "image_width"
          FROM   "assignment.152"
        ),
-       "assignment.157"("screen_y", "image_height", "screen_x", "pixel_g", "pixel_r", "󰐤", "image_width") AS (
+       "assignment.157"("screen_y", "image_height", "screen_x", "pixel_g", "pixel_r", "#️⃣", "image_width") AS (
          SELECT "assignment.156"."screen_y" AS "screen_y",
                 "assignment.156"."image_height" AS "image_height",
                 "assignment.156"."screen_x" AS "screen_x",
                 CAST((1) AS real) AS "pixel_g",
                 "assignment.156"."pixel_r" AS "pixel_r",
-                "assignment.156"."󰐤" AS "󰐤",
+                "assignment.156"."#️⃣" AS "#️⃣",
                 "assignment.156"."image_width" AS "image_width"
          FROM   "assignment.156"
        ),
-       "where.29"("origin_x", "direction_y", "min_dist", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "where.29"("origin_x", "direction_y", "min_dist", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.159"."origin_x" AS "origin_x",
                 "assignment.159"."direction_y" AS "direction_y",
                 "assignment.159"."min_dist" AS "min_dist",
                 "assignment.159"."light_z" AS "light_z",
                 "assignment.159"."max_rec_depth" AS "max_rec_depth",
-                "assignment.159"."󰐤" AS "󰐤",
+                "assignment.159"."#️⃣" AS "#️⃣",
                 "assignment.159"."epsilon" AS "epsilon",
                 "assignment.159"."color_r" AS "color_r",
                 "assignment.159"."normal_x" AS "normal_x",
@@ -6923,14 +6923,14 @@ WITH RECURSIVE
          FROM   "assignment.159"
          WHERE  "assignment.159"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.30"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "where.30"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "material", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.159"."origin_x" AS "origin_x",
                 "assignment.159"."direction_y" AS "direction_y",
                 "assignment.159"."min_dist" AS "min_dist",
                 "assignment.159"."light_z" AS "light_z",
                 "assignment.159"."shadow_ray" AS "shadow_ray",
                 "assignment.159"."max_rec_depth" AS "max_rec_depth",
-                "assignment.159"."󰐤" AS "󰐤",
+                "assignment.159"."#️⃣" AS "#️⃣",
                 "assignment.159"."epsilon" AS "epsilon",
                 "assignment.159"."material" AS "material",
                 "assignment.159"."normal_x" AS "normal_x",
@@ -6954,10 +6954,10 @@ WITH RECURSIVE
          FROM   "assignment.159"
          WHERE  "assignment.159"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.154"("pixel_b", "image_height", "󰐤", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "assignment.154"("pixel_b", "image_height", "#️⃣", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          SELECT CAST((0) AS real) AS "pixel_b",
                 "assignment.153"."image_height" AS "image_height",
-                "assignment.153"."󰐤" AS "󰐤",
+                "assignment.153"."#️⃣" AS "#️⃣",
                 "assignment.153"."screen_y" AS "screen_y",
                 "assignment.153"."screen_x" AS "screen_x",
                 "assignment.153"."pixel_g" AS "pixel_g",
@@ -6965,10 +6965,10 @@ WITH RECURSIVE
                 "assignment.153"."image_width" AS "image_width"
          FROM   "assignment.153"
        ),
-       "assignment.158"("pixel_b", "image_height", "󰐤", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "assignment.158"("pixel_b", "image_height", "#️⃣", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          SELECT CAST((1) AS real) AS "pixel_b",
                 "assignment.157"."image_height" AS "image_height",
-                "assignment.157"."󰐤" AS "󰐤",
+                "assignment.157"."#️⃣" AS "#️⃣",
                 "assignment.157"."screen_y" AS "screen_y",
                 "assignment.157"."screen_x" AS "screen_x",
                 "assignment.157"."pixel_g" AS "pixel_g",
@@ -6976,13 +6976,13 @@ WITH RECURSIVE
                 "assignment.157"."image_width" AS "image_width"
          FROM   "assignment.157"
        ),
-       "assignment.160"("origin_x", "direction_y", "min_dist", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.160"("origin_x", "direction_y", "min_dist", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT CAST((("where.29"."origin_x") + ("where.29"."direction_x") * ("where.29"."min_dist") + ("where.29"."normal_x") * ("where.29"."epsilon")) AS real) AS "origin_x",
                 "where.29"."direction_y" AS "direction_y",
                 "where.29"."min_dist" AS "min_dist",
                 "where.29"."light_z" AS "light_z",
                 "where.29"."max_rec_depth" AS "max_rec_depth",
-                "where.29"."󰐤" AS "󰐤",
+                "where.29"."#️⃣" AS "#️⃣",
                 "where.29"."epsilon" AS "epsilon",
                 "where.29"."color_r" AS "color_r",
                 "where.29"."normal_x" AS "normal_x",
@@ -7003,14 +7003,14 @@ WITH RECURSIVE
                 "where.29"."origin_z" AS "origin_z"
          FROM   "where.29"
        ),
-       "assignment.176"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.176"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.30"."origin_x" AS "origin_x",
                 "where.30"."direction_y" AS "direction_y",
                 "where.30"."min_dist" AS "min_dist",
                 "where.30"."light_z" AS "light_z",
                 "where.30"."shadow_ray" AS "shadow_ray",
                 "where.30"."max_rec_depth" AS "max_rec_depth",
-                "where.30"."󰐤" AS "󰐤",
+                "where.30"."#️⃣" AS "#️⃣",
                 "where.30"."epsilon" AS "epsilon",
                 CAST((("where.30"."material") = 'r') AS bool) AS "condition",
                 "where.30"."normal_x" AS "normal_x",
@@ -7033,12 +7033,12 @@ WITH RECURSIVE
                 "where.30"."origin_z" AS "origin_z"
          FROM   "where.30"
        ),
-       "assignment.161"("origin_x", "min_dist", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.161"("origin_x", "min_dist", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.160"."origin_x" AS "origin_x",
                 "assignment.160"."min_dist" AS "min_dist",
                 "assignment.160"."light_z" AS "light_z",
                 "assignment.160"."max_rec_depth" AS "max_rec_depth",
-                "assignment.160"."󰐤" AS "󰐤",
+                "assignment.160"."#️⃣" AS "#️⃣",
                 "assignment.160"."epsilon" AS "epsilon",
                 "assignment.160"."color_r" AS "color_r",
                 "assignment.160"."normal_x" AS "normal_x",
@@ -7059,14 +7059,14 @@ WITH RECURSIVE
                 "assignment.160"."origin_z" AS "origin_z"
          FROM   "assignment.160"
        ),
-       "where.33"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "where.33"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.176"."origin_x" AS "origin_x",
                 "assignment.176"."direction_y" AS "direction_y",
                 "assignment.176"."min_dist" AS "min_dist",
                 "assignment.176"."light_z" AS "light_z",
                 "assignment.176"."shadow_ray" AS "shadow_ray",
                 "assignment.176"."max_rec_depth" AS "max_rec_depth",
-                "assignment.176"."󰐤" AS "󰐤",
+                "assignment.176"."#️⃣" AS "#️⃣",
                 "assignment.176"."epsilon" AS "epsilon",
                 "assignment.176"."normal_x" AS "normal_x",
                 "assignment.176"."pixel_g" AS "pixel_g",
@@ -7089,10 +7089,10 @@ WITH RECURSIVE
          FROM   "assignment.176"
          WHERE  "assignment.176"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.34"("pixel_b", "image_height", "󰐤", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "where.34"("pixel_b", "image_height", "#️⃣", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          SELECT "assignment.176"."pixel_b" AS "pixel_b",
                 "assignment.176"."image_height" AS "image_height",
-                "assignment.176"."󰐤" AS "󰐤",
+                "assignment.176"."#️⃣" AS "#️⃣",
                 "assignment.176"."screen_y" AS "screen_y",
                 "assignment.176"."screen_x" AS "screen_x",
                 "assignment.176"."pixel_g" AS "pixel_g",
@@ -7101,11 +7101,11 @@ WITH RECURSIVE
          FROM   "assignment.176"
          WHERE  "assignment.176"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.162"("origin_x", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.162"("origin_x", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.161"."origin_x" AS "origin_x",
                 "assignment.161"."light_z" AS "light_z",
                 "assignment.161"."max_rec_depth" AS "max_rec_depth",
-                "assignment.161"."󰐤" AS "󰐤",
+                "assignment.161"."#️⃣" AS "#️⃣",
                 "assignment.161"."epsilon" AS "epsilon",
                 "assignment.161"."color_r" AS "color_r",
                 "assignment.161"."normal_x" AS "normal_x",
@@ -7125,14 +7125,14 @@ WITH RECURSIVE
                 CAST((("assignment.161"."origin_z") + ("assignment.161"."direction_z") * ("assignment.161"."min_dist") + ("assignment.161"."normal_z") * ("assignment.161"."epsilon")) AS real) AS "origin_z"
          FROM   "assignment.161"
        ),
-       "assignment.177"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.177"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT CAST((("where.33"."origin_x") + ("where.33"."direction_x") * ("where.33"."min_dist") + ("where.33"."normal_x") * ("where.33"."epsilon")) AS real) AS "origin_x",
                 "where.33"."direction_y" AS "direction_y",
                 "where.33"."min_dist" AS "min_dist",
                 "where.33"."light_z" AS "light_z",
                 "where.33"."shadow_ray" AS "shadow_ray",
                 "where.33"."max_rec_depth" AS "max_rec_depth",
-                "where.33"."󰐤" AS "󰐤",
+                "where.33"."#️⃣" AS "#️⃣",
                 "where.33"."epsilon" AS "epsilon",
                 "where.33"."normal_x" AS "normal_x",
                 "where.33"."pixel_g" AS "pixel_g",
@@ -7154,11 +7154,11 @@ WITH RECURSIVE
                 "where.33"."origin_z" AS "origin_z"
          FROM   "where.33"
        ),
-       "assignment.163"("origin_x", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.163"("origin_x", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.162"."origin_x" AS "origin_x",
                 "assignment.162"."light_z" AS "light_z",
                 "assignment.162"."max_rec_depth" AS "max_rec_depth",
-                "assignment.162"."󰐤" AS "󰐤",
+                "assignment.162"."#️⃣" AS "#️⃣",
                 "assignment.162"."epsilon" AS "epsilon",
                 "assignment.162"."color_r" AS "color_r",
                 "assignment.162"."normal_x" AS "normal_x",
@@ -7179,14 +7179,14 @@ WITH RECURSIVE
                 "assignment.162"."origin_z" AS "origin_z"
          FROM   "assignment.162"
        ),
-       "assignment.178"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.178"("origin_x", "direction_y", "min_dist", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "normal_x", "pixel_g", "normal_z", "pixel_r", "screen_y", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.177"."origin_x" AS "origin_x",
                 "assignment.177"."direction_y" AS "direction_y",
                 "assignment.177"."min_dist" AS "min_dist",
                 "assignment.177"."light_z" AS "light_z",
                 "assignment.177"."shadow_ray" AS "shadow_ray",
                 "assignment.177"."max_rec_depth" AS "max_rec_depth",
-                "assignment.177"."󰐤" AS "󰐤",
+                "assignment.177"."#️⃣" AS "#️⃣",
                 "assignment.177"."epsilon" AS "epsilon",
                 "assignment.177"."normal_x" AS "normal_x",
                 "assignment.177"."pixel_g" AS "pixel_g",
@@ -7208,12 +7208,12 @@ WITH RECURSIVE
                 "assignment.177"."origin_z" AS "origin_z"
          FROM   "assignment.177"
        ),
-       "assignment.164"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.164"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.163"."origin_x" AS "origin_x",
                 CAST((("assignment.163"."light_y") - ("assignment.163"."origin_y")) AS real) AS "direction_y",
                 "assignment.163"."light_z" AS "light_z",
                 "assignment.163"."max_rec_depth" AS "max_rec_depth",
-                "assignment.163"."󰐤" AS "󰐤",
+                "assignment.163"."#️⃣" AS "#️⃣",
                 "assignment.163"."epsilon" AS "epsilon",
                 "assignment.163"."color_r" AS "color_r",
                 "assignment.163"."normal_x" AS "normal_x",
@@ -7234,13 +7234,13 @@ WITH RECURSIVE
                 "assignment.163"."origin_z" AS "origin_z"
          FROM   "assignment.163"
        ),
-       "assignment.179"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "normal_x", "screen_y", "pixel_g", "normal_z", "pixel_r", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.179"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "normal_x", "screen_y", "pixel_g", "normal_z", "pixel_r", "normal_y", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.178"."origin_x" AS "origin_x",
                 "assignment.178"."direction_y" AS "direction_y",
                 "assignment.178"."light_z" AS "light_z",
                 "assignment.178"."shadow_ray" AS "shadow_ray",
                 "assignment.178"."max_rec_depth" AS "max_rec_depth",
-                "assignment.178"."󰐤" AS "󰐤",
+                "assignment.178"."#️⃣" AS "#️⃣",
                 "assignment.178"."epsilon" AS "epsilon",
                 "assignment.178"."normal_x" AS "normal_x",
                 "assignment.178"."screen_y" AS "screen_y",
@@ -7262,12 +7262,12 @@ WITH RECURSIVE
                 CAST((("assignment.178"."origin_z") + ("assignment.178"."direction_z") * ("assignment.178"."min_dist") + ("assignment.178"."normal_z") * ("assignment.178"."epsilon")) AS real) AS "origin_z"
          FROM   "assignment.178"
        ),
-       "assignment.165"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.165"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.164"."origin_x" AS "origin_x",
                 "assignment.164"."direction_y" AS "direction_y",
                 "assignment.164"."light_z" AS "light_z",
                 "assignment.164"."max_rec_depth" AS "max_rec_depth",
-                "assignment.164"."󰐤" AS "󰐤",
+                "assignment.164"."#️⃣" AS "#️⃣",
                 "assignment.164"."epsilon" AS "epsilon",
                 "assignment.164"."color_r" AS "color_r",
                 "assignment.164"."normal_x" AS "normal_x",
@@ -7289,13 +7289,13 @@ WITH RECURSIVE
                 "assignment.164"."origin_z" AS "origin_z"
          FROM   "assignment.164"
        ),
-       "assignment.180"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "normal_x", "screen_y", "pixel_g", "normal_z", "pixel_r", "normal_y", "shadows", "step", "pixel_b", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.180"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "normal_x", "screen_y", "pixel_g", "normal_z", "pixel_r", "normal_y", "shadows", "step", "pixel_b", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.179"."origin_x" AS "origin_x",
                 "assignment.179"."direction_y" AS "direction_y",
                 "assignment.179"."light_z" AS "light_z",
                 "assignment.179"."shadow_ray" AS "shadow_ray",
                 "assignment.179"."max_rec_depth" AS "max_rec_depth",
-                "assignment.179"."󰐤" AS "󰐤",
+                "assignment.179"."#️⃣" AS "#️⃣",
                 "assignment.179"."epsilon" AS "epsilon",
                 "assignment.179"."normal_x" AS "normal_x",
                 "assignment.179"."screen_y" AS "screen_y",
@@ -7318,13 +7318,13 @@ WITH RECURSIVE
                 "assignment.179"."origin_z" AS "origin_z"
          FROM   "assignment.179"
        ),
-       "assignment.166"("length", "direction_y", "origin_x", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.166"("length", "direction_y", "origin_x", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT CAST((sqrt(("assignment.165"."direction_x") ** 2 + ("assignment.165"."direction_y") ** 2 + ("assignment.165"."direction_z") ** 2)) AS real) AS "length",
                 "assignment.165"."direction_y" AS "direction_y",
                 "assignment.165"."origin_x" AS "origin_x",
                 "assignment.165"."light_z" AS "light_z",
                 "assignment.165"."max_rec_depth" AS "max_rec_depth",
-                "assignment.165"."󰐤" AS "󰐤",
+                "assignment.165"."#️⃣" AS "#️⃣",
                 "assignment.165"."epsilon" AS "epsilon",
                 "assignment.165"."color_r" AS "color_r",
                 "assignment.165"."normal_x" AS "normal_x",
@@ -7346,13 +7346,13 @@ WITH RECURSIVE
                 "assignment.165"."origin_z" AS "origin_z"
          FROM   "assignment.165"
        ),
-       "assignment.181"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "normal_z", "pixel_r", "normal_y", "shadows", "step", "pixel_b", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.181"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "normal_z", "pixel_r", "normal_y", "shadows", "step", "pixel_b", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.180"."origin_x" AS "origin_x",
                 "assignment.180"."direction_y" AS "direction_y",
                 "assignment.180"."light_z" AS "light_z",
                 "assignment.180"."shadow_ray" AS "shadow_ray",
                 "assignment.180"."max_rec_depth" AS "max_rec_depth",
-                "assignment.180"."󰐤" AS "󰐤",
+                "assignment.180"."#️⃣" AS "#️⃣",
                 "assignment.180"."epsilon" AS "epsilon",
                 "assignment.180"."screen_y" AS "screen_y",
                 "assignment.180"."pixel_g" AS "pixel_g",
@@ -7374,13 +7374,13 @@ WITH RECURSIVE
                 "assignment.180"."origin_z" AS "origin_z"
          FROM   "assignment.180"
        ),
-       "assignment.167"("length", "direction_y", "origin_x", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.167"("length", "direction_y", "origin_x", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.166"."length" AS "length",
                 "assignment.166"."direction_y" AS "direction_y",
                 "assignment.166"."origin_x" AS "origin_x",
                 "assignment.166"."light_z" AS "light_z",
                 "assignment.166"."max_rec_depth" AS "max_rec_depth",
-                "assignment.166"."󰐤" AS "󰐤",
+                "assignment.166"."#️⃣" AS "#️⃣",
                 "assignment.166"."epsilon" AS "epsilon",
                 "assignment.166"."color_r" AS "color_r",
                 "assignment.166"."normal_x" AS "normal_x",
@@ -7402,13 +7402,13 @@ WITH RECURSIVE
                 "assignment.166"."origin_z" AS "origin_z"
          FROM   "assignment.166"
        ),
-       "assignment.182"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "normal_z", "pixel_r", "shadows", "step", "pixel_b", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.182"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "normal_z", "pixel_r", "shadows", "step", "pixel_b", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.181"."origin_x" AS "origin_x",
                 CAST((("assignment.181"."direction_y") - ("assignment.181"."normal_y") * ("assignment.181"."u")) AS real) AS "direction_y",
                 "assignment.181"."light_z" AS "light_z",
                 "assignment.181"."shadow_ray" AS "shadow_ray",
                 "assignment.181"."max_rec_depth" AS "max_rec_depth",
-                "assignment.181"."󰐤" AS "󰐤",
+                "assignment.181"."#️⃣" AS "#️⃣",
                 "assignment.181"."epsilon" AS "epsilon",
                 "assignment.181"."screen_y" AS "screen_y",
                 "assignment.181"."pixel_g" AS "pixel_g",
@@ -7429,13 +7429,13 @@ WITH RECURSIVE
                 "assignment.181"."origin_z" AS "origin_z"
          FROM   "assignment.181"
        ),
-       "assignment.168"("length", "direction_y", "origin_x", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.168"("length", "direction_y", "origin_x", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.167"."length" AS "length",
                 CAST((("assignment.167"."direction_y") / ("assignment.167"."length")) AS real) AS "direction_y",
                 "assignment.167"."origin_x" AS "origin_x",
                 "assignment.167"."light_z" AS "light_z",
                 "assignment.167"."max_rec_depth" AS "max_rec_depth",
-                "assignment.167"."󰐤" AS "󰐤",
+                "assignment.167"."#️⃣" AS "#️⃣",
                 "assignment.167"."epsilon" AS "epsilon",
                 "assignment.167"."color_r" AS "color_r",
                 "assignment.167"."normal_x" AS "normal_x",
@@ -7457,13 +7457,13 @@ WITH RECURSIVE
                 "assignment.167"."origin_z" AS "origin_z"
          FROM   "assignment.167"
        ),
-       "assignment.183"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.183"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.182"."origin_x" AS "origin_x",
                 "assignment.182"."direction_y" AS "direction_y",
                 "assignment.182"."light_z" AS "light_z",
                 "assignment.182"."shadow_ray" AS "shadow_ray",
                 "assignment.182"."max_rec_depth" AS "max_rec_depth",
-                "assignment.182"."󰐤" AS "󰐤",
+                "assignment.182"."#️⃣" AS "#️⃣",
                 "assignment.182"."epsilon" AS "epsilon",
                 "assignment.182"."screen_y" AS "screen_y",
                 "assignment.182"."pixel_g" AS "pixel_g",
@@ -7482,12 +7482,12 @@ WITH RECURSIVE
                 "assignment.182"."origin_z" AS "origin_z"
          FROM   "assignment.182"
        ),
-       "assignment.169"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.169"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "normal_x", "screen_y", "normal_z", "normal_y", "shadows", "step", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.168"."origin_x" AS "origin_x",
                 "assignment.168"."direction_y" AS "direction_y",
                 "assignment.168"."light_z" AS "light_z",
                 "assignment.168"."max_rec_depth" AS "max_rec_depth",
-                "assignment.168"."󰐤" AS "󰐤",
+                "assignment.168"."#️⃣" AS "#️⃣",
                 "assignment.168"."epsilon" AS "epsilon",
                 "assignment.168"."color_r" AS "color_r",
                 "assignment.168"."normal_x" AS "normal_x",
@@ -7509,13 +7509,13 @@ WITH RECURSIVE
                 "assignment.168"."origin_z" AS "origin_z"
          FROM   "assignment.168"
        ),
-       "assignment.184"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "condition", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.184"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "condition", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.183"."origin_x" AS "origin_x",
                 "assignment.183"."direction_y" AS "direction_y",
                 "assignment.183"."light_z" AS "light_z",
                 "assignment.183"."shadow_ray" AS "shadow_ray",
                 "assignment.183"."max_rec_depth" AS "max_rec_depth",
-                "assignment.183"."󰐤" AS "󰐤",
+                "assignment.183"."#️⃣" AS "#️⃣",
                 "assignment.183"."epsilon" AS "epsilon",
                 CAST((("assignment.183"."step") < ("assignment.183"."max_rec_depth")) AS bool) AS "condition",
                 "assignment.183"."screen_y" AS "screen_y",
@@ -7535,12 +7535,12 @@ WITH RECURSIVE
                 "assignment.183"."origin_z" AS "origin_z"
          FROM   "assignment.183"
        ),
-       "assignment.170"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "color_r", "screen_y", "shadows", "step", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.170"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "color_r", "screen_y", "shadows", "step", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.169"."origin_x" AS "origin_x",
                 "assignment.169"."direction_y" AS "direction_y",
                 "assignment.169"."light_z" AS "light_z",
                 "assignment.169"."max_rec_depth" AS "max_rec_depth",
-                "assignment.169"."󰐤" AS "󰐤",
+                "assignment.169"."#️⃣" AS "#️⃣",
                 "assignment.169"."epsilon" AS "epsilon",
                 "assignment.169"."color_r" AS "color_r",
                 "assignment.169"."screen_y" AS "screen_y",
@@ -7560,13 +7560,13 @@ WITH RECURSIVE
                 "assignment.169"."origin_z" AS "origin_z"
          FROM   "assignment.169"
        ),
-       "where.35"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "where.35"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.184"."origin_x" AS "origin_x",
                 "assignment.184"."direction_y" AS "direction_y",
                 "assignment.184"."light_z" AS "light_z",
                 "assignment.184"."shadow_ray" AS "shadow_ray",
                 "assignment.184"."max_rec_depth" AS "max_rec_depth",
-                "assignment.184"."󰐤" AS "󰐤",
+                "assignment.184"."#️⃣" AS "#️⃣",
                 "assignment.184"."epsilon" AS "epsilon",
                 "assignment.184"."screen_y" AS "screen_y",
                 "assignment.184"."pixel_g" AS "pixel_g",
@@ -7586,10 +7586,10 @@ WITH RECURSIVE
          FROM   "assignment.184"
          WHERE  "assignment.184"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.36"("pixel_b", "image_height", "󰐤", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "where.36"("pixel_b", "image_height", "#️⃣", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          SELECT "assignment.184"."pixel_b" AS "pixel_b",
                 "assignment.184"."image_height" AS "image_height",
-                "assignment.184"."󰐤" AS "󰐤",
+                "assignment.184"."#️⃣" AS "#️⃣",
                 "assignment.184"."screen_y" AS "screen_y",
                 "assignment.184"."screen_x" AS "screen_x",
                 "assignment.184"."pixel_g" AS "pixel_g",
@@ -7598,12 +7598,12 @@ WITH RECURSIVE
          FROM   "assignment.184"
          WHERE  "assignment.184"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.171"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_r", "shadows", "step", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.171"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_r", "shadows", "step", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "color_g", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.170"."origin_x" AS "origin_x",
                 "assignment.170"."direction_y" AS "direction_y",
                 "assignment.170"."light_z" AS "light_z",
                 "assignment.170"."max_rec_depth" AS "max_rec_depth",
-                "assignment.170"."󰐤" AS "󰐤",
+                "assignment.170"."#️⃣" AS "#️⃣",
                 "assignment.170"."epsilon" AS "epsilon",
                 "assignment.170"."screen_y" AS "screen_y",
                 CAST((("assignment.170"."color_r") * ("assignment.170"."u")) AS real) AS "pixel_r",
@@ -7623,13 +7623,13 @@ WITH RECURSIVE
                 "assignment.170"."origin_z" AS "origin_z"
          FROM   "assignment.170"
        ),
-       "assignment.185"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.185"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.35"."origin_x" AS "origin_x",
                 "where.35"."direction_y" AS "direction_y",
                 "where.35"."light_z" AS "light_z",
                 "where.35"."shadow_ray" AS "shadow_ray",
                 "where.35"."max_rec_depth" AS "max_rec_depth",
-                "where.35"."󰐤" AS "󰐤",
+                "where.35"."#️⃣" AS "#️⃣",
                 "where.35"."epsilon" AS "epsilon",
                 "where.35"."screen_y" AS "screen_y",
                 "where.35"."pixel_g" AS "pixel_g",
@@ -7648,12 +7648,12 @@ WITH RECURSIVE
                 "where.35"."origin_z" AS "origin_z"
          FROM   "where.35"
        ),
-       "assignment.172"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
+       "assignment.172"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "u", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "color_b", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.171"."origin_x" AS "origin_x",
                 "assignment.171"."direction_y" AS "direction_y",
                 "assignment.171"."light_z" AS "light_z",
                 "assignment.171"."max_rec_depth" AS "max_rec_depth",
-                "assignment.171"."󰐤" AS "󰐤",
+                "assignment.171"."#️⃣" AS "#️⃣",
                 "assignment.171"."epsilon" AS "epsilon",
                 "assignment.171"."screen_y" AS "screen_y",
                 CAST((("assignment.171"."color_g") * ("assignment.171"."u")) AS real) AS "pixel_g",
@@ -7673,11 +7673,11 @@ WITH RECURSIVE
                 "assignment.171"."origin_z" AS "origin_z"
          FROM   "assignment.171"
        ),
-       "jump.4"("pixel_r", "color_b", "direction_z", "󰐤", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
+       "jump.4"("pixel_r", "color_b", "direction_z", "#️⃣", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "🏷️", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
          SELECT "assignment.185"."pixel_r" AS "pixel_r",
                 NULL AS "color_b",
                 "assignment.185"."direction_z" AS "direction_z",
-                "assignment.185"."󰐤" AS "󰐤",
+                "assignment.185"."#️⃣" AS "#️⃣",
                 "assignment.185"."origin_x" AS "origin_x",
                 "assignment.185"."image_width" AS "image_width",
                 "assignment.185"."step" AS "step",
@@ -7692,7 +7692,7 @@ WITH RECURSIVE
                 "assignment.185"."origin_y" AS "origin_y",
                 "assignment.185"."pixel_g" AS "pixel_g",
                 NULL AS "normal_y",
-                'start.2' AS "",
+                'start.2' AS "🏷️",
                 "assignment.185"."origin_z" AS "origin_z",
                 "assignment.185"."epsilon" AS "epsilon",
                 "assignment.185"."light_z" AS "light_z",
@@ -7709,12 +7709,12 @@ WITH RECURSIVE
                 "assignment.185"."light_x" AS "light_x"
          FROM   "assignment.185"
        ),
-       "assignment.173"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.173"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.172"."origin_x" AS "origin_x",
                 "assignment.172"."direction_y" AS "direction_y",
                 "assignment.172"."light_z" AS "light_z",
                 "assignment.172"."max_rec_depth" AS "max_rec_depth",
-                "assignment.172"."󰐤" AS "󰐤",
+                "assignment.172"."#️⃣" AS "#️⃣",
                 "assignment.172"."epsilon" AS "epsilon",
                 "assignment.172"."screen_y" AS "screen_y",
                 "assignment.172"."pixel_g" AS "pixel_g",
@@ -7733,12 +7733,12 @@ WITH RECURSIVE
                 "assignment.172"."origin_z" AS "origin_z"
          FROM   "assignment.172"
        ),
-       "assignment.174"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "condition", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.174"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "condition", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.173"."origin_x" AS "origin_x",
                 "assignment.173"."direction_y" AS "direction_y",
                 "assignment.173"."light_z" AS "light_z",
                 "assignment.173"."max_rec_depth" AS "max_rec_depth",
-                "assignment.173"."󰐤" AS "󰐤",
+                "assignment.173"."#️⃣" AS "#️⃣",
                 "assignment.173"."epsilon" AS "epsilon",
                 CAST((("assignment.173"."shadows")) AS bool) AS "condition",
                 "assignment.173"."screen_y" AS "screen_y",
@@ -7758,12 +7758,12 @@ WITH RECURSIVE
                 "assignment.173"."origin_z" AS "origin_z"
          FROM   "assignment.173"
        ),
-       "where.31"("origin_x", "direction_y", "light_z", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "where.31"("origin_x", "direction_y", "light_z", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "assignment.174"."origin_x" AS "origin_x",
                 "assignment.174"."direction_y" AS "direction_y",
                 "assignment.174"."light_z" AS "light_z",
                 "assignment.174"."max_rec_depth" AS "max_rec_depth",
-                "assignment.174"."󰐤" AS "󰐤",
+                "assignment.174"."#️⃣" AS "#️⃣",
                 "assignment.174"."epsilon" AS "epsilon",
                 "assignment.174"."screen_y" AS "screen_y",
                 "assignment.174"."pixel_g" AS "pixel_g",
@@ -7783,10 +7783,10 @@ WITH RECURSIVE
          FROM   "assignment.174"
          WHERE  "assignment.174"."condition" IS NOT DISTINCT FROM TRUE
        ),
-       "where.32"("pixel_b", "image_height", "󰐤", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "where.32"("pixel_b", "image_height", "#️⃣", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          SELECT "assignment.174"."pixel_b" AS "pixel_b",
                 "assignment.174"."image_height" AS "image_height",
-                "assignment.174"."󰐤" AS "󰐤",
+                "assignment.174"."#️⃣" AS "#️⃣",
                 "assignment.174"."screen_y" AS "screen_y",
                 "assignment.174"."screen_x" AS "screen_x",
                 "assignment.174"."pixel_g" AS "pixel_g",
@@ -7795,13 +7795,13 @@ WITH RECURSIVE
          FROM   "assignment.174"
          WHERE  "assignment.174"."condition" IS DISTINCT FROM TRUE
        ),
-       "assignment.175"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "󰐤", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
+       "assignment.175"("origin_x", "direction_y", "light_z", "shadow_ray", "max_rec_depth", "#️⃣", "epsilon", "screen_y", "pixel_g", "pixel_r", "shadows", "step", "pixel_b", "direction_x", "direction_z", "light_y", "image_height", "origin_y", "light_x", "screen_x", "image_width", "origin_z") AS (
          SELECT "where.31"."origin_x" AS "origin_x",
                 "where.31"."direction_y" AS "direction_y",
                 "where.31"."light_z" AS "light_z",
                 CAST((true) AS bool) AS "shadow_ray",
                 "where.31"."max_rec_depth" AS "max_rec_depth",
-                "where.31"."󰐤" AS "󰐤",
+                "where.31"."#️⃣" AS "#️⃣",
                 "where.31"."epsilon" AS "epsilon",
                 "where.31"."screen_y" AS "screen_y",
                 "where.31"."pixel_g" AS "pixel_g",
@@ -7820,10 +7820,10 @@ WITH RECURSIVE
                 "where.31"."origin_z" AS "origin_z"
          FROM   "where.31"
        ),
-       "merge.7"("pixel_b", "image_height", "󰐤", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
+       "merge.7"("pixel_b", "image_height", "#️⃣", "screen_y", "screen_x", "pixel_g", "pixel_r", "image_width") AS (
          (SELECT "where.36"."pixel_b" AS "pixel_b",
                  "where.36"."image_height" AS "image_height",
-                 "where.36"."󰐤" AS "󰐤",
+                 "where.36"."#️⃣" AS "#️⃣",
                  "where.36"."screen_y" AS "screen_y",
                  "where.36"."screen_x" AS "screen_x",
                  "where.36"."pixel_g" AS "pixel_g",
@@ -7833,7 +7833,7 @@ WITH RECURSIVE
            UNION ALL
          (SELECT "where.32"."pixel_b" AS "pixel_b",
                  "where.32"."image_height" AS "image_height",
-                 "where.32"."󰐤" AS "󰐤",
+                 "where.32"."#️⃣" AS "#️⃣",
                  "where.32"."screen_y" AS "screen_y",
                  "where.32"."screen_x" AS "screen_x",
                  "where.32"."pixel_g" AS "pixel_g",
@@ -7843,7 +7843,7 @@ WITH RECURSIVE
            UNION ALL
          (SELECT "where.34"."pixel_b" AS "pixel_b",
                  "where.34"."image_height" AS "image_height",
-                 "where.34"."󰐤" AS "󰐤",
+                 "where.34"."#️⃣" AS "#️⃣",
                  "where.34"."screen_y" AS "screen_y",
                  "where.34"."screen_x" AS "screen_x",
                  "where.34"."pixel_g" AS "pixel_g",
@@ -7853,7 +7853,7 @@ WITH RECURSIVE
            UNION ALL
          (SELECT "where.26"."pixel_b" AS "pixel_b",
                  "where.26"."image_height" AS "image_height",
-                 "where.26"."󰐤" AS "󰐤",
+                 "where.26"."#️⃣" AS "#️⃣",
                  "where.26"."screen_y" AS "screen_y",
                  "where.26"."screen_x" AS "screen_x",
                  "where.26"."pixel_g" AS "pixel_g",
@@ -7863,7 +7863,7 @@ WITH RECURSIVE
            UNION ALL
          (SELECT "assignment.154"."pixel_b" AS "pixel_b",
                  "assignment.154"."image_height" AS "image_height",
-                 "assignment.154"."󰐤" AS "󰐤",
+                 "assignment.154"."#️⃣" AS "#️⃣",
                  "assignment.154"."screen_y" AS "screen_y",
                  "assignment.154"."screen_x" AS "screen_x",
                  "assignment.154"."pixel_g" AS "pixel_g",
@@ -7873,7 +7873,7 @@ WITH RECURSIVE
            UNION ALL
          (SELECT "assignment.158"."pixel_b" AS "pixel_b",
                  "assignment.158"."image_height" AS "image_height",
-                 "assignment.158"."󰐤" AS "󰐤",
+                 "assignment.158"."#️⃣" AS "#️⃣",
                  "assignment.158"."screen_y" AS "screen_y",
                  "assignment.158"."screen_x" AS "screen_x",
                  "assignment.158"."pixel_g" AS "pixel_g",
@@ -7881,22 +7881,22 @@ WITH RECURSIVE
                  "assignment.158"."image_width" AS "image_width"
           FROM   "assignment.158")
        ),
-       "assignment.186"("screen_x", "screen_y", "image_height", "󰐤", "image_width", "image") AS (
+       "assignment.186"("screen_x", "screen_y", "image_height", "#️⃣", "image_width", "image") AS (
          SELECT "merge.7"."screen_x" AS "screen_x",
                 "merge.7"."screen_y" AS "screen_y",
                 "merge.7"."image_height" AS "image_height",
-                "merge.7"."󰐤" AS "󰐤",
+                "merge.7"."#️⃣" AS "#️⃣",
                 "merge.7"."image_width" AS "image_width",
                 CAST((lpad((("merge.7"."pixel_r") * 255) :: int :: text, 3, ' ') || ' ' ||
                        lpad((("merge.7"."pixel_g") * 255) :: int :: text, 3, ' ') || ' ' ||
                        lpad((("merge.7"."pixel_b") * 255) :: int :: text, 3, ' ')) AS text) AS "image"
          FROM   "merge.7"
        ),
-       "jump.3"("pixel_r", "color_b", "direction_z", "󰐤", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
+       "jump.3"("pixel_r", "color_b", "direction_z", "#️⃣", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "🏷️", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
          SELECT "assignment.175"."pixel_r" AS "pixel_r",
                 NULL AS "color_b",
                 "assignment.175"."direction_z" AS "direction_z",
-                "assignment.175"."󰐤" AS "󰐤",
+                "assignment.175"."#️⃣" AS "#️⃣",
                 "assignment.175"."origin_x" AS "origin_x",
                 "assignment.175"."image_width" AS "image_width",
                 "assignment.175"."step" AS "step",
@@ -7911,7 +7911,7 @@ WITH RECURSIVE
                 "assignment.175"."origin_y" AS "origin_y",
                 "assignment.175"."pixel_g" AS "pixel_g",
                 NULL AS "normal_y",
-                'start.2' AS "",
+                'start.2' AS "🏷️",
                 "assignment.175"."origin_z" AS "origin_z",
                 "assignment.175"."epsilon" AS "epsilon",
                 "assignment.175"."light_z" AS "light_z",
@@ -7928,11 +7928,11 @@ WITH RECURSIVE
                 "assignment.175"."light_x" AS "light_x"
          FROM   "assignment.175"
        ),
-       "jump.5"("pixel_r", "color_b", "direction_z", "󰐤", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
+       "jump.5"("pixel_r", "color_b", "direction_z", "#️⃣", "origin_x", "image_width", "step", "shadows", "light_y", "image_height", "screen_y", "normal_x", "direction_y", "color_r", "material", "origin_y", "pixel_g", "normal_y", "🏷️", "origin_z", "epsilon", "light_z", "pixel_b", "min_dist", "color_g", "normal_z", "id", "shadow_ray", "max_rec_depth", "direction_x", "screen_x", "image", "light_x") AS (
          SELECT NULL AS "pixel_r",
                 NULL AS "color_b",
                 NULL AS "direction_z",
-                "assignment.186"."󰐤" AS "󰐤",
+                "assignment.186"."#️⃣" AS "#️⃣",
                 NULL AS "origin_x",
                 "assignment.186"."image_width" AS "image_width",
                 NULL AS "step",
@@ -7947,7 +7947,7 @@ WITH RECURSIVE
                 NULL AS "origin_y",
                 NULL AS "pixel_g",
                 NULL AS "normal_y",
-                'start.5' AS "",
+                'start.5' AS "🏷️",
                 NULL AS "origin_z",
                 NULL AS "epsilon",
                 NULL AS "light_z",
@@ -7964,9 +7964,9 @@ WITH RECURSIVE
                 NULL AS "light_x"
          FROM   "assignment.186"
        )
-     (SELECT CAST(("jump.6"."") AS text) AS "",
-             CAST(("jump.6"."󰐤" + 1) AS int) AS "󰐤",
-             CAST((NULL) AS text) AS "󱕍",
+     (SELECT CAST(("jump.6"."🏷️") AS text) AS "🏷️",
+             CAST(("jump.6"."#️⃣" + 1) AS int) AS "#️⃣",
+             CAST((NULL) AS text) AS "📊",
              CAST(("jump.6"."origin_x") AS real) AS "origin_x",
              CAST(("jump.6"."direction_y") AS real) AS "direction_y",
              CAST(("jump.6"."light_z") AS real) AS "light_z",
@@ -8000,9 +8000,9 @@ WITH RECURSIVE
              CAST(("jump.6"."image") AS text) AS "image"
       FROM   "jump.6")
        UNION ALL
-     (SELECT CAST((NULL) AS text) AS "",
-             CAST(("emit.1"."󰐤") AS int) AS "󰐤",
-             CAST(("emit.1"."󱕍") AS text) AS "󱕍",
+     (SELECT CAST((NULL) AS text) AS "🏷️",
+             CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
+             CAST(("emit.1"."📊") AS text) AS "📊",
              CAST((NULL) AS real) AS "origin_x",
              CAST((NULL) AS real) AS "direction_y",
              CAST((NULL) AS real) AS "light_z",
@@ -8036,9 +8036,9 @@ WITH RECURSIVE
              CAST((NULL) AS text) AS "image"
       FROM   "emit.1")
        UNION ALL
-     (SELECT CAST(("jump.1"."") AS text) AS "",
-             CAST(("jump.1"."󰐤" + 1) AS int) AS "󰐤",
-             CAST((NULL) AS text) AS "󱕍",
+     (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
+             CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
+             CAST((NULL) AS text) AS "📊",
              CAST(("jump.1"."origin_x") AS real) AS "origin_x",
              CAST(("jump.1"."direction_y") AS real) AS "direction_y",
              CAST(("jump.1"."light_z") AS real) AS "light_z",
@@ -8072,9 +8072,9 @@ WITH RECURSIVE
              CAST(("jump.1"."image") AS text) AS "image"
       FROM   "jump.1")
        UNION ALL
-     (SELECT CAST(("jump.2"."") AS text) AS "",
-             CAST(("jump.2"."󰐤" + 1) AS int) AS "󰐤",
-             CAST((NULL) AS text) AS "󱕍",
+     (SELECT CAST(("jump.2"."🏷️") AS text) AS "🏷️",
+             CAST(("jump.2"."#️⃣" + 1) AS int) AS "#️⃣",
+             CAST((NULL) AS text) AS "📊",
              CAST(("jump.2"."origin_x") AS real) AS "origin_x",
              CAST(("jump.2"."direction_y") AS real) AS "direction_y",
              CAST(("jump.2"."light_z") AS real) AS "light_z",
@@ -8108,9 +8108,9 @@ WITH RECURSIVE
              CAST(("jump.2"."image") AS text) AS "image"
       FROM   "jump.2")
        UNION ALL
-     (SELECT CAST(("jump.4"."") AS text) AS "",
-             CAST(("jump.4"."󰐤" + 1) AS int) AS "󰐤",
-             CAST((NULL) AS text) AS "󱕍",
+     (SELECT CAST(("jump.4"."🏷️") AS text) AS "🏷️",
+             CAST(("jump.4"."#️⃣" + 1) AS int) AS "#️⃣",
+             CAST((NULL) AS text) AS "📊",
              CAST(("jump.4"."origin_x") AS real) AS "origin_x",
              CAST(("jump.4"."direction_y") AS real) AS "direction_y",
              CAST(("jump.4"."light_z") AS real) AS "light_z",
@@ -8144,9 +8144,9 @@ WITH RECURSIVE
              CAST(("jump.4"."image") AS text) AS "image"
       FROM   "jump.4")
        UNION ALL
-     (SELECT CAST(("jump.3"."") AS text) AS "",
-             CAST(("jump.3"."󰐤" + 1) AS int) AS "󰐤",
-             CAST((NULL) AS text) AS "󱕍",
+     (SELECT CAST(("jump.3"."🏷️") AS text) AS "🏷️",
+             CAST(("jump.3"."#️⃣" + 1) AS int) AS "#️⃣",
+             CAST((NULL) AS text) AS "📊",
              CAST(("jump.3"."origin_x") AS real) AS "origin_x",
              CAST(("jump.3"."direction_y") AS real) AS "direction_y",
              CAST(("jump.3"."light_z") AS real) AS "light_z",
@@ -8180,9 +8180,9 @@ WITH RECURSIVE
              CAST(("jump.3"."image") AS text) AS "image"
       FROM   "jump.3")
        UNION ALL
-     (SELECT CAST(("jump.5"."") AS text) AS "",
-             CAST(("jump.5"."󰐤" + 1) AS int) AS "󰐤",
-             CAST((NULL) AS text) AS "󱕍",
+     (SELECT CAST(("jump.5"."🏷️") AS text) AS "🏷️",
+             CAST(("jump.5"."#️⃣" + 1) AS int) AS "#️⃣",
+             CAST((NULL) AS text) AS "📊",
              CAST(("jump.5"."origin_x") AS real) AS "origin_x",
              CAST(("jump.5"."direction_y") AS real) AS "direction_y",
              CAST(("jump.5"."light_z") AS real) AS "light_z",
@@ -8216,6 +8216,6 @@ WITH RECURSIVE
              CAST(("jump.5"."image") AS text) AS "image"
       FROM   "jump.5"))
   )
-SELECT "🔄"."󱕍"
+SELECT "🔄"."📊"
 FROM   "🔄"
-WHERE  "🔄"."" IS NULL;
+WHERE  "🔄"."🏷️" IS NULL;
