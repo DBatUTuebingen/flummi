@@ -1,7 +1,7 @@
 # Flummi
 _A to-SQL Compiler Prototype._
 
-_Flummi_ is a research compiler prototype for to-SQL compilation, implementing methods we've researched and developed at the [database chair of the University of Tübingen](https://db.cs.uni-tuebingen.de/)---see the list of related publications [below](#related-publications).
+_Flummi_ is a research compiler prototype for to-SQL compilation, implementing methods we've researched and developed at the [database chair of the University of Tübingen](https://db.cs.uni-tuebingen.de/)---see the list of related publications [below](#related-publications). Our compilation strategy takes imperative procedural programs with embedded SQL expressions and transforms them to a single monolithic SQL query.
 
 ## Usage
 
@@ -114,7 +114,7 @@ This compiler prototype uses a "minimum viable language" as an input, as such it
 
 **Embedded SQL**
 
-The grammar contains a few `§...§[...]` bits that we call "black boxes" in most of our work. Syntactically we represent these in two parts, the first `§...§` being a bit of SQL code with free variables (free wrt. the code snippet itself) replaced by `{𝑖}` and the second being a list of the free variables in the order of `𝑖`. So the expression `§{0} + 1§[v]` maps to the SQL expression that increments the variable `v`, i.e., `v + 1`. Note that for types we don't expect free variables, since that doesn't make much sense for our purposes.
+To keep things focussed on what SQL can't already handle itself---i.e., statement-level control-flow---we co-opt SQL's expression language as our own. The grammar reflects this via the `§...§[...]` bits that we call "black boxes" in most of our work. Syntactically we represent these in two parts, the first `§...§` being a bit of SQL code with free variables (free wrt. the code snippet itself) replaced by `{𝑖}` and the second being a list of the free variables in the order of `𝑖`. So the expression `§{0} + 1§[v]` maps to the SQL expression that increments the variable `v`, i.e., `v + 1`. Note that for types we don't expect free variables, since that doesn't make much sense for our purposes.
 
 **Data-Driven Concurrency**
 
