@@ -1,0 +1,11 @@
+{
+  DECLARE v : §int§;
+  DECLARE c : §boolean§;
+  LET v = §0§[];
+  LOOP {
+    EMIT v;
+    LET v = §{0} + 1§[v];
+    LET c = §{0} < 10§[v];
+    IF c THEN CONTINUE ELSE STOP
+  }
+}
