@@ -109,10 +109,9 @@ class Solver:
                 return {variable}
 
             case Gather(aggregates, keys):
-                return {
+                return keys | {
                     # ? [info] basically a virtual key!
                     self._analysis.system_variables[SystemVariable.CONTROL],
-                    *keys,
                     *utils.union(
                         expression.arguments
                         for expression in aggregates.values()
@@ -120,7 +119,7 @@ class Solver:
                 }
 
             case IsSynced(_, _, keys):
-                return {*keys}
+                return keys
 
             case Jump(_):
                 return {
@@ -156,12 +155,11 @@ class Solver:
             case Fork(variables, _):
                 return {*variables}
 
-            case Gather(aggregates, keys):
+            case Gather(aggregates, _):
                 return {
                     # ? [info] basically a virtual key!
                     self._analysis.system_variables[SystemVariable.CONTROL],
                     *aggregates,
-                    *keys,
                 }
 
             case _:

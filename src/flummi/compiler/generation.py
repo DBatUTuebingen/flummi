@@ -448,9 +448,7 @@ class CodeGenerator:
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
-                keys.append(
-                    self._analysis.system_variables[SystemVariable.CONTROL]
-                )
+                keys.update(outputs - aggregates.keys())
 
                 body = sql.select(
                     select_list=[
@@ -472,9 +470,7 @@ class CodeGenerator:
                                 else sql.variable(
                                     output.identifier,
                                     predecessor.identifier,
-                                )
-                                if output in keys
-                                else sql.NULL,
+                                ),
                                 output.identifier,
                             )
                             for output in outputs

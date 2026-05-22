@@ -7,16 +7,16 @@ WITH RECURSIVE
             CAST((NULL) AS int[]) AS "empty_cells")
       UNION ALL
     (WITH
-       "start.1"("#️⃣", "⚙️") AS (
-         SELECT "🔄"."#️⃣" AS "#️⃣",
-                NULL AS "⚙️"
+       "start.1"("⚙️", "#️⃣") AS (
+         SELECT NULL AS "⚙️",
+                "🔄"."#️⃣" AS "#️⃣"
          FROM   "🔄"
          WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.1'
        ),
-       "start.2"("#️⃣", "cells", "⚙️", "empty_cells") AS (
-         SELECT "🔄"."#️⃣" AS "#️⃣",
+       "start.2"("⚙️", "#️⃣", "cells", "empty_cells") AS (
+         SELECT NULL AS "⚙️",
+                "🔄"."#️⃣" AS "#️⃣",
                 "🔄"."cells" AS "cells",
-                NULL AS "⚙️",
                 "🔄"."empty_cells" AS "empty_cells"
          FROM   "🔄"
          WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.2'
@@ -29,84 +29,84 @@ WITH RECURSIVE
                 "start.1"."⚙️" AS "⚙️"
          FROM   "start.1"
        ),
-       "assignment.2"("cells", "#️⃣", "⚙️", "empty_cells") AS (
-         SELECT "assignment.1"."cells" AS "cells",
+       "assignment.2"("⚙️", "cells", "#️⃣", "empty_cells") AS (
+         SELECT "assignment.1"."⚙️" AS "⚙️",
+                "assignment.1"."cells" AS "cells",
                 "assignment.1"."#️⃣" AS "#️⃣",
-                "assignment.1"."⚙️" AS "⚙️",
                 CAST((SELECT list(cell - 1) FILTER (value = 0)
                        FROM   unnest(("assignment.1"."cells")) WITH ORDINALITY AS _(value, cell)) AS int[]) AS "empty_cells"
          FROM   "assignment.1"
        ),
-       "merge.1"("cells", "#️⃣", "⚙️", "empty_cells") AS (
-         (SELECT "assignment.2"."cells" AS "cells",
-                 "assignment.2"."#️⃣" AS "#️⃣",
-                 "assignment.2"."⚙️" AS "⚙️",
-                 "assignment.2"."empty_cells" AS "empty_cells"
-          FROM   "assignment.2")
-           UNION ALL
-         (SELECT "start.2"."cells" AS "cells",
+       "merge.1"("⚙️", "cells", "#️⃣", "empty_cells") AS (
+         (SELECT "start.2"."⚙️" AS "⚙️",
+                 "start.2"."cells" AS "cells",
                  "start.2"."#️⃣" AS "#️⃣",
-                 "start.2"."⚙️" AS "⚙️",
                  "start.2"."empty_cells" AS "empty_cells"
           FROM   "start.2")
+           UNION ALL
+         (SELECT "assignment.2"."⚙️" AS "⚙️",
+                 "assignment.2"."cells" AS "cells",
+                 "assignment.2"."#️⃣" AS "#️⃣",
+                 "assignment.2"."empty_cells" AS "empty_cells"
+          FROM   "assignment.2")
        ),
-       "fork.1"("empty_cells", "#️⃣", "cells", "idx", "⚙️") AS (
-         SELECT "merge.1"."empty_cells" AS "empty_cells",
-                "merge.1"."#️⃣" AS "#️⃣",
+       "fork.1"("#️⃣", "empty_cells", "⚙️", "cells", "idx") AS (
+         SELECT "merge.1"."#️⃣" AS "#️⃣",
+                "merge.1"."empty_cells" AS "empty_cells",
+                "merge.1"."⚙️" AS "⚙️",
                 "merge.1"."cells" AS "cells",
-                "ℚ"."idx" AS "idx",
-                "merge.1"."⚙️" AS "⚙️"
+                "ℚ"."idx" AS "idx"
          FROM   "merge.1",
                 LATERAL (FROM unnest(("merge.1"."empty_cells"))) AS "ℚ"("idx")
        ),
-       "assignment.3"("#️⃣", "cell", "cells", "idx", "⚙️", "empty_cells") AS (
-         SELECT "fork.1"."#️⃣" AS "#️⃣",
+       "assignment.3"("⚙️", "#️⃣", "cell", "empty_cells", "cells", "idx") AS (
+         SELECT "fork.1"."⚙️" AS "⚙️",
+                "fork.1"."#️⃣" AS "#️⃣",
                 CAST((("fork.1"."empty_cells")[("fork.1"."idx")]) AS int) AS "cell",
+                "fork.1"."empty_cells" AS "empty_cells",
                 "fork.1"."cells" AS "cells",
-                "fork.1"."idx" AS "idx",
-                "fork.1"."⚙️" AS "⚙️",
-                "fork.1"."empty_cells" AS "empty_cells"
+                "fork.1"."idx" AS "idx"
          FROM   "fork.1"
        ),
-       "assignment.4"("empty_cells", "cell", "#️⃣", "cells", "⚙️") AS (
-         SELECT CAST((("assignment.3"."empty_cells")[:("assignment.3"."idx")] || ("assignment.3"."empty_cells")[("assignment.3"."idx")+2:]) AS int[]) AS "empty_cells",
+       "assignment.4"("#️⃣", "cell", "empty_cells", "⚙️", "cells") AS (
+         SELECT "assignment.3"."#️⃣" AS "#️⃣",
                 "assignment.3"."cell" AS "cell",
-                "assignment.3"."#️⃣" AS "#️⃣",
-                "assignment.3"."cells" AS "cells",
-                "assignment.3"."⚙️" AS "⚙️"
+                CAST((("assignment.3"."empty_cells")[:("assignment.3"."idx")] || ("assignment.3"."empty_cells")[("assignment.3"."idx")+2:]) AS int[]) AS "empty_cells",
+                "assignment.3"."⚙️" AS "⚙️",
+                "assignment.3"."cells" AS "cells"
          FROM   "assignment.3"
        ),
-       "fork.2"("empty_cells", "cell", "#️⃣", "cells", "⚙️", "value") AS (
-         SELECT "assignment.4"."empty_cells" AS "empty_cells",
+       "fork.2"("#️⃣", "cell", "empty_cells", "⚙️", "cells", "value") AS (
+         SELECT "assignment.4"."#️⃣" AS "#️⃣",
                 "assignment.4"."cell" AS "cell",
-                "assignment.4"."#️⃣" AS "#️⃣",
-                "assignment.4"."cells" AS "cells",
+                "assignment.4"."empty_cells" AS "empty_cells",
                 "assignment.4"."⚙️" AS "⚙️",
+                "assignment.4"."cells" AS "cells",
                 "ℚ"."value" AS "value"
          FROM   "assignment.4",
-                LATERAL (FROM generate_series(1, 9)) AS "ℚ"("value")
+                (FROM generate_series(1, 9)) AS "ℚ"("value")
        ),
-       "assignment.5"("empty_cells", "cell", "#️⃣", "cells", "⚙️", "ok", "value") AS (
-         SELECT "fork.2"."empty_cells" AS "empty_cells",
-                "fork.2"."cell" AS "cell",
-                "fork.2"."#️⃣" AS "#️⃣",
-                "fork.2"."cells" AS "cells",
-                "fork.2"."⚙️" AS "⚙️",
-                CAST((NOT EXISTS (
+       "assignment.5"("ok", "#️⃣", "cell", "empty_cells", "⚙️", "cells", "value") AS (
+         SELECT CAST((NOT EXISTS (
                          FROM  generate_series(1, 9) AS _(o)
                          WHERE ("fork.2"."value") IN (("fork.2"."cells")[(("fork.2"."cell") // 9) * 9                      + o                 ],
                                        ("fork.2"."cells")[("fork.2"."cell") % 9                             + (o-1)*9 + 1       ],
                                        ("fork.2"."cells")[((("fork.2"."cell")//3) % 3) * 3 + (("fork.2"."cell")//27) * 27 + o + ((o-1)//3) * 6])
                        )) AS boolean) AS "ok",
+                "fork.2"."#️⃣" AS "#️⃣",
+                "fork.2"."cell" AS "cell",
+                "fork.2"."empty_cells" AS "empty_cells",
+                "fork.2"."⚙️" AS "⚙️",
+                "fork.2"."cells" AS "cells",
                 "fork.2"."value" AS "value"
          FROM   "fork.2"
        ),
-       "where.1"("#️⃣", "cell", "cells", "⚙️", "empty_cells", "value") AS (
-         SELECT "assignment.5"."#️⃣" AS "#️⃣",
+       "where.1"("⚙️", "#️⃣", "cell", "empty_cells", "cells", "value") AS (
+         SELECT "assignment.5"."⚙️" AS "⚙️",
+                "assignment.5"."#️⃣" AS "#️⃣",
                 "assignment.5"."cell" AS "cell",
-                "assignment.5"."cells" AS "cells",
-                "assignment.5"."⚙️" AS "⚙️",
                 "assignment.5"."empty_cells" AS "empty_cells",
+                "assignment.5"."cells" AS "cells",
                 "assignment.5"."value" AS "value"
          FROM   "assignment.5"
          WHERE  "assignment.5"."ok" IS NOT DISTINCT FROM TRUE
@@ -116,9 +116,9 @@ WITH RECURSIVE
          FROM   "assignment.5"
          WHERE  "assignment.5"."ok" IS DISTINCT FROM TRUE
        ),
-       "assignment.6"("cells", "⚙️", "#️⃣", "empty_cells") AS (
-         SELECT CAST((concat(("where.1"."cells")[:("where.1"."cell")], [("where.1"."value")], ("where.1"."cells")[("where.1"."cell")+2:])) AS int[]) AS "cells",
-                "where.1"."⚙️" AS "⚙️",
+       "assignment.6"("⚙️", "cells", "#️⃣", "empty_cells") AS (
+         SELECT "where.1"."⚙️" AS "⚙️",
+                CAST((concat(("where.1"."cells")[:("where.1"."cell")], [("where.1"."value")], ("where.1"."cells")[("where.1"."cell")+2:])) AS int[]) AS "cells",
                 "where.1"."#️⃣" AS "#️⃣",
                 "where.1"."empty_cells" AS "empty_cells"
          FROM   "where.1"
@@ -128,38 +128,38 @@ WITH RECURSIVE
          FROM   "where.2"
          WHERE  FALSE
        ),
-       "assignment.7"("#️⃣", "empty_cells", "done", "cells", "⚙️") AS (
+       "assignment.7"("#️⃣", "empty_cells", "⚙️", "cells", "done") AS (
          SELECT "assignment.6"."#️⃣" AS "#️⃣",
                 "assignment.6"."empty_cells" AS "empty_cells",
-                CAST((length(("assignment.6"."empty_cells")) = 0) AS boolean) AS "done",
+                "assignment.6"."⚙️" AS "⚙️",
                 "assignment.6"."cells" AS "cells",
-                "assignment.6"."⚙️" AS "⚙️"
+                CAST((length(("assignment.6"."empty_cells")) = 0) AS boolean) AS "done"
          FROM   "assignment.6"
        ),
-       "where.3"("cells", "⚙️", "#️⃣") AS (
-         SELECT "assignment.7"."cells" AS "cells",
-                "assignment.7"."⚙️" AS "⚙️",
-                "assignment.7"."#️⃣" AS "#️⃣"
+       "where.3"("#️⃣", "cells", "⚙️") AS (
+         SELECT "assignment.7"."#️⃣" AS "#️⃣",
+                "assignment.7"."cells" AS "cells",
+                "assignment.7"."⚙️" AS "⚙️"
          FROM   "assignment.7"
          WHERE  "assignment.7"."done" IS NOT DISTINCT FROM TRUE
        ),
-       "where.4"("cells", "#️⃣", "empty_cells") AS (
-         SELECT "assignment.7"."cells" AS "cells",
-                "assignment.7"."#️⃣" AS "#️⃣",
+       "where.4"("#️⃣", "cells", "empty_cells") AS (
+         SELECT "assignment.7"."#️⃣" AS "#️⃣",
+                "assignment.7"."cells" AS "cells",
                 "assignment.7"."empty_cells" AS "empty_cells"
          FROM   "assignment.7"
          WHERE  "assignment.7"."done" IS DISTINCT FROM TRUE
        ),
-       "emit.1"("📊", "⚙️", "#️⃣") AS (
-         SELECT "where.3"."cells" AS "📊",
-                "where.3"."⚙️" AS "⚙️",
-                "where.3"."#️⃣" AS "#️⃣"
+       "emit.1"("#️⃣", "📊", "⚙️") AS (
+         SELECT "where.3"."#️⃣" AS "#️⃣",
+                "where.3"."cells" AS "📊",
+                "where.3"."⚙️" AS "⚙️"
          FROM   "where.3"
        ),
-       "jump.1"("cells", "#️⃣", "empty_cells", "🏷️") AS (
+       "jump.1"("cells", "empty_cells", "#️⃣", "🏷️") AS (
          SELECT "where.4"."cells" AS "cells",
-                "where.4"."#️⃣" AS "#️⃣",
                 "where.4"."empty_cells" AS "empty_cells",
+                "where.4"."#️⃣" AS "#️⃣",
                 'start.2' AS "🏷️"
          FROM   "where.4"
        ),

@@ -235,9 +235,9 @@ class Parser(parser.Parser[Tokens]):
             self.sequence(self.parse_scalar_binding, Tokens.COMMA)
         )
         if self.match(Tokens.BY):
-            keys = list(self.sequence(self.parse_variable, Tokens.COMMA))
+            keys = set(self.sequence(self.parse_variable, Tokens.COMMA))
         else:
-            keys = []
+            keys = set()
 
         return Gather(
             aggregates=aggregates,
@@ -256,9 +256,9 @@ class Parser(parser.Parser[Tokens]):
         self.expect(Tokens.SYNC)
 
         if self.match(Tokens.BY):
-            keys = list(self.sequence(self.parse_variable, Tokens.COMMA))
+            keys = set(self.sequence(self.parse_variable, Tokens.COMMA))
         else:
-            keys = []
+            keys = set()
 
         return Sync(
             keys=keys,

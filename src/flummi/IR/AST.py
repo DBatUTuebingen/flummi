@@ -95,12 +95,12 @@ class Fork(Statement):
 @dataclass
 class Gather(Statement):
     aggregates: dict[Variable, Expression]
-    keys: list[Variable]
+    keys: set[Variable]
 
 
 @dataclass
 class Sync(Statement):
-    keys: list[Variable]
+    keys: set[Variable]
 
 
 Program = BaseProgram[Statement]

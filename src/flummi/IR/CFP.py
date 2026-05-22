@@ -81,14 +81,14 @@ class Fork(Primitive):
 @dataclass
 class Gather(Primitive):
     aggregates: dict[Variable, Expression]
-    keys: list[Variable]
+    keys: set[Variable]
 
 
 @dataclass
 class IsSynced(Primitive):
     variable: Variable
     label: Label
-    keys: list[Variable]
+    keys: set[Variable]
 
 
 Program = BaseProgram[Plan]
