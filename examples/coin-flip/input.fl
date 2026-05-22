@@ -13,7 +13,7 @@
   THEN LET s = §'tails'§[]
   ELSE LET s = §'heads'§[];
 
-  GATHER i = §count(*)§[] BY s, n;
+  GATHER i = §count(*)§[] BY s;
   LET i = §{0} / ({1} :: float)§[i, n];
   GATHER i = §avg({0})§[i];
   EMIT i

@@ -540,21 +540,21 @@
     BREAK
   };
 
-  DECLARE result : §text§;
-  LET result = §
+  DECLARE pixel : §text§;
+  LET pixel = §
     lpad(({0} * 255) :: int :: text, 3, ' ') || ' ' ||
     lpad(({1} * 255) :: int :: text, 3, ' ') || ' ' ||
     lpad(({2} * 255) :: int :: text, 3, ' ')
   §[pixel_r, pixel_g, pixel_b];
 
   SYNC;
-  GATHER result = §
-    E'P3\n' || {0} :: text || ' ' || {1} :: text || E'\n255\n' ||
-    string_agg({2}, E'\n' ORDER BY {3}, {4})
-    || E'\n'
-  §[image_width, image_height, result, screen_y, screen_x]
-  BY image_width, image_height;
-  EMIT result;
+
+  DECLARE pixels : §text§;
+  GATHER pixels = §string_agg({0}, E'\n' ORDER BY {1}, {2})§[pixel, screen_y, screen_x];
+
+  DECLARE image : §text§;
+  LET image = §E'P3\n' || {0} :: text || ' ' || {1} :: text || E'\n255\n' || {2} || E'\n'§[image_width, image_height, pixels];
+  EMIT image;
 
   STOP
 }

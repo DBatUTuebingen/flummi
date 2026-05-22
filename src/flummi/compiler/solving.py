@@ -97,7 +97,7 @@ class Solver:
                 _,
                 Expression(_, arguments),
             ):
-                return {*arguments}
+                return set(arguments)
 
             case Emit(variable):
                 return {
@@ -119,7 +119,7 @@ class Solver:
                 }
 
             case IsSynced(_, _, keys):
-                return keys
+                return set(keys)
 
             case Jump(_):
                 return {
@@ -153,7 +153,7 @@ class Solver:
                 }
 
             case Fork(variables, _):
-                return {*variables}
+                return set(variables)
 
             case Gather(aggregates, _):
                 return {
