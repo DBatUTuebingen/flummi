@@ -421,7 +421,11 @@ class CodeGenerator:
                     from_list=[
                         sql.name(predecessor.identifier),
                         sql.named(
-                            sql.lateral(
+                            (
+                                sql.lateral
+                                if expression.arguments
+                                else sql.paren
+                            )(
                                 expression.source.format(
                                     *(
                                         sql.paren(

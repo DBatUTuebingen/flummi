@@ -3,6 +3,9 @@ _A to-SQL Compiler Prototype._
 
 _Flummi_ is a research compiler prototype for to-SQL compilation, implementing methods we've researched and developed at the [database chair of the University of Tübingen](https://db.cs.uni-tuebingen.de/)---see the list of related publications [below](#related-publications). Our compilation strategy takes imperative procedural programs with embedded SQL expressions and transforms them to a single monolithic SQL query.
 
+> [!IMPORTANT]
+> The input language to our compiler only includes the bare minimum necessary and is thus not very developer friendly! Being a research vehicle for our ideas before anything else, we opted to not box ourselves in and define [our own simple, bare-bones language](#the-flummi-language) that includes only the absolute core necessities for imperative programming. Most, if not all other, more "complicated" language constructs/features common to more developer friendly languages can be easily desugared to our language and are thus not of interest to this project---though we of course have ongoing research on that side of the fence as well. 😉
+
 ## Usage
 
 The Flummi compiler in this repository can be used either as a _python library_ or directly as a _command line tool_. Either way, to use our compiler, you will need to add it to your local environment. You can install it from [PyPI](https://pypi.org/flummi) or as a `git` dependency:
@@ -14,7 +17,7 @@ $ pip install flummi@git+https://github.com/DBatUTuebingen/flummi
 
 **Library mode.**
 
-As a python library, we expose only the function `compile` and the module `IR` containing our intermediate representations. The `compile` function is straightforward; as the name implies it takes a program and _compiles_ it, yielding the compiled query string. The programs can either be supplied in the form of a source string (you can find a description of the syntax [down below](#the-flummi-language)) or an AST.
+As a python library, we expose the function `compile` which is straightforward; as the name implies it takes a program, _compiles_ it and spits our the compiled query string. The input programs can either be supplied in the form of a source string (you can find a description of the syntax [down below](#the-flummi-language)) or an AST.
 
 ```python
 from flummi import compile
@@ -84,11 +87,11 @@ WITH
 ...
 ```
 
-For debugging purposes, or if you just a bit nosy, the compiler can also spit out a graphically renditions of the IR used during our compilation. To render these we rely on being able to find a working version of [graphviz](https://graphviz.org/) somewhere on your path—so make sure to have that installed if you want to use this feature.
+For debugging purposes, or if you just a bit nosy, the compiler can also spit out graphical renditions of the IR used during our compilation. To render these we rely on being able to find a working version of [graphviz](https://graphviz.org/) somewhere on your path—so make sure to have that installed if you want to use this feature.
 
 ## The Flummi Language
 
-This compiler prototype uses a "minimum viable language" as an input, as such it isn't really ergonomic to program---but that isn't our goal here! Some of the "unergonomic" things you will need to contend with are that we only have infinite loops with loop controls (`BREAK`/`CONTINUE`), our conditionals always need two branches, all variables are scoped globally, etc. The following is a complete EBNF-esque grammar of the Flummi language.
+This compiler prototype uses a "minimum viable language" as an input, as such it isn't really ergonomic to program---but that isn't our goal here! Some of the "unergonomic" caveats you will need to contend with are that we only have infinite loops with loop controls (`BREAK`/`CONTINUE`), all variables are scoped globally, etc.---see the comprehensive listing [below](#programming-in-flummi). The following is a complete EBNF-esque grammar of the Flummi language.
 
 ```
 𝑠 := { 𝑠; …; 𝑠 }
@@ -125,6 +128,26 @@ Up until `LOOP`, `BREAK`, `CONTINUE`, the grammar above probably doesn't need mu
 - `SYNC [BY …]` allows you to enforce synchronicity between sibling program states, again with the option to _group_ sibling program states using a grouping key.
 
 The latter is necessary due to our handling of loops during compilation; the SQL queries we compile to execute loop iterations of all siblings in lock step, which can lead to situations where siblings diverge wrt. their current progress through the program. Without the `SYNC` statement, such divergence would be unrecoverable, thus making it impossible to _join_ these divergent sibling program states.
+
+### Flummi Caveats
+
+The developer ergonomics of our input language leave much to be desired, but for the sake of reproducible research fellow researchers (or any interested readers, in fact) should at least be able to grok our example programs. In that light, consider the following important even if you don't plan on programming in Flummi yourself!
+
+**Global Scoping**
+
+Though unnatural to most developers, it makes compiling a lot easier when we don't need to consider the scoping of variables. Since scoping rules of other programming languages can be encoded in a single global scope through the use of dedicated variable naming schemes, programs in our language only have one global scope. So anywhere you see a given variable `𝑣` in a Flummi program, it is that exact same `𝑣` as everywhere else in the program.
+
+**Emit and Stop**
+
+Since we're aiming to bring procedural programs into the database, the most natural shape the output of such a program is tabular. To include this as a first-class concept in our compiler, we decided on having our program spit out (`EMIT`) values incrementally---think `yield` in python, just with the suspension of local control-flow. As a consequence of this design, we don't have a `RETURN` statement as it would duplicate behavior of `EMIT`, rather we have `STOP` which only halts control-flow and nothing else.
+
+**Infinite Loops**
+
+Our input language only includes one construct for looping/iteration---`LOOP`---which implements a simple infinite loop. In addition to which, we include common iteration controls in `BREAK` and `CONTINUE`---which jump after a loop or back to its head, respectively. Combining these controls with some conditionals and assignments, allows you to model any other kind of loop!
+
+**Limited Expression Use**
+
+We heavily restrict where in our language you can use expressions---as a rule of thumb, expressions can only be used where you bind them to a variable. This, in combination with all variables also needing explicit declarations, makes programs pretty wordy.
 
 ## Related Publications
 - Tim Fischer and Denis Hirn. 2025. BIRNE: Mixed-paradigm Workload Execution in SQL Engines. In Proceedings of the 19th International Symposium on Database Programming Languages (DBPL '25). Association for Computing Machinery, New York, NY, USA, Article 4, 1–11. https://doi.org/10.1145/3735106.3736535

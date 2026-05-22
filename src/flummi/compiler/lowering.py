@@ -87,7 +87,13 @@ class Lowering:
             name="start",
         )
 
-        _ = self.lower_statement({entry_label}, program.body)
+        _ = self.lower_statement(
+            {entry_label},
+            AST.Block(
+                [program.body, AST.Stop(location=program.location)],
+                location=program.location,
+            ),
+        )
 
         graph = CFP.Plan(
             entry_label=entry_label,
@@ -220,13 +226,15 @@ class Lowering:
                         self._loop_labels.append(loop_head)
                         self._loop_exits.append(set())
 
-                        loop_tails = self.lower_statement(
-                            {loop_head, predecessor}, body
-                        )
-
                         _ = self.lower_statement(
-                            loop_tails,
-                            AST.Continue(location=statement.location),
+                            {loop_head, predecessor},
+                            AST.Block(
+                                [
+                                    body,
+                                    AST.Continue(location=statement.location),
+                                ],
+                                location=statement.location,
+                            ),
                         )
 
                         del self._loop_labels[-1]

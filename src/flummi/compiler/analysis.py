@@ -77,6 +77,8 @@ class Analyzer:
         default_factory=set,
     )
 
+    _loop_depth: int = field(init=False, default=0)
+
     def __post_init__(self):
         self._add_system_variable(
             SystemVariable.CONTROL,
@@ -152,7 +154,15 @@ class Analyzer:
                 for child_statement in statements:
                     self.analyze_statement(child_statement)
 
-            case NoOp() | Stop() | Break() | Continue():
+            case NoOp() | Stop():
+                return
+
+            case Break() | Continue():
+                if self._loop_depth == 0:
+                    raise AnalysisError(
+                        f"Found {statement.__class__.__name__.lower()} outside of loop...",
+                        statement.location,
+                    )
                 return
 
             case Assignment(variable, expression):
@@ -187,7 +197,9 @@ class Analyzer:
             case Loop(body):
                 self._add_feature(Feature.ITERATING)
 
+                self._loop_depth += 1
                 self.analyze_statement(body)
+                self._loop_depth -= 1
 
             case Fork(variables, expression):
                 self.analyze_expression(expression)
