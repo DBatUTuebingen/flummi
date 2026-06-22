@@ -1,0 +1,35 @@
+{
+  DECLARE first  : §int§;
+  DECLARE last   : §int§;
+  DECLARE length : §int§;
+  DECLARE path   : §int[]§;
+  DECLARE cond   : §boolean§;
+  DECLARE edge   : §edge§;
+
+  -- run the whole search for each node in the graph
+  FORK first = §SELECT id FROM nodes§[];
+
+  LET last = §{0}§[first];
+  LET length = §0§[];
+  LET path = §array[{0}]§[last];
+
+  LOOP {
+    -- we need to consider "intermediate" paths in the `GATHER` below!
+    FORK cond = §VALUES (TRUE), (FALSE)§[];
+    IF cond THEN BREAK ELSE NOOP;
+
+    -- fork over all outgoing edges and update the local state accordingly
+    FORK edge = §SELECT e FROM edges AS e WHERE here = {0}§[last];
+    LET length = §{0} + {1}.length§[length, edge];
+    LET last = §{0}.there§[edge];
+    LET path = §{0} || array[{1}]§[path, last]
+  };
+
+  -- paths of differing edge count arrive here out of sync!
+  SYNC;
+
+  -- get the shortest path for each node pair that has a path
+  GATHER path = §ARGMIN({0}, {1})§[path, length] BY first, last;
+  EMIT path;
+  STOP
+}
