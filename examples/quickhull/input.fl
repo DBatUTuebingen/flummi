@@ -1,0 +1,60 @@
+{
+  DECLARE min   : §point§;
+  DECLARE max   : §point§;
+  DECLARE left  : §point§;
+  DECLARE right : §point§;
+  DECLARE next  : §point§;
+  DECLARE flip  : §boolean§;
+  DECLARE cond  : §boolean§;
+
+  LET min = §SELECT argmin(p, p.x) FROM points AS p§[];
+  EMIT min;
+
+  LET max = §SELECT argmax(p, p.x) FROM points AS p§[];
+  EMIT max;
+
+  FORK flip = §VALUES (TRUE), (FALSE)§[];
+  IF flip THEN {
+    LET left  = §{0}§[min];
+    LET right = §{0}§[max]
+  } ELSE {
+    LET left  = §{0}§[max];
+    LET right = §{0}§[min]
+  };
+
+  LOOP {
+    LET next = §
+      WITH
+        distances(point, distance) AS (
+          SELECT p,
+                 (
+                   dy * p.x -
+                   dx * p.y +
+                   {1}.x * {0}.y -
+                   {1}.y * {0}.x
+                 ) / sqrt(dx * dx + dy * dy)
+          FROM   points AS p,
+                 (SELECT {1}.y - {0}.y AS dy,
+                         {1}.x - {0}.x AS dx)
+          WHERE  p <> {0}
+          AND    p <> {1}
+        )
+      SELECT point
+      FROM   distances
+      WHERE  distance > 0
+      ORDER  BY distance DESC
+      LIMIT  1
+    §[left, right];
+
+    LET cond = §{0} IS NULL§[next];
+    IF cond THEN BREAK ELSE NOOP;
+
+    EMIT next;
+
+    FORK flip = §VALUES (TRUE), (FALSE)§[];
+    IF flip THEN
+      LET left = §{0}§[next]
+    ELSE
+      LET right = §{0}§[next]
+  }
+}
