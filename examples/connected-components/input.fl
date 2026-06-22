@@ -1,0 +1,32 @@
+{
+    DECLARE node           : §int§;
+    DECLARE component      : §int§;
+    DECLARE nodes          : §int[]§;
+    DECLARE cond           : §boolean§;
+    DECLARE old_components : §uhugeint§;
+    DECLARE new_components : §uhugeint§;
+
+    FORK node = §FROM nodes§[];
+    LET component = §{0}§[node];
+
+    LOOP {
+        LET old_components = §sum(DISTINCT {0}) OVER ()§[component];
+
+        FORK node = §
+            SELECT there
+            FROM   edges
+            WHERE  here = {0}
+        §[node, component];
+
+        GATHER component  = §min({0})§[component] BY node;
+
+        LET new_components = §sum(DISTINCT {0}) OVER ()§[component];
+
+        LET cond = §{0} <> {1}§[old_components, new_components];
+        IF cond THEN CONTINUE ELSE BREAK
+    };
+
+    GATHER nodes = §list({0})§[node] BY component;
+    EMIT nodes;
+    STOP
+}
