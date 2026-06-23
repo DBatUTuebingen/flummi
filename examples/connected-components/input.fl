@@ -16,9 +16,10 @@
             SELECT there
             FROM   edges
             WHERE  here = {0}
+            AND    there > {1}
         §[node, component];
 
-        GATHER component  = §min({0})§[component] BY node;
+        GATHER component = §min({0})§[component] BY node;
 
         LET new_components = §sum(DISTINCT {0}) OVER ()§[component];
 
