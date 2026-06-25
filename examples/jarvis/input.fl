@@ -1,0 +1,25 @@
+{
+    DECLARE p0   : §point§;
+    DECLARE p    : §point§;
+    DECLARE cond : §boolean§;
+
+    LET p0 = §SELECT p FROM points AS p ORDER BY p.x LIMIT 1§[];
+    LET p  = §{0}§[p0];
+
+    LOOP {
+        EMIT p;
+        LET p = §
+            SELECT p1
+            FROM   points AS p1
+            WHERE  p1 <> {0}
+            AND    NOT EXISTS (
+                     FROM  points AS p2
+                     WHERE ({0}.x - p2.x) * (p1.y - p2.y) -
+                           ({0}.y - p2.y) * (p1.x - p2.x) > 0
+                   )
+        §[p];
+
+        LET cond = §{0} = {1}§[p, p0];
+        IF cond THEN STOP ELSE CONTINUE
+    }
+}
