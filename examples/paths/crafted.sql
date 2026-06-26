@@ -16,4 +16,5 @@ WITH RECURSIVE
 
 SELECT argmin(path, length)
 FROM   loop
+WHERE  length > 0
 GROUP  BY first, last;
