@@ -1,0 +1,39 @@
+{
+    DECLARE node           : §int§;
+    DECLARE community      : §int§;
+    DECLARE cond           : §boolean§;
+    DECLARE old_communitys : §int§;
+    DECLARE new_communitys : §int§;
+    DECLARE nodes          : §int[]§;
+
+    FORK node = §FROM nodes§[];
+    LET community = §{0}§[node];
+
+    LOOP {
+        LET old_communitys = §bit_xor(DISTINCT {0}) OVER ()§[community];
+
+        -- keep one copy of the current community "here" for later
+        FORK cond = §VALUES (TRUE), (FALSE)§[];
+        IF cond THEN NOOP ELSE {
+            -- propagate current communties from "here" to "there"
+            FORK node = §
+                SELECT there
+                FROM   edges
+                WHERE  here = {0}
+            §[node];
+            GATHER community = §mode({0} ORDER BY {0})§[community] BY node
+        };
+
+        -- update community "here" if necessary
+        GATHER community = §min({0})§[community] BY node;
+
+        LET new_communitys = §bit_xor(DISTINCT {0}) OVER ()§[community];
+
+        LET cond = §{0} <> {1}§[old_communitys, new_communitys];
+        IF cond THEN CONTINUE ELSE BREAK
+    };
+
+    GATHER nodes = §list({0})§[node] BY community;
+    EMIT nodes;
+    STOP
+}
