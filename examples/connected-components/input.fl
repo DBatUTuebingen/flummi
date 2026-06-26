@@ -10,7 +10,7 @@
     LET component = §{0}§[node];
 
     LOOP {
-        LET old_components = §sum(DISTINCT {0}) OVER ()§[component];
+        LET old_components = §bit_xor({0}) OVER ()§[component];
 
         FORK node = §
             SELECT there
@@ -21,7 +21,7 @@
 
         GATHER component = §min({0})§[component] BY node;
 
-        LET new_components = §sum(DISTINCT {0}) OVER ()§[component];
+        LET new_components = §bit_xor({0}) OVER ()§[component];
 
         LET cond = §{0} <> {1}§[old_components, new_components];
         IF cond THEN CONTINUE ELSE BREAK
