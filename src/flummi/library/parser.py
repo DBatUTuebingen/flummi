@@ -34,7 +34,7 @@ type Lexer[T: Tokens] = Callable[[str], Iterator[Token[T]]]
 
 
 def make_lexer[T: Tokens](
-    types: type[T], skip: set[T] | None = None
+    types: type[T], skip: set[T] | None = None, regex_flags: re._FlagsType = 0
 ) -> Lexer[T]:
     """Build a lexer for a given enum of token types.
 
@@ -42,6 +42,8 @@ def make_lexer[T: Tokens](
     :type types: type[T]
     :param skip: A set of token types to emit not tokens for.
     :type skip: set[T]
+    :param regex_flags: Flags to pass to the regex scanner.
+    :type regex_flags: re._FlagsType
     :return: The lexer for the given token types.
     :rtype: Lexer[T]
     """
@@ -51,7 +53,7 @@ def make_lexer[T: Tokens](
             rf"(?P<{type.name}>{type.value})" for type in types
         )
         line, line_start, column = 1, 0, 0
-        for match in re.finditer(token_regex, code):
+        for match in re.finditer(token_regex, code, flags=regex_flags):
             assert match.lastgroup is not None
             type = types[match.lastgroup]
             value = match.group()

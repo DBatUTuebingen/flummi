@@ -1,3 +1,4 @@
+import re
 from textwrap import dedent
 
 from ..IR.AST import (
@@ -62,7 +63,9 @@ class Tokens(parser.Tokens):
     WHITESPACE = r"\s+"
 
 
-lex = parser.make_lexer(Tokens, {Tokens.WHITESPACE, Tokens.COMMENT})
+lex = parser.make_lexer(
+    Tokens, {Tokens.WHITESPACE, Tokens.COMMENT}, regex_flags=re.IGNORECASE
+)
 
 
 class Parser(parser.Parser[Tokens]):
