@@ -1,0 +1,34 @@
+{
+    DECLARE k         : §int§;
+    DECLARE node      : §int§;
+    DECLARE degree    : §int§;
+    DECLARE active    : §boolean§;
+    DECLARE cond      : §boolean§;
+    DECLARE old_nodes : §int§;
+    DECLARE new_nodes : §int§;
+
+    LET k = §2§[];
+    FORK node = §FROM nodes§[];
+    LET active = §TRUE§[];
+
+    LOOP {
+        LET old_nodes = §countif({0}) OVER ()§[active];
+
+        FORK node = §
+            SELECT there
+            FROM   edges
+            WHERE  here = {0}
+        §[node];
+
+        GATHER degree = §countif({0})§[active] BY node;
+
+        LET active = §{0} >= {1} + 1§[degree, k];
+
+        LET new_nodes = §countif({0}) OVER ()§[active];
+        LET cond = §{0} > {1}§[old_nodes, new_nodes];
+        IF cond THEN CONTINUE ELSE BREAK
+    };
+
+    IF active THEN EMIT node ELSE NOOP;
+    STOP
+}
