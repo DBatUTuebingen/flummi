@@ -6,8 +6,8 @@ from ..IR.CFP import (
     Expression,
     Fork,
     Gather,
-    Jump,
     IsSynced,
+    Jump,
     Label,
     Primitive,
     Program,
@@ -90,13 +90,14 @@ class Solver:
                     self._analysis.system_variables[SystemVariable.CONTROL],
                 }
 
-            case Assignment(
-                _,
-                Expression(_, arguments),
-            ) | Fork(
-                _,
-                Expression(_, arguments),
-            ):
+            case Assignment(bindings):
+                return {
+                    *utils.union(
+                        expression.arguments for expression in bindings.values()
+                    ),
+                }
+
+            case Fork(_, Expression(_, arguments)):
                 return set(arguments)
 
             case Emit(variable):
@@ -123,6 +124,7 @@ class Solver:
 
             case Jump(_):
                 return {
+                    self._analysis.system_variables[SystemVariable.CONTROL],
                     self._analysis.system_variables[SystemVariable.ITERATION],
                 }
 
@@ -137,7 +139,7 @@ class Solver:
                     self._analysis.system_variables[SystemVariable.ITERATION],
                 }
 
-            case Assignment(variable, _) | IsSynced(variable, _, _):
+            case IsSynced(variable, _, _):
                 return {variable}
 
             case Emit(_):
@@ -155,12 +157,15 @@ class Solver:
             case Fork(variables, _):
                 return set(variables)
 
-            case Gather(aggregates, _):
+            case Gather(bindings, _):
                 return {
                     # ? [info] basically a virtual key!
                     self._analysis.system_variables[SystemVariable.CONTROL],
-                    *aggregates,
+                    *bindings,
                 }
+
+            case Assignment(bindings):
+                return {*bindings}
 
             case _:
                 return set()

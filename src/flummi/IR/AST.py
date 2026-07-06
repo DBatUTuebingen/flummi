@@ -49,8 +49,7 @@ class Block(Statement):
 
 @dataclass
 class Assignment(Statement):
-    variable: Variable
-    expression: Expression
+    bindings: dict[Variable, Expression]
 
 
 @dataclass

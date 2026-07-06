@@ -5,6 +5,7 @@ from ..IR.CFP import (
     Emit,
     Fork,
     Gather,
+    IsSynced,
     Jump,
     Label,
     Merge,
@@ -13,12 +14,11 @@ from ..IR.CFP import (
     Start,
     Stop,
     Where,
-    IsSynced,
 )
 from ..library import graph, sql
-from .scheming import Schema
 from .analysis import AnalysisResult, Feature
 from .names import Names, SystemVariable
+from .scheming import Schema
 from .solving import DataflowResult
 
 __all__ = ("generate",)
@@ -278,7 +278,7 @@ class CodeGenerator:
                     predicates=["FALSE"],
                 )
 
-            case Assignment(variable, expression):
+            case Assignment(bindings):
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
@@ -297,9 +297,9 @@ class CodeGenerator:
                                         for argument in expression.arguments
                                     )
                                 ),
-                                self._analysis.symbol_table[variable].source,
+                                self._analysis.symbol_table[output].source,
                             )
-                            if output == variable
+                            if (expression := bindings.get(output)) is not None
                             else sql.variable(
                                 output.identifier, predecessor.identifier
                             ),
@@ -454,16 +454,19 @@ class CodeGenerator:
                     select_list=[
                         *(
                             sql.named(
-                                expression.source.format(
-                                    *(
-                                        sql.paren(
-                                            sql.variable(
-                                                argument.identifier,
-                                                predecessor.identifier,
+                                sql.cast(
+                                    expression.source.format(
+                                        *(
+                                            sql.paren(
+                                                sql.variable(
+                                                    argument.identifier,
+                                                    predecessor.identifier,
+                                                )
                                             )
+                                            for argument in expression.arguments
                                         )
-                                        for argument in expression.arguments
-                                    )
+                                    ),
+                                    self._analysis.symbol_table[output].source,
                                 )
                                 if (expression := aggregates.get(output))
                                 is not None

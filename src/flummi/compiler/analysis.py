@@ -165,9 +165,12 @@ class Analyzer:
                     )
                 return
 
-            case Assignment(variable, expression):
-                self.analyze_expression(expression)
-                self.analyze_variable_write(variable)
+            case Assignment(bindings):
+                for expression in bindings.values():
+                    self.analyze_expression(expression)
+
+                for variable in bindings.keys():
+                    self.analyze_variable_write(variable)
 
             case Emit(variable):
                 self.analyze_variable_read(variable)
@@ -213,7 +216,7 @@ class Analyzer:
                 for aggregate in aggregates.values():
                     self.analyze_expression(aggregate)
 
-                for variable in aggregates:
+                for variable in aggregates.keys():
                     self.analyze_variable_write(variable)
 
             case Sync(keys):

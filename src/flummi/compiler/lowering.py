@@ -157,11 +157,10 @@ class Lowering:
 
                         return set()
 
-                    case AST.Assignment(probe_variable, expression):
+                    case AST.Assignment(bindings):
                         this_label = self._add_primitive(
                             primitive=CFP.Assignment(
-                                variable=probe_variable,
-                                expression=expression,
+                                bindings=bindings,
                                 location=statement.location,
                             ),
                         )

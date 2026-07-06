@@ -70,16 +70,35 @@ lex = parser.make_lexer(
 
 class Parser(parser.Parser[Tokens]):
     def parse_expression(self) -> Expression:
+        if self.lookahead(Tokens.IDENTIFIER):
+            variable = self.parse_variable()
+            return Expression(
+                location=variable.location,
+                source="{0}",
+                arguments=[variable],
+            )
+
         location = self.current.location
         value = self.expectv(Tokens.SQL)[1:-1]
-        self.expect(Tokens.LEFT_BRACKET)
-        if self.match(Tokens.RIGHT_BRACKET):
-            free_variables = []
+
+        if self.match(Tokens.LEFT_BRACKET):
+            if self.match(Tokens.RIGHT_BRACKET):
+                free_variables = []
+            else:
+                free_variables = list(
+                    self.sequence(self.parse_variable, Tokens.COMMA)
+                )
+                self.expect(Tokens.RIGHT_BRACKET)
         else:
-            free_variables = list(
-                self.sequence(self.parse_variable, Tokens.COMMA)
-            )
-            self.expect(Tokens.RIGHT_BRACKET)
+            free_variables = [
+                Variable(location=location, identifier=identifier[1:-1])
+                for identifier in set(
+                    re.findall(rf"\{{{Tokens.IDENTIFIER.value}\}}", value)
+                )
+            ]
+            for i, variable in enumerate(free_variables):
+                value = value.replace(f"{{{variable.identifier}}}", f"{{{i}}}")
+
         return Expression(
             location=location,
             source=dedent(value).strip(),
@@ -174,12 +193,8 @@ class Parser(parser.Parser[Tokens]):
     def parse_assignment(self) -> Assignment:
         location = self.current.location
         self.expect(Tokens.LET)
-        variable = self.parse_variable()
-        self.expect(Tokens.EQUALS)
-        expression = self.parse_expression()
-        return Assignment(
-            location=location, variable=variable, expression=expression
-        )
+        bindings = dict(self.sequence(self.parse_scalar_binding, Tokens.COMMA))
+        return Assignment(location=location, bindings=bindings)
 
     def parse_conditional(self) -> Conditional:
         location = self.current.location

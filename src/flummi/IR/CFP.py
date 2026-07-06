@@ -48,8 +48,7 @@ class Stop(Primitive): ...
 
 @dataclass
 class Assignment(Primitive):
-    variable: Variable
-    expression: Expression
+    bindings: dict[Variable, Expression]
 
 
 @dataclass
