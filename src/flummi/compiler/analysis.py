@@ -92,6 +92,10 @@ class Analyzer:
             SystemVariable.ITERATION,
             "int",
         )
+        self._add_system_variable(
+            SystemVariable.PROBE,
+            "boolean",
+        )
 
     def _add_feature(self, feature: Feature):
         self._features |= feature
@@ -193,7 +197,7 @@ class Analyzer:
             case Conditional(condition, true_branch, false_branch):
                 self._add_feature(Feature.BRANCHING)
 
-                self.analyze_variable_read(condition)
+                self.analyze_expression(condition)
                 self.analyze_statement(true_branch)
                 self.analyze_statement(false_branch)
 
@@ -235,8 +239,13 @@ class Analyzer:
     def analyze_variable_read(self, variable: Variable):
         if variable not in self._bound_symbols:
             raise AnalysisError(
-                f"Found read from uninitialised variable {variable.identifier!r}.",
+                f"Found read from uninitialized variable {variable.identifier!r}.",
                 variable.location,
+                "Variables initialized before here: "
+                + ", ".join(
+                    repr(initialized_variable.identifier)
+                    for initialized_variable in self._bound_symbols
+                ),
             )
 
     def analyze_variable_write(self, variable: Variable):
@@ -244,6 +253,11 @@ class Analyzer:
             raise AnalysisError(
                 f"Found write to undeclared variable {variable.identifier!r}.",
                 variable.location,
+                "Variables declared before here: "
+                + ", ".join(
+                    repr(declared_variable.identifier)
+                    for declared_variable in self._symbol_table
+                ),
             )
 
         self._bound_symbols.add(variable)

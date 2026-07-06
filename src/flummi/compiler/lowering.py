@@ -191,23 +191,35 @@ class Lowering:
                         return predecessors
 
                     case AST.Conditional(condition, true_branch, false_branch):
+                        condition_variable: CFP.Variable = CFP.Variable(
+                            SystemVariable.PROBE, location=statement.location
+                        )
+
+                        assign_condition = self._add_primitive(
+                            primitive=CFP.Assignment(
+                                bindings={condition_variable: condition},
+                                location=statement.location,
+                            )
+                        )
+
                         where = self._add_primitive(
                             primitive=CFP.Where(
-                                condition,
+                                condition_variable,
                                 inverted=False,
                                 location=statement.location,
                             ),
                         )
                         where_not = self._add_primitive(
                             primitive=CFP.Where(
-                                condition,
+                                condition_variable,
                                 inverted=True,
                                 location=statement.location,
                             ),
                         )
 
-                        self._add_edge(predecessor, where)
-                        self._add_edge(predecessor, where_not)
+                        self._add_edge(predecessor, assign_condition)
+                        self._add_edge(assign_condition, where)
+                        self._add_edge(assign_condition, where_not)
 
                         return self.lower_statement(
                             {where},
@@ -279,8 +291,8 @@ class Lowering:
                         return {this_label}
 
                     case AST.Sync(keys):
-                        probe_variable: CFP.Variable = self._make_label(
-                            SystemVariable.PROBE, statement.location
+                        probe_variable: CFP.Variable = CFP.Variable(
+                            SystemVariable.PROBE, location=statement.location
                         )
 
                         start = self._add_primitive(

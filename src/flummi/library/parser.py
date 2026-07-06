@@ -58,6 +58,7 @@ def make_lexer[T: Tokens](
             type = types[match.lastgroup]
             value = match.group()
             column = 1 + match.start() - line_start
+            token = Token(type, value, line, column)
 
             if (newlines := len(lines := value.split("\n"))) > 1:
                 line_start = match.end() - len(lines[-1])
@@ -66,7 +67,7 @@ def make_lexer[T: Tokens](
             if skip and type in skip:
                 continue
 
-            yield Token(type, value, line, column)
+            yield token
 
     return lex
 

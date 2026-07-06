@@ -29,7 +29,8 @@ def scheme(
     SYSTEM_SCHEMA = {
         variable.identifier: analysis.symbol_table[variable]
         for variable in analysis.system_variables.values()
-        if variable.identifier != SystemVariable.CONTROL
+        if variable.identifier
+        not in {SystemVariable.CONTROL, SystemVariable.PROBE}
     }
 
     schema = SYSTEM_SCHEMA

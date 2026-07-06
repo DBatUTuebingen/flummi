@@ -67,7 +67,7 @@ class NoOp(Statement): ...
 
 @dataclass
 class Conditional(Statement):
-    condition: Variable
+    condition: Expression
     true_branch: Statement
     false_branch: Statement
 

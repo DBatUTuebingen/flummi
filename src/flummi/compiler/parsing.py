@@ -24,7 +24,7 @@ from ..IR.common import (
     Type,
     Variable,
 )
-from ..library import parser
+from ..library import errors, parser
 
 __all__ = ("parse",)
 
@@ -79,7 +79,7 @@ class Parser(parser.Parser[Tokens]):
             )
 
         location = self.current.location
-        value = self.expectv(Tokens.SQL)[1:-1]
+        value = self.expectv(Tokens.SQL)
 
         if self.match(Tokens.LEFT_BRACKET):
             if self.match(Tokens.RIGHT_BRACKET):
@@ -90,18 +90,35 @@ class Parser(parser.Parser[Tokens]):
                 )
                 self.expect(Tokens.RIGHT_BRACKET)
         else:
-            free_variables = [
-                Variable(location=location, identifier=identifier[1:-1])
-                for identifier in set(
-                    re.findall(rf"\{{{Tokens.IDENTIFIER.value}\}}", value)
-                )
-            ]
+            free_variables = list(
+                {
+                    Variable(
+                        location=errors.Location(
+                            line=location.line
+                            + len(
+                                (
+                                    lines := value[
+                                        : match.start(1)
+                                    ].splitlines()[1:]
+                                )
+                            ),
+                            column=len(lines[-1]) + 1
+                            if len(lines) > 0
+                            else location.column + match.start(1),
+                        ),
+                        identifier=match.group(1),
+                    )
+                    for match in re.finditer(
+                        rf"\{{({Tokens.IDENTIFIER.value})\}}", value
+                    )
+                }
+            )
             for i, variable in enumerate(free_variables):
                 value = value.replace(f"{{{variable.identifier}}}", f"{{{i}}}")
 
         return Expression(
             location=location,
-            source=dedent(value).strip(),
+            source=dedent(value[1:-1]).strip(),
             arguments=free_variables,
         )
 
@@ -199,7 +216,7 @@ class Parser(parser.Parser[Tokens]):
     def parse_conditional(self) -> Conditional:
         location = self.current.location
         self.expect(Tokens.IF)
-        condition = self.parse_variable()
+        condition = self.parse_expression()
         self.expect(Tokens.THEN)
         true_branch = self.parse_statement()
         self.expect(Tokens.ELSE)
