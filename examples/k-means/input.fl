@@ -1,7 +1,7 @@
 {
     DECLARE centroid : §point§;
+    DECLARE centroids : §real§;
     DECLARE old_centroids : §real§;
-    DECLARE new_centroids : §real§;
     DECLARE point : §point§;
     DECLARE distance : §real§;
     DECLARE new_centroid : §point§;
@@ -9,33 +9,32 @@
     DECLARE cluster : §point[]§;
 
     -- set up intial centroids
-    FORK centroid = §SELECT p FROM points AS p USING SAMPLE 10 ROWS§[];
+    FORK centroid = §SELECT p FROM points AS p USING SAMPLE 10 ROWS§;
+    LET  centroids = §sum({centroid}.x + {centroid}.y) OVER ()§;
 
     LOOP {
-        LET old_centroids = §sum({0}.x + {0}.y) OVER ()§[centroid];
-
         -- map points to current centroids
-        FORK point = §SELECT p FROM points AS p§[];
-        LET distance = §sqrt(({0}.x - {1}.x) ** 2 + ({0}.y - {1}.y) ** 2)§[point, centroid];
-        GATHER centroid = §arg_min({0}, {1})§[centroid, distance] BY point;
+        FORK point = §SELECT p FROM points AS p§;
+        LET distance = §sqrt(({point}.x - {centroid}.x) ** 2 + ({point}.y - {centroid}.y) ** 2)§;
+        GATHER centroid = §arg_min({centroid}, {distance})§ BY point;
 
         -- compute new centroids
-        GATHER new_centroid = §{{ 'x': avg({0}.x), 'y': avg({0}.y) }}§[point] BY centroid;
+        GATHER new_centroid = §{{ 'x': avg({point}.x), 'y': avg({point}.y) }}§ BY centroid;
 
         -- check if centroids converged
-        LET new_centroids = §sum({0}.x + {0}.y) OVER ()§[new_centroid];
-        LET cond = §abs({0} - {1}) > 0.000001§[old_centroids, new_centroids];
-        IF cond THEN LET centroid = §{0}§[new_centroid] ELSE BREAK
+        LET centroids = §sum({new_centroid}.x + {new_centroid}.y) OVER ()§, old_centroids = centroids;
+        IF §abs({old_centroids} - {centroids}) > 0.000001§
+        THEN LET centroid = new_centroid ELSE BREAK
     };
 
     -- map points to final centroids (one last time...)
     -- can be skipped if we just want to return the centroids
-    FORK point = §SELECT p FROM points AS p§[];
-    LET distance = §sqrt(({0}.x - {1}.x) ** 2 + ({0}.y - {1}.y) ** 2)§[point, centroid];
-    GATHER centroid = §arg_min({0}, {1})§[centroid, distance] BY point;
+    FORK point = §SELECT p FROM points AS p§;
+    LET distance = §sqrt(({point}.x - {centroid}.x) ** 2 + ({point}.y - {centroid}.y) ** 2)§;
+    GATHER centroid = §arg_min({centroid}, {distance})§ BY point;
 
     -- finalize and emit cluster
-    GATHER cluster = §list({0})§[point] BY centroid;
+    GATHER cluster = §list({point})§ BY centroid;
     EMIT cluster;
 
     STOP

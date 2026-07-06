@@ -2,32 +2,31 @@
     DECLARE node           : §int§;
     DECLARE component      : §int§;
     DECLARE nodes          : §int[]§;
-    DECLARE cond           : §boolean§;
-    DECLARE old_components : §uhugeint§;
-    DECLARE new_components : §uhugeint§;
+    DECLARE components     : §int§;
+    DECLARE old_components : §int§;
 
-    FORK node = §FROM nodes§[];
-    LET component = §{0}§[node];
+    FORK node = §FROM nodes§;
+    LET component = node;
+    LET components = §bit_xor({component}) OVER ()§;
 
     LOOP {
-        LET old_components = §bit_xor({0}) OVER ()§[component];
-
         FORK node = §
             SELECT there
             FROM   edges
-            WHERE  here = {0}
-            AND    there > {1}
-        §[node, component];
+            WHERE  here = {node}
+            AND    there > {component}
+        §;
 
-        GATHER component = §min({0})§[component] BY node;
+        GATHER component = §min({component})§ BY node;
 
-        LET new_components = §bit_xor({0}) OVER ()§[component];
+        LET components     = §bit_xor({component}) OVER ()§,
+            old_components = components;
 
-        LET cond = §{0} <> {1}§[old_components, new_components];
+        LET cond = §{old_components} <> {components}§;
         IF cond THEN CONTINUE ELSE BREAK
     };
 
-    GATHER nodes = §list({0})§[node] BY component;
+    GATHER nodes = §list({node})§ BY component;
     EMIT nodes;
     STOP
 }

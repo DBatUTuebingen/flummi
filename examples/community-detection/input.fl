@@ -1,41 +1,40 @@
 {
     DECLARE node      : §int§;
     DECLARE community : §int§;
-    DECLARE cond      : §boolean§;
     DECLARE old_state : §int§;
-    DECLARE new_state : §int§;
+    DECLARE state     : §int§;
     DECLARE nodes     : §int[]§;
+    DECLARE flip      : §boolean§;
 
-    FORK node = §FROM nodes§[];
-    LET community = §{0}§[node];
+    FORK node = §FROM nodes§;
+    LET community = node;
+    LET state = §bit_xor({community}) OVER ()§;
 
     LOOP {
-        LET old_state = §bit_xor({0}) OVER ()§[community];
 
         -- keep one copy of the current community "here" for later
-        FORK cond = §VALUES (TRUE), (FALSE)§[];
-        IF cond THEN NOOP ELSE {
+        FORK flip = §VALUES (TRUE), (FALSE)§;
+        IF flip THEN NOOP ELSE {
             -- propagate current communties from "here" to "there"
             FORK node = §
-                SELECT there FROM edges WHERE here = {0}
+                SELECT there FROM edges WHERE here = {node}
                     UNION ALL
-                SELECT here FROM edges WHERE there = {0}
-            §[node];
+                SELECT here FROM edges WHERE there = {node}
+            §;
 
             -- get the most frequent community per
-            GATHER community = §mode({0} ORDER BY {0})§[community] BY node
+            GATHER community = §mode({community} ORDER BY {community})§ BY node
         };
 
         -- if the new community would be larger, keep the old one instead
-        GATHER community = §min({0})§[community] BY node;
+        GATHER community = §min({community})§ BY node;
 
-        LET new_state = §bit_xor({0}) OVER ()§[community];
+        LET state = §bit_xor({community}) OVER ()§, old_state = state;
 
-        LET cond = §{0} = {1}§[old_state, new_state];
-        IF cond THEN BREAK ELSE CONTINUE
+        IF §{old_state} = {state}§ THEN BREAK ELSE CONTINUE
     };
 
-    GATHER nodes = §list({0} ORDER BY {0})§[node] BY community;
+    GATHER nodes = §list({node} ORDER BY {node})§ BY community;
     EMIT nodes;
     STOP
 }

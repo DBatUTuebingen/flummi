@@ -1,11 +1,11 @@
 {
   DECLARE v : §int§;
-  DECLARE c : §boolean§;
-  LET v = §0§[];
+
+  LET v = §0§;
   LOOP {
     EMIT v;
-    LET v = §{0} + 1§[v];
-    LET c = §{0} < 10§[v];
-    IF c THEN NOOP ELSE BREAK
+    LET v = §{v} + 1§;
+    IF §{v} < 10§
+    THEN NOOP ELSE BREAK
   }
 }

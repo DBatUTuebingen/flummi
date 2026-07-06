@@ -1,20 +1,18 @@
 {
-  DECLARE c : §boolean§;
   DECLARE s : §text§;
   DECLARE i : §int§;
   DECLARE n : §int§;
 
-  LET n = §10§[];
+  LET n = §10§;
 
-  FORK i = §SELECT * FROM range({0})§[n];
+  FORK i = §SELECT * FROM range({n})§;
 
-  LET c = §random() >= 0.5§[];
-  IF c
-  THEN LET s = §'tails'§[]
-  ELSE LET s = §'heads'§[];
+  IF §random() >= 0.5§
+  THEN LET s = §'tails'§
+  ELSE LET s = §'heads'§;
 
-  GATHER i = §count(*)§[] BY s;
-  LET i = §{0} / ({1} :: float)§[i, n];
-  GATHER i = §avg({0})§[i];
+  GATHER i = §count(*)§ BY s;
+  LET i = §{i} / ({n} :: float)§;
+  GATHER i = §avg({i})§;
   EMIT i
 }
