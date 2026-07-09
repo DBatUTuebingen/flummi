@@ -143,15 +143,16 @@ FROM edges;
 SET VARIABLE k = 2;
 
 WITH RECURSIVE k_core(node, deg, active) USING KEY (node) AS (
-  SELECT v.node, -1 AS deg, true AS active
-  FROM   nodes AS v
+  SELECT v.node, count(e) AS deg, deg >= $k AS active
+  FROM   nodes AS v LEFT OUTER JOIN edges AS e ON v.node = e."from"
+  GROUP BY v.node
 
     UNION ALL
 
   SELECT v.node, countif(n.active) AS degree, degree >= $k AS active
   FROM   k_core AS v, edges AS e, recurring.k_core AS n
   WHERE (v.node, n.node) = (e."from", e."to")
-  GROUP BY v.node, v.active, v.deg
+  GROUP BY ALL
   HAVING degree <> v.deg
 )
 SELECT node
