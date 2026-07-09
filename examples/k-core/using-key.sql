@@ -143,7 +143,7 @@ FROM edges;
 SET VARIABLE k = 2;
 
 WITH RECURSIVE k_core(node, deg, active) USING KEY (node) AS (
-  SELECT v.node, count(e) AS deg, deg >= $k AS active
+  SELECT v.node, count(e."to") AS deg, deg >= $k AS active
   FROM   nodes AS v LEFT OUTER JOIN edges AS e ON v.node = e."from"
   GROUP BY v.node
 
