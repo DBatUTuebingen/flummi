@@ -1,12 +1,16 @@
 {
-    DECLARE k      : §int§;
-    DECLARE node   : §int§;
-    DECLARE degree : §int§;
-    DECLARE active : §boolean§;
-    DECLARE stable : §boolean§;
+    DECLARE k        : §int§;
+    DECLARE node     : §int§;
+    DECLARE degree   : §int§;
+    DECLARE active   : §boolean§;
+    DECLARE stable   : §boolean§;
+    DECLARE size     : §int§;
+    DECLARE old_size : §int§;
 
     LET k = §2§;
     FORK node = §FROM nodes§;
+    LET active = §TRUE§;
+    LET size = §count(*) OVER ()§;
 
     LOOP {
         FORK node = §
@@ -15,14 +19,12 @@
             WHERE  here = {node}
         §;
 
-        GATHER degree = §count(*)§ BY node;
+        GATHER degree = §countif({active})§ BY node;
         LET active = §{degree} >= {k} + 1§;
-        LET stable = §bool_and({active}) OVER ()§;
+        LET size = §countif({active}) OVER ()§, old_size = size;
 
-        IF active THEN NOOP ELSE STOP;
-        IF stable THEN BREAK ELSE CONTINUE
+        IF §{old_size} = {size}§ THEN BREAK ELSE CONTINUE
     };
 
-    EMIT node;
-    STOP
+    IF active THEN EMIT node ELSE NOOP
 }
