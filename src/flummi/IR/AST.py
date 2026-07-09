@@ -38,7 +38,7 @@ class Statement(Located, ABC): ...
 
 @dataclass
 class Declaration(Statement):
-    variable: Variable
+    variables: list[Variable]
     type: Type
 
 

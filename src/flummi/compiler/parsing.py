@@ -175,12 +175,12 @@ class Parser(parser.Parser[Tokens]):
     def parse_declaration(self) -> Declaration:
         location = self.current.location
         self.expect(Tokens.DECLARE)
-        variable = self.parse_variable()
+        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
         self.expect(Tokens.COLON)
         type = self.parse_type()
         return Declaration(
             location=location,
-            variable=variable,
+            variables=variables,
             type=type,
         )
 

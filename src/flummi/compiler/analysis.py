@@ -130,22 +130,23 @@ class Analyzer:
 
     def analyze_statement(self, statement: Statement) -> None:
         match statement:
-            case Declaration(variable, type):
-                if variable in self._symbol_table:
-                    old_variable = next(
-                        old_variable
-                        for old_variable in self._symbol_table
-                        if variable == old_variable
-                    )
+            case Declaration(variables, type):
+                for variable in variables:
+                    if variable in self._symbol_table:
+                        old_variable = next(
+                            old_variable
+                            for old_variable in self._symbol_table
+                            if variable == old_variable
+                        )
 
-                    raise AnalysisError(
-                        f"Found declaration of variable {variable.identifier!r}...",
-                        variable.location,
-                        "...that was previously declared.",
-                        old_variable.location,
-                    )
+                        raise AnalysisError(
+                            f"Found declaration of variable {variable.identifier!r}...",
+                            variable.location,
+                            "...that was previously declared.",
+                            old_variable.location,
+                        )
 
-                self._symbol_table[variable] = type
+                    self._symbol_table[variable] = type
 
             case Block(statements):
                 if not statements:
