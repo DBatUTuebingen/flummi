@@ -89,30 +89,71 @@ INSERT INTO edges("to", "from")
 FROM nodes;
 FROM edges;
 
+
 -----------------------------------------------------------------------
+-- Sample undirected 16-node graph ("2-core") taken from
+-- https://en.wikipedia.org/wiki/Degeneracy_%28graph_theory%29
+
+
+DROP TABLE IF EXISTS edges CASCADE;
+DROP TABLE IF EXISTS nodes CASCADE;
+
+CREATE TABLE nodes (
+  node int PRIMARY KEY
+);
+
+CREATE TABLE edges (
+   "from" int,
+   "to"   int,
+   FOREIGN KEY ("from") REFERENCES nodes,
+   FOREIGN KEY ("to")   REFERENCES nodes
+);
+
+INSERT INTO nodes(node)
+  FROM generate_series(1,16);
+
+INSERT INTO edges("from", "to")
+  VALUES ( 1, 2), ( 1, 3),
+         ( 2, 3), ( 2, 9),
+         ( 4, 5), ( 4, 6), ( 4,10), ( 4,13),
+         ( 5, 6), ( 5, 7), ( 5,10), ( 5,14),
+         ( 6, 7), ( 6, 8), ( 6, 9), ( 6,11),
+         ( 7, 8),
+         (11,12), (11,15),
+         (15,16);
+
+-- Make undirected
+INSERT INTO edges("to", "from")
+  FROM edges;
+
+FROM nodes;
+FROM edges;
+
+-----------------------------------------------------------------------
+
+
 
 -- Pseudcode:
 --
--- active[v] = degree[v] >= k
+-- active[v] = true
 -- repeat until no change:
 --   degree[v] = count(active neighbors of v)
 --   active[v] = active[v] and degree[v] >= k
 
 SET VARIABLE k = 2;
 
-WITH RECURSIVE k_core(node, active) USING KEY (node) AS (
-  SELECT v.node, count(*) >= $k AS active    -- count(*) ≡ deg(v)
-  FROM   nodes AS v, edges AS e
-  WHERE  v.node = e."from"
-  GROUP BY v.node
+WITH RECURSIVE k_core(node, deg, active) USING KEY (node) AS (
+  SELECT v.node, -1 AS deg, true AS active
+  FROM   nodes AS v
 
     UNION ALL
 
-  SELECT v.node, v.active AND count(*) >= $k AS new_active
-  FROM   k_core AS v, edges AS e, k_core AS n
-  WHERE (v.node, n.node) = (e."from", e."to") AND n.active
-  GROUP BY v.node, v.active
-  HAVING new_active <> v.active
+  SELECT v.node, countif(n.active) AS degree, degree >= $k AS active
+  FROM   k_core AS v, edges AS e, recurring.k_core AS n
+  WHERE (v.node, n.node) = (e."from", e."to")
+  GROUP BY v.node, v.active, v.deg
+  HAVING degree <> v.deg
 )
+SELECT node
 FROM k_core
 WHERE active;
