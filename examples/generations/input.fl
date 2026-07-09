@@ -1,0 +1,68 @@
+{
+    DECLARE buffer : §text§;
+
+    DECLARE height, width, iterations, max_age : §int§;
+    LET height     = §50§,
+        width      = §50§,
+        iterations = §50§,
+        max_age    = §3§;
+
+    DECLARE birth_cond, survive_cond : §int[]§;
+    LET birth_cond   = §[2]§,
+        survive_cond = §[]§;
+
+    -- setup board
+    DECLARE x, y : §int§;
+    FORK x = §FROM range({width})§;
+    FORK y = §FROM range({height})§;
+
+    -- initialize "age" states
+    DECLARE age : §int§;
+    LET age = §random() < 0.4§;
+
+    LOOP {
+        -- "send" a "copy" of the current grid to "rendering"
+        DECLARE flip : §boolean§;
+        FORK flip = §VALUES (TRUE), (FALSE)§;
+        IF flip THEN BREAK ELSE NOOP;
+
+        -- limit iteration count (optional! disable this for infinite iterations)
+        IF §{iterations} = 0§ THEN STOP ELSE LET iterations = §{iterations} - 1§;
+
+        -- distribute "age" states to neighboring cells
+        DECLARE dx, dy : §int§;
+        FORK dy = §FROM generate_series(-1, +1)§;
+        FORK dx = §FROM generate_series(-1, +1)§;
+        LET x = §({width}  + ({x} + {dx}) % {width} ) % {width}§,
+            y = §({height} + ({y} + {dy}) % {height}) % {height}§;
+
+        -- detect state contiaining the orginal "alive" state of current cell
+        DECLARE original : §boolean§;
+        LET original = §{dx} = 0 AND {dy} = 0§;
+
+        -- count up "living" neighbors
+        DECLARE neighbors : §int§;
+        GATHER neighbors = §countif({age} = 1) FILTER (WHERE NOT {original})§,
+               age       = §any_value({age})   FILTER (WHERE     {original})§
+        BY     x, y;
+
+        -- update "age" state of current cell
+        IF §{age} = 0 AND     list_contains({birth_cond},   {neighbors})§ THEN LET age = §1§         ELSE
+        IF §{age} = 1 AND NOT list_contains({survive_cond}, {neighbors})§ THEN LET age = §2§         ELSE
+        IF §{age} > 1§                                                    THEN LET age = §{age} + 1§
+        ELSE NOOP;
+
+        LET age = §{age} % {max_age}§
+    };
+
+    -- render by collapsing state, first into rows, then into a whole grid
+    GATHER buffer = §string_agg([' ', '#', '*'][{age} + 1], '' ORDER BY {x})§ BY y;
+    -- GATHER buffer = §string_agg(E'\033[' || ['0', '41', '43'][{age} + 1] || 'm \033[0m', '' ORDER BY {x})§ BY y;
+    GATHER buffer = §string_agg({buffer}, E'\n' ORDER BY {y})§;
+    EMIT buffer;
+
+    -- (having this spacer after a complete board works wonders for output in `.mode list`)
+    LET buffer = iterations;
+    LET buffer = §{buffer} || ' ' || repeat('-.', ({width} - length({buffer} :: text) - 1) // 2)§;
+    EMIT buffer
+}
