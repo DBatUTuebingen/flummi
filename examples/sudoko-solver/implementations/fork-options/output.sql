@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "cells", "id") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "cells", "id") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS struct(id int, cells int[])) AS "📊",
+            CAST((NULL) AS struct(id int, cells int[])) AS "📊.1",
             CAST((NULL) AS int[]) AS "cells",
             CAST((NULL) AS int) AS "id")
       UNION ALL
@@ -114,10 +114,10 @@ WITH RECURSIVE
                 "fork.2"."id" AS "id"
          FROM   "fork.2"
        ),
-       "emit.1"("#️⃣", "⚙️", "📊") AS (
+       "emit.1"("#️⃣", "⚙️", "📊.1") AS (
          SELECT "assignment.6"."#️⃣" AS "#️⃣",
                 "assignment.6"."⚙️" AS "⚙️",
-                "assignment.6"."result" AS "📊"
+                "assignment.6"."result" AS "📊.1"
          FROM   "assignment.6"
        ),
        "stop.2"("⚙️") AS (
@@ -159,18 +159,18 @@ WITH RECURSIVE
        )
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS struct(id int, cells int[])) AS "📊",
+             CAST(("emit.1"."📊.1") AS struct(id int, cells int[])) AS "📊.1",
              CAST((NULL) AS int[]) AS "cells",
              CAST((NULL) AS int) AS "id"
       FROM   "emit.1")
        UNION ALL
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS struct(id int, cells int[])) AS "📊",
+             CAST((NULL) AS struct(id int, cells int[])) AS "📊.1",
              CAST(("jump.1"."cells") AS int[]) AS "cells",
              CAST(("jump.1"."id") AS int) AS "id"
       FROM   "jump.1"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

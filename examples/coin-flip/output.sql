@@ -92,8 +92,8 @@ WITH
               "assignment.5"."⚙️"
     HAVING COUNT(*) > 0
   ),
-  "emit.1"("📊", "#️⃣", "⚙️") AS (
-    SELECT "gather.2"."i" AS "📊",
+  "emit.1"("📊.1", "#️⃣", "⚙️") AS (
+    SELECT "gather.2"."i" AS "📊.1",
            "gather.2"."#️⃣" AS "#️⃣",
            "gather.2"."⚙️" AS "⚙️"
     FROM   "gather.2"
@@ -103,5 +103,5 @@ WITH
     FROM   "emit.1"
     WHERE  FALSE
   )
-(SELECT "emit.1"."📊"
+(SELECT "emit.1"."📊.1"
  FROM   "emit.1")

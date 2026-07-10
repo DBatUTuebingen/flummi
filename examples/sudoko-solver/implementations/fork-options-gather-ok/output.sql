@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "cells", "empty_cells") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "cells", "empty_cells") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS int[]) AS "📊",
+            CAST((NULL) AS int[]) AS "📊.1",
             CAST((NULL) AS int[]) AS "cells",
             CAST((NULL) AS int[]) AS "empty_cells")
       UNION ALL
@@ -188,8 +188,8 @@ WITH RECURSIVE
          FROM   "assignment.9"
          WHERE  "assignment.9"."done" IS DISTINCT FROM TRUE
        ),
-       "emit.1"("📊", "#️⃣", "⚙️") AS (
-         SELECT "where.3"."cells" AS "📊",
+       "emit.1"("📊.1", "#️⃣", "⚙️") AS (
+         SELECT "where.3"."cells" AS "📊.1",
                 "where.3"."#️⃣" AS "#️⃣",
                 "where.3"."⚙️" AS "⚙️"
          FROM   "where.3"
@@ -208,18 +208,18 @@ WITH RECURSIVE
        )
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS int[]) AS "📊",
+             CAST(("emit.1"."📊.1") AS int[]) AS "📊.1",
              CAST((NULL) AS int[]) AS "cells",
              CAST((NULL) AS int[]) AS "empty_cells"
       FROM   "emit.1")
        UNION ALL
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS int[]) AS "📊",
+             CAST((NULL) AS int[]) AS "📊.1",
              CAST(("jump.1"."cells") AS int[]) AS "cells",
              CAST(("jump.1"."empty_cells") AS int[]) AS "empty_cells"
       FROM   "jump.1"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

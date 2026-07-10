@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "length", "first", "path", "last") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "length", "first", "path", "last") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS int[]) AS "📊",
+            CAST((NULL) AS int[]) AS "📊.1",
             CAST((NULL) AS int) AS "length",
             CAST((NULL) AS int) AS "first",
             CAST((NULL) AS int[]) AS "path",
@@ -118,10 +118,10 @@ WITH RECURSIVE
                 "assignment.2"."#️⃣" AS "#️⃣"
          FROM   "assignment.2"
        ),
-       "emit.1"("#️⃣", "⚙️", "📊") AS (
+       "emit.1"("#️⃣", "⚙️", "📊.1") AS (
          SELECT "gather.1"."#️⃣" AS "#️⃣",
                 "gather.1"."⚙️" AS "⚙️",
-                "gather.1"."path" AS "📊"
+                "gather.1"."path" AS "📊.1"
          FROM   "gather.1"
        ),
        "merge.1"("length", "first", "path", "last", "⚙️", "#️⃣") AS (
@@ -244,7 +244,7 @@ WITH RECURSIVE
        )
      (SELECT CAST(("jump.3"."🏷️") AS text) AS "🏷️",
              CAST(("jump.3"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS int[]) AS "📊",
+             CAST((NULL) AS int[]) AS "📊.1",
              CAST(("jump.3"."length") AS int) AS "length",
              CAST(("jump.3"."first") AS int) AS "first",
              CAST(("jump.3"."path") AS int[]) AS "path",
@@ -253,7 +253,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS int[]) AS "📊",
+             CAST(("emit.1"."📊.1") AS int[]) AS "📊.1",
              CAST((NULL) AS int) AS "length",
              CAST((NULL) AS int) AS "first",
              CAST((NULL) AS int[]) AS "path",
@@ -262,7 +262,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS int[]) AS "📊",
+             CAST((NULL) AS int[]) AS "📊.1",
              CAST(("jump.1"."length") AS int) AS "length",
              CAST(("jump.1"."first") AS int) AS "first",
              CAST(("jump.1"."path") AS int[]) AS "path",
@@ -271,13 +271,13 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.2"."🏷️") AS text) AS "🏷️",
              CAST(("jump.2"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS int[]) AS "📊",
+             CAST((NULL) AS int[]) AS "📊.1",
              CAST(("jump.2"."length") AS int) AS "length",
              CAST(("jump.2"."first") AS int) AS "first",
              CAST(("jump.2"."path") AS int[]) AS "path",
              CAST(("jump.2"."last") AS int) AS "last"
       FROM   "jump.2"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

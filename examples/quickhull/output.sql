@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "left", "right") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "left", "right") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS point) AS "📊",
+            CAST((NULL) AS point) AS "📊.1",
             CAST((NULL) AS point) AS "left",
             CAST((NULL) AS point) AS "right")
       UNION ALL
@@ -27,11 +27,11 @@ WITH RECURSIVE
                 CAST((SELECT argmin(p, p.x) FROM points AS p) AS point) AS "min"
          FROM   "start.1"
        ),
-       "emit.1"("min", "⚙️", "#️⃣", "📊") AS (
+       "emit.1"("min", "⚙️", "#️⃣", "📊.1") AS (
          SELECT "assignment.1"."min" AS "min",
                 "assignment.1"."⚙️" AS "⚙️",
                 "assignment.1"."#️⃣" AS "#️⃣",
-                "assignment.1"."min" AS "📊"
+                "assignment.1"."min" AS "📊.1"
          FROM   "assignment.1"
        ),
        "assignment.2"("⚙️", "max", "#️⃣", "min") AS (
@@ -41,9 +41,9 @@ WITH RECURSIVE
                 "emit.1"."min" AS "min"
          FROM   "emit.1"
        ),
-       "emit.2"("max", "📊", "⚙️", "#️⃣", "min") AS (
+       "emit.2"("max", "📊.1", "⚙️", "#️⃣", "min") AS (
          SELECT "assignment.2"."max" AS "max",
-                "assignment.2"."max" AS "📊",
+                "assignment.2"."max" AS "📊.1",
                 "assignment.2"."⚙️" AS "⚙️",
                 "assignment.2"."#️⃣" AS "#️⃣",
                 "assignment.2"."min" AS "min"
@@ -177,12 +177,12 @@ WITH RECURSIVE
          FROM   "assignment.8"
          WHERE  "assignment.8"."cond" IS DISTINCT FROM TRUE
        ),
-       "emit.3"("next", "left", "right", "#️⃣", "📊") AS (
+       "emit.3"("next", "left", "right", "#️⃣", "📊.1") AS (
          SELECT "where.4"."next" AS "next",
                 "where.4"."left" AS "left",
                 "where.4"."right" AS "right",
                 "where.4"."#️⃣" AS "#️⃣",
-                "where.4"."next" AS "📊"
+                "where.4"."next" AS "📊.1"
          FROM   "where.4"
        ),
        "stop.1"("⚙️") AS (
@@ -241,39 +241,39 @@ WITH RECURSIVE
        )
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS point) AS "📊",
+             CAST(("emit.1"."📊.1") AS point) AS "📊.1",
              CAST((NULL) AS point) AS "left",
              CAST((NULL) AS point) AS "right"
       FROM   "emit.1")
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.2"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.2"."📊") AS point) AS "📊",
+             CAST(("emit.2"."📊.1") AS point) AS "📊.1",
              CAST((NULL) AS point) AS "left",
              CAST((NULL) AS point) AS "right"
       FROM   "emit.2")
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.3"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.3"."📊") AS point) AS "📊",
+             CAST(("emit.3"."📊.1") AS point) AS "📊.1",
              CAST((NULL) AS point) AS "left",
              CAST((NULL) AS point) AS "right"
       FROM   "emit.3")
        UNION ALL
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS point) AS "📊",
+             CAST((NULL) AS point) AS "📊.1",
              CAST(("jump.1"."left") AS point) AS "left",
              CAST(("jump.1"."right") AS point) AS "right"
       FROM   "jump.1")
        UNION ALL
      (SELECT CAST(("jump.2"."🏷️") AS text) AS "🏷️",
              CAST(("jump.2"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS point) AS "📊",
+             CAST((NULL) AS point) AS "📊.1",
              CAST(("jump.2"."left") AS point) AS "left",
              CAST(("jump.2"."right") AS point) AS "right"
       FROM   "jump.2"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

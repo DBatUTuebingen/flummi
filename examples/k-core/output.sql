@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "size", "node", "active", "k") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "size", "node", "active", "k") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS int) AS "📊",
+            CAST((NULL) AS int) AS "📊.1",
             CAST((NULL) AS int) AS "size",
             CAST((NULL) AS int) AS "node",
             CAST((NULL) AS boolean) AS "active",
@@ -175,9 +175,9 @@ WITH RECURSIVE
          FROM   "assignment.7"
          WHERE  "assignment.7"."🔍" IS DISTINCT FROM TRUE
        ),
-       "emit.1"("⚙️", "📊", "#️⃣") AS (
+       "emit.1"("⚙️", "📊.1", "#️⃣") AS (
          SELECT "where.3"."⚙️" AS "⚙️",
-                "where.3"."node" AS "📊",
+                "where.3"."node" AS "📊.1",
                 "where.3"."#️⃣" AS "#️⃣"
          FROM   "where.3"
        ),
@@ -193,7 +193,7 @@ WITH RECURSIVE
        )
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS int) AS "📊",
+             CAST((NULL) AS int) AS "📊.1",
              CAST(("jump.1"."size") AS int) AS "size",
              CAST(("jump.1"."node") AS int) AS "node",
              CAST(("jump.1"."active") AS boolean) AS "active",
@@ -202,13 +202,13 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS int) AS "📊",
+             CAST(("emit.1"."📊.1") AS int) AS "📊.1",
              CAST((NULL) AS int) AS "size",
              CAST((NULL) AS int) AS "node",
              CAST((NULL) AS boolean) AS "active",
              CAST((NULL) AS int) AS "k"
       FROM   "emit.1"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

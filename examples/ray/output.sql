@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "direction_x", "screen_y", "max_rec_depth", "direction_z", "origin_y", "shadows", "direction_y", "origin_x", "image_width", "image_height", "light_y", "step", "light_z", "epsilon", "pixel_b", "pixel_g", "shadow_ray", "origin_z", "light_x", "pixel_r", "screen_x", "normal_y", "color_g", "color_b", "material", "id", "color_r", "normal_x", "normal_z", "min_dist", "pixel") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "direction_x", "screen_y", "max_rec_depth", "direction_z", "origin_y", "shadows", "direction_y", "origin_x", "image_width", "image_height", "light_y", "step", "light_z", "epsilon", "pixel_b", "pixel_g", "shadow_ray", "origin_z", "light_x", "pixel_r", "screen_x", "normal_y", "color_g", "color_b", "material", "id", "color_r", "normal_x", "normal_z", "min_dist", "pixel") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS text) AS "📊",
+            CAST((NULL) AS text) AS "📊.1",
             CAST((NULL) AS real) AS "direction_x",
             CAST((NULL) AS int) AS "screen_y",
             CAST((NULL) AS int) AS "max_rec_depth",
@@ -285,9 +285,9 @@ WITH RECURSIVE
                 "fork.1"."max_rec_depth" AS "max_rec_depth"
          FROM   "fork.1"
        ),
-       "emit.1"("#️⃣", "📊", "⚙️") AS (
+       "emit.1"("#️⃣", "📊.1", "⚙️") AS (
          SELECT "assignment.187"."#️⃣" AS "#️⃣",
-                "assignment.187"."image" AS "📊",
+                "assignment.187"."image" AS "📊.1",
                 "assignment.187"."⚙️" AS "⚙️"
          FROM   "assignment.187"
        ),
@@ -7971,7 +7971,7 @@ WITH RECURSIVE
        )
      (SELECT CAST(("jump.6"."🏷️") AS text) AS "🏷️",
              CAST(("jump.6"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.6"."direction_x") AS real) AS "direction_x",
              CAST(("jump.6"."screen_y") AS int) AS "screen_y",
              CAST(("jump.6"."max_rec_depth") AS int) AS "max_rec_depth",
@@ -8007,7 +8007,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS text) AS "📊",
+             CAST(("emit.1"."📊.1") AS text) AS "📊.1",
              CAST((NULL) AS real) AS "direction_x",
              CAST((NULL) AS int) AS "screen_y",
              CAST((NULL) AS int) AS "max_rec_depth",
@@ -8043,7 +8043,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.1"."direction_x") AS real) AS "direction_x",
              CAST(("jump.1"."screen_y") AS int) AS "screen_y",
              CAST(("jump.1"."max_rec_depth") AS int) AS "max_rec_depth",
@@ -8079,7 +8079,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.2"."🏷️") AS text) AS "🏷️",
              CAST(("jump.2"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.2"."direction_x") AS real) AS "direction_x",
              CAST(("jump.2"."screen_y") AS int) AS "screen_y",
              CAST(("jump.2"."max_rec_depth") AS int) AS "max_rec_depth",
@@ -8115,7 +8115,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.4"."🏷️") AS text) AS "🏷️",
              CAST(("jump.4"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.4"."direction_x") AS real) AS "direction_x",
              CAST(("jump.4"."screen_y") AS int) AS "screen_y",
              CAST(("jump.4"."max_rec_depth") AS int) AS "max_rec_depth",
@@ -8151,7 +8151,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.3"."🏷️") AS text) AS "🏷️",
              CAST(("jump.3"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.3"."direction_x") AS real) AS "direction_x",
              CAST(("jump.3"."screen_y") AS int) AS "screen_y",
              CAST(("jump.3"."max_rec_depth") AS int) AS "max_rec_depth",
@@ -8187,7 +8187,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.5"."🏷️") AS text) AS "🏷️",
              CAST(("jump.5"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.5"."direction_x") AS real) AS "direction_x",
              CAST(("jump.5"."screen_y") AS int) AS "screen_y",
              CAST(("jump.5"."max_rec_depth") AS int) AS "max_rec_depth",
@@ -8221,6 +8221,6 @@ WITH RECURSIVE
              CAST(("jump.5"."pixel") AS text) AS "pixel"
       FROM   "jump.5"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

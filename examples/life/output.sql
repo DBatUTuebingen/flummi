@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "width", "alive", "x", "y", "height", "iterations") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "width", "alive", "x", "y", "height", "iterations") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS text) AS "📊",
+            CAST((NULL) AS text) AS "📊.1",
             CAST((NULL) AS int) AS "width",
             CAST((NULL) AS boolean) AS "alive",
             CAST((NULL) AS int) AS "x",
@@ -205,11 +205,11 @@ WITH RECURSIVE
                 CAST((("where.4"."iterations") - 1) AS int) AS "iterations"
          FROM   "where.4"
        ),
-       "emit.1"("width", "⚙️", "#️⃣", "📊") AS (
+       "emit.1"("width", "⚙️", "#️⃣", "📊.1") AS (
          SELECT "gather.3"."width" AS "width",
                 "gather.3"."⚙️" AS "⚙️",
                 "gather.3"."#️⃣" AS "#️⃣",
-                "gather.3"."buffer" AS "📊"
+                "gather.3"."buffer" AS "📊.1"
          FROM   "gather.3"
        ),
        "stop.1"("⚙️") AS (
@@ -236,10 +236,10 @@ WITH RECURSIVE
          FROM   "assignment.5",
                 (FROM generate_series(-1, 1)) AS "ℚ"("dx")
        ),
-       "emit.2"("⚙️", "#️⃣", "📊") AS (
+       "emit.2"("⚙️", "#️⃣", "📊.1") AS (
          SELECT "assignment.11"."⚙️" AS "⚙️",
                 "assignment.11"."#️⃣" AS "#️⃣",
-                "assignment.11"."buffer" AS "📊"
+                "assignment.11"."buffer" AS "📊.1"
          FROM   "assignment.11"
        ),
        "fork.5"("width", "alive", "y", "height", "#️⃣", "iterations", "dy", "⚙️", "dx", "x") AS (
@@ -388,7 +388,7 @@ WITH RECURSIVE
        )
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS text) AS "📊",
+             CAST(("emit.1"."📊.1") AS text) AS "📊.1",
              CAST((NULL) AS int) AS "width",
              CAST((NULL) AS boolean) AS "alive",
              CAST((NULL) AS int) AS "x",
@@ -399,7 +399,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.2"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.2"."📊") AS text) AS "📊",
+             CAST(("emit.2"."📊.1") AS text) AS "📊.1",
              CAST((NULL) AS int) AS "width",
              CAST((NULL) AS boolean) AS "alive",
              CAST((NULL) AS int) AS "x",
@@ -410,7 +410,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.1"."width") AS int) AS "width",
              CAST(("jump.1"."alive") AS boolean) AS "alive",
              CAST(("jump.1"."x") AS int) AS "x",
@@ -421,7 +421,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.2"."🏷️") AS text) AS "🏷️",
              CAST(("jump.2"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.2"."width") AS int) AS "width",
              CAST(("jump.2"."alive") AS boolean) AS "alive",
              CAST(("jump.2"."x") AS int) AS "x",
@@ -430,6 +430,6 @@ WITH RECURSIVE
              CAST(("jump.2"."iterations") AS int) AS "iterations"
       FROM   "jump.2"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

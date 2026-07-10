@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "y", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "y", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS text) AS "📊",
+            CAST((NULL) AS text) AS "📊.1",
             CAST((NULL) AS int) AS "y",
             CAST((NULL) AS int[]) AS "survive_cond",
             CAST((NULL) AS int) AS "x",
@@ -257,9 +257,9 @@ WITH RECURSIVE
                 "where.4"."max_age" AS "max_age"
          FROM   "where.4"
        ),
-       "emit.1"("iterations", "📊", "#️⃣", "width", "⚙️") AS (
+       "emit.1"("iterations", "📊.1", "#️⃣", "width", "⚙️") AS (
          SELECT "gather.3"."iterations" AS "iterations",
-                "gather.3"."buffer" AS "📊",
+                "gather.3"."buffer" AS "📊.1",
                 "gather.3"."#️⃣" AS "#️⃣",
                 "gather.3"."width" AS "width",
                 "gather.3"."⚙️" AS "⚙️"
@@ -332,8 +332,8 @@ WITH RECURSIVE
                 "fork.5"."max_age" AS "max_age"
          FROM   "fork.5"
        ),
-       "emit.2"("📊", "#️⃣", "⚙️") AS (
-         SELECT "assignment.17"."buffer" AS "📊",
+       "emit.2"("📊.1", "#️⃣", "⚙️") AS (
+         SELECT "assignment.17"."buffer" AS "📊.1",
                 "assignment.17"."#️⃣" AS "#️⃣",
                 "assignment.17"."⚙️" AS "⚙️"
          FROM   "assignment.17"
@@ -644,7 +644,7 @@ WITH RECURSIVE
        )
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS text) AS "📊",
+             CAST(("emit.1"."📊.1") AS text) AS "📊.1",
              CAST((NULL) AS int) AS "y",
              CAST((NULL) AS int[]) AS "survive_cond",
              CAST((NULL) AS int) AS "x",
@@ -658,7 +658,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.2"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.2"."📊") AS text) AS "📊",
+             CAST(("emit.2"."📊.1") AS text) AS "📊.1",
              CAST((NULL) AS int) AS "y",
              CAST((NULL) AS int[]) AS "survive_cond",
              CAST((NULL) AS int) AS "x",
@@ -672,7 +672,7 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "📊",
+             CAST((NULL) AS text) AS "📊.1",
              CAST(("jump.1"."y") AS int) AS "y",
              CAST(("jump.1"."survive_cond") AS int[]) AS "survive_cond",
              CAST(("jump.1"."x") AS int) AS "x",
@@ -684,6 +684,6 @@ WITH RECURSIVE
              CAST(("jump.1"."max_age") AS int) AS "max_age"
       FROM   "jump.1"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

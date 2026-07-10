@@ -1,8 +1,8 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊", "node", "state", "community") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "node", "state", "community") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
-            CAST((NULL) AS int[]) AS "📊",
+            CAST((NULL) AS int[]) AS "📊.1",
             CAST((NULL) AS int) AS "node",
             CAST((NULL) AS int) AS "state",
             CAST((NULL) AS int) AS "community")
@@ -211,8 +211,8 @@ WITH RECURSIVE
                 "where.4"."community" AS "community"
          FROM   "where.4"
        ),
-       "emit.1"("📊", "⚙️", "#️⃣") AS (
-         SELECT "gather.3"."nodes" AS "📊",
+       "emit.1"("📊.1", "⚙️", "#️⃣") AS (
+         SELECT "gather.3"."nodes" AS "📊.1",
                 "gather.3"."⚙️" AS "⚙️",
                 "gather.3"."#️⃣" AS "#️⃣"
          FROM   "gather.3"
@@ -224,7 +224,7 @@ WITH RECURSIVE
        )
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST((NULL) AS int[]) AS "📊",
+             CAST((NULL) AS int[]) AS "📊.1",
              CAST(("jump.1"."node") AS int) AS "node",
              CAST(("jump.1"."state") AS int) AS "state",
              CAST(("jump.1"."community") AS int) AS "community"
@@ -232,12 +232,12 @@ WITH RECURSIVE
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST(("emit.1"."📊") AS int[]) AS "📊",
+             CAST(("emit.1"."📊.1") AS int[]) AS "📊.1",
              CAST((NULL) AS int) AS "node",
              CAST((NULL) AS int) AS "state",
              CAST((NULL) AS int) AS "community"
       FROM   "emit.1"))
   )
-SELECT "🔄"."📊"
+SELECT "🔄"."📊.1"
 FROM   "🔄"
 WHERE  "🔄"."🏷️" IS NULL;

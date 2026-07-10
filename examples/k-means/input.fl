@@ -35,7 +35,7 @@
 
     -- finalize and emit cluster
     GATHER cluster = §list({point})§ BY centroid;
-    EMIT cluster;
+    EMIT centroid, cluster;
 
     STOP
 }

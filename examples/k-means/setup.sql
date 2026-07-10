@@ -8,6 +8,8 @@ CREATE TABLE points(
   PRIMARY KEY (x, y)
 );
 
+SELECT setseed(0.42);
+
 INSERT INTO points
-SELECT DISTINCT random() * 100_000, random() * 100_000
-FROM   range(1_000_000);
+SELECT DISTINCT random() * 10_000, random() * 10_000
+FROM   range(100_000);
