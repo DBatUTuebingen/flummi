@@ -54,7 +54,7 @@ class Assignment(Statement):
 
 @dataclass
 class Emit(Statement):
-    variable: Variable
+    variables: list[Variable]
 
 
 @dataclass

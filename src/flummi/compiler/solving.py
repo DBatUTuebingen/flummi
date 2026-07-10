@@ -100,10 +100,10 @@ class Solver:
             case Fork(_, Expression(_, arguments)):
                 return set(arguments)
 
-            case Emit(variable):
+            case Emit(variables):
                 return {
                     self._analysis.system_variables[SystemVariable.ITERATION],
-                    variable,
+                    *variables,
                 }
 
             case Where(variable, _):
@@ -144,7 +144,7 @@ class Solver:
 
             case Emit(_):
                 return {
-                    self._analysis.system_variables[SystemVariable.RESULT],
+                    *self._analysis.result_variables,
                     self._analysis.system_variables[SystemVariable.ITERATION],
                 }
 

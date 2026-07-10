@@ -44,9 +44,13 @@ class CodeGenerator:
     _analysis: AnalysisResult
 
     _linear: bool = field(init=False)
+    _result_columns: tuple[str, ...] = field(init=False)
 
     def __post_init__(self):
         self._linear = Feature.ITERATING not in self._analysis.features
+        self._result_columns = tuple(
+            variable.identifier for variable in self._analysis.result_variables
+        )
 
     def gen_program(self, program: Program) -> sql.SQL:
         if self._linear:
@@ -74,7 +78,8 @@ class CodeGenerator:
         collectors = [
             sql.select(
                 select_list=[
-                    sql.variable(SystemVariable.RESULT, label.identifier)
+                    sql.variable(column, label.identifier)
+                    for column in self._result_columns
                 ],
                 from_list=[sql.name(label.identifier)],
             )
@@ -117,7 +122,7 @@ class CodeGenerator:
                                             if column
                                             == SystemVariable.ITERATION
                                             else sql.NULL
-                                            if column == SystemVariable.RESULT
+                                            if column in self._result_columns
                                             else sql.variable(
                                                 column,
                                                 label.identifier,
@@ -145,10 +150,8 @@ class CodeGenerator:
                                                 label.identifier,
                                             )
                                             if column
-                                            in {
-                                                SystemVariable.RESULT,
-                                                SystemVariable.ITERATION,
-                                            }
+                                            == SystemVariable.ITERATION
+                                            or column in self._result_columns
                                             else sql.NULL
                                         ),
                                         type.source,
@@ -194,7 +197,10 @@ class CodeGenerator:
         )
 
         result_selection = sql.select(
-            select_list=[sql.variable(SystemVariable.RESULT, Names.LOOP)],
+            select_list=[
+                sql.variable(column, Names.LOOP)
+                for column in self._result_columns
+            ],
             from_list=[sql.name(Names.LOOP)],
             predicates=[
                 sql.variable(SystemVariable.LABEL, Names.LOOP) + " IS NULL"
@@ -310,17 +316,25 @@ class CodeGenerator:
                     from_list=[sql.name(predecessor.identifier)],
                 )
 
-            case Emit(variable):
+            case Emit(variables):
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
+                result_bindings = dict(
+                    zip(
+                        self._analysis.result_variables,
+                        variables,
+                        strict=True,
+                    )
+                )
 
                 body = sql.select(
                     select_list=[
                         sql.named(
                             sql.variable(
-                                variable.identifier, predecessor.identifier
+                                result_bindings[output].identifier,
+                                predecessor.identifier,
                             )
-                            if output.identifier == SystemVariable.RESULT
+                            if output in result_bindings
                             else sql.variable(
                                 output.identifier, predecessor.identifier
                             ),
@@ -377,9 +391,11 @@ class CodeGenerator:
                 assert len(predecessors) == 1
                 predecessor = list(predecessors)[0]
 
-                cte_columns = list(
-                    self._schema.keys() - {SystemVariable.RESULT}
-                )
+                cte_columns = [
+                    column
+                    for column in self._schema
+                    if column not in self._result_columns
+                ]
                 _outputs = {variable.identifier for variable in outputs}
 
                 body = sql.select(

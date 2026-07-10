@@ -6,23 +6,28 @@ from ...library import utils
 
 def pretty(primitive: CFP.Primitive) -> str:
     match primitive:
-        case CFP.Emit(variable):
-            return f"EMIT {variable.identifier}"
-
-        case CFP.Assignment(variable, expression):
-            this = f"LET {variable.identifier} = "
-            this += utils.indent1(
-                dedent(
-                    expression.source.format(
-                        *(
-                            f"{{{argument.identifier}}}"
-                            for argument in expression.arguments
-                        )
-                    )
-                ),
-                " " * len(this),
+        case CFP.Emit(variables):
+            return "EMIT " + ", ".join(
+                variable.identifier for variable in variables
             )
-            return this
+
+        case CFP.Assignment(bindings):
+            return "LET " + ",\n    ".join(
+                variable.identifier
+                + " = "
+                + utils.indent1(
+                    dedent(
+                        expression.source.format(
+                            *(
+                                f"{{{argument.identifier}}}"
+                                for argument in expression.arguments
+                            )
+                        )
+                    ),
+                    " " * (7 + len(variable.identifier)),
+                )
+                for variable, expression in bindings.items()
+            )
 
         case CFP.Fork(variables, expression):
             this = f"FORK {','.join(variable.identifier for variable in variables)} = "

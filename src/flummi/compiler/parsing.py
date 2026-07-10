@@ -192,8 +192,8 @@ class Parser(parser.Parser[Tokens]):
     def parse_emit(self) -> Emit:
         location = self.current.location
         self.expect(Tokens.EMIT)
-        variable = self.parse_variable()
-        return Emit(location=location, variable=variable)
+        variables = list(self.sequence(self.parse_variable, Tokens.COMMA))
+        return Emit(location=location, variables=variables)
 
     def parse_block(self) -> Block:
         location = self.current.location

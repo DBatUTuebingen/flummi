@@ -53,7 +53,7 @@ class Assignment(Primitive):
 
 @dataclass
 class Emit(Primitive):
-    variable: Variable
+    variables: list[Variable]
 
 
 @dataclass

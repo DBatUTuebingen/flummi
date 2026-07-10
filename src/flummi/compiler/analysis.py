@@ -20,7 +20,7 @@ from ..IR.AST import (
 )
 from ..IR.common import Expression, Type, Variable
 from ..library import errors
-from .names import SystemVariable
+from .names import SystemVariable, result_column
 
 __all__ = ("analyze",)
 
@@ -40,6 +40,7 @@ class AnalysisResult:
     symbol_table: SymbolTable
     features: Feature
     system_variables: dict[SystemVariable, Variable]
+    result_variables: tuple[Variable, ...]
 
 
 class AnalysisError(errors.PrettyError):
@@ -67,9 +68,14 @@ class Analyzer:
         init=False,
         default_factory=dict,
     )
-    _emitted_type: Type | None = field(
+    _emitted_types: tuple[Type, ...] | None = field(
         init=False,
         default=None,
+    )
+    _first_emit: Emit | None = field(init=False, default=None)
+    _result_variables: list[Variable] = field(
+        init=False,
+        default_factory=list,
     )
 
     _bound_symbols: set[Variable] = field(
@@ -116,16 +122,28 @@ class Analyzer:
     def run(self) -> AnalysisResult:
         self.analyze_statement(self._program.body)
 
-        if self._emitted_type is not None:
-            self._add_system_variable(
-                SystemVariable.RESULT,
-                self._emitted_type.source,
-            )
+        if self._emitted_types is not None:
+            assert self._first_emit is not None
+
+            for index, (type, variable) in enumerate(
+                zip(
+                    self._emitted_types,
+                    self._first_emit.variables,
+                    strict=True,
+                )
+            ):
+                result_variable = Variable(
+                    result_column(index),
+                    location=variable.location,
+                )
+                self._symbol_table[result_variable] = type
+                self._result_variables.append(result_variable)
 
         return AnalysisResult(
             symbol_table=self._symbol_table,
             features=self._features,
             system_variables=self._system_variables,
+            result_variables=tuple(self._result_variables),
         )
 
     def analyze_statement(self, statement: Statement) -> None:
@@ -177,23 +195,63 @@ class Analyzer:
                 for variable in bindings.keys():
                     self.analyze_variable_write(variable)
 
-            case Emit(variable):
-                self.analyze_variable_read(variable)
+            case Emit(variables):
+                for variable in variables:
+                    self.analyze_variable_read(variable)
 
-                this_type = self._symbol_table[variable]
+                emitted_types = tuple(
+                    self._symbol_table[variable] for variable in variables
+                )
 
-                if self._emitted_type:
-                    if self._emitted_type != this_type:
+                if self._emitted_types is None:
+                    self._emitted_types = emitted_types
+                    self._first_emit = statement
+                    return
+
+                assert self._first_emit is not None
+
+                if len(variables) != len(self._first_emit.variables):
+                    def describe_emission(variables: list[Variable]) -> str:
+                        count = len(variables)
+                        names = ", ".join(repr(variable.identifier) for variable in variables)
+                        return f"{count} variable{'s' if count != 1 else ''} ({names})"
+
+                    raise AnalysisError(
+                        "Found EMIT with "
+                        + describe_emission(variables)
+                        + "...",
+                        statement.location,
+                        "...but the first EMIT has "
+                        + describe_emission(self._first_emit.variables)
+                        + ".",
+                        self._first_emit.location,
+                    )
+
+                for index, (
+                    variable,
+                    type,
+                    first_variable,
+                    first_type,
+                ) in enumerate(
+                    zip(
+                        variables,
+                        emitted_types,
+                        self._first_emit.variables,
+                        self._emitted_types,
+                        strict=True,
+                    )
+                ):
+                    if type != first_type:
                         raise AnalysisError(
-                            f"Found type-mismatch between emits. This emits {this_type.source!r}...",
-                            statement.location,
-                            f"...and this emits {self._emitted_type.source!r}.",
-                            self._emitted_type.location,
+                            f"Found type mismatch in emitted column {index + 1}: "
+                            + f"variable {variable.identifier!r} has type "
+                            + f"{type.source!r}...",
+                            variable.location,
+                            f"...but variable {first_variable.identifier!r} in "
+                            + f"emitted column {index + 1} of the first EMIT "
+                            + f"has type {first_type.source!r}.",
+                            first_variable.location,
                         )
-                else:
-                    self._emitted_type = this_type
-                    #! [WARN] This may clash with other things!
-                    self._emitted_type.location = statement.location
 
             case Conditional(condition, true_branch, false_branch):
                 self._add_feature(Feature.BRANCHING)

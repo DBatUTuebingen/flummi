@@ -169,10 +169,10 @@ class Lowering:
 
                         return {this_label}
 
-                    case AST.Emit(probe_variable):
+                    case AST.Emit(variables):
                         this_label = self._add_primitive(
                             primitive=CFP.Emit(
-                                variable=probe_variable,
+                                variables=variables,
                                 location=statement.location,
                             ),
                         )
