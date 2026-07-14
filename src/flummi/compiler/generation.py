@@ -421,9 +421,12 @@ class CodeGenerator:
                     select_list=[
                         *(
                             sql.named(
-                                sql.variable(
-                                    output.identifier,
-                                    Names.EXPRESSION,
+                                sql.cast(
+                                    sql.variable(
+                                        output.identifier,
+                                        Names.EXPRESSION,
+                                    ),
+                                    self._schema[output.identifier].source
                                 )
                                 if output in variables
                                 else sql.variable(

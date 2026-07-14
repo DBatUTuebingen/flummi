@@ -1,6 +1,6 @@
 [project]
 name = "flummi"
-version = "0.2.4"
+version = "0.2.5"
 description = "A to-SQL Compiler Prototype."
 readme = "README.md"
 authors = [{ name = "Tim Fischer", email = "tim.fischer@uni-tuebingen.de" }]
