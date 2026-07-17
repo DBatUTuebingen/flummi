@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from _typeshed import SupportsRichComparison
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from functools import reduce
 
 type Graph[A] = dict[A, set[A]]
@@ -32,20 +32,20 @@ def invert[A](graph: Graph[A]) -> Graph[A]:
 
 def topological_order[A: SupportsRichComparison](
     successors: Graph[A],
+    key: Callable[[A], SupportsRichComparison] | None = None,
 ) -> Iterator[A]:
     predecessors = invert(successors)
-    stack = [label for label, parents in predecessors.items() if not parents]
-    seen: set[A] = set()
-    while stack:
-        yield from sorted(stack)
-        new_stack: list[A] = []
-        while stack:
-            label = stack.pop()
-            seen.add(label)
-            for child in successors[label]:
-                if seen.issuperset(predecessors[child]):
-                    new_stack.append(child)
-        stack = new_stack
+    ready = {label for label, parents in predecessors.items() if not parents}
+
+    while ready:
+        label = min(ready, key=key) if key is not None else min(ready)
+        ready.remove(label)
+        yield label
+
+        for child in successors[label]:
+            predecessors[child].remove(label)
+            if not predecessors[child]:
+                ready.add(child)
 
 
 def compute_dominator_tree[A](

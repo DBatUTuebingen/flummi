@@ -48,6 +48,9 @@ class CodeGenerator:
 
     def __post_init__(self):
         self._linear = Feature.ITERATING not in self._analysis.features
+        self._schema = {
+            column: self._schema[column] for column in sorted(self._schema)
+        }
         self._result_columns = tuple(
             variable.identifier for variable in self._analysis.result_variables
         )
@@ -72,7 +75,10 @@ class CodeGenerator:
                 predecessors_of[label],
                 label,
             )
-            for label in graph.topological_order(cfp.successors_of)
+            for label in graph.topological_order(
+                cfp.successors_of,
+                key=lambda label: label.identifier,
+            )
         ]
 
         collectors = [
@@ -83,7 +89,9 @@ class CodeGenerator:
                 ],
                 from_list=[sql.name(label.identifier)],
             )
-            for label, primitive in cfp.primitives.items()
+            for label, primitive in sorted(
+                cfp.primitives.items(), key=lambda item: item[0].identifier
+            )
             if isinstance(primitive, Emit)
         ]
 
@@ -95,7 +103,10 @@ class CodeGenerator:
 
         ctes: list[sql.SQL] = []
         collectors: list[sql.SQL] = []
-        for label in graph.topological_order(cfp.successors_of):
+        for label in graph.topological_order(
+            cfp.successors_of,
+            key=lambda label: label.identifier,
+        ):
             primitive = cfp.primitives[label]
 
             ctes.append(
@@ -220,7 +231,10 @@ class CodeGenerator:
         predecessors: set[Label],
         label: Label,
     ) -> sql.SQL:
-        outputs = self._dataflow.outputs_of[label]
+        outputs = sorted(
+            self._dataflow.outputs_of[label],
+            key=lambda variable: variable.identifier,
+        )
         cte_columns = [variable.identifier for variable in outputs]
 
         match primitive:
@@ -383,7 +397,9 @@ class CodeGenerator:
                             ],
                             from_list=[sql.name(predecessor.identifier)],
                         )
-                        for predecessor in predecessors
+                        for predecessor in sorted(
+                            predecessors, key=lambda label: label.identifier
+                        )
                     ]
                 )
 
@@ -504,7 +520,9 @@ class CodeGenerator:
                             variable.identifier,
                             predecessor.identifier,
                         )
-                        for variable in keys
+                        for variable in sorted(
+                            keys, key=lambda variable: variable.identifier
+                        )
                     ],
                     having=[sql.call("COUNT", ["*"]) + " > 0"],
                 )
@@ -548,7 +566,12 @@ class CodeGenerator:
                                                                 key.identifier,
                                                                 predecessor.identifier,
                                                             )
-                                                            for key in keys
+                                                            for key in sorted(
+                                                                keys,
+                                                                key=lambda key: (
+                                                                    key.identifier
+                                                                ),
+                                                            )
                                                         ),
                                                     ],
                                                 )

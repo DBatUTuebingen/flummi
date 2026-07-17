@@ -342,7 +342,10 @@ class Lowering:
                     case Multiplexing.Method.FAN:
                         return union(
                             self.lower_statement({predecessor}, statement)
-                            for predecessor in predecessors
+                            for predecessor in sorted(
+                                predecessors,
+                                key=lambda label: label.identifier,
+                            )
                         )
 
                     case Multiplexing.Method.MERGE:
