@@ -1,17 +1,17 @@
 WITH RECURSIVE
-  "🔄"("🏷️", "#️⃣", "📊.1", "y", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
+  "🔄"("🏷️", "#️⃣", "📊.1", "iterations", "height", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "x") AS (
     (SELECT CAST(('start.1') AS text) AS "🏷️",
             CAST((0) AS int) AS "#️⃣",
             CAST((NULL) AS text) AS "📊.1",
-            CAST((NULL) AS int) AS "y",
-            CAST((NULL) AS int[]) AS "survive_cond",
-            CAST((NULL) AS int) AS "x",
-            CAST((NULL) AS int) AS "age",
             CAST((NULL) AS int) AS "iterations",
-            CAST((NULL) AS int) AS "width",
-            CAST((NULL) AS int[]) AS "birth_cond",
             CAST((NULL) AS int) AS "height",
-            CAST((NULL) AS int) AS "max_age")
+            CAST((NULL) AS int[]) AS "birth_cond",
+            CAST((NULL) AS int) AS "width",
+            CAST((NULL) AS int) AS "age",
+            CAST((NULL) AS int[]) AS "survive_cond",
+            CAST((NULL) AS int) AS "max_age",
+            CAST((NULL) AS int) AS "y",
+            CAST((NULL) AS int) AS "x")
       UNION ALL
     (WITH
        "start.1"("⚙️", "#️⃣") AS (
@@ -20,191 +20,191 @@ WITH RECURSIVE
          FROM   "🔄"
          WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.1'
        ),
-       "start.2"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "🔄"."#️⃣" AS "#️⃣",
+       "start.2"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "🔄"."iterations" AS "iterations",
+                "🔄"."height" AS "height",
+                "🔄"."#️⃣" AS "#️⃣",
+                "🔄"."birth_cond" AS "birth_cond",
+                "🔄"."width" AS "width",
+                "🔄"."age" AS "age",
+                "🔄"."survive_cond" AS "survive_cond",
+                "🔄"."max_age" AS "max_age",
                 "🔄"."y" AS "y",
                 NULL AS "⚙️",
-                "🔄"."survive_cond" AS "survive_cond",
-                "🔄"."x" AS "x",
-                "🔄"."age" AS "age",
-                "🔄"."iterations" AS "iterations",
-                "🔄"."width" AS "width",
-                "🔄"."birth_cond" AS "birth_cond",
-                "🔄"."height" AS "height",
-                "🔄"."max_age" AS "max_age"
+                "🔄"."x" AS "x"
          FROM   "🔄"
          WHERE  "🔄"."🏷️" IS NOT DISTINCT FROM 'start.2'
        ),
-       "assignment.1"("iterations", "#️⃣", "width", "⚙️", "height", "max_age") AS (
+       "assignment.1"("iterations", "height", "#️⃣", "width", "⚙️", "max_age") AS (
          SELECT CAST((50) AS int) AS "iterations",
+                CAST((50) AS int) AS "height",
                 "start.1"."#️⃣" AS "#️⃣",
                 CAST((50) AS int) AS "width",
                 "start.1"."⚙️" AS "⚙️",
-                CAST((50) AS int) AS "height",
                 CAST((3) AS int) AS "max_age"
          FROM   "start.1"
        ),
-       "assignment.2"("iterations", "#️⃣", "width", "birth_cond", "max_age", "⚙️", "height", "survive_cond") AS (
+       "assignment.2"("iterations", "height", "#️⃣", "birth_cond", "width", "⚙️", "survive_cond", "max_age") AS (
          SELECT "assignment.1"."iterations" AS "iterations",
-                "assignment.1"."#️⃣" AS "#️⃣",
-                "assignment.1"."width" AS "width",
-                CAST(([2]) AS int[]) AS "birth_cond",
-                "assignment.1"."max_age" AS "max_age",
-                "assignment.1"."⚙️" AS "⚙️",
                 "assignment.1"."height" AS "height",
-                CAST(([]) AS int[]) AS "survive_cond"
+                "assignment.1"."#️⃣" AS "#️⃣",
+                CAST(([2]) AS int[]) AS "birth_cond",
+                "assignment.1"."width" AS "width",
+                "assignment.1"."⚙️" AS "⚙️",
+                CAST(([]) AS int[]) AS "survive_cond",
+                "assignment.1"."max_age" AS "max_age"
          FROM   "assignment.1"
        ),
-       "fork.1"("#️⃣", "⚙️", "survive_cond", "x", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "assignment.2"."#️⃣" AS "#️⃣",
-                "assignment.2"."⚙️" AS "⚙️",
-                "assignment.2"."survive_cond" AS "survive_cond",
-                "ℚ"."x" AS "x",
-                "assignment.2"."iterations" AS "iterations",
-                "assignment.2"."width" AS "width",
-                "assignment.2"."birth_cond" AS "birth_cond",
+       "fork.1"("iterations", "height", "#️⃣", "birth_cond", "width", "survive_cond", "max_age", "⚙️", "x") AS (
+         SELECT "assignment.2"."iterations" AS "iterations",
                 "assignment.2"."height" AS "height",
-                "assignment.2"."max_age" AS "max_age"
+                "assignment.2"."#️⃣" AS "#️⃣",
+                "assignment.2"."birth_cond" AS "birth_cond",
+                "assignment.2"."width" AS "width",
+                "assignment.2"."survive_cond" AS "survive_cond",
+                "assignment.2"."max_age" AS "max_age",
+                "assignment.2"."⚙️" AS "⚙️",
+                CAST(("ℚ"."x") AS int) AS "x"
          FROM   "assignment.2",
                 LATERAL (FROM range(("assignment.2"."width"))) AS "ℚ"("x")
        ),
-       "fork.2"("y", "#️⃣", "⚙️", "survive_cond", "x", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "ℚ"."y" AS "y",
-                "fork.1"."#️⃣" AS "#️⃣",
-                "fork.1"."⚙️" AS "⚙️",
-                "fork.1"."survive_cond" AS "survive_cond",
-                "fork.1"."x" AS "x",
-                "fork.1"."iterations" AS "iterations",
-                "fork.1"."width" AS "width",
-                "fork.1"."birth_cond" AS "birth_cond",
+       "fork.2"("iterations", "height", "#️⃣", "birth_cond", "width", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "fork.1"."iterations" AS "iterations",
                 "fork.1"."height" AS "height",
-                "fork.1"."max_age" AS "max_age"
+                "fork.1"."#️⃣" AS "#️⃣",
+                "fork.1"."birth_cond" AS "birth_cond",
+                "fork.1"."width" AS "width",
+                "fork.1"."survive_cond" AS "survive_cond",
+                "fork.1"."max_age" AS "max_age",
+                CAST(("ℚ"."y") AS int) AS "y",
+                "fork.1"."⚙️" AS "⚙️",
+                "fork.1"."x" AS "x"
          FROM   "fork.1",
                 LATERAL (FROM range(("fork.1"."height"))) AS "ℚ"("y")
        ),
-       "assignment.3"("y", "#️⃣", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "fork.2"."y" AS "y",
-                "fork.2"."#️⃣" AS "#️⃣",
-                "fork.2"."⚙️" AS "⚙️",
-                "fork.2"."survive_cond" AS "survive_cond",
-                "fork.2"."x" AS "x",
-                CAST((random() < 0.4) AS int) AS "age",
-                "fork.2"."iterations" AS "iterations",
-                "fork.2"."width" AS "width",
-                "fork.2"."birth_cond" AS "birth_cond",
+       "assignment.3"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "fork.2"."iterations" AS "iterations",
                 "fork.2"."height" AS "height",
-                "fork.2"."max_age" AS "max_age"
+                "fork.2"."#️⃣" AS "#️⃣",
+                "fork.2"."birth_cond" AS "birth_cond",
+                "fork.2"."width" AS "width",
+                CAST((random() < 0.4) AS int) AS "age",
+                "fork.2"."survive_cond" AS "survive_cond",
+                "fork.2"."max_age" AS "max_age",
+                "fork.2"."y" AS "y",
+                "fork.2"."⚙️" AS "⚙️",
+                "fork.2"."x" AS "x"
          FROM   "fork.2"
        ),
-       "merge.1"("y", "#️⃣", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         (SELECT "start.2"."y" AS "y",
-                 "start.2"."#️⃣" AS "#️⃣",
-                 "start.2"."⚙️" AS "⚙️",
-                 "start.2"."survive_cond" AS "survive_cond",
-                 "start.2"."x" AS "x",
-                 "start.2"."age" AS "age",
-                 "start.2"."iterations" AS "iterations",
-                 "start.2"."width" AS "width",
-                 "start.2"."birth_cond" AS "birth_cond",
+       "merge.1"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         (SELECT "start.2"."iterations" AS "iterations",
                  "start.2"."height" AS "height",
-                 "start.2"."max_age" AS "max_age"
+                 "start.2"."#️⃣" AS "#️⃣",
+                 "start.2"."birth_cond" AS "birth_cond",
+                 "start.2"."width" AS "width",
+                 "start.2"."age" AS "age",
+                 "start.2"."survive_cond" AS "survive_cond",
+                 "start.2"."max_age" AS "max_age",
+                 "start.2"."y" AS "y",
+                 "start.2"."⚙️" AS "⚙️",
+                 "start.2"."x" AS "x"
           FROM   "start.2")
            UNION ALL
-         (SELECT "assignment.3"."y" AS "y",
-                 "assignment.3"."#️⃣" AS "#️⃣",
-                 "assignment.3"."⚙️" AS "⚙️",
-                 "assignment.3"."survive_cond" AS "survive_cond",
-                 "assignment.3"."x" AS "x",
-                 "assignment.3"."age" AS "age",
-                 "assignment.3"."iterations" AS "iterations",
-                 "assignment.3"."width" AS "width",
-                 "assignment.3"."birth_cond" AS "birth_cond",
+         (SELECT "assignment.3"."iterations" AS "iterations",
                  "assignment.3"."height" AS "height",
-                 "assignment.3"."max_age" AS "max_age"
+                 "assignment.3"."#️⃣" AS "#️⃣",
+                 "assignment.3"."birth_cond" AS "birth_cond",
+                 "assignment.3"."width" AS "width",
+                 "assignment.3"."age" AS "age",
+                 "assignment.3"."survive_cond" AS "survive_cond",
+                 "assignment.3"."max_age" AS "max_age",
+                 "assignment.3"."y" AS "y",
+                 "assignment.3"."⚙️" AS "⚙️",
+                 "assignment.3"."x" AS "x"
           FROM   "assignment.3")
        ),
-       "fork.3"("y", "#️⃣", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "max_age", "height", "flip") AS (
-         SELECT "merge.1"."y" AS "y",
-                "merge.1"."#️⃣" AS "#️⃣",
-                "merge.1"."⚙️" AS "⚙️",
-                "merge.1"."survive_cond" AS "survive_cond",
-                "merge.1"."x" AS "x",
-                "merge.1"."age" AS "age",
-                "merge.1"."iterations" AS "iterations",
-                "merge.1"."width" AS "width",
-                "merge.1"."birth_cond" AS "birth_cond",
-                "merge.1"."max_age" AS "max_age",
+       "fork.3"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x", "flip") AS (
+         SELECT "merge.1"."iterations" AS "iterations",
                 "merge.1"."height" AS "height",
-                "ℚ"."flip" AS "flip"
+                "merge.1"."#️⃣" AS "#️⃣",
+                "merge.1"."birth_cond" AS "birth_cond",
+                "merge.1"."width" AS "width",
+                "merge.1"."age" AS "age",
+                "merge.1"."survive_cond" AS "survive_cond",
+                "merge.1"."max_age" AS "max_age",
+                "merge.1"."y" AS "y",
+                "merge.1"."⚙️" AS "⚙️",
+                "merge.1"."x" AS "x",
+                CAST(("ℚ"."flip") AS boolean) AS "flip"
          FROM   "merge.1",
                 (VALUES (TRUE), (FALSE)) AS "ℚ"("flip")
        ),
-       "assignment.4"("y", "#️⃣", "⚙️", "🔍", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "fork.3"."y" AS "y",
-                "fork.3"."#️⃣" AS "#️⃣",
-                "fork.3"."⚙️" AS "⚙️",
-                CAST((("fork.3"."flip")) AS boolean) AS "🔍",
-                "fork.3"."survive_cond" AS "survive_cond",
-                "fork.3"."x" AS "x",
-                "fork.3"."age" AS "age",
-                "fork.3"."iterations" AS "iterations",
-                "fork.3"."width" AS "width",
-                "fork.3"."birth_cond" AS "birth_cond",
+       "assignment.4"("iterations", "height", "#️⃣", "🔍", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "fork.3"."iterations" AS "iterations",
                 "fork.3"."height" AS "height",
-                "fork.3"."max_age" AS "max_age"
+                "fork.3"."#️⃣" AS "#️⃣",
+                CAST((("fork.3"."flip")) AS boolean) AS "🔍",
+                "fork.3"."birth_cond" AS "birth_cond",
+                "fork.3"."width" AS "width",
+                "fork.3"."age" AS "age",
+                "fork.3"."survive_cond" AS "survive_cond",
+                "fork.3"."max_age" AS "max_age",
+                "fork.3"."y" AS "y",
+                "fork.3"."⚙️" AS "⚙️",
+                "fork.3"."x" AS "x"
          FROM   "fork.3"
        ),
-       "where.1"("x", "age", "y", "#️⃣", "iterations", "width", "⚙️") AS (
-         SELECT "assignment.4"."x" AS "x",
-                "assignment.4"."age" AS "age",
-                "assignment.4"."y" AS "y",
-                "assignment.4"."#️⃣" AS "#️⃣",
+       "where.1"("y", "iterations", "#️⃣", "width", "⚙️", "age", "x") AS (
+         SELECT "assignment.4"."y" AS "y",
                 "assignment.4"."iterations" AS "iterations",
+                "assignment.4"."#️⃣" AS "#️⃣",
                 "assignment.4"."width" AS "width",
-                "assignment.4"."⚙️" AS "⚙️"
+                "assignment.4"."⚙️" AS "⚙️",
+                "assignment.4"."age" AS "age",
+                "assignment.4"."x" AS "x"
          FROM   "assignment.4"
          WHERE  "assignment.4"."🔍" IS NOT DISTINCT FROM TRUE
        ),
-       "where.2"("y", "#️⃣", "⚙️", "survive_cond", "iterations", "x", "age", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "assignment.4"."y" AS "y",
-                "assignment.4"."#️⃣" AS "#️⃣",
-                "assignment.4"."⚙️" AS "⚙️",
-                "assignment.4"."survive_cond" AS "survive_cond",
-                "assignment.4"."iterations" AS "iterations",
-                "assignment.4"."x" AS "x",
-                "assignment.4"."age" AS "age",
-                "assignment.4"."width" AS "width",
-                "assignment.4"."birth_cond" AS "birth_cond",
+       "where.2"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "assignment.4"."iterations" AS "iterations",
                 "assignment.4"."height" AS "height",
-                "assignment.4"."max_age" AS "max_age"
+                "assignment.4"."#️⃣" AS "#️⃣",
+                "assignment.4"."birth_cond" AS "birth_cond",
+                "assignment.4"."width" AS "width",
+                "assignment.4"."age" AS "age",
+                "assignment.4"."survive_cond" AS "survive_cond",
+                "assignment.4"."max_age" AS "max_age",
+                "assignment.4"."y" AS "y",
+                "assignment.4"."⚙️" AS "⚙️",
+                "assignment.4"."x" AS "x"
          FROM   "assignment.4"
          WHERE  "assignment.4"."🔍" IS DISTINCT FROM TRUE
        ),
-       "assignment.5"("y", "#️⃣", "⚙️", "🔍", "survive_cond", "iterations", "x", "age", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "where.2"."y" AS "y",
-                "where.2"."#️⃣" AS "#️⃣",
-                "where.2"."⚙️" AS "⚙️",
-                CAST((("where.2"."iterations") = 0) AS boolean) AS "🔍",
-                "where.2"."survive_cond" AS "survive_cond",
-                "where.2"."iterations" AS "iterations",
-                "where.2"."x" AS "x",
-                "where.2"."age" AS "age",
-                "where.2"."width" AS "width",
-                "where.2"."birth_cond" AS "birth_cond",
+       "assignment.5"("iterations", "height", "#️⃣", "🔍", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "where.2"."iterations" AS "iterations",
                 "where.2"."height" AS "height",
-                "where.2"."max_age" AS "max_age"
+                "where.2"."#️⃣" AS "#️⃣",
+                CAST((("where.2"."iterations") = 0) AS boolean) AS "🔍",
+                "where.2"."birth_cond" AS "birth_cond",
+                "where.2"."width" AS "width",
+                "where.2"."age" AS "age",
+                "where.2"."survive_cond" AS "survive_cond",
+                "where.2"."max_age" AS "max_age",
+                "where.2"."y" AS "y",
+                "where.2"."⚙️" AS "⚙️",
+                "where.2"."x" AS "x"
          FROM   "where.2"
        ),
-       "gather.2"("iterations", "y", "#️⃣", "width", "⚙️", "buffer") AS (
-         SELECT "where.1"."iterations" AS "iterations",
-                "where.1"."y" AS "y",
+       "gather.2"("y", "iterations", "#️⃣", "width", "⚙️", "buffer") AS (
+         SELECT "where.1"."y" AS "y",
+                "where.1"."iterations" AS "iterations",
                 "where.1"."#️⃣" AS "#️⃣",
                 "where.1"."width" AS "width",
                 "where.1"."⚙️" AS "⚙️",
                 CAST((string_agg([' ', '#', '*'][("where.1"."age") + 1], '' ORDER BY ("where.1"."x"))) AS text) AS "buffer"
          FROM   "where.1"
-         GROUP  BY "where.1"."iterations",
-                   "where.1"."y",
+         GROUP  BY "where.1"."y",
+                   "where.1"."iterations",
                    "where.1"."#️⃣",
                    "where.1"."width",
                    "where.1"."⚙️"
@@ -217,10 +217,10 @@ WITH RECURSIVE
                 "gather.2"."⚙️" AS "⚙️",
                 CAST((string_agg(("gather.2"."buffer"), E'\n' ORDER BY ("gather.2"."y"))) AS text) AS "buffer"
          FROM   "gather.2"
-         GROUP  BY "gather.2"."iterations",
-                   "gather.2"."⚙️",
+         GROUP  BY "gather.2"."width",
+                   "gather.2"."iterations",
                    "gather.2"."#️⃣",
-                   "gather.2"."width"
+                   "gather.2"."⚙️"
          HAVING COUNT(*) > 0
        ),
        "where.3"("⚙️") AS (
@@ -228,38 +228,38 @@ WITH RECURSIVE
          FROM   "assignment.5"
          WHERE  "assignment.5"."🔍" IS NOT DISTINCT FROM TRUE
        ),
-       "where.4"("y", "#️⃣", "⚙️", "survive_cond", "iterations", "x", "age", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "assignment.5"."y" AS "y",
-                "assignment.5"."#️⃣" AS "#️⃣",
-                "assignment.5"."⚙️" AS "⚙️",
-                "assignment.5"."survive_cond" AS "survive_cond",
-                "assignment.5"."iterations" AS "iterations",
-                "assignment.5"."x" AS "x",
-                "assignment.5"."age" AS "age",
-                "assignment.5"."width" AS "width",
-                "assignment.5"."birth_cond" AS "birth_cond",
+       "where.4"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "assignment.5"."iterations" AS "iterations",
                 "assignment.5"."height" AS "height",
-                "assignment.5"."max_age" AS "max_age"
+                "assignment.5"."#️⃣" AS "#️⃣",
+                "assignment.5"."birth_cond" AS "birth_cond",
+                "assignment.5"."width" AS "width",
+                "assignment.5"."age" AS "age",
+                "assignment.5"."survive_cond" AS "survive_cond",
+                "assignment.5"."max_age" AS "max_age",
+                "assignment.5"."y" AS "y",
+                "assignment.5"."⚙️" AS "⚙️",
+                "assignment.5"."x" AS "x"
          FROM   "assignment.5"
          WHERE  "assignment.5"."🔍" IS DISTINCT FROM TRUE
        ),
-       "assignment.6"("y", "#️⃣", "⚙️", "survive_cond", "iterations", "x", "age", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "where.4"."y" AS "y",
-                "where.4"."#️⃣" AS "#️⃣",
-                "where.4"."⚙️" AS "⚙️",
-                "where.4"."survive_cond" AS "survive_cond",
-                CAST((("where.4"."iterations") - 1) AS int) AS "iterations",
-                "where.4"."x" AS "x",
-                "where.4"."age" AS "age",
-                "where.4"."width" AS "width",
-                "where.4"."birth_cond" AS "birth_cond",
+       "assignment.6"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT CAST((("where.4"."iterations") - 1) AS int) AS "iterations",
                 "where.4"."height" AS "height",
-                "where.4"."max_age" AS "max_age"
+                "where.4"."#️⃣" AS "#️⃣",
+                "where.4"."birth_cond" AS "birth_cond",
+                "where.4"."width" AS "width",
+                "where.4"."age" AS "age",
+                "where.4"."survive_cond" AS "survive_cond",
+                "where.4"."max_age" AS "max_age",
+                "where.4"."y" AS "y",
+                "where.4"."⚙️" AS "⚙️",
+                "where.4"."x" AS "x"
          FROM   "where.4"
        ),
-       "emit.1"("iterations", "📊.1", "#️⃣", "width", "⚙️") AS (
-         SELECT "gather.3"."iterations" AS "iterations",
-                "gather.3"."buffer" AS "📊.1",
+       "emit.1"("📊.1", "iterations", "#️⃣", "width", "⚙️") AS (
+         SELECT "gather.3"."buffer" AS "📊.1",
+                "gather.3"."iterations" AS "iterations",
                 "gather.3"."#️⃣" AS "#️⃣",
                 "gather.3"."width" AS "width",
                 "gather.3"."⚙️" AS "⚙️"
@@ -270,26 +270,26 @@ WITH RECURSIVE
          FROM   "where.3"
          WHERE  FALSE
        ),
-       "assignment.16"("⚙️", "buffer", "width", "#️⃣") AS (
-         SELECT "emit.1"."⚙️" AS "⚙️",
+       "assignment.16"("width", "⚙️", "buffer", "#️⃣") AS (
+         SELECT "emit.1"."width" AS "width",
+                "emit.1"."⚙️" AS "⚙️",
                 CAST((("emit.1"."iterations")) AS text) AS "buffer",
-                "emit.1"."width" AS "width",
                 "emit.1"."#️⃣" AS "#️⃣"
          FROM   "emit.1"
        ),
-       "fork.4"("y", "#️⃣", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "dy", "max_age") AS (
-         SELECT "assignment.6"."y" AS "y",
-                "assignment.6"."#️⃣" AS "#️⃣",
-                "assignment.6"."⚙️" AS "⚙️",
-                "assignment.6"."survive_cond" AS "survive_cond",
-                "assignment.6"."x" AS "x",
-                "assignment.6"."age" AS "age",
-                "assignment.6"."iterations" AS "iterations",
-                "assignment.6"."width" AS "width",
-                "assignment.6"."birth_cond" AS "birth_cond",
+       "fork.4"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "dy", "x") AS (
+         SELECT "assignment.6"."iterations" AS "iterations",
                 "assignment.6"."height" AS "height",
-                "ℚ"."dy" AS "dy",
-                "assignment.6"."max_age" AS "max_age"
+                "assignment.6"."#️⃣" AS "#️⃣",
+                "assignment.6"."birth_cond" AS "birth_cond",
+                "assignment.6"."width" AS "width",
+                "assignment.6"."age" AS "age",
+                "assignment.6"."survive_cond" AS "survive_cond",
+                "assignment.6"."max_age" AS "max_age",
+                "assignment.6"."y" AS "y",
+                "assignment.6"."⚙️" AS "⚙️",
+                CAST(("ℚ"."dy") AS int) AS "dy",
+                "assignment.6"."x" AS "x"
          FROM   "assignment.6",
                 (FROM generate_series(-1, +1)) AS "ℚ"("dy")
        ),
@@ -299,58 +299,58 @@ WITH RECURSIVE
                 "assignment.16"."#️⃣" AS "#️⃣"
          FROM   "assignment.16"
        ),
-       "fork.5"("y", "#️⃣", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "dy", "dx", "max_age") AS (
-         SELECT "fork.4"."y" AS "y",
-                "fork.4"."#️⃣" AS "#️⃣",
-                "fork.4"."⚙️" AS "⚙️",
-                "fork.4"."survive_cond" AS "survive_cond",
-                "fork.4"."x" AS "x",
-                "fork.4"."age" AS "age",
-                "fork.4"."iterations" AS "iterations",
-                "fork.4"."width" AS "width",
-                "fork.4"."birth_cond" AS "birth_cond",
+       "fork.5"("iterations", "height", "dx", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "dy", "x") AS (
+         SELECT "fork.4"."iterations" AS "iterations",
                 "fork.4"."height" AS "height",
+                CAST(("ℚ"."dx") AS int) AS "dx",
+                "fork.4"."#️⃣" AS "#️⃣",
+                "fork.4"."birth_cond" AS "birth_cond",
+                "fork.4"."width" AS "width",
+                "fork.4"."age" AS "age",
+                "fork.4"."survive_cond" AS "survive_cond",
+                "fork.4"."max_age" AS "max_age",
+                "fork.4"."y" AS "y",
+                "fork.4"."⚙️" AS "⚙️",
                 "fork.4"."dy" AS "dy",
-                "ℚ"."dx" AS "dx",
-                "fork.4"."max_age" AS "max_age"
+                "fork.4"."x" AS "x"
          FROM   "fork.4",
                 (FROM generate_series(-1, +1)) AS "ℚ"("dx")
        ),
-       "assignment.7"("y", "#️⃣", "⚙️", "survive_cond", "x", "age", "iterations", "birth_cond", "width", "height", "dy", "dx", "max_age") AS (
-         SELECT CAST(((("fork.5"."height") + (("fork.5"."y") + ("fork.5"."dy")) % ("fork.5"."height")) % ("fork.5"."height")) AS int) AS "y",
+       "assignment.7"("iterations", "height", "dx", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "dy", "x") AS (
+         SELECT "fork.5"."iterations" AS "iterations",
+                "fork.5"."height" AS "height",
+                "fork.5"."dx" AS "dx",
                 "fork.5"."#️⃣" AS "#️⃣",
-                "fork.5"."⚙️" AS "⚙️",
-                "fork.5"."survive_cond" AS "survive_cond",
-                CAST(((("fork.5"."width")  + (("fork.5"."x") + ("fork.5"."dx")) % ("fork.5"."width") ) % ("fork.5"."width")) AS int) AS "x",
-                "fork.5"."age" AS "age",
-                "fork.5"."iterations" AS "iterations",
                 "fork.5"."birth_cond" AS "birth_cond",
                 "fork.5"."width" AS "width",
-                "fork.5"."height" AS "height",
+                "fork.5"."age" AS "age",
+                "fork.5"."survive_cond" AS "survive_cond",
+                "fork.5"."max_age" AS "max_age",
+                CAST(((("fork.5"."height") + (("fork.5"."y") + ("fork.5"."dy")) % ("fork.5"."height")) % ("fork.5"."height")) AS int) AS "y",
+                "fork.5"."⚙️" AS "⚙️",
                 "fork.5"."dy" AS "dy",
-                "fork.5"."dx" AS "dx",
-                "fork.5"."max_age" AS "max_age"
+                CAST(((("fork.5"."width")  + (("fork.5"."x") + ("fork.5"."dx")) % ("fork.5"."width") ) % ("fork.5"."width")) AS int) AS "x"
          FROM   "fork.5"
        ),
-       "emit.2"("📊.1", "#️⃣", "⚙️") AS (
+       "emit.2"("📊.1", "⚙️", "#️⃣") AS (
          SELECT "assignment.17"."buffer" AS "📊.1",
-                "assignment.17"."#️⃣" AS "#️⃣",
-                "assignment.17"."⚙️" AS "⚙️"
+                "assignment.17"."⚙️" AS "⚙️",
+                "assignment.17"."#️⃣" AS "#️⃣"
          FROM   "assignment.17"
        ),
-       "assignment.8"("y", "#️⃣", "⚙️", "survive_cond", "x", "age", "iterations", "birth_cond", "width", "original", "height", "max_age") AS (
-         SELECT "assignment.7"."y" AS "y",
+       "assignment.8"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "original", "⚙️", "x") AS (
+         SELECT "assignment.7"."iterations" AS "iterations",
+                "assignment.7"."height" AS "height",
                 "assignment.7"."#️⃣" AS "#️⃣",
-                "assignment.7"."⚙️" AS "⚙️",
-                "assignment.7"."survive_cond" AS "survive_cond",
-                "assignment.7"."x" AS "x",
-                "assignment.7"."age" AS "age",
-                "assignment.7"."iterations" AS "iterations",
                 "assignment.7"."birth_cond" AS "birth_cond",
                 "assignment.7"."width" AS "width",
+                "assignment.7"."age" AS "age",
+                "assignment.7"."survive_cond" AS "survive_cond",
+                "assignment.7"."max_age" AS "max_age",
+                "assignment.7"."y" AS "y",
                 CAST((("assignment.7"."dx") = 0 AND ("assignment.7"."dy") = 0) AS boolean) AS "original",
-                "assignment.7"."height" AS "height",
-                "assignment.7"."max_age" AS "max_age"
+                "assignment.7"."⚙️" AS "⚙️",
+                "assignment.7"."x" AS "x"
          FROM   "assignment.7"
        ),
        "stop.2"("⚙️") AS (
@@ -358,330 +358,330 @@ WITH RECURSIVE
          FROM   "emit.2"
          WHERE  FALSE
        ),
-       "gather.1"("#️⃣", "neighbors", "y", "⚙️", "survive_cond", "x", "age", "iterations", "birth_cond", "width", "height", "max_age") AS (
-         SELECT "assignment.8"."#️⃣" AS "#️⃣",
-                CAST((countif(("assignment.8"."age") = 1) FILTER (WHERE NOT ("assignment.8"."original"))) AS int) AS "neighbors",
-                "assignment.8"."y" AS "y",
-                "assignment.8"."⚙️" AS "⚙️",
-                "assignment.8"."survive_cond" AS "survive_cond",
-                "assignment.8"."x" AS "x",
-                CAST((any_value(("assignment.8"."age"))   FILTER (WHERE     ("assignment.8"."original"))) AS int) AS "age",
-                "assignment.8"."iterations" AS "iterations",
+       "gather.1"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x", "neighbors") AS (
+         SELECT "assignment.8"."iterations" AS "iterations",
+                "assignment.8"."height" AS "height",
+                "assignment.8"."#️⃣" AS "#️⃣",
                 "assignment.8"."birth_cond" AS "birth_cond",
                 "assignment.8"."width" AS "width",
-                "assignment.8"."height" AS "height",
-                "assignment.8"."max_age" AS "max_age"
+                CAST((any_value(("assignment.8"."age"))   FILTER (WHERE     ("assignment.8"."original"))) AS int) AS "age",
+                "assignment.8"."survive_cond" AS "survive_cond",
+                "assignment.8"."max_age" AS "max_age",
+                "assignment.8"."y" AS "y",
+                "assignment.8"."⚙️" AS "⚙️",
+                "assignment.8"."x" AS "x",
+                CAST((countif(("assignment.8"."age") = 1) FILTER (WHERE NOT ("assignment.8"."original"))) AS int) AS "neighbors"
          FROM   "assignment.8"
-         GROUP  BY "assignment.8"."y",
+         GROUP  BY "assignment.8"."iterations",
+                   "assignment.8"."height",
                    "assignment.8"."#️⃣",
-                   "assignment.8"."⚙️",
-                   "assignment.8"."survive_cond",
-                   "assignment.8"."x",
-                   "assignment.8"."iterations",
                    "assignment.8"."birth_cond",
                    "assignment.8"."width",
-                   "assignment.8"."height",
-                   "assignment.8"."max_age"
+                   "assignment.8"."survive_cond",
+                   "assignment.8"."max_age",
+                   "assignment.8"."y",
+                   "assignment.8"."⚙️",
+                   "assignment.8"."x"
          HAVING COUNT(*) > 0
        ),
-       "assignment.9"("#️⃣", "neighbors", "y", "⚙️", "🔍", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "gather.1"."#️⃣" AS "#️⃣",
-                "gather.1"."neighbors" AS "neighbors",
-                "gather.1"."y" AS "y",
-                "gather.1"."⚙️" AS "⚙️",
-                CAST((("gather.1"."age") = 0 AND     list_contains(("gather.1"."birth_cond"),   ("gather.1"."neighbors"))) AS boolean) AS "🔍",
-                "gather.1"."survive_cond" AS "survive_cond",
-                "gather.1"."x" AS "x",
-                "gather.1"."age" AS "age",
-                "gather.1"."iterations" AS "iterations",
-                "gather.1"."width" AS "width",
-                "gather.1"."birth_cond" AS "birth_cond",
+       "assignment.9"("iterations", "height", "#️⃣", "🔍", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "neighbors", "x", "⚙️") AS (
+         SELECT "gather.1"."iterations" AS "iterations",
                 "gather.1"."height" AS "height",
-                "gather.1"."max_age" AS "max_age"
+                "gather.1"."#️⃣" AS "#️⃣",
+                CAST((("gather.1"."age") = 0 AND     list_contains(("gather.1"."birth_cond"),   ("gather.1"."neighbors"))) AS boolean) AS "🔍",
+                "gather.1"."birth_cond" AS "birth_cond",
+                "gather.1"."width" AS "width",
+                "gather.1"."age" AS "age",
+                "gather.1"."survive_cond" AS "survive_cond",
+                "gather.1"."max_age" AS "max_age",
+                "gather.1"."y" AS "y",
+                "gather.1"."neighbors" AS "neighbors",
+                "gather.1"."x" AS "x",
+                "gather.1"."⚙️" AS "⚙️"
          FROM   "gather.1"
        ),
-       "where.5"("#️⃣", "y", "⚙️", "survive_cond", "x", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "assignment.9"."#️⃣" AS "#️⃣",
+       "where.5"("iterations", "height", "#️⃣", "birth_cond", "width", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "assignment.9"."iterations" AS "iterations",
+                "assignment.9"."height" AS "height",
+                "assignment.9"."#️⃣" AS "#️⃣",
+                "assignment.9"."birth_cond" AS "birth_cond",
+                "assignment.9"."width" AS "width",
+                "assignment.9"."survive_cond" AS "survive_cond",
+                "assignment.9"."max_age" AS "max_age",
                 "assignment.9"."y" AS "y",
                 "assignment.9"."⚙️" AS "⚙️",
-                "assignment.9"."survive_cond" AS "survive_cond",
-                "assignment.9"."x" AS "x",
-                "assignment.9"."iterations" AS "iterations",
-                "assignment.9"."width" AS "width",
-                "assignment.9"."birth_cond" AS "birth_cond",
-                "assignment.9"."height" AS "height",
-                "assignment.9"."max_age" AS "max_age"
+                "assignment.9"."x" AS "x"
          FROM   "assignment.9"
          WHERE  "assignment.9"."🔍" IS NOT DISTINCT FROM TRUE
        ),
-       "where.6"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "max_age", "width", "birth_cond", "height", "neighbors") AS (
-         SELECT "assignment.9"."#️⃣" AS "#️⃣",
-                "assignment.9"."y" AS "y",
-                "assignment.9"."⚙️" AS "⚙️",
-                "assignment.9"."survive_cond" AS "survive_cond",
-                "assignment.9"."x" AS "x",
-                "assignment.9"."age" AS "age",
-                "assignment.9"."iterations" AS "iterations",
-                "assignment.9"."max_age" AS "max_age",
-                "assignment.9"."width" AS "width",
-                "assignment.9"."birth_cond" AS "birth_cond",
+       "where.6"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "neighbors", "x", "⚙️") AS (
+         SELECT "assignment.9"."iterations" AS "iterations",
                 "assignment.9"."height" AS "height",
-                "assignment.9"."neighbors" AS "neighbors"
+                "assignment.9"."#️⃣" AS "#️⃣",
+                "assignment.9"."birth_cond" AS "birth_cond",
+                "assignment.9"."width" AS "width",
+                "assignment.9"."age" AS "age",
+                "assignment.9"."survive_cond" AS "survive_cond",
+                "assignment.9"."max_age" AS "max_age",
+                "assignment.9"."y" AS "y",
+                "assignment.9"."neighbors" AS "neighbors",
+                "assignment.9"."x" AS "x",
+                "assignment.9"."⚙️" AS "⚙️"
          FROM   "assignment.9"
          WHERE  "assignment.9"."🔍" IS DISTINCT FROM TRUE
        ),
-       "assignment.10"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "where.5"."#️⃣" AS "#️⃣",
+       "assignment.10"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "where.5"."iterations" AS "iterations",
+                "where.5"."height" AS "height",
+                "where.5"."#️⃣" AS "#️⃣",
+                "where.5"."birth_cond" AS "birth_cond",
+                "where.5"."width" AS "width",
+                CAST((1) AS int) AS "age",
+                "where.5"."survive_cond" AS "survive_cond",
+                "where.5"."max_age" AS "max_age",
                 "where.5"."y" AS "y",
                 "where.5"."⚙️" AS "⚙️",
-                "where.5"."survive_cond" AS "survive_cond",
-                "where.5"."x" AS "x",
-                CAST((1) AS int) AS "age",
-                "where.5"."iterations" AS "iterations",
-                "where.5"."width" AS "width",
-                "where.5"."birth_cond" AS "birth_cond",
-                "where.5"."height" AS "height",
-                "where.5"."max_age" AS "max_age"
+                "where.5"."x" AS "x"
          FROM   "where.5"
        ),
-       "assignment.11"("#️⃣", "y", "⚙️", "🔍", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "where.6"."#️⃣" AS "#️⃣",
+       "assignment.11"("iterations", "height", "#️⃣", "🔍", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "where.6"."iterations" AS "iterations",
+                "where.6"."height" AS "height",
+                "where.6"."#️⃣" AS "#️⃣",
+                CAST((("where.6"."age") = 1 AND NOT list_contains(("where.6"."survive_cond"), ("where.6"."neighbors"))) AS boolean) AS "🔍",
+                "where.6"."birth_cond" AS "birth_cond",
+                "where.6"."width" AS "width",
+                "where.6"."age" AS "age",
+                "where.6"."survive_cond" AS "survive_cond",
+                "where.6"."max_age" AS "max_age",
                 "where.6"."y" AS "y",
                 "where.6"."⚙️" AS "⚙️",
-                CAST((("where.6"."age") = 1 AND NOT list_contains(("where.6"."survive_cond"), ("where.6"."neighbors"))) AS boolean) AS "🔍",
-                "where.6"."survive_cond" AS "survive_cond",
-                "where.6"."x" AS "x",
-                "where.6"."age" AS "age",
-                "where.6"."iterations" AS "iterations",
-                "where.6"."width" AS "width",
-                "where.6"."birth_cond" AS "birth_cond",
-                "where.6"."height" AS "height",
-                "where.6"."max_age" AS "max_age"
+                "where.6"."x" AS "x"
          FROM   "where.6"
        ),
-       "where.7"("#️⃣", "y", "⚙️", "survive_cond", "x", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "assignment.11"."#️⃣" AS "#️⃣",
+       "where.7"("iterations", "height", "#️⃣", "birth_cond", "width", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "assignment.11"."iterations" AS "iterations",
+                "assignment.11"."height" AS "height",
+                "assignment.11"."#️⃣" AS "#️⃣",
+                "assignment.11"."birth_cond" AS "birth_cond",
+                "assignment.11"."width" AS "width",
+                "assignment.11"."survive_cond" AS "survive_cond",
+                "assignment.11"."max_age" AS "max_age",
                 "assignment.11"."y" AS "y",
                 "assignment.11"."⚙️" AS "⚙️",
-                "assignment.11"."survive_cond" AS "survive_cond",
-                "assignment.11"."x" AS "x",
-                "assignment.11"."iterations" AS "iterations",
-                "assignment.11"."width" AS "width",
-                "assignment.11"."birth_cond" AS "birth_cond",
-                "assignment.11"."height" AS "height",
-                "assignment.11"."max_age" AS "max_age"
+                "assignment.11"."x" AS "x"
          FROM   "assignment.11"
          WHERE  "assignment.11"."🔍" IS NOT DISTINCT FROM TRUE
        ),
-       "where.8"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "assignment.11"."#️⃣" AS "#️⃣",
+       "where.8"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "assignment.11"."iterations" AS "iterations",
+                "assignment.11"."height" AS "height",
+                "assignment.11"."#️⃣" AS "#️⃣",
+                "assignment.11"."birth_cond" AS "birth_cond",
+                "assignment.11"."width" AS "width",
+                "assignment.11"."age" AS "age",
+                "assignment.11"."survive_cond" AS "survive_cond",
+                "assignment.11"."max_age" AS "max_age",
                 "assignment.11"."y" AS "y",
                 "assignment.11"."⚙️" AS "⚙️",
-                "assignment.11"."survive_cond" AS "survive_cond",
-                "assignment.11"."x" AS "x",
-                "assignment.11"."age" AS "age",
-                "assignment.11"."iterations" AS "iterations",
-                "assignment.11"."width" AS "width",
-                "assignment.11"."birth_cond" AS "birth_cond",
-                "assignment.11"."height" AS "height",
-                "assignment.11"."max_age" AS "max_age"
+                "assignment.11"."x" AS "x"
          FROM   "assignment.11"
          WHERE  "assignment.11"."🔍" IS DISTINCT FROM TRUE
        ),
-       "assignment.12"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "where.7"."#️⃣" AS "#️⃣",
+       "assignment.12"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "where.7"."iterations" AS "iterations",
+                "where.7"."height" AS "height",
+                "where.7"."#️⃣" AS "#️⃣",
+                "where.7"."birth_cond" AS "birth_cond",
+                "where.7"."width" AS "width",
+                CAST((2) AS int) AS "age",
+                "where.7"."survive_cond" AS "survive_cond",
+                "where.7"."max_age" AS "max_age",
                 "where.7"."y" AS "y",
                 "where.7"."⚙️" AS "⚙️",
-                "where.7"."survive_cond" AS "survive_cond",
-                "where.7"."x" AS "x",
-                CAST((2) AS int) AS "age",
-                "where.7"."iterations" AS "iterations",
-                "where.7"."width" AS "width",
-                "where.7"."birth_cond" AS "birth_cond",
-                "where.7"."height" AS "height",
-                "where.7"."max_age" AS "max_age"
+                "where.7"."x" AS "x"
          FROM   "where.7"
        ),
-       "assignment.13"("#️⃣", "y", "⚙️", "🔍", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "where.8"."#️⃣" AS "#️⃣",
+       "assignment.13"("iterations", "height", "#️⃣", "🔍", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "where.8"."iterations" AS "iterations",
+                "where.8"."height" AS "height",
+                "where.8"."#️⃣" AS "#️⃣",
+                CAST((("where.8"."age") > 1) AS boolean) AS "🔍",
+                "where.8"."birth_cond" AS "birth_cond",
+                "where.8"."width" AS "width",
+                "where.8"."age" AS "age",
+                "where.8"."survive_cond" AS "survive_cond",
+                "where.8"."max_age" AS "max_age",
                 "where.8"."y" AS "y",
                 "where.8"."⚙️" AS "⚙️",
-                CAST((("where.8"."age") > 1) AS boolean) AS "🔍",
-                "where.8"."survive_cond" AS "survive_cond",
-                "where.8"."x" AS "x",
-                "where.8"."age" AS "age",
-                "where.8"."iterations" AS "iterations",
-                "where.8"."width" AS "width",
-                "where.8"."birth_cond" AS "birth_cond",
-                "where.8"."height" AS "height",
-                "where.8"."max_age" AS "max_age"
+                "where.8"."x" AS "x"
          FROM   "where.8"
        ),
-       "where.10"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "assignment.13"."#️⃣" AS "#️⃣",
+       "where.10"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "assignment.13"."iterations" AS "iterations",
+                "assignment.13"."height" AS "height",
+                "assignment.13"."#️⃣" AS "#️⃣",
+                "assignment.13"."birth_cond" AS "birth_cond",
+                "assignment.13"."width" AS "width",
+                "assignment.13"."age" AS "age",
+                "assignment.13"."survive_cond" AS "survive_cond",
+                "assignment.13"."max_age" AS "max_age",
                 "assignment.13"."y" AS "y",
                 "assignment.13"."⚙️" AS "⚙️",
-                "assignment.13"."survive_cond" AS "survive_cond",
-                "assignment.13"."x" AS "x",
-                "assignment.13"."age" AS "age",
-                "assignment.13"."iterations" AS "iterations",
-                "assignment.13"."width" AS "width",
-                "assignment.13"."birth_cond" AS "birth_cond",
-                "assignment.13"."height" AS "height",
-                "assignment.13"."max_age" AS "max_age"
+                "assignment.13"."x" AS "x"
          FROM   "assignment.13"
          WHERE  "assignment.13"."🔍" IS DISTINCT FROM TRUE
        ),
-       "where.9"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "assignment.13"."#️⃣" AS "#️⃣",
+       "where.9"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "assignment.13"."iterations" AS "iterations",
+                "assignment.13"."height" AS "height",
+                "assignment.13"."#️⃣" AS "#️⃣",
+                "assignment.13"."birth_cond" AS "birth_cond",
+                "assignment.13"."width" AS "width",
+                "assignment.13"."age" AS "age",
+                "assignment.13"."survive_cond" AS "survive_cond",
+                "assignment.13"."max_age" AS "max_age",
                 "assignment.13"."y" AS "y",
                 "assignment.13"."⚙️" AS "⚙️",
-                "assignment.13"."survive_cond" AS "survive_cond",
-                "assignment.13"."x" AS "x",
-                "assignment.13"."age" AS "age",
-                "assignment.13"."iterations" AS "iterations",
-                "assignment.13"."width" AS "width",
-                "assignment.13"."birth_cond" AS "birth_cond",
-                "assignment.13"."height" AS "height",
-                "assignment.13"."max_age" AS "max_age"
+                "assignment.13"."x" AS "x"
          FROM   "assignment.13"
          WHERE  "assignment.13"."🔍" IS NOT DISTINCT FROM TRUE
        ),
-       "assignment.14"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "where.9"."#️⃣" AS "#️⃣",
+       "assignment.14"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "where.9"."iterations" AS "iterations",
+                "where.9"."height" AS "height",
+                "where.9"."#️⃣" AS "#️⃣",
+                "where.9"."birth_cond" AS "birth_cond",
+                "where.9"."width" AS "width",
+                CAST((("where.9"."age") + 1) AS int) AS "age",
+                "where.9"."survive_cond" AS "survive_cond",
+                "where.9"."max_age" AS "max_age",
                 "where.9"."y" AS "y",
                 "where.9"."⚙️" AS "⚙️",
-                "where.9"."survive_cond" AS "survive_cond",
-                "where.9"."x" AS "x",
-                CAST((("where.9"."age") + 1) AS int) AS "age",
-                "where.9"."iterations" AS "iterations",
-                "where.9"."width" AS "width",
-                "where.9"."birth_cond" AS "birth_cond",
-                "where.9"."height" AS "height",
-                "where.9"."max_age" AS "max_age"
+                "where.9"."x" AS "x"
          FROM   "where.9"
        ),
-       "merge.2"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         (SELECT "assignment.12"."#️⃣" AS "#️⃣",
-                 "assignment.12"."y" AS "y",
-                 "assignment.12"."⚙️" AS "⚙️",
-                 "assignment.12"."survive_cond" AS "survive_cond",
-                 "assignment.12"."x" AS "x",
-                 "assignment.12"."age" AS "age",
-                 "assignment.12"."iterations" AS "iterations",
-                 "assignment.12"."width" AS "width",
-                 "assignment.12"."birth_cond" AS "birth_cond",
-                 "assignment.12"."height" AS "height",
-                 "assignment.12"."max_age" AS "max_age"
-          FROM   "assignment.12")
-           UNION ALL
-         (SELECT "assignment.14"."#️⃣" AS "#️⃣",
-                 "assignment.14"."y" AS "y",
-                 "assignment.14"."⚙️" AS "⚙️",
-                 "assignment.14"."survive_cond" AS "survive_cond",
-                 "assignment.14"."x" AS "x",
-                 "assignment.14"."age" AS "age",
-                 "assignment.14"."iterations" AS "iterations",
-                 "assignment.14"."width" AS "width",
-                 "assignment.14"."birth_cond" AS "birth_cond",
-                 "assignment.14"."height" AS "height",
-                 "assignment.14"."max_age" AS "max_age"
-          FROM   "assignment.14")
-           UNION ALL
-         (SELECT "assignment.10"."#️⃣" AS "#️⃣",
-                 "assignment.10"."y" AS "y",
-                 "assignment.10"."⚙️" AS "⚙️",
-                 "assignment.10"."survive_cond" AS "survive_cond",
-                 "assignment.10"."x" AS "x",
-                 "assignment.10"."age" AS "age",
-                 "assignment.10"."iterations" AS "iterations",
-                 "assignment.10"."width" AS "width",
-                 "assignment.10"."birth_cond" AS "birth_cond",
-                 "assignment.10"."height" AS "height",
-                 "assignment.10"."max_age" AS "max_age"
-          FROM   "assignment.10")
-           UNION ALL
-         (SELECT "where.10"."#️⃣" AS "#️⃣",
+       "merge.2"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         (SELECT "where.10"."iterations" AS "iterations",
+                 "where.10"."height" AS "height",
+                 "where.10"."#️⃣" AS "#️⃣",
+                 "where.10"."birth_cond" AS "birth_cond",
+                 "where.10"."width" AS "width",
+                 "where.10"."age" AS "age",
+                 "where.10"."survive_cond" AS "survive_cond",
+                 "where.10"."max_age" AS "max_age",
                  "where.10"."y" AS "y",
                  "where.10"."⚙️" AS "⚙️",
-                 "where.10"."survive_cond" AS "survive_cond",
-                 "where.10"."x" AS "x",
-                 "where.10"."age" AS "age",
-                 "where.10"."iterations" AS "iterations",
-                 "where.10"."width" AS "width",
-                 "where.10"."birth_cond" AS "birth_cond",
-                 "where.10"."height" AS "height",
-                 "where.10"."max_age" AS "max_age"
+                 "where.10"."x" AS "x"
           FROM   "where.10")
+           UNION ALL
+         (SELECT "assignment.10"."iterations" AS "iterations",
+                 "assignment.10"."height" AS "height",
+                 "assignment.10"."#️⃣" AS "#️⃣",
+                 "assignment.10"."birth_cond" AS "birth_cond",
+                 "assignment.10"."width" AS "width",
+                 "assignment.10"."age" AS "age",
+                 "assignment.10"."survive_cond" AS "survive_cond",
+                 "assignment.10"."max_age" AS "max_age",
+                 "assignment.10"."y" AS "y",
+                 "assignment.10"."⚙️" AS "⚙️",
+                 "assignment.10"."x" AS "x"
+          FROM   "assignment.10")
+           UNION ALL
+         (SELECT "assignment.14"."iterations" AS "iterations",
+                 "assignment.14"."height" AS "height",
+                 "assignment.14"."#️⃣" AS "#️⃣",
+                 "assignment.14"."birth_cond" AS "birth_cond",
+                 "assignment.14"."width" AS "width",
+                 "assignment.14"."age" AS "age",
+                 "assignment.14"."survive_cond" AS "survive_cond",
+                 "assignment.14"."max_age" AS "max_age",
+                 "assignment.14"."y" AS "y",
+                 "assignment.14"."⚙️" AS "⚙️",
+                 "assignment.14"."x" AS "x"
+          FROM   "assignment.14")
+           UNION ALL
+         (SELECT "assignment.12"."iterations" AS "iterations",
+                 "assignment.12"."height" AS "height",
+                 "assignment.12"."#️⃣" AS "#️⃣",
+                 "assignment.12"."birth_cond" AS "birth_cond",
+                 "assignment.12"."width" AS "width",
+                 "assignment.12"."age" AS "age",
+                 "assignment.12"."survive_cond" AS "survive_cond",
+                 "assignment.12"."max_age" AS "max_age",
+                 "assignment.12"."y" AS "y",
+                 "assignment.12"."⚙️" AS "⚙️",
+                 "assignment.12"."x" AS "x"
+          FROM   "assignment.12")
        ),
-       "assignment.15"("#️⃣", "y", "⚙️", "survive_cond", "x", "age", "iterations", "width", "birth_cond", "height", "max_age") AS (
-         SELECT "merge.2"."#️⃣" AS "#️⃣",
+       "assignment.15"("iterations", "height", "#️⃣", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "⚙️", "x") AS (
+         SELECT "merge.2"."iterations" AS "iterations",
+                "merge.2"."height" AS "height",
+                "merge.2"."#️⃣" AS "#️⃣",
+                "merge.2"."birth_cond" AS "birth_cond",
+                "merge.2"."width" AS "width",
+                CAST((("merge.2"."age") % ("merge.2"."max_age")) AS int) AS "age",
+                "merge.2"."survive_cond" AS "survive_cond",
+                "merge.2"."max_age" AS "max_age",
                 "merge.2"."y" AS "y",
                 "merge.2"."⚙️" AS "⚙️",
-                "merge.2"."survive_cond" AS "survive_cond",
-                "merge.2"."x" AS "x",
-                CAST((("merge.2"."age") % ("merge.2"."max_age")) AS int) AS "age",
-                "merge.2"."iterations" AS "iterations",
-                "merge.2"."width" AS "width",
-                "merge.2"."birth_cond" AS "birth_cond",
-                "merge.2"."height" AS "height",
-                "merge.2"."max_age" AS "max_age"
+                "merge.2"."x" AS "x"
          FROM   "merge.2"
        ),
-       "jump.1"("max_age", "#️⃣", "width", "birth_cond", "y", "age", "🏷️", "x", "iterations", "survive_cond", "height") AS (
-         SELECT "assignment.15"."max_age" AS "max_age",
+       "jump.1"("🏷️", "#️⃣", "iterations", "height", "birth_cond", "width", "age", "survive_cond", "max_age", "y", "x") AS (
+         SELECT 'start.2' AS "🏷️",
                 "assignment.15"."#️⃣" AS "#️⃣",
-                "assignment.15"."width" AS "width",
-                "assignment.15"."birth_cond" AS "birth_cond",
-                "assignment.15"."y" AS "y",
-                "assignment.15"."age" AS "age",
-                'start.2' AS "🏷️",
-                "assignment.15"."x" AS "x",
                 "assignment.15"."iterations" AS "iterations",
+                "assignment.15"."height" AS "height",
+                "assignment.15"."birth_cond" AS "birth_cond",
+                "assignment.15"."width" AS "width",
+                "assignment.15"."age" AS "age",
                 "assignment.15"."survive_cond" AS "survive_cond",
-                "assignment.15"."height" AS "height"
+                "assignment.15"."max_age" AS "max_age",
+                "assignment.15"."y" AS "y",
+                "assignment.15"."x" AS "x"
          FROM   "assignment.15"
        )
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
              CAST(("emit.1"."📊.1") AS text) AS "📊.1",
-             CAST((NULL) AS int) AS "y",
-             CAST((NULL) AS int[]) AS "survive_cond",
-             CAST((NULL) AS int) AS "x",
-             CAST((NULL) AS int) AS "age",
              CAST((NULL) AS int) AS "iterations",
-             CAST((NULL) AS int) AS "width",
-             CAST((NULL) AS int[]) AS "birth_cond",
              CAST((NULL) AS int) AS "height",
-             CAST((NULL) AS int) AS "max_age"
+             CAST((NULL) AS int[]) AS "birth_cond",
+             CAST((NULL) AS int) AS "width",
+             CAST((NULL) AS int) AS "age",
+             CAST((NULL) AS int[]) AS "survive_cond",
+             CAST((NULL) AS int) AS "max_age",
+             CAST((NULL) AS int) AS "y",
+             CAST((NULL) AS int) AS "x"
       FROM   "emit.1")
        UNION ALL
      (SELECT CAST((NULL) AS text) AS "🏷️",
              CAST(("emit.2"."#️⃣") AS int) AS "#️⃣",
              CAST(("emit.2"."📊.1") AS text) AS "📊.1",
-             CAST((NULL) AS int) AS "y",
-             CAST((NULL) AS int[]) AS "survive_cond",
-             CAST((NULL) AS int) AS "x",
-             CAST((NULL) AS int) AS "age",
              CAST((NULL) AS int) AS "iterations",
-             CAST((NULL) AS int) AS "width",
-             CAST((NULL) AS int[]) AS "birth_cond",
              CAST((NULL) AS int) AS "height",
-             CAST((NULL) AS int) AS "max_age"
+             CAST((NULL) AS int[]) AS "birth_cond",
+             CAST((NULL) AS int) AS "width",
+             CAST((NULL) AS int) AS "age",
+             CAST((NULL) AS int[]) AS "survive_cond",
+             CAST((NULL) AS int) AS "max_age",
+             CAST((NULL) AS int) AS "y",
+             CAST((NULL) AS int) AS "x"
       FROM   "emit.2")
        UNION ALL
      (SELECT CAST(("jump.1"."🏷️") AS text) AS "🏷️",
              CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
              CAST((NULL) AS text) AS "📊.1",
-             CAST(("jump.1"."y") AS int) AS "y",
-             CAST(("jump.1"."survive_cond") AS int[]) AS "survive_cond",
-             CAST(("jump.1"."x") AS int) AS "x",
-             CAST(("jump.1"."age") AS int) AS "age",
              CAST(("jump.1"."iterations") AS int) AS "iterations",
-             CAST(("jump.1"."width") AS int) AS "width",
-             CAST(("jump.1"."birth_cond") AS int[]) AS "birth_cond",
              CAST(("jump.1"."height") AS int) AS "height",
-             CAST(("jump.1"."max_age") AS int) AS "max_age"
+             CAST(("jump.1"."birth_cond") AS int[]) AS "birth_cond",
+             CAST(("jump.1"."width") AS int) AS "width",
+             CAST(("jump.1"."age") AS int) AS "age",
+             CAST(("jump.1"."survive_cond") AS int[]) AS "survive_cond",
+             CAST(("jump.1"."max_age") AS int) AS "max_age",
+             CAST(("jump.1"."y") AS int) AS "y",
+             CAST(("jump.1"."x") AS int) AS "x"
       FROM   "jump.1"))
   )
 SELECT "🔄"."📊.1"

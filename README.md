@@ -1,4 +1,5 @@
 # Flummi
+
 _A to-SQL Compiler Prototype._
 
 _Flummi_ is a research compiler prototype for to-SQL compilation, implementing methods we've researched and developed at the [database chair of the University of Tübingen](https://db.cs.uni-tuebingen.de/)---see the list of related publications [below](#related-publications). Our compilation strategy takes imperative procedural programs with embedded SQL expressions and transforms them to a single monolithic SQL query.
@@ -100,12 +101,12 @@ This compiler prototype uses a "minimum viable language" as an input, as such it
    | EMIT 𝑣, …, 𝑣
    | STOP
    | NOOP
-   | IF 𝑒 THEN 𝑠 ELSE 𝑠
+   | IF 𝑒 THEN 𝑠 [ ELSE 𝑠 ]
    | LOOP 𝑠
    | BREAK
    | CONTINUE
    | FORK 𝑣, …, 𝑣 = 𝑞
-   | GATHER 𝑣 = 𝑎, …, 𝑣 = 𝑎 [ BY 𝑣, …, 𝑣 ]
+   | GATHER [ 𝑣 = 𝑎, …, 𝑣 = 𝑎 ] [ BY 𝑣, …, 𝑣 ]
    | SYNC [ BY 𝑣, …, 𝑣 ]
 
 𝑣 := <variable>
@@ -165,5 +166,6 @@ Our input language only includes one construct for looping/iteration---`LOOP`---
 We heavily restrict where in our language you can use expressions: in the right-hand sides of `LET` and `GATHER`, as the query of `FORK`, and as the condition of `IF`. This, in combination with all variables also needing explicit declarations, makes programs pretty wordy.
 
 ## Related Publications
+
 - Tim Fischer and Denis Hirn. 2025. BIRNE: Mixed-paradigm Workload Execution in SQL Engines. In Proceedings of the 19th International Symposium on Database Programming Languages (DBPL '25). Association for Computing Machinery, New York, NY, USA, Article 4, 1–11. https://doi.org/10.1145/3735106.3736535
 - Tim Fischer, Denis Hirn, and Torsten Grust. 2024. SQL Engines Excel at the Execution of Imperative Programs. Proc. VLDB Endow. 17, 13 (September 2024), 4696–4708. https://doi.org/10.14778/3704965.3704976

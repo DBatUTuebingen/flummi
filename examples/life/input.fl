@@ -23,7 +23,7 @@
         -- "send" a "copy" of the current grid to "rendering"
         DECLARE flip : §boolean§;
         FORK flip = §VALUES (TRUE), (FALSE)§;
-        IF flip THEN BREAK ELSE NOOP;
+        IF flip THEN BREAK;
 
         -- limit iteration count (optional!)
         IF §{iterations} = 0§ THEN STOP ELSE LET iterations = §{iterations} - 1§;

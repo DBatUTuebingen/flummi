@@ -14,7 +14,7 @@
 
         -- keep one copy of the current community "here" for later
         FORK flip = §VALUES (TRUE), (FALSE)§;
-        IF flip THEN NOOP ELSE {
+        IF flip THEN {
             -- propagate current communties from "here" to "there"
             FORK node = §
                 SELECT there FROM edges WHERE here = {node}
@@ -31,7 +31,7 @@
 
         LET state = §bit_xor({community}) OVER ()§, old_state = state;
 
-        IF §{old_state} = {state}§ THEN BREAK ELSE CONTINUE
+        IF §{old_state} = {state}§ THEN BREAK
     };
 
     GATHER nodes = §list({node} ORDER BY {node})§ BY community;

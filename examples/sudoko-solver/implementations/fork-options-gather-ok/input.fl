@@ -40,10 +40,8 @@
     THEN LET cells = §concat({0}[:{1}], [{2}], {0}[{1}+2:])§[cells, cell, value]
     ELSE STOP;
 
-    LET done = §length({0}) = 0§[empty_cells];
-    IF done THEN BREAK ELSE NOOP
+    IF §length({0}) = 0§[empty_cells] THEN BREAK
   };
 
-  EMIT cells;
-  STOP
+  EMIT cells
 }

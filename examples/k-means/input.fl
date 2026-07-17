@@ -23,8 +23,9 @@
 
         -- check if centroids converged
         LET centroids = §sum({new_centroid}.x + {new_centroid}.y) OVER ()§, old_centroids = centroids;
-        IF §abs({old_centroids} - {centroids}) > 0.000001§
-        THEN LET centroid = new_centroid ELSE BREAK
+        IF §abs({old_centroids} - {centroids}) <= 0.000001§ THEN BREAK;
+
+        LET centroid = new_centroid
     };
 
     -- map points to final centroids (one last time...)

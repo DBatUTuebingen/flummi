@@ -23,8 +23,8 @@
         LET active = §{degree} >= {k} + 1§;
         LET size = §countif({active}) OVER ()§, old_size = size;
 
-        IF §{old_size} = {size}§ THEN BREAK ELSE CONTINUE
+        IF §{old_size} = {size}§ THEN BREAK
     };
 
-    IF active THEN EMIT node ELSE NOOP
+    IF active THEN EMIT node
 }

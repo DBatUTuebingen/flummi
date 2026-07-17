@@ -219,8 +219,10 @@ class Parser(parser.Parser[Tokens]):
         condition = self.parse_expression()
         self.expect(Tokens.THEN)
         true_branch = self.parse_statement()
-        self.expect(Tokens.ELSE)
-        false_branch = self.parse_statement()
+        if self.match(Tokens.ELSE):
+            false_branch = self.parse_statement()
+        else:
+            false_branch = NoOp(location=location)
         return Conditional(
             location=location,
             condition=condition,
@@ -266,9 +268,12 @@ class Parser(parser.Parser[Tokens]):
     def parse_gather(self) -> Gather:
         location = self.current.location
         self.expect(Tokens.GATHER)
-        aggregates = dict(
-            self.sequence(self.parse_scalar_binding, Tokens.COMMA)
-        )
+        if self.lookahead(Tokens.IDENTIFIER):
+            aggregates = dict(
+                self.sequence(self.parse_scalar_binding, Tokens.COMMA)
+            )
+        else:
+            aggregates = {}
         if self.match(Tokens.BY):
             keys = set(self.sequence(self.parse_variable, Tokens.COMMA))
         else:

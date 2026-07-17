@@ -5,7 +5,6 @@
   LOOP {
     EMIT v;
     LET v = §{v} + 1§;
-    IF §{v} < 10§
-    THEN NOOP ELSE BREAK
+    IF §{v} >= 10§ THEN BREAK
   }
 }

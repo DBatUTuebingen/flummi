@@ -3,7 +3,6 @@
   DECLARE id : §int§;
   DECLARE length : §real§;
   DECLARE dist : §real§;
-  DECLARE condition : §bool§;
 
   -- Setup render parameters  --------------------------------------------------
   DECLARE shadows : §bool§;
@@ -268,9 +267,7 @@
       DECLARE det : §real§;
       LET det = §{0} * {1} + {2} * {3} + {4} * {5}§[e1_x, P_x, e1_y, P_y, e1_z, P_z]; -- } det = e1 ⋅ P
 
-      LET condition = §abs({0}) <= {1}§[det, epsilon];
-      IF condition THEN NOOP
-      ELSE {
+      IF §abs({0}) > {1}§[det, epsilon] THEN {
         DECLARE T1_x : §real§;
         DECLARE T1_y : §real§;
         DECLARE T1_z : §real§;
@@ -281,9 +278,7 @@
         DECLARE u : §real§;
         LET u = §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[T1_x, P_x, T1_y, P_y, T1_z, P_z, det];  -- } u = (T1 ⋅ P) / det
 
-        LET condition = §{0} NOT BETWEEN 0 AND 1§[u];
-        IF condition THEN NOOP
-        ELSE {
+        IF §{0} BETWEEN 0 AND 1§[u] THEN {
           DECLARE Q_x : §real§;
           DECLARE Q_y : §real§;
           DECLARE Q_z : §real§;
@@ -294,14 +289,10 @@
           DECLARE v : §real§;
           LET v = §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[direction_x, Q_x, direction_y, Q_y, direction_z, Q_z, det];  -- } v = (direction ⋅ Q) / det
 
-          LET condition = §0 > {0} OR {0} + {1} > 1§[v, u];
-          IF condition THEN NOOP
-          ELSE {
+          IF §0 <= {0} AND {0} + {1} <= 1§[v, u] THEN {
             LET dist = §({0} * {1} + {2} * {3} + {4} * {5}) / {6}§[e2_x, Q_x, e2_y, Q_y, e2_z, Q_z, det];  -- } dist = (e2 ⋅ Q) / det
 
-            LET condition = §{0} <= {1} OR {0} >= {2}§[dist, epsilon, min_dist];
-            IF condition THEN NOOP
-            ELSE {
+            IF §{0} > {1} AND {0} < {2}§[dist, epsilon, min_dist] THEN {
               LET material = §{0}§[triangle_material];
               LET min_dist = §{0}§[dist];
 
@@ -314,28 +305,23 @@
               LET normal_y = §{0} / {1}§[normal_y, length];  -- ⎬ normal = normal / length
               LET normal_z = §{0} / {1}§[normal_z, length];  -- ⎭
 
-              LET condition = §{0} * {1} + {2} * {3} + {4} * {5} > 0§[normal_x, direction_x, normal_y, direction_y, normal_z, direction_z];
-              IF condition
-              THEN {
+              IF §{0} * {1} + {2} * {3} + {4} * {5} > 0§[normal_x, direction_x, normal_y, direction_y, normal_z, direction_z] THEN {
                 LET normal_x = §{0} * -1§[normal_x];  -- ⎫
                 LET normal_y = §{0} * -1§[normal_y];  -- ⎬ normal = -normal
                 LET normal_z = §{0} * -1§[normal_z]   -- ⎭
-              } ELSE NOOP;
+              };
 
-              LET condition = §{0} = 'm'§[material];
-              IF condition
-              THEN {
+              IF §{0} = 'm'§[material] THEN {
                 LET color_r = §{0}§[triangle_r];
                 LET color_g = §{0}§[triangle_g];
                 LET color_b = §{0}§[triangle_b]
-              } ELSE NOOP
+              }
             }
           }
         }
       };
 
-      LET condition = §{0} = 0§[id];
-      IF condition
+      IF §{0} = 0§[id]
       THEN BREAK
       ELSE LET id = §{0} - 1§[id]
     };
@@ -376,16 +362,12 @@
       DECLARE d2 : §real§;
       LET d2 = §{0} ** 2 + {1} ** 2 + {2} ** 2 - {3} ** 2§[L_x, L_y, L_z, tca];  -- } d2 = |L|² - tca²
 
-      LET condition = §{0} > {1} ** 2§[d2, sphere_radius];
-      IF condition THEN NOOP
-      ELSE {
+      IF §{0} <= {1} ** 2§[d2, sphere_radius] THEN {
         DECLARE thc : §real§;                                 --          _____________
         LET thc = §sqrt({0} ** 2 - {1})§[sphere_radius, d2];  -- } thc = √radius² - d2`
         LET dist = §least({0} + {1}, greatest({0} - {1}, 0))§[tca, thc];  -- } dist = min(tca + tch, max(tca - thc, 0))
 
-        LET condition = §{0} NOT BETWEEN {1} AND {2}§[dist, epsilon, min_dist];
-        IF condition THEN NOOP
-        ELSE {
+        IF §{0} BETWEEN {1} AND {2}§[dist, epsilon, min_dist] THEN {
           LET material = §{0}§[sphere_material];
           LET min_dist = §{0}§[dist];
 
@@ -398,44 +380,33 @@
           LET normal_y = §{0} / {1}§[normal_y, length];  -- ⎬ normal = normal / length
           LET normal_z = §{0} / {1}§[normal_z, length];  -- ⎭
 
-          LET condition = §{0} = 'm'§[material];
-          IF condition
-          THEN {
+          IF §{0} = 'm'§[material] THEN {
             LET color_r = §{0}§[sphere_r];
             LET color_g = §{0}§[sphere_g];
             LET color_b = §{0}§[sphere_b]
-          } ELSE NOOP
+          }
         }
       };
 
-      LET condition = §{0} = 0§[id];
-      IF condition
+      IF §{0} = 0§[id]
       THEN BREAK
       ELSE LET id = §{0} - 1§[id]
     };
 
-    LET condition = §{0}§[shadow_ray];        -- ⎫
-    IF condition                              -- ⎪
-    THEN {                                    -- ⎪
-      LET condition = §{0} <> 'l'§[material]; -- ⎪
-      IF condition                            -- ⎪
-      THEN {                                  -- ⎬ If we are handling a shadow ray and haven't
-        LET pixel_r = §0§[];                  -- ⎪ hit a light we are actually in a shadow!
-        LET pixel_g = §0§[];                  -- ⎪ Black out the color and be done with it.
-        LET pixel_b = §0§[]                   -- ⎪
-      } ELSE NOOP;                            -- ⎪
+    IF §{0}§[shadow_ray] THEN {               -- ⎫
+      IF §{0} <> 'l'§[material] THEN {        -- ⎪
+        LET pixel_r = §0§[];                  -- ⎪ If we are handling a shadow ray and haven't
+        LET pixel_g = §0§[];                  -- ⎬ hit a light we are actually in a shadow!
+        LET pixel_b = §0§[]                   -- ⎪ Black out the color and be done with it.
+      };                                      -- ⎪
       BREAK                                   -- ⎭
     } ELSE {
-      LET condition = §{0} = 'l'§[material];
-      IF condition
-      THEN {
+      IF §{0} = 'l'§[material] THEN {
         LET pixel_r = §1§[];
         LET pixel_g = §1§[];
         LET pixel_b = §1§[]
       } ELSE {
-        LET condition = §{0} = 'm'§[material];
-        IF condition
-        THEN {
+        IF §{0} = 'm'§[material] THEN {
           --              Calculate actual hit position
           --              and set the shadow ray origin
           --              to that
@@ -462,16 +433,12 @@
           LET pixel_g = §{0} * {1}§[color_g, u]; -- ⎪ in proportion to the angle difference
           LET pixel_b = §{0} * {1}§[color_b, u]; -- ⎭ between the current ray and the shadow ray
 
-          LET condition = §{0}§[shadows]; -- ⎫
-          IF condition                    -- ⎪
-          THEN {                          -- ⎪ If shadows are enabled...
-            LET shadow_ray = §true§[];    -- ⎬   ...fire off a shadow ray
-            CONTINUE                      -- ⎪   ...otherwise we are done here.
-          } ELSE BREAK                    -- ⎭
+          IF §{0}§[shadows] THEN {        -- ⎫
+            LET shadow_ray = §true§[];    -- ⎬  If shadows are enabled...
+            CONTINUE                      -- ⎪   ...fire off a shadow ray
+          } ELSE BREAK                    -- ⎭   ...otherwise we are done here.
         } ELSE {
-          LET condition = §{0} = 'r'§[material];
-          IF condition
-          THEN {
+          IF §{0} = 'r'§[material] THEN {
             --              Calculate actual hit position
             --              and set the reflection ray origin
             --              to that
@@ -489,13 +456,11 @@
             LET direction_y = §{0} - {1} * {2}§[direction_y, normal_y, u];  -- ⎪ based on the assumption of perfect
             LET direction_z = §{0} - {1} * {2}§[direction_z, normal_z, u];  -- ⎭ reflection
 
-            LET condition = §{0} < {1}§[step, max_rec_depth]; -- ⎫
-            IF condition                                      -- ⎪
-            THEN {                                            -- ⎪ If there are still some reflection passes...
-              LET step = §{0} + 1§[step];                     -- ⎬   ...go in for another round
-              CONTINUE                                        -- ⎪   ...otherwise we are done here.
-            } ELSE BREAK                                      -- ⎭
-          } ELSE NOOP
+            IF §{0} < {1}§[step, max_rec_depth] THEN {        -- ⎫
+              LET step = §{0} + 1§[step];                     -- ⎬ If there are still some reflection passes...
+              CONTINUE                                        -- ⎪   ...go in for another round
+            } ELSE BREAK                                      -- ⎭   ...otherwise we are done here.
+          }
         }
       }
     };

@@ -22,7 +22,7 @@
 
     -- we need to consider "intermediate" paths in the `GATHER` below!
     FORK flip = §VALUES (TRUE), (FALSE)§;
-    IF flip THEN BREAK ELSE CONTINUE
+    IF flip THEN BREAK
   };
 
   -- paths of differing edge count arrive here out of sync!

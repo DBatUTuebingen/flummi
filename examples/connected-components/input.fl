@@ -22,8 +22,7 @@
         LET components     = §bit_xor({component}) OVER ()§,
             old_components = components;
 
-        IF §{old_components} <> {components}§
-        THEN CONTINUE ELSE BREAK
+        IF §{old_components} = {components}§ THEN BREAK
     };
 
     GATHER nodes = §list({node})§ BY component;

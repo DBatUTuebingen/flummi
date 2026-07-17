@@ -41,7 +41,7 @@
       WHERE  distance > 0
     §;
 
-    IF §{next} IS NULL§ THEN BREAK ELSE NOOP;
+    IF §{next} IS NULL§ THEN BREAK;
 
     EMIT next;
 

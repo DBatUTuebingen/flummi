@@ -426,7 +426,7 @@ class CodeGenerator:
                                         output.identifier,
                                         Names.EXPRESSION,
                                     ),
-                                    self._schema[output.identifier].source
+                                    self._analysis.symbol_table[output].source,
                                 )
                                 if output in variables
                                 else sql.variable(
