@@ -45,15 +45,51 @@ class CodeGenerator:
 
     _linear: bool = field(init=False)
     _result_columns: tuple[str, ...] = field(init=False)
+    _column_order: dict[str, tuple[int, int, str]] = field(init=False)
 
     def __post_init__(self):
         self._linear = Feature.ITERATING not in self._analysis.features
-        self._schema = {
-            column: self._schema[column] for column in sorted(self._schema)
-        }
         self._result_columns = tuple(
             variable.identifier for variable in self._analysis.result_variables
         )
+        self._column_order = {}
+
+        for index, column in enumerate(
+            (
+                SystemVariable.ITERATION,
+                SystemVariable.LABEL,
+                SystemVariable.CONTROL,
+                SystemVariable.PROBE,
+            )
+        ):
+            self._column_order[column] = (0, index, column)
+
+        for index, column in enumerate(self._result_columns):
+            self._column_order[column] = (1, index, column)
+
+        system_columns = {
+            variable.identifier
+            for variable in self._analysis.system_variables.values()
+        }
+        for variable in self._analysis.symbol_table:
+            column = variable.identifier
+            if (
+                column not in system_columns
+                and column not in self._column_order
+            ):
+                self._column_order[column] = (
+                    2,
+                    len(self._column_order),
+                    column,
+                )
+
+        self._schema = {
+            column: self._schema[column]
+            for column in sorted(self._schema, key=self._column_key)
+        }
+
+    def _column_key(self, column: str) -> tuple[int, int, str]:
+        return self._column_order.get(column, (3, 0, column))
 
     def gen_program(self, program: Program) -> sql.SQL:
         if self._linear:
@@ -233,7 +269,7 @@ class CodeGenerator:
     ) -> sql.SQL:
         outputs = sorted(
             self._dataflow.outputs_of[label],
-            key=lambda variable: variable.identifier,
+            key=lambda variable: self._column_key(variable.identifier),
         )
         cte_columns = [variable.identifier for variable in outputs]
 
