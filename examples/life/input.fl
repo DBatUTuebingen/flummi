@@ -1,16 +1,13 @@
 {
-    DECLARE height, width, iterations : §int§;
     LET height     = §10§,
         width      = §10§,
         iterations = §100§;
 
     -- setup board
-    DECLARE x, y : §int§;
     FORK x = §FROM range({width})§;
     FORK y = §FROM range({height})§;
 
     -- initialize "alive" states
-    DECLARE alive : §boolean§;
     LET alive = §
         ({x}, {y}) = ANY (VALUES
                    ((1,0)),
@@ -21,7 +18,6 @@
 
     LOOP {
         -- "send" a "copy" of the current grid to "rendering"
-        DECLARE flip : §boolean§;
         FORK flip = §VALUES (TRUE), (FALSE)§;
         IF flip THEN BREAK;
 
@@ -29,18 +25,15 @@
         IF §{iterations} = 0§ THEN STOP ELSE LET iterations = §{iterations} - 1§;
 
         -- distribute "alive" state to neighboring cells
-        DECLARE dx, dy : §int§;
         FORK dx = §FROM generate_series(-1, 1)§;
         FORK dy = §FROM generate_series(-1, 1)§;
         LET x = §({width}  + {x} + {dx}) % {width}§,
             y = §({height} + {y} + {dy}) % {height}§;
 
         -- detect state contiaining the orginal "alive" state of current cell
-        DECLARE original : §boolean§;
         LET original = §{dx} = 0 AND {dy} = 0§;
 
         -- count up "living" neighbors
-        DECLARE neighbors : §int§;
         GATHER neighbors = §count(*) FILTER (WHERE {alive} AND NOT {original})§,
                alive     = §any_value({alive}) FILTER (WHERE {original})§
         BY     x, y;
@@ -52,7 +45,6 @@
     };
 
     -- render by collapsing state, first into rows, then into a whole grid
-    DECLARE buffer : §text§;
     GATHER buffer = §string_agg(if({alive}, '#', '.'), '' ORDER BY {x})§ BY y;
     GATHER buffer = §string_agg({buffer}, E'\n' ORDER BY {y})§;
     EMIT buffer;

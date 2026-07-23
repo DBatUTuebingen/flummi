@@ -1,13 +1,4 @@
 {
-  DECLARE cells : §int[]§;
-  DECLARE cell : §int§;
-  DECLARE value : §int§;
-  DECLARE offset : §int§;
-  DECLARE ok : §boolean§;
-  DECLARE done : §boolean§;
-  DECLARE id : §int§;
-  DECLARE result : §struct(id int, cells int[])§;
-
   -- try all sudokus at once
   FORK cells = §
     SELECT cells

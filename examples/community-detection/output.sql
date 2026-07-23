@@ -1,11 +1,11 @@
 WITH RECURSIVE
   "🔄"("#️⃣", "🏷️", "📊.1", "node", "community", "state") AS (
-    (SELECT CAST((0) AS int) AS "#️⃣",
-            CAST(('start.1') AS text) AS "🏷️",
-            CAST((NULL) AS int[]) AS "📊.1",
-            CAST((NULL) AS int) AS "node",
-            CAST((NULL) AS int) AS "community",
-            CAST((NULL) AS int) AS "state")
+    (SELECT CAST((0) AS INTEGER) AS "#️⃣",
+            CAST(('start.1') AS VARCHAR) AS "🏷️",
+            CAST((NULL) AS INTEGER[]) AS "📊.1",
+            CAST((NULL) AS INTEGER) AS "node",
+            CAST((NULL) AS INTEGER) AS "community",
+            CAST((NULL) AS INTEGER) AS "state")
       UNION ALL
     (WITH
        "start.1"("#️⃣", "⚙️") AS (
@@ -17,7 +17,7 @@ WITH RECURSIVE
        "fork.1"("#️⃣", "⚙️", "node") AS (
          SELECT "start.1"."#️⃣" AS "#️⃣",
                 "start.1"."⚙️" AS "⚙️",
-                CAST(("ℚ"."node") AS int) AS "node"
+                CAST(("ℚ"."node") AS INTEGER) AS "node"
          FROM   "start.1",
                 (FROM nodes) AS "ℚ"("node")
        ),
@@ -25,7 +25,7 @@ WITH RECURSIVE
          SELECT "fork.1"."#️⃣" AS "#️⃣",
                 "fork.1"."⚙️" AS "⚙️",
                 "fork.1"."node" AS "node",
-                CAST((("fork.1"."node")) AS int) AS "community"
+                CAST((("fork.1"."node")) AS INTEGER) AS "community"
          FROM   "fork.1"
        ),
        "assignment.2"("#️⃣", "⚙️", "node", "community", "state") AS (
@@ -33,7 +33,7 @@ WITH RECURSIVE
                 "assignment.1"."⚙️" AS "⚙️",
                 "assignment.1"."node" AS "node",
                 "assignment.1"."community" AS "community",
-                CAST((bit_xor(("assignment.1"."community")) OVER ()) AS int) AS "state"
+                CAST((bit_xor(("assignment.1"."community")) OVER ()) AS INTEGER) AS "state"
          FROM   "assignment.1"
        ),
        "start.2"("#️⃣", "⚙️", "node", "community", "state") AS (
@@ -66,14 +66,14 @@ WITH RECURSIVE
                 "merge.1"."node" AS "node",
                 "merge.1"."community" AS "community",
                 "merge.1"."state" AS "state",
-                CAST(("ℚ"."flip") AS boolean) AS "flip"
+                CAST(("ℚ"."flip") AS BOOLEAN) AS "flip"
          FROM   "merge.1",
                 (VALUES (TRUE), (FALSE)) AS "ℚ"("flip")
        ),
        "assignment.3"("#️⃣", "⚙️", "🔍", "node", "community", "state") AS (
          SELECT "fork.2"."#️⃣" AS "#️⃣",
                 "fork.2"."⚙️" AS "⚙️",
-                CAST((("fork.2"."flip")) AS boolean) AS "🔍",
+                CAST((("fork.2"."flip")) AS BOOLEAN) AS "🔍",
                 "fork.2"."node" AS "node",
                 "fork.2"."community" AS "community",
                 "fork.2"."state" AS "state"
@@ -91,7 +91,7 @@ WITH RECURSIVE
        "fork.3"("#️⃣", "⚙️", "node", "community", "state") AS (
          SELECT "where.1"."#️⃣" AS "#️⃣",
                 "where.1"."⚙️" AS "⚙️",
-                CAST(("ℚ"."node") AS int) AS "node",
+                CAST(("ℚ"."node") AS INTEGER) AS "node",
                 "where.1"."community" AS "community",
                 "where.1"."state" AS "state"
          FROM   "where.1",
@@ -103,7 +103,7 @@ WITH RECURSIVE
          SELECT "fork.3"."#️⃣" AS "#️⃣",
                 "fork.3"."⚙️" AS "⚙️",
                 "fork.3"."node" AS "node",
-                CAST((mode(("fork.3"."community") ORDER BY ("fork.3"."community"))) AS int) AS "community",
+                CAST((mode(("fork.3"."community") ORDER BY ("fork.3"."community"))) AS INTEGER) AS "community",
                 "fork.3"."state" AS "state"
          FROM   "fork.3"
          GROUP  BY "fork.3"."#️⃣",
@@ -140,7 +140,7 @@ WITH RECURSIVE
          SELECT "merge.2"."#️⃣" AS "#️⃣",
                 "merge.2"."⚙️" AS "⚙️",
                 "merge.2"."node" AS "node",
-                CAST((min(("merge.2"."community"))) AS int) AS "community",
+                CAST((min(("merge.2"."community"))) AS INTEGER) AS "community",
                 "merge.2"."state" AS "state"
          FROM   "merge.2"
          GROUP  BY "merge.2"."#️⃣",
@@ -149,19 +149,19 @@ WITH RECURSIVE
                    "merge.2"."⚙️"
          HAVING COUNT(*) > 0
        ),
-       "assignment.4"("#️⃣", "⚙️", "node", "community", "old_state", "state") AS (
+       "assignment.4"("#️⃣", "⚙️", "node", "community", "state", "old_state") AS (
          SELECT "gather.2"."#️⃣" AS "#️⃣",
                 "gather.2"."⚙️" AS "⚙️",
                 "gather.2"."node" AS "node",
                 "gather.2"."community" AS "community",
-                CAST((("gather.2"."state")) AS int) AS "old_state",
-                CAST((bit_xor(("gather.2"."community")) OVER ()) AS int) AS "state"
+                CAST((bit_xor(("gather.2"."community")) OVER ()) AS INTEGER) AS "state",
+                CAST((("gather.2"."state")) AS INTEGER) AS "old_state"
          FROM   "gather.2"
        ),
        "assignment.5"("#️⃣", "⚙️", "🔍", "node", "community", "state") AS (
          SELECT "assignment.4"."#️⃣" AS "#️⃣",
                 "assignment.4"."⚙️" AS "⚙️",
-                CAST((("assignment.4"."old_state") = ("assignment.4"."state")) AS boolean) AS "🔍",
+                CAST((("assignment.4"."old_state") = ("assignment.4"."state")) AS BOOLEAN) AS "🔍",
                 "assignment.4"."node" AS "node",
                 "assignment.4"."community" AS "community",
                 "assignment.4"."state" AS "state"
@@ -178,7 +178,7 @@ WITH RECURSIVE
        "gather.3"("#️⃣", "⚙️", "nodes") AS (
          SELECT "where.3"."#️⃣" AS "#️⃣",
                 "where.3"."⚙️" AS "⚙️",
-                CAST((list(("where.3"."node") ORDER BY ("where.3"."node"))) AS int[]) AS "nodes"
+                CAST((list(("where.3"."node") ORDER BY ("where.3"."node"))) AS INTEGER[]) AS "nodes"
          FROM   "where.3"
          GROUP  BY "where.3"."#️⃣",
                    "where.3"."community",
@@ -213,20 +213,20 @@ WITH RECURSIVE
                 "where.4"."state" AS "state"
          FROM   "where.4"
        )
-     (SELECT CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.1"."📊.1") AS int[]) AS "📊.1",
-             CAST((NULL) AS int) AS "node",
-             CAST((NULL) AS int) AS "community",
-             CAST((NULL) AS int) AS "state"
+     (SELECT CAST(("emit.1"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.1"."📊.1") AS INTEGER[]) AS "📊.1",
+             CAST((NULL) AS INTEGER) AS "node",
+             CAST((NULL) AS INTEGER) AS "community",
+             CAST((NULL) AS INTEGER) AS "state"
       FROM   "emit.1")
        UNION ALL
-     (SELECT CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.1"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS int[]) AS "📊.1",
-             CAST(("jump.1"."node") AS int) AS "node",
-             CAST(("jump.1"."community") AS int) AS "community",
-             CAST(("jump.1"."state") AS int) AS "state"
+     (SELECT CAST(("jump.1"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.1"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS INTEGER[]) AS "📊.1",
+             CAST(("jump.1"."node") AS INTEGER) AS "node",
+             CAST(("jump.1"."community") AS INTEGER) AS "community",
+             CAST(("jump.1"."state") AS INTEGER) AS "state"
       FROM   "jump.1"))
   )
 SELECT "🔄"."📊.1"

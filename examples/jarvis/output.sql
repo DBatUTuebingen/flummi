@@ -1,10 +1,10 @@
 WITH RECURSIVE
   "🔄"("#️⃣", "🏷️", "📊.1", "p0", "p") AS (
-    (SELECT CAST((0) AS int) AS "#️⃣",
-            CAST(('start.1') AS text) AS "🏷️",
-            CAST((NULL) AS point) AS "📊.1",
-            CAST((NULL) AS point) AS "p0",
-            CAST((NULL) AS point) AS "p")
+    (SELECT CAST((0) AS INTEGER) AS "#️⃣",
+            CAST(('start.1') AS VARCHAR) AS "🏷️",
+            CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+            CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "p0",
+            CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "p")
       UNION ALL
     (WITH
        "start.1"("#️⃣", "⚙️") AS (
@@ -16,14 +16,14 @@ WITH RECURSIVE
        "assignment.1"("#️⃣", "⚙️", "p0") AS (
          SELECT "start.1"."#️⃣" AS "#️⃣",
                 "start.1"."⚙️" AS "⚙️",
-                CAST((SELECT arg_min(p, p.x) FROM points AS p) AS point) AS "p0"
+                CAST((SELECT arg_min(p, p.x) FROM points AS p) AS STRUCT(x DOUBLE, y DOUBLE)) AS "p0"
          FROM   "start.1"
        ),
        "assignment.2"("#️⃣", "⚙️", "p0", "p") AS (
          SELECT "assignment.1"."#️⃣" AS "#️⃣",
                 "assignment.1"."⚙️" AS "⚙️",
                 "assignment.1"."p0" AS "p0",
-                CAST((("assignment.1"."p0")) AS point) AS "p"
+                CAST((("assignment.1"."p0")) AS STRUCT(x DOUBLE, y DOUBLE)) AS "p"
          FROM   "assignment.1"
        ),
        "start.2"("#️⃣", "⚙️", "p0", "p") AS (
@@ -66,13 +66,13 @@ WITH RECURSIVE
                                 FROM  points AS p2
                                 WHERE (("emit.1"."p").x - p2.x) * (p1.y - p2.y) -
                                       (("emit.1"."p").y - p2.y) * (p1.x - p2.x) > 0
-                              )) AS point) AS "p"
+                              )) AS STRUCT(x DOUBLE, y DOUBLE)) AS "p"
          FROM   "emit.1"
        ),
        "assignment.4"("#️⃣", "⚙️", "🔍", "p0", "p") AS (
          SELECT "assignment.3"."#️⃣" AS "#️⃣",
                 "assignment.3"."⚙️" AS "⚙️",
-                CAST((("assignment.3"."p") = ("assignment.3"."p0")) AS boolean) AS "🔍",
+                CAST((("assignment.3"."p") = ("assignment.3"."p0")) AS BOOLEAN) AS "🔍",
                 "assignment.3"."p0" AS "p0",
                 "assignment.3"."p" AS "p"
          FROM   "assignment.3"
@@ -102,18 +102,18 @@ WITH RECURSIVE
                 "where.2"."p" AS "p"
          FROM   "where.2"
        )
-     (SELECT CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.1"."📊.1") AS point) AS "📊.1",
-             CAST((NULL) AS point) AS "p0",
-             CAST((NULL) AS point) AS "p"
+     (SELECT CAST(("emit.1"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.1"."📊.1") AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "p0",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "p"
       FROM   "emit.1")
        UNION ALL
-     (SELECT CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.1"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS point) AS "📊.1",
-             CAST(("jump.1"."p0") AS point) AS "p0",
-             CAST(("jump.1"."p") AS point) AS "p"
+     (SELECT CAST(("jump.1"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.1"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+             CAST(("jump.1"."p0") AS STRUCT(x DOUBLE, y DOUBLE)) AS "p0",
+             CAST(("jump.1"."p") AS STRUCT(x DOUBLE, y DOUBLE)) AS "p"
       FROM   "jump.1"))
   )
 SELECT "🔄"."📊.1"

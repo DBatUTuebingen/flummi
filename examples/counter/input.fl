@@ -1,6 +1,4 @@
 {
-  DECLARE v : §int§;
-
   LET v = §0§;
   LOOP {
     EMIT v;

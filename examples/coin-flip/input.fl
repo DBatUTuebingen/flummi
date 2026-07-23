@@ -1,8 +1,4 @@
 {
-  DECLARE s : §text§;
-  DECLARE i : §int§;
-  DECLARE n : §int§;
-
   LET n = §10§;
 
   FORK i = §SELECT * FROM range({n})§;

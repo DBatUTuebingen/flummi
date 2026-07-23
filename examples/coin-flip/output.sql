@@ -6,21 +6,21 @@ WITH
   "assignment.1"("#️⃣", "⚙️", "n") AS (
     SELECT "start.1"."#️⃣" AS "#️⃣",
            "start.1"."⚙️" AS "⚙️",
-           CAST((10) AS int) AS "n"
+           CAST((10) AS INTEGER) AS "n"
     FROM   "start.1"
   ),
-  "fork.1"("#️⃣", "⚙️", "i", "n") AS (
+  "fork.1"("#️⃣", "⚙️", "n", "i") AS (
     SELECT "assignment.1"."#️⃣" AS "#️⃣",
            "assignment.1"."⚙️" AS "⚙️",
-           CAST(("ℚ"."i") AS int) AS "i",
-           "assignment.1"."n" AS "n"
+           "assignment.1"."n" AS "n",
+           CAST(("ℚ"."i") AS BIGINT) AS "i"
     FROM   "assignment.1",
            LATERAL (SELECT * FROM range(("assignment.1"."n"))) AS "ℚ"("i")
   ),
   "assignment.2"("#️⃣", "⚙️", "🔍", "n") AS (
     SELECT "fork.1"."#️⃣" AS "#️⃣",
            "fork.1"."⚙️" AS "⚙️",
-           CAST((random() >= 0.5) AS boolean) AS "🔍",
+           CAST((random() >= 0.5) AS BOOLEAN) AS "🔍",
            "fork.1"."n" AS "n"
     FROM   "fork.1"
   ),
@@ -31,11 +31,11 @@ WITH
     FROM   "assignment.2"
     WHERE  "assignment.2"."🔍" IS NOT DISTINCT FROM TRUE
   ),
-  "assignment.3"("#️⃣", "⚙️", "s", "n") AS (
+  "assignment.3"("#️⃣", "⚙️", "n", "s") AS (
     SELECT "where.1"."#️⃣" AS "#️⃣",
            "where.1"."⚙️" AS "⚙️",
-           CAST(('tails') AS text) AS "s",
-           "where.1"."n" AS "n"
+           "where.1"."n" AS "n",
+           CAST(('tails') AS VARCHAR) AS "s"
     FROM   "where.1"
   ),
   "where.2"("#️⃣", "⚙️", "n") AS (
@@ -45,31 +45,31 @@ WITH
     FROM   "assignment.2"
     WHERE  "assignment.2"."🔍" IS DISTINCT FROM TRUE
   ),
-  "assignment.4"("#️⃣", "⚙️", "s", "n") AS (
+  "assignment.4"("#️⃣", "⚙️", "n", "s") AS (
     SELECT "where.2"."#️⃣" AS "#️⃣",
            "where.2"."⚙️" AS "⚙️",
-           CAST(('heads') AS text) AS "s",
-           "where.2"."n" AS "n"
+           "where.2"."n" AS "n",
+           CAST(('heads') AS VARCHAR) AS "s"
     FROM   "where.2"
   ),
-  "merge.1"("#️⃣", "⚙️", "s", "n") AS (
+  "merge.1"("#️⃣", "⚙️", "n", "s") AS (
     (SELECT "assignment.3"."#️⃣" AS "#️⃣",
             "assignment.3"."⚙️" AS "⚙️",
-            "assignment.3"."s" AS "s",
-            "assignment.3"."n" AS "n"
+            "assignment.3"."n" AS "n",
+            "assignment.3"."s" AS "s"
      FROM   "assignment.3")
       UNION ALL
     (SELECT "assignment.4"."#️⃣" AS "#️⃣",
             "assignment.4"."⚙️" AS "⚙️",
-            "assignment.4"."s" AS "s",
-            "assignment.4"."n" AS "n"
+            "assignment.4"."n" AS "n",
+            "assignment.4"."s" AS "s"
      FROM   "assignment.4")
   ),
-  "gather.1"("#️⃣", "⚙️", "i", "n") AS (
+  "gather.1"("#️⃣", "⚙️", "n", "i") AS (
     SELECT "merge.1"."#️⃣" AS "#️⃣",
            "merge.1"."⚙️" AS "⚙️",
-           CAST((count(*)) AS int) AS "i",
-           "merge.1"."n" AS "n"
+           "merge.1"."n" AS "n",
+           CAST((count(*)) AS BIGINT) AS "i"
     FROM   "merge.1"
     GROUP  BY "merge.1"."#️⃣",
               "merge.1"."n",
@@ -80,13 +80,13 @@ WITH
   "assignment.5"("#️⃣", "⚙️", "i") AS (
     SELECT "gather.1"."#️⃣" AS "#️⃣",
            "gather.1"."⚙️" AS "⚙️",
-           CAST((("gather.1"."i") / (("gather.1"."n") :: float)) AS int) AS "i"
+           CAST((("gather.1"."i") / (("gather.1"."n") :: float)) AS BIGINT) AS "i"
     FROM   "gather.1"
   ),
   "gather.2"("#️⃣", "⚙️", "i") AS (
     SELECT "assignment.5"."#️⃣" AS "#️⃣",
            "assignment.5"."⚙️" AS "⚙️",
-           CAST((avg(("assignment.5"."i"))) AS int) AS "i"
+           CAST((avg(("assignment.5"."i"))) AS BIGINT) AS "i"
     FROM   "assignment.5"
     GROUP  BY "assignment.5"."#️⃣",
               "assignment.5"."⚙️"

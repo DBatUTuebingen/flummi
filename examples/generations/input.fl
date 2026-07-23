@@ -1,28 +1,21 @@
 {
-    DECLARE buffer : §text§;
-
-    DECLARE height, width, iterations, max_age : §int§;
     LET height     = §50§,
         width      = §50§,
         iterations = §50§,
         max_age    = §3§;
 
-    DECLARE birth_cond, survive_cond : §int[]§;
     LET birth_cond   = §[2]§,
         survive_cond = §[]§;
 
     -- setup board
-    DECLARE x, y : §int§;
     FORK x = §FROM range({width})§;
     FORK y = §FROM range({height})§;
 
     -- initialize "age" states
-    DECLARE age : §int§;
-    LET age = §random() < 0.4§;
+    LET age = §(random() < 0.4) :: int§;
 
     LOOP {
         -- "send" a "copy" of the current grid to "rendering"
-        DECLARE flip : §boolean§;
         FORK flip = §VALUES (TRUE), (FALSE)§;
         IF flip THEN BREAK;
 
@@ -30,18 +23,15 @@
         IF §{iterations} = 0§ THEN STOP ELSE LET iterations = §{iterations} - 1§;
 
         -- distribute "age" states to neighboring cells
-        DECLARE dx, dy : §int§;
         FORK dy = §FROM generate_series(-1, +1)§;
         FORK dx = §FROM generate_series(-1, +1)§;
         LET x = §({width}  + ({x} + {dx}) % {width} ) % {width}§,
             y = §({height} + ({y} + {dy}) % {height}) % {height}§;
 
         -- detect state contiaining the orginal "alive" state of current cell
-        DECLARE original : §boolean§;
         LET original = §{dx} = 0 AND {dy} = 0§;
 
         -- count up "living" neighbors
-        DECLARE neighbors : §int§;
         GATHER neighbors = §countif({age} = 1) FILTER (WHERE NOT {original})§,
                age       = §any_value({age})   FILTER (WHERE     {original})§
         BY     x, y;

@@ -1,10 +1,10 @@
 WITH RECURSIVE
   "🔄"("#️⃣", "🏷️", "📊.1", "cells", "empty_cells") AS (
-    (SELECT CAST((0) AS int) AS "#️⃣",
-            CAST(('start.1') AS text) AS "🏷️",
-            CAST((NULL) AS int[]) AS "📊.1",
-            CAST((NULL) AS int[]) AS "cells",
-            CAST((NULL) AS int[]) AS "empty_cells")
+    (SELECT CAST((0) AS INTEGER) AS "#️⃣",
+            CAST(('start.1') AS VARCHAR) AS "🏷️",
+            CAST((NULL) AS INTEGER[]) AS "📊.1",
+            CAST((NULL) AS INTEGER[]) AS "cells",
+            CAST((NULL) AS BIGINT[]) AS "empty_cells")
       UNION ALL
     (WITH
        "start.1"("#️⃣", "⚙️") AS (
@@ -18,7 +18,7 @@ WITH RECURSIVE
                 "start.1"."⚙️" AS "⚙️",
                 CAST((SELECT cells
                        FROM   sudoku
-                       LIMIT  1) AS int[]) AS "cells"
+                       LIMIT  1) AS INTEGER[]) AS "cells"
          FROM   "start.1"
        ),
        "assignment.2"("#️⃣", "⚙️", "cells", "empty_cells") AS (
@@ -26,7 +26,7 @@ WITH RECURSIVE
                 "assignment.1"."⚙️" AS "⚙️",
                 "assignment.1"."cells" AS "cells",
                 CAST((SELECT list(cell - 1) FILTER (value = 0)
-                       FROM   unnest(("assignment.1"."cells")) WITH ORDINALITY AS _(value, cell)) AS int[]) AS "empty_cells"
+                       FROM   unnest(("assignment.1"."cells")) WITH ORDINALITY AS _(value, cell)) AS BIGINT[]) AS "empty_cells"
          FROM   "assignment.1"
        ),
        "start.2"("#️⃣", "⚙️", "cells", "empty_cells") AS (
@@ -55,7 +55,7 @@ WITH RECURSIVE
                 "merge.1"."⚙️" AS "⚙️",
                 "merge.1"."cells" AS "cells",
                 "merge.1"."empty_cells" AS "empty_cells",
-                CAST(("ℚ"."idx") AS int) AS "idx"
+                CAST(("ℚ"."idx") AS BIGINT) AS "idx"
          FROM   "merge.1",
                 LATERAL (FROM unnest(("merge.1"."empty_cells"))) AS "ℚ"("idx")
        ),
@@ -65,14 +65,14 @@ WITH RECURSIVE
                 "fork.1"."cells" AS "cells",
                 "fork.1"."empty_cells" AS "empty_cells",
                 "fork.1"."idx" AS "idx",
-                CAST((("fork.1"."empty_cells")[("fork.1"."idx")]) AS int) AS "cell"
+                CAST((("fork.1"."empty_cells")[("fork.1"."idx")]) AS BIGINT) AS "cell"
          FROM   "fork.1"
        ),
        "assignment.4"("#️⃣", "⚙️", "cells", "empty_cells", "cell") AS (
          SELECT "assignment.3"."#️⃣" AS "#️⃣",
                 "assignment.3"."⚙️" AS "⚙️",
                 "assignment.3"."cells" AS "cells",
-                CAST((("assignment.3"."empty_cells")[:("assignment.3"."idx")] || ("assignment.3"."empty_cells")[("assignment.3"."idx")+2:]) AS int[]) AS "empty_cells",
+                CAST((("assignment.3"."empty_cells")[:("assignment.3"."idx")] || ("assignment.3"."empty_cells")[("assignment.3"."idx")+2:]) AS BIGINT[]) AS "empty_cells",
                 "assignment.3"."cell" AS "cell"
          FROM   "assignment.3"
        ),
@@ -82,7 +82,7 @@ WITH RECURSIVE
                 "assignment.4"."cells" AS "cells",
                 "assignment.4"."empty_cells" AS "empty_cells",
                 "assignment.4"."cell" AS "cell",
-                CAST(("ℚ"."value") AS int) AS "value"
+                CAST(("ℚ"."value") AS BIGINT) AS "value"
          FROM   "assignment.4",
                 (FROM generate_series(1, 9)) AS "ℚ"("value")
        ),
@@ -98,13 +98,13 @@ WITH RECURSIVE
                          WHERE ("fork.2"."value") IN (("fork.2"."cells")[(("fork.2"."cell") // 9) * 9                      + o                 ],
                                        ("fork.2"."cells")[("fork.2"."cell") % 9                             + (o-1)*9 + 1       ],
                                        ("fork.2"."cells")[((("fork.2"."cell")//3) % 3) * 3 + (("fork.2"."cell")//27) * 27 + o + ((o-1)//3) * 6])
-                       )) AS boolean) AS "ok"
+                       )) AS BOOLEAN) AS "ok"
          FROM   "fork.2"
        ),
        "assignment.6"("#️⃣", "⚙️", "🔍", "cells", "empty_cells", "cell", "value") AS (
          SELECT "assignment.5"."#️⃣" AS "#️⃣",
                 "assignment.5"."⚙️" AS "⚙️",
-                CAST((("assignment.5"."ok")) AS boolean) AS "🔍",
+                CAST((("assignment.5"."ok")) AS BOOLEAN) AS "🔍",
                 "assignment.5"."cells" AS "cells",
                 "assignment.5"."empty_cells" AS "empty_cells",
                 "assignment.5"."cell" AS "cell",
@@ -124,14 +124,14 @@ WITH RECURSIVE
        "assignment.7"("#️⃣", "⚙️", "cells", "empty_cells") AS (
          SELECT "where.1"."#️⃣" AS "#️⃣",
                 "where.1"."⚙️" AS "⚙️",
-                CAST((concat(("where.1"."cells")[:("where.1"."cell")], [("where.1"."value")], ("where.1"."cells")[("where.1"."cell")+2:])) AS int[]) AS "cells",
+                CAST((concat(("where.1"."cells")[:("where.1"."cell")], [("where.1"."value")], ("where.1"."cells")[("where.1"."cell")+2:])) AS INTEGER[]) AS "cells",
                 "where.1"."empty_cells" AS "empty_cells"
          FROM   "where.1"
        ),
        "assignment.8"("#️⃣", "⚙️", "🔍", "cells", "empty_cells") AS (
          SELECT "assignment.7"."#️⃣" AS "#️⃣",
                 "assignment.7"."⚙️" AS "⚙️",
-                CAST((length(("assignment.7"."empty_cells")) = 0) AS boolean) AS "🔍",
+                CAST((length(("assignment.7"."empty_cells")) = 0) AS BOOLEAN) AS "🔍",
                 "assignment.7"."cells" AS "cells",
                 "assignment.7"."empty_cells" AS "empty_cells"
          FROM   "assignment.7"
@@ -179,18 +179,18 @@ WITH RECURSIVE
                 "where.4"."empty_cells" AS "empty_cells"
          FROM   "where.4"
        )
-     (SELECT CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.1"."📊.1") AS int[]) AS "📊.1",
-             CAST((NULL) AS int[]) AS "cells",
-             CAST((NULL) AS int[]) AS "empty_cells"
+     (SELECT CAST(("emit.1"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.1"."📊.1") AS INTEGER[]) AS "📊.1",
+             CAST((NULL) AS INTEGER[]) AS "cells",
+             CAST((NULL) AS BIGINT[]) AS "empty_cells"
       FROM   "emit.1")
        UNION ALL
-     (SELECT CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.1"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS int[]) AS "📊.1",
-             CAST(("jump.1"."cells") AS int[]) AS "cells",
-             CAST(("jump.1"."empty_cells") AS int[]) AS "empty_cells"
+     (SELECT CAST(("jump.1"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.1"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS INTEGER[]) AS "📊.1",
+             CAST(("jump.1"."cells") AS INTEGER[]) AS "cells",
+             CAST(("jump.1"."empty_cells") AS BIGINT[]) AS "empty_cells"
       FROM   "jump.1"))
   )
 SELECT "🔄"."📊.1"

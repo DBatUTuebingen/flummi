@@ -1,9 +1,9 @@
 WITH RECURSIVE
   "🔄"("#️⃣", "🏷️", "📊.1", "v") AS (
-    (SELECT CAST((0) AS int) AS "#️⃣",
-            CAST(('start.1') AS text) AS "🏷️",
-            CAST((NULL) AS int) AS "📊.1",
-            CAST((NULL) AS int) AS "v")
+    (SELECT CAST((0) AS INTEGER) AS "#️⃣",
+            CAST(('start.1') AS VARCHAR) AS "🏷️",
+            CAST((NULL) AS INTEGER) AS "📊.1",
+            CAST((NULL) AS INTEGER) AS "v")
       UNION ALL
     (WITH
        "start.1"("#️⃣", "⚙️") AS (
@@ -15,7 +15,7 @@ WITH RECURSIVE
        "assignment.1"("#️⃣", "⚙️", "v") AS (
          SELECT "start.1"."#️⃣" AS "#️⃣",
                 "start.1"."⚙️" AS "⚙️",
-                CAST((0) AS int) AS "v"
+                CAST((0) AS INTEGER) AS "v"
          FROM   "start.1"
        ),
        "start.2"("#️⃣", "⚙️", "v") AS (
@@ -46,13 +46,13 @@ WITH RECURSIVE
        "assignment.2"("#️⃣", "⚙️", "v") AS (
          SELECT "emit.1"."#️⃣" AS "#️⃣",
                 "emit.1"."⚙️" AS "⚙️",
-                CAST((("emit.1"."v") + 1) AS int) AS "v"
+                CAST((("emit.1"."v") + 1) AS INTEGER) AS "v"
          FROM   "emit.1"
        ),
        "assignment.3"("#️⃣", "⚙️", "🔍", "v") AS (
          SELECT "assignment.2"."#️⃣" AS "#️⃣",
                 "assignment.2"."⚙️" AS "⚙️",
-                CAST((("assignment.2"."v") >= 10) AS boolean) AS "🔍",
+                CAST((("assignment.2"."v") >= 10) AS BOOLEAN) AS "🔍",
                 "assignment.2"."v" AS "v"
          FROM   "assignment.2"
        ),
@@ -79,16 +79,16 @@ WITH RECURSIVE
                 "where.2"."v" AS "v"
          FROM   "where.2"
        )
-     (SELECT CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.1"."📊.1") AS int) AS "📊.1",
-             CAST((NULL) AS int) AS "v"
+     (SELECT CAST(("emit.1"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.1"."📊.1") AS INTEGER) AS "📊.1",
+             CAST((NULL) AS INTEGER) AS "v"
       FROM   "emit.1")
        UNION ALL
-     (SELECT CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.1"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS int) AS "📊.1",
-             CAST(("jump.1"."v") AS int) AS "v"
+     (SELECT CAST(("jump.1"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.1"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS INTEGER) AS "📊.1",
+             CAST(("jump.1"."v") AS INTEGER) AS "v"
       FROM   "jump.1"))
   )
 SELECT "🔄"."📊.1"

@@ -1,12 +1,4 @@
 {
-  DECLARE cells : §int[]§;
-  DECLARE empty_cells : §int[]§;
-  DECLARE idx : §int§;
-  DECLARE cell : §int§;
-  DECLARE value : §int§;
-  DECLARE ok : §boolean§;
-  DECLARE done : §boolean§;
-
   LET cells = §
     SELECT cells
     FROM   sudoku

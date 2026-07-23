@@ -1,17 +1,17 @@
 WITH RECURSIVE
   "🔄"("#️⃣", "🏷️", "📊.1", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
-    (SELECT CAST((0) AS int) AS "#️⃣",
-            CAST(('start.1') AS text) AS "🏷️",
-            CAST((NULL) AS text) AS "📊.1",
-            CAST((NULL) AS int) AS "height",
-            CAST((NULL) AS int) AS "width",
-            CAST((NULL) AS int) AS "iterations",
-            CAST((NULL) AS int) AS "max_age",
-            CAST((NULL) AS int[]) AS "birth_cond",
-            CAST((NULL) AS int[]) AS "survive_cond",
-            CAST((NULL) AS int) AS "x",
-            CAST((NULL) AS int) AS "y",
-            CAST((NULL) AS int) AS "age")
+    (SELECT CAST((0) AS INTEGER) AS "#️⃣",
+            CAST(('start.1') AS VARCHAR) AS "🏷️",
+            CAST((NULL) AS VARCHAR) AS "📊.1",
+            CAST((NULL) AS INTEGER) AS "height",
+            CAST((NULL) AS INTEGER) AS "width",
+            CAST((NULL) AS INTEGER) AS "iterations",
+            CAST((NULL) AS INTEGER) AS "max_age",
+            CAST((NULL) AS INTEGER[]) AS "birth_cond",
+            CAST((NULL) AS "NULL"[]) AS "survive_cond",
+            CAST((NULL) AS BIGINT) AS "x",
+            CAST((NULL) AS BIGINT) AS "y",
+            CAST((NULL) AS INTEGER) AS "age")
       UNION ALL
     (WITH
        "start.1"("#️⃣", "⚙️") AS (
@@ -23,10 +23,10 @@ WITH RECURSIVE
        "assignment.1"("#️⃣", "⚙️", "height", "width", "iterations", "max_age") AS (
          SELECT "start.1"."#️⃣" AS "#️⃣",
                 "start.1"."⚙️" AS "⚙️",
-                CAST((50) AS int) AS "height",
-                CAST((50) AS int) AS "width",
-                CAST((50) AS int) AS "iterations",
-                CAST((3) AS int) AS "max_age"
+                CAST((50) AS INTEGER) AS "height",
+                CAST((50) AS INTEGER) AS "width",
+                CAST((50) AS INTEGER) AS "iterations",
+                CAST((3) AS INTEGER) AS "max_age"
          FROM   "start.1"
        ),
        "assignment.2"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond") AS (
@@ -36,8 +36,8 @@ WITH RECURSIVE
                 "assignment.1"."width" AS "width",
                 "assignment.1"."iterations" AS "iterations",
                 "assignment.1"."max_age" AS "max_age",
-                CAST(([2]) AS int[]) AS "birth_cond",
-                CAST(([]) AS int[]) AS "survive_cond"
+                CAST(([2]) AS INTEGER[]) AS "birth_cond",
+                CAST(([]) AS "NULL"[]) AS "survive_cond"
          FROM   "assignment.1"
        ),
        "fork.1"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x") AS (
@@ -49,7 +49,7 @@ WITH RECURSIVE
                 "assignment.2"."max_age" AS "max_age",
                 "assignment.2"."birth_cond" AS "birth_cond",
                 "assignment.2"."survive_cond" AS "survive_cond",
-                CAST(("ℚ"."x") AS int) AS "x"
+                CAST(("ℚ"."x") AS BIGINT) AS "x"
          FROM   "assignment.2",
                 LATERAL (FROM range(("assignment.2"."width"))) AS "ℚ"("x")
        ),
@@ -63,7 +63,7 @@ WITH RECURSIVE
                 "fork.1"."birth_cond" AS "birth_cond",
                 "fork.1"."survive_cond" AS "survive_cond",
                 "fork.1"."x" AS "x",
-                CAST(("ℚ"."y") AS int) AS "y"
+                CAST(("ℚ"."y") AS BIGINT) AS "y"
          FROM   "fork.1",
                 LATERAL (FROM range(("fork.1"."height"))) AS "ℚ"("y")
        ),
@@ -78,7 +78,7 @@ WITH RECURSIVE
                 "fork.2"."survive_cond" AS "survive_cond",
                 "fork.2"."x" AS "x",
                 "fork.2"."y" AS "y",
-                CAST((random() < 0.4) AS int) AS "age"
+                CAST(((random() < 0.4) :: int) AS INTEGER) AS "age"
          FROM   "fork.2"
        ),
        "start.2"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
@@ -135,14 +135,14 @@ WITH RECURSIVE
                 "merge.1"."x" AS "x",
                 "merge.1"."y" AS "y",
                 "merge.1"."age" AS "age",
-                CAST(("ℚ"."flip") AS boolean) AS "flip"
+                CAST(("ℚ"."flip") AS BOOLEAN) AS "flip"
          FROM   "merge.1",
                 (VALUES (TRUE), (FALSE)) AS "ℚ"("flip")
        ),
        "assignment.4"("#️⃣", "⚙️", "🔍", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
          SELECT "fork.3"."#️⃣" AS "#️⃣",
                 "fork.3"."⚙️" AS "⚙️",
-                CAST((("fork.3"."flip")) AS boolean) AS "🔍",
+                CAST((("fork.3"."flip")) AS BOOLEAN) AS "🔍",
                 "fork.3"."height" AS "height",
                 "fork.3"."width" AS "width",
                 "fork.3"."iterations" AS "iterations",
@@ -165,13 +165,13 @@ WITH RECURSIVE
          FROM   "assignment.4"
          WHERE  "assignment.4"."🔍" IS NOT DISTINCT FROM TRUE
        ),
-       "gather.2"("#️⃣", "⚙️", "buffer", "width", "iterations", "y") AS (
+       "gather.2"("#️⃣", "⚙️", "width", "iterations", "y", "buffer") AS (
          SELECT "where.1"."#️⃣" AS "#️⃣",
                 "where.1"."⚙️" AS "⚙️",
-                CAST((string_agg([' ', '#', '*'][("where.1"."age") + 1], '' ORDER BY ("where.1"."x"))) AS text) AS "buffer",
                 "where.1"."width" AS "width",
                 "where.1"."iterations" AS "iterations",
-                "where.1"."y" AS "y"
+                "where.1"."y" AS "y",
+                CAST((string_agg([' ', '#', '*'][("where.1"."age") + 1], '' ORDER BY ("where.1"."x"))) AS VARCHAR) AS "buffer"
          FROM   "where.1"
          GROUP  BY "where.1"."#️⃣",
                    "where.1"."iterations",
@@ -180,12 +180,12 @@ WITH RECURSIVE
                    "where.1"."⚙️"
          HAVING COUNT(*) > 0
        ),
-       "gather.3"("#️⃣", "⚙️", "buffer", "width", "iterations") AS (
+       "gather.3"("#️⃣", "⚙️", "width", "iterations", "buffer") AS (
          SELECT "gather.2"."#️⃣" AS "#️⃣",
                 "gather.2"."⚙️" AS "⚙️",
-                CAST((string_agg(("gather.2"."buffer"), E'\n' ORDER BY ("gather.2"."y"))) AS text) AS "buffer",
                 "gather.2"."width" AS "width",
-                "gather.2"."iterations" AS "iterations"
+                "gather.2"."iterations" AS "iterations",
+                CAST((string_agg(("gather.2"."buffer"), E'\n' ORDER BY ("gather.2"."y"))) AS VARCHAR) AS "buffer"
          FROM   "gather.2"
          GROUP  BY "gather.2"."#️⃣",
                    "gather.2"."iterations",
@@ -201,17 +201,17 @@ WITH RECURSIVE
                 "gather.3"."iterations" AS "iterations"
          FROM   "gather.3"
        ),
-       "assignment.16"("#️⃣", "⚙️", "buffer", "width") AS (
+       "assignment.16"("#️⃣", "⚙️", "width", "buffer") AS (
          SELECT "emit.1"."#️⃣" AS "#️⃣",
                 "emit.1"."⚙️" AS "⚙️",
-                CAST((("emit.1"."iterations")) AS text) AS "buffer",
-                "emit.1"."width" AS "width"
+                "emit.1"."width" AS "width",
+                CAST((("emit.1"."iterations")) AS VARCHAR) AS "buffer"
          FROM   "emit.1"
        ),
        "assignment.17"("#️⃣", "⚙️", "buffer") AS (
          SELECT "assignment.16"."#️⃣" AS "#️⃣",
                 "assignment.16"."⚙️" AS "⚙️",
-                CAST((("assignment.16"."buffer") || ' ' || repeat('-.', (("assignment.16"."width") - length(("assignment.16"."buffer") :: text) - 1) // 2)) AS text) AS "buffer"
+                CAST((("assignment.16"."buffer") || ' ' || repeat('-.', (("assignment.16"."width") - length(("assignment.16"."buffer") :: text) - 1) // 2)) AS VARCHAR) AS "buffer"
          FROM   "assignment.16"
        ),
        "emit.2"("#️⃣", "⚙️", "📊.1") AS (
@@ -243,7 +243,7 @@ WITH RECURSIVE
        "assignment.5"("#️⃣", "⚙️", "🔍", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
          SELECT "where.2"."#️⃣" AS "#️⃣",
                 "where.2"."⚙️" AS "⚙️",
-                CAST((("where.2"."iterations") = 0) AS boolean) AS "🔍",
+                CAST((("where.2"."iterations") = 0) AS BOOLEAN) AS "🔍",
                 "where.2"."height" AS "height",
                 "where.2"."width" AS "width",
                 "where.2"."iterations" AS "iterations",
@@ -285,7 +285,7 @@ WITH RECURSIVE
                 "where.4"."⚙️" AS "⚙️",
                 "where.4"."height" AS "height",
                 "where.4"."width" AS "width",
-                CAST((("where.4"."iterations") - 1) AS int) AS "iterations",
+                CAST((("where.4"."iterations") - 1) AS INTEGER) AS "iterations",
                 "where.4"."max_age" AS "max_age",
                 "where.4"."birth_cond" AS "birth_cond",
                 "where.4"."survive_cond" AS "survive_cond",
@@ -306,11 +306,11 @@ WITH RECURSIVE
                 "assignment.6"."x" AS "x",
                 "assignment.6"."y" AS "y",
                 "assignment.6"."age" AS "age",
-                CAST(("ℚ"."dy") AS int) AS "dy"
+                CAST(("ℚ"."dy") AS BIGINT) AS "dy"
          FROM   "assignment.6",
                 (FROM generate_series(-1, +1)) AS "ℚ"("dy")
        ),
-       "fork.5"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age", "dx", "dy") AS (
+       "fork.5"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age", "dy", "dx") AS (
          SELECT "fork.4"."#️⃣" AS "#️⃣",
                 "fork.4"."⚙️" AS "⚙️",
                 "fork.4"."height" AS "height",
@@ -322,12 +322,12 @@ WITH RECURSIVE
                 "fork.4"."x" AS "x",
                 "fork.4"."y" AS "y",
                 "fork.4"."age" AS "age",
-                CAST(("ℚ"."dx") AS int) AS "dx",
-                "fork.4"."dy" AS "dy"
+                "fork.4"."dy" AS "dy",
+                CAST(("ℚ"."dx") AS BIGINT) AS "dx"
          FROM   "fork.4",
                 (FROM generate_series(-1, +1)) AS "ℚ"("dx")
        ),
-       "assignment.7"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age", "dx", "dy") AS (
+       "assignment.7"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age", "dy", "dx") AS (
          SELECT "fork.5"."#️⃣" AS "#️⃣",
                 "fork.5"."⚙️" AS "⚙️",
                 "fork.5"."height" AS "height",
@@ -336,11 +336,11 @@ WITH RECURSIVE
                 "fork.5"."max_age" AS "max_age",
                 "fork.5"."birth_cond" AS "birth_cond",
                 "fork.5"."survive_cond" AS "survive_cond",
-                CAST(((("fork.5"."width")  + (("fork.5"."x") + ("fork.5"."dx")) % ("fork.5"."width") ) % ("fork.5"."width")) AS int) AS "x",
-                CAST(((("fork.5"."height") + (("fork.5"."y") + ("fork.5"."dy")) % ("fork.5"."height")) % ("fork.5"."height")) AS int) AS "y",
+                CAST(((("fork.5"."width")  + (("fork.5"."x") + ("fork.5"."dx")) % ("fork.5"."width") ) % ("fork.5"."width")) AS BIGINT) AS "x",
+                CAST(((("fork.5"."height") + (("fork.5"."y") + ("fork.5"."dy")) % ("fork.5"."height")) % ("fork.5"."height")) AS BIGINT) AS "y",
                 "fork.5"."age" AS "age",
-                "fork.5"."dx" AS "dx",
-                "fork.5"."dy" AS "dy"
+                "fork.5"."dy" AS "dy",
+                "fork.5"."dx" AS "dx"
          FROM   "fork.5"
        ),
        "assignment.8"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age", "original") AS (
@@ -355,7 +355,7 @@ WITH RECURSIVE
                 "assignment.7"."x" AS "x",
                 "assignment.7"."y" AS "y",
                 "assignment.7"."age" AS "age",
-                CAST((("assignment.7"."dx") = 0 AND ("assignment.7"."dy") = 0) AS boolean) AS "original"
+                CAST((("assignment.7"."dx") = 0 AND ("assignment.7"."dy") = 0) AS BOOLEAN) AS "original"
          FROM   "assignment.7"
        ),
        "gather.1"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age", "neighbors") AS (
@@ -369,8 +369,8 @@ WITH RECURSIVE
                 "assignment.8"."survive_cond" AS "survive_cond",
                 "assignment.8"."x" AS "x",
                 "assignment.8"."y" AS "y",
-                CAST((any_value(("assignment.8"."age"))   FILTER (WHERE     ("assignment.8"."original"))) AS int) AS "age",
-                CAST((countif(("assignment.8"."age") = 1) FILTER (WHERE NOT ("assignment.8"."original"))) AS int) AS "neighbors"
+                CAST((any_value(("assignment.8"."age"))   FILTER (WHERE     ("assignment.8"."original"))) AS INTEGER) AS "age",
+                CAST((countif(("assignment.8"."age") = 1) FILTER (WHERE NOT ("assignment.8"."original"))) AS HUGEINT) AS "neighbors"
          FROM   "assignment.8"
          GROUP  BY "assignment.8"."#️⃣",
                    "assignment.8"."birth_cond",
@@ -387,7 +387,7 @@ WITH RECURSIVE
        "assignment.9"("#️⃣", "⚙️", "🔍", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age", "neighbors") AS (
          SELECT "gather.1"."#️⃣" AS "#️⃣",
                 "gather.1"."⚙️" AS "⚙️",
-                CAST((("gather.1"."age") = 0 AND     list_contains(("gather.1"."birth_cond"),   ("gather.1"."neighbors"))) AS boolean) AS "🔍",
+                CAST((("gather.1"."age") = 0 AND     list_contains(("gather.1"."birth_cond"),   ("gather.1"."neighbors"))) AS BOOLEAN) AS "🔍",
                 "gather.1"."height" AS "height",
                 "gather.1"."width" AS "width",
                 "gather.1"."iterations" AS "iterations",
@@ -425,7 +425,7 @@ WITH RECURSIVE
                 "where.5"."survive_cond" AS "survive_cond",
                 "where.5"."x" AS "x",
                 "where.5"."y" AS "y",
-                CAST((1) AS int) AS "age"
+                CAST((1) AS INTEGER) AS "age"
          FROM   "where.5"
        ),
        "where.6"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age", "neighbors") AS (
@@ -447,7 +447,7 @@ WITH RECURSIVE
        "assignment.11"("#️⃣", "⚙️", "🔍", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
          SELECT "where.6"."#️⃣" AS "#️⃣",
                 "where.6"."⚙️" AS "⚙️",
-                CAST((("where.6"."age") = 1 AND NOT list_contains(("where.6"."survive_cond"), ("where.6"."neighbors"))) AS boolean) AS "🔍",
+                CAST((("where.6"."age") = 1 AND NOT list_contains(("where.6"."survive_cond"), ("where.6"."neighbors"))) AS BOOLEAN) AS "🔍",
                 "where.6"."height" AS "height",
                 "where.6"."width" AS "width",
                 "where.6"."iterations" AS "iterations",
@@ -484,7 +484,7 @@ WITH RECURSIVE
                 "where.7"."survive_cond" AS "survive_cond",
                 "where.7"."x" AS "x",
                 "where.7"."y" AS "y",
-                CAST((2) AS int) AS "age"
+                CAST((2) AS INTEGER) AS "age"
          FROM   "where.7"
        ),
        "where.8"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
@@ -505,7 +505,7 @@ WITH RECURSIVE
        "assignment.13"("#️⃣", "⚙️", "🔍", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
          SELECT "where.8"."#️⃣" AS "#️⃣",
                 "where.8"."⚙️" AS "⚙️",
-                CAST((("where.8"."age") > 1) AS boolean) AS "🔍",
+                CAST((("where.8"."age") > 1) AS BOOLEAN) AS "🔍",
                 "where.8"."height" AS "height",
                 "where.8"."width" AS "width",
                 "where.8"."iterations" AS "iterations",
@@ -558,7 +558,7 @@ WITH RECURSIVE
                 "where.9"."survive_cond" AS "survive_cond",
                 "where.9"."x" AS "x",
                 "where.9"."y" AS "y",
-                CAST((("where.9"."age") + 1) AS int) AS "age"
+                CAST((("where.9"."age") + 1) AS INTEGER) AS "age"
          FROM   "where.9"
        ),
        "merge.2"("#️⃣", "⚙️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
@@ -625,7 +625,7 @@ WITH RECURSIVE
                 "merge.2"."survive_cond" AS "survive_cond",
                 "merge.2"."x" AS "x",
                 "merge.2"."y" AS "y",
-                CAST((("merge.2"."age") % ("merge.2"."max_age")) AS int) AS "age"
+                CAST((("merge.2"."age") % ("merge.2"."max_age")) AS INTEGER) AS "age"
          FROM   "merge.2"
        ),
        "jump.1"("#️⃣", "🏷️", "height", "width", "iterations", "max_age", "birth_cond", "survive_cond", "x", "y", "age") AS (
@@ -642,46 +642,46 @@ WITH RECURSIVE
                 "assignment.15"."age" AS "age"
          FROM   "assignment.15"
        )
-     (SELECT CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.1"."📊.1") AS text) AS "📊.1",
-             CAST((NULL) AS int) AS "height",
-             CAST((NULL) AS int) AS "width",
-             CAST((NULL) AS int) AS "iterations",
-             CAST((NULL) AS int) AS "max_age",
-             CAST((NULL) AS int[]) AS "birth_cond",
-             CAST((NULL) AS int[]) AS "survive_cond",
-             CAST((NULL) AS int) AS "x",
-             CAST((NULL) AS int) AS "y",
-             CAST((NULL) AS int) AS "age"
+     (SELECT CAST(("emit.1"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.1"."📊.1") AS VARCHAR) AS "📊.1",
+             CAST((NULL) AS INTEGER) AS "height",
+             CAST((NULL) AS INTEGER) AS "width",
+             CAST((NULL) AS INTEGER) AS "iterations",
+             CAST((NULL) AS INTEGER) AS "max_age",
+             CAST((NULL) AS INTEGER[]) AS "birth_cond",
+             CAST((NULL) AS "NULL"[]) AS "survive_cond",
+             CAST((NULL) AS BIGINT) AS "x",
+             CAST((NULL) AS BIGINT) AS "y",
+             CAST((NULL) AS INTEGER) AS "age"
       FROM   "emit.1")
        UNION ALL
-     (SELECT CAST(("emit.2"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.2"."📊.1") AS text) AS "📊.1",
-             CAST((NULL) AS int) AS "height",
-             CAST((NULL) AS int) AS "width",
-             CAST((NULL) AS int) AS "iterations",
-             CAST((NULL) AS int) AS "max_age",
-             CAST((NULL) AS int[]) AS "birth_cond",
-             CAST((NULL) AS int[]) AS "survive_cond",
-             CAST((NULL) AS int) AS "x",
-             CAST((NULL) AS int) AS "y",
-             CAST((NULL) AS int) AS "age"
+     (SELECT CAST(("emit.2"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.2"."📊.1") AS VARCHAR) AS "📊.1",
+             CAST((NULL) AS INTEGER) AS "height",
+             CAST((NULL) AS INTEGER) AS "width",
+             CAST((NULL) AS INTEGER) AS "iterations",
+             CAST((NULL) AS INTEGER) AS "max_age",
+             CAST((NULL) AS INTEGER[]) AS "birth_cond",
+             CAST((NULL) AS "NULL"[]) AS "survive_cond",
+             CAST((NULL) AS BIGINT) AS "x",
+             CAST((NULL) AS BIGINT) AS "y",
+             CAST((NULL) AS INTEGER) AS "age"
       FROM   "emit.2")
        UNION ALL
-     (SELECT CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.1"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS text) AS "📊.1",
-             CAST(("jump.1"."height") AS int) AS "height",
-             CAST(("jump.1"."width") AS int) AS "width",
-             CAST(("jump.1"."iterations") AS int) AS "iterations",
-             CAST(("jump.1"."max_age") AS int) AS "max_age",
-             CAST(("jump.1"."birth_cond") AS int[]) AS "birth_cond",
-             CAST(("jump.1"."survive_cond") AS int[]) AS "survive_cond",
-             CAST(("jump.1"."x") AS int) AS "x",
-             CAST(("jump.1"."y") AS int) AS "y",
-             CAST(("jump.1"."age") AS int) AS "age"
+     (SELECT CAST(("jump.1"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.1"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS VARCHAR) AS "📊.1",
+             CAST(("jump.1"."height") AS INTEGER) AS "height",
+             CAST(("jump.1"."width") AS INTEGER) AS "width",
+             CAST(("jump.1"."iterations") AS INTEGER) AS "iterations",
+             CAST(("jump.1"."max_age") AS INTEGER) AS "max_age",
+             CAST(("jump.1"."birth_cond") AS INTEGER[]) AS "birth_cond",
+             CAST(("jump.1"."survive_cond") AS "NULL"[]) AS "survive_cond",
+             CAST(("jump.1"."x") AS BIGINT) AS "x",
+             CAST(("jump.1"."y") AS BIGINT) AS "y",
+             CAST(("jump.1"."age") AS INTEGER) AS "age"
       FROM   "jump.1"))
   )
 SELECT "🔄"."📊.1"

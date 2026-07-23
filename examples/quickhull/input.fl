@@ -1,13 +1,5 @@
 {
-  DECLARE min   : §point§;
-  DECLARE max   : §point§;
-  DECLARE left  : §point§;
-  DECLARE right : §point§;
-  DECLARE next  : §point§;
-  DECLARE flip  : §boolean§;
-  DECLARE cond  : §boolean§;
-
-  FORK next = §FROM points§;
+  FORK next = §SELECT p FROM points AS p§;
   GATHER min = §arg_min({next}, {next}.x)§,
          max = §arg_min({next}, {next}.x)§;
 

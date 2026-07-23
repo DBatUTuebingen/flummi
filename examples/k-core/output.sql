@@ -1,12 +1,12 @@
 WITH RECURSIVE
   "🔄"("#️⃣", "🏷️", "📊.1", "k", "node", "active", "size") AS (
-    (SELECT CAST((0) AS int) AS "#️⃣",
-            CAST(('start.1') AS text) AS "🏷️",
-            CAST((NULL) AS int) AS "📊.1",
-            CAST((NULL) AS int) AS "k",
-            CAST((NULL) AS int) AS "node",
-            CAST((NULL) AS boolean) AS "active",
-            CAST((NULL) AS int) AS "size")
+    (SELECT CAST((0) AS INTEGER) AS "#️⃣",
+            CAST(('start.1') AS VARCHAR) AS "🏷️",
+            CAST((NULL) AS INTEGER) AS "📊.1",
+            CAST((NULL) AS INTEGER) AS "k",
+            CAST((NULL) AS INTEGER) AS "node",
+            CAST((NULL) AS BOOLEAN) AS "active",
+            CAST((NULL) AS BIGINT) AS "size")
       UNION ALL
     (WITH
        "start.1"("#️⃣", "⚙️") AS (
@@ -18,14 +18,14 @@ WITH RECURSIVE
        "assignment.1"("#️⃣", "⚙️", "k") AS (
          SELECT "start.1"."#️⃣" AS "#️⃣",
                 "start.1"."⚙️" AS "⚙️",
-                CAST((2) AS int) AS "k"
+                CAST((2) AS INTEGER) AS "k"
          FROM   "start.1"
        ),
        "fork.1"("#️⃣", "⚙️", "k", "node") AS (
          SELECT "assignment.1"."#️⃣" AS "#️⃣",
                 "assignment.1"."⚙️" AS "⚙️",
                 "assignment.1"."k" AS "k",
-                CAST(("ℚ"."node") AS int) AS "node"
+                CAST(("ℚ"."node") AS INTEGER) AS "node"
          FROM   "assignment.1",
                 (FROM nodes) AS "ℚ"("node")
        ),
@@ -34,7 +34,7 @@ WITH RECURSIVE
                 "fork.1"."⚙️" AS "⚙️",
                 "fork.1"."k" AS "k",
                 "fork.1"."node" AS "node",
-                CAST((TRUE) AS boolean) AS "active"
+                CAST((TRUE) AS BOOLEAN) AS "active"
          FROM   "fork.1"
        ),
        "assignment.3"("#️⃣", "⚙️", "k", "node", "active", "size") AS (
@@ -43,7 +43,7 @@ WITH RECURSIVE
                 "assignment.2"."k" AS "k",
                 "assignment.2"."node" AS "node",
                 "assignment.2"."active" AS "active",
-                CAST((count(*) OVER ()) AS int) AS "size"
+                CAST((count(*) OVER ()) AS BIGINT) AS "size"
          FROM   "assignment.2"
        ),
        "start.2"("#️⃣", "⚙️", "k", "node", "active", "size") AS (
@@ -77,7 +77,7 @@ WITH RECURSIVE
          SELECT "merge.1"."#️⃣" AS "#️⃣",
                 "merge.1"."⚙️" AS "⚙️",
                 "merge.1"."k" AS "k",
-                CAST(("ℚ"."node") AS int) AS "node",
+                CAST(("ℚ"."node") AS INTEGER) AS "node",
                 "merge.1"."active" AS "active",
                 "merge.1"."size" AS "size"
          FROM   "merge.1",
@@ -85,13 +85,13 @@ WITH RECURSIVE
                          FROM   edges
                          WHERE  here = ("merge.1"."node")) AS "ℚ"("node")
        ),
-       "gather.1"("#️⃣", "⚙️", "k", "node", "degree", "size") AS (
+       "gather.1"("#️⃣", "⚙️", "k", "node", "size", "degree") AS (
          SELECT "fork.2"."#️⃣" AS "#️⃣",
                 "fork.2"."⚙️" AS "⚙️",
                 "fork.2"."k" AS "k",
                 "fork.2"."node" AS "node",
-                CAST((countif(("fork.2"."active"))) AS int) AS "degree",
-                "fork.2"."size" AS "size"
+                "fork.2"."size" AS "size",
+                CAST((countif(("fork.2"."active"))) AS HUGEINT) AS "degree"
          FROM   "fork.2"
          GROUP  BY "fork.2"."#️⃣",
                    "fork.2"."k",
@@ -105,7 +105,7 @@ WITH RECURSIVE
                 "gather.1"."⚙️" AS "⚙️",
                 "gather.1"."k" AS "k",
                 "gather.1"."node" AS "node",
-                CAST((("gather.1"."degree") >= ("gather.1"."k") + 1) AS boolean) AS "active",
+                CAST((("gather.1"."degree") >= ("gather.1"."k") + 1) AS BOOLEAN) AS "active",
                 "gather.1"."size" AS "size"
          FROM   "gather.1"
        ),
@@ -115,14 +115,14 @@ WITH RECURSIVE
                 "assignment.4"."k" AS "k",
                 "assignment.4"."node" AS "node",
                 "assignment.4"."active" AS "active",
-                CAST((countif(("assignment.4"."active")) OVER ()) AS int) AS "size",
-                CAST((("assignment.4"."size")) AS int) AS "old_size"
+                CAST((countif(("assignment.4"."active")) OVER ()) AS BIGINT) AS "size",
+                CAST((("assignment.4"."size")) AS BIGINT) AS "old_size"
          FROM   "assignment.4"
        ),
        "assignment.6"("#️⃣", "⚙️", "🔍", "k", "node", "active", "size") AS (
          SELECT "assignment.5"."#️⃣" AS "#️⃣",
                 "assignment.5"."⚙️" AS "⚙️",
-                CAST((("assignment.5"."old_size") = ("assignment.5"."size")) AS boolean) AS "🔍",
+                CAST((("assignment.5"."old_size") = ("assignment.5"."size")) AS BOOLEAN) AS "🔍",
                 "assignment.5"."k" AS "k",
                 "assignment.5"."node" AS "node",
                 "assignment.5"."active" AS "active",
@@ -140,7 +140,7 @@ WITH RECURSIVE
        "assignment.7"("#️⃣", "⚙️", "🔍", "node") AS (
          SELECT "where.1"."#️⃣" AS "#️⃣",
                 "where.1"."⚙️" AS "⚙️",
-                CAST((("where.1"."active")) AS boolean) AS "🔍",
+                CAST((("where.1"."active")) AS BOOLEAN) AS "🔍",
                 "where.1"."node" AS "node"
          FROM   "where.1"
        ),
@@ -191,22 +191,22 @@ WITH RECURSIVE
          FROM   "where.4"
          WHERE  FALSE
        )
-     (SELECT CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.1"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS int) AS "📊.1",
-             CAST(("jump.1"."k") AS int) AS "k",
-             CAST(("jump.1"."node") AS int) AS "node",
-             CAST(("jump.1"."active") AS boolean) AS "active",
-             CAST(("jump.1"."size") AS int) AS "size"
+     (SELECT CAST(("jump.1"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.1"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS INTEGER) AS "📊.1",
+             CAST(("jump.1"."k") AS INTEGER) AS "k",
+             CAST(("jump.1"."node") AS INTEGER) AS "node",
+             CAST(("jump.1"."active") AS BOOLEAN) AS "active",
+             CAST(("jump.1"."size") AS BIGINT) AS "size"
       FROM   "jump.1")
        UNION ALL
-     (SELECT CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.1"."📊.1") AS int) AS "📊.1",
-             CAST((NULL) AS int) AS "k",
-             CAST((NULL) AS int) AS "node",
-             CAST((NULL) AS boolean) AS "active",
-             CAST((NULL) AS int) AS "size"
+     (SELECT CAST(("emit.1"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.1"."📊.1") AS INTEGER) AS "📊.1",
+             CAST((NULL) AS INTEGER) AS "k",
+             CAST((NULL) AS INTEGER) AS "node",
+             CAST((NULL) AS BOOLEAN) AS "active",
+             CAST((NULL) AS BIGINT) AS "size"
       FROM   "emit.1"))
   )
 SELECT "🔄"."📊.1"

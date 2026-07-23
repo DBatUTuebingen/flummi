@@ -1,12 +1,4 @@
 {
-    DECLARE k        : §int§;
-    DECLARE node     : §int§;
-    DECLARE degree   : §int§;
-    DECLARE active   : §boolean§;
-    DECLARE stable   : §boolean§;
-    DECLARE size     : §int§;
-    DECLARE old_size : §int§;
-
     LET k = §2§;
     FORK node = §FROM nodes§;
     LET active = §TRUE§;

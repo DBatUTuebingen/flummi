@@ -1,12 +1,12 @@
 WITH RECURSIVE
   "🔄"("#️⃣", "🏷️", "📊.1", "📊.2", "node", "component", "components") AS (
-    (SELECT CAST((0) AS int) AS "#️⃣",
-            CAST(('start.1') AS text) AS "🏷️",
-            CAST((NULL) AS int) AS "📊.1",
-            CAST((NULL) AS int[]) AS "📊.2",
-            CAST((NULL) AS int) AS "node",
-            CAST((NULL) AS int) AS "component",
-            CAST((NULL) AS int) AS "components")
+    (SELECT CAST((0) AS INTEGER) AS "#️⃣",
+            CAST(('start.1') AS VARCHAR) AS "🏷️",
+            CAST((NULL) AS INTEGER) AS "📊.1",
+            CAST((NULL) AS INTEGER[]) AS "📊.2",
+            CAST((NULL) AS INTEGER) AS "node",
+            CAST((NULL) AS INTEGER) AS "component",
+            CAST((NULL) AS INTEGER) AS "components")
       UNION ALL
     (WITH
        "start.1"("#️⃣", "⚙️") AS (
@@ -18,7 +18,7 @@ WITH RECURSIVE
        "fork.1"("#️⃣", "⚙️", "node") AS (
          SELECT "start.1"."#️⃣" AS "#️⃣",
                 "start.1"."⚙️" AS "⚙️",
-                CAST(("ℚ"."node") AS int) AS "node"
+                CAST(("ℚ"."node") AS INTEGER) AS "node"
          FROM   "start.1",
                 (FROM nodes) AS "ℚ"("node")
        ),
@@ -26,7 +26,7 @@ WITH RECURSIVE
          SELECT "fork.1"."#️⃣" AS "#️⃣",
                 "fork.1"."⚙️" AS "⚙️",
                 "fork.1"."node" AS "node",
-                CAST((("fork.1"."node")) AS int) AS "component"
+                CAST((("fork.1"."node")) AS INTEGER) AS "component"
          FROM   "fork.1"
        ),
        "assignment.2"("#️⃣", "⚙️", "node", "component", "components") AS (
@@ -34,7 +34,7 @@ WITH RECURSIVE
                 "assignment.1"."⚙️" AS "⚙️",
                 "assignment.1"."node" AS "node",
                 "assignment.1"."component" AS "component",
-                CAST((bit_xor(("assignment.1"."component")) OVER ()) AS int) AS "components"
+                CAST((bit_xor(("assignment.1"."component")) OVER ()) AS INTEGER) AS "components"
          FROM   "assignment.1"
        ),
        "start.2"("#️⃣", "⚙️", "node", "component", "components") AS (
@@ -64,7 +64,7 @@ WITH RECURSIVE
        "fork.2"("#️⃣", "⚙️", "node", "component", "components") AS (
          SELECT "merge.1"."#️⃣" AS "#️⃣",
                 "merge.1"."⚙️" AS "⚙️",
-                CAST(("ℚ"."node") AS int) AS "node",
+                CAST(("ℚ"."node") AS INTEGER) AS "node",
                 "merge.1"."component" AS "component",
                 "merge.1"."components" AS "components"
          FROM   "merge.1",
@@ -77,7 +77,7 @@ WITH RECURSIVE
          SELECT "fork.2"."#️⃣" AS "#️⃣",
                 "fork.2"."⚙️" AS "⚙️",
                 "fork.2"."node" AS "node",
-                CAST((min(("fork.2"."component"))) AS int) AS "component",
+                CAST((min(("fork.2"."component"))) AS INTEGER) AS "component",
                 "fork.2"."components" AS "components"
          FROM   "fork.2"
          GROUP  BY "fork.2"."#️⃣",
@@ -91,14 +91,14 @@ WITH RECURSIVE
                 "gather.1"."⚙️" AS "⚙️",
                 "gather.1"."node" AS "node",
                 "gather.1"."component" AS "component",
-                CAST((bit_xor(("gather.1"."component")) OVER ()) AS int) AS "components",
-                CAST((("gather.1"."components")) AS int) AS "old_components"
+                CAST((bit_xor(("gather.1"."component")) OVER ()) AS INTEGER) AS "components",
+                CAST((("gather.1"."components")) AS INTEGER) AS "old_components"
          FROM   "gather.1"
        ),
        "assignment.4"("#️⃣", "⚙️", "🔍", "node", "component", "components") AS (
          SELECT "assignment.3"."#️⃣" AS "#️⃣",
                 "assignment.3"."⚙️" AS "⚙️",
-                CAST((("assignment.3"."old_components") = ("assignment.3"."components")) AS boolean) AS "🔍",
+                CAST((("assignment.3"."old_components") = ("assignment.3"."components")) AS BOOLEAN) AS "🔍",
                 "assignment.3"."node" AS "node",
                 "assignment.3"."component" AS "component",
                 "assignment.3"."components" AS "components"
@@ -116,7 +116,7 @@ WITH RECURSIVE
          SELECT "where.1"."#️⃣" AS "#️⃣",
                 "where.1"."⚙️" AS "⚙️",
                 "where.1"."component" AS "component",
-                CAST((list(("where.1"."node"))) AS int[]) AS "nodes"
+                CAST((list(("where.1"."node"))) AS INTEGER[]) AS "nodes"
          FROM   "where.1"
          GROUP  BY "where.1"."#️⃣",
                    "where.1"."component",
@@ -152,22 +152,22 @@ WITH RECURSIVE
                 "where.2"."components" AS "components"
          FROM   "where.2"
        )
-     (SELECT CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.1"."📊.1") AS int) AS "📊.1",
-             CAST(("emit.1"."📊.2") AS int[]) AS "📊.2",
-             CAST((NULL) AS int) AS "node",
-             CAST((NULL) AS int) AS "component",
-             CAST((NULL) AS int) AS "components"
+     (SELECT CAST(("emit.1"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.1"."📊.1") AS INTEGER) AS "📊.1",
+             CAST(("emit.1"."📊.2") AS INTEGER[]) AS "📊.2",
+             CAST((NULL) AS INTEGER) AS "node",
+             CAST((NULL) AS INTEGER) AS "component",
+             CAST((NULL) AS INTEGER) AS "components"
       FROM   "emit.1")
        UNION ALL
-     (SELECT CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.1"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS int) AS "📊.1",
-             CAST((NULL) AS int[]) AS "📊.2",
-             CAST(("jump.1"."node") AS int) AS "node",
-             CAST(("jump.1"."component") AS int) AS "component",
-             CAST(("jump.1"."components") AS int) AS "components"
+     (SELECT CAST(("jump.1"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.1"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS INTEGER) AS "📊.1",
+             CAST((NULL) AS INTEGER[]) AS "📊.2",
+             CAST(("jump.1"."node") AS INTEGER) AS "node",
+             CAST(("jump.1"."component") AS INTEGER) AS "component",
+             CAST(("jump.1"."components") AS INTEGER) AS "components"
       FROM   "jump.1"))
   )
 SELECT "🔄"."📊.1",

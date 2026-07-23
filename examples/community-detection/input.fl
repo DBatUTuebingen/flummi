@@ -1,11 +1,4 @@
 {
-    DECLARE node      : §int§;
-    DECLARE community : §int§;
-    DECLARE old_state : §int§;
-    DECLARE state     : §int§;
-    DECLARE nodes     : §int[]§;
-    DECLARE flip      : §boolean§;
-
     FORK node = §FROM nodes§;
     LET community = node;
     LET state = §bit_xor({community}) OVER ()§;

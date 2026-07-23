@@ -1,10 +1,10 @@
 WITH RECURSIVE
   "🔄"("#️⃣", "🏷️", "📊.1", "left", "right") AS (
-    (SELECT CAST((0) AS int) AS "#️⃣",
-            CAST(('start.1') AS text) AS "🏷️",
-            CAST((NULL) AS point) AS "📊.1",
-            CAST((NULL) AS point) AS "left",
-            CAST((NULL) AS point) AS "right")
+    (SELECT CAST((0) AS INTEGER) AS "#️⃣",
+            CAST(('start.1') AS VARCHAR) AS "🏷️",
+            CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+            CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
+            CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "right")
       UNION ALL
     (WITH
        "start.1"("#️⃣", "⚙️") AS (
@@ -16,15 +16,15 @@ WITH RECURSIVE
        "fork.1"("#️⃣", "⚙️", "next") AS (
          SELECT "start.1"."#️⃣" AS "#️⃣",
                 "start.1"."⚙️" AS "⚙️",
-                CAST(("ℚ"."next") AS point) AS "next"
+                CAST(("ℚ"."next") AS STRUCT(x DOUBLE, y DOUBLE)) AS "next"
          FROM   "start.1",
-                (FROM points) AS "ℚ"("next")
+                (SELECT p FROM points AS p) AS "ℚ"("next")
        ),
        "gather.1"("#️⃣", "⚙️", "min", "max") AS (
          SELECT "fork.1"."#️⃣" AS "#️⃣",
                 "fork.1"."⚙️" AS "⚙️",
-                CAST((arg_min(("fork.1"."next"), ("fork.1"."next").x)) AS point) AS "min",
-                CAST((arg_min(("fork.1"."next"), ("fork.1"."next").x)) AS point) AS "max"
+                CAST((arg_min(("fork.1"."next"), ("fork.1"."next").x)) AS STRUCT(x DOUBLE, y DOUBLE)) AS "min",
+                CAST((arg_min(("fork.1"."next"), ("fork.1"."next").x)) AS STRUCT(x DOUBLE, y DOUBLE)) AS "max"
          FROM   "fork.1"
          GROUP  BY "fork.1"."#️⃣",
                    "fork.1"."⚙️"
@@ -51,14 +51,14 @@ WITH RECURSIVE
                 "emit.2"."⚙️" AS "⚙️",
                 "emit.2"."min" AS "min",
                 "emit.2"."max" AS "max",
-                CAST(("ℚ"."flip") AS boolean) AS "flip"
+                CAST(("ℚ"."flip") AS BOOLEAN) AS "flip"
          FROM   "emit.2",
                 (VALUES (TRUE), (FALSE)) AS "ℚ"("flip")
        ),
        "assignment.1"("#️⃣", "⚙️", "🔍", "min", "max") AS (
          SELECT "fork.2"."#️⃣" AS "#️⃣",
                 "fork.2"."⚙️" AS "⚙️",
-                CAST((("fork.2"."flip")) AS boolean) AS "🔍",
+                CAST((("fork.2"."flip")) AS BOOLEAN) AS "🔍",
                 "fork.2"."min" AS "min",
                 "fork.2"."max" AS "max"
          FROM   "fork.2"
@@ -82,8 +82,8 @@ WITH RECURSIVE
        "assignment.2"("#️⃣", "⚙️", "left", "right") AS (
          SELECT "where.1"."#️⃣" AS "#️⃣",
                 "where.1"."⚙️" AS "⚙️",
-                CAST((("where.1"."min")) AS point) AS "left",
-                CAST((("where.1"."max")) AS point) AS "right"
+                CAST((("where.1"."min")) AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
+                CAST((("where.1"."max")) AS STRUCT(x DOUBLE, y DOUBLE)) AS "right"
          FROM   "where.1"
        ),
        "where.2"("#️⃣", "⚙️", "min", "max") AS (
@@ -97,8 +97,8 @@ WITH RECURSIVE
        "assignment.3"("#️⃣", "⚙️", "left", "right") AS (
          SELECT "where.2"."#️⃣" AS "#️⃣",
                 "where.2"."⚙️" AS "⚙️",
-                CAST((("where.2"."max")) AS point) AS "left",
-                CAST((("where.2"."min")) AS point) AS "right"
+                CAST((("where.2"."max")) AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
+                CAST((("where.2"."min")) AS STRUCT(x DOUBLE, y DOUBLE)) AS "right"
          FROM   "where.2"
        ),
        "merge.1"("#️⃣", "⚙️", "left", "right") AS (
@@ -127,11 +127,9 @@ WITH RECURSIVE
                  "start.2"."right" AS "right"
           FROM   "start.2")
        ),
-       "assignment.4"("#️⃣", "⚙️", "left", "right", "next") AS (
+       "assignment.4"("#️⃣", "⚙️", "next", "left", "right") AS (
          SELECT "merge.2"."#️⃣" AS "#️⃣",
                 "merge.2"."⚙️" AS "⚙️",
-                "merge.2"."left" AS "left",
-                "merge.2"."right" AS "right",
                 CAST((WITH
                          distances(point, distance) AS (
                            SELECT p,
@@ -149,16 +147,18 @@ WITH RECURSIVE
                          )
                        SELECT arg_max(point, distance)
                        FROM   distances
-                       WHERE  distance > 0) AS point) AS "next"
+                       WHERE  distance > 0) AS STRUCT(x DOUBLE, y DOUBLE)) AS "next",
+                "merge.2"."left" AS "left",
+                "merge.2"."right" AS "right"
          FROM   "merge.2"
        ),
-       "assignment.5"("#️⃣", "⚙️", "🔍", "left", "right", "next") AS (
+       "assignment.5"("#️⃣", "⚙️", "🔍", "next", "left", "right") AS (
          SELECT "assignment.4"."#️⃣" AS "#️⃣",
                 "assignment.4"."⚙️" AS "⚙️",
-                CAST((("assignment.4"."next") IS NULL) AS boolean) AS "🔍",
+                CAST((("assignment.4"."next") IS NULL) AS BOOLEAN) AS "🔍",
+                "assignment.4"."next" AS "next",
                 "assignment.4"."left" AS "left",
-                "assignment.4"."right" AS "right",
-                "assignment.4"."next" AS "next"
+                "assignment.4"."right" AS "right"
          FROM   "assignment.4"
        ),
        "where.3"("⚙️") AS (
@@ -171,55 +171,55 @@ WITH RECURSIVE
          FROM   "where.3"
          WHERE  FALSE
        ),
-       "where.4"("#️⃣", "⚙️", "left", "right", "next") AS (
+       "where.4"("#️⃣", "⚙️", "next", "left", "right") AS (
          SELECT "assignment.5"."#️⃣" AS "#️⃣",
                 "assignment.5"."⚙️" AS "⚙️",
+                "assignment.5"."next" AS "next",
                 "assignment.5"."left" AS "left",
-                "assignment.5"."right" AS "right",
-                "assignment.5"."next" AS "next"
+                "assignment.5"."right" AS "right"
          FROM   "assignment.5"
          WHERE  "assignment.5"."🔍" IS DISTINCT FROM TRUE
        ),
-       "emit.3"("#️⃣", "⚙️", "📊.1", "left", "right", "next") AS (
+       "emit.3"("#️⃣", "⚙️", "📊.1", "next", "left", "right") AS (
          SELECT "where.4"."#️⃣" AS "#️⃣",
                 "where.4"."⚙️" AS "⚙️",
                 "where.4"."next" AS "📊.1",
+                "where.4"."next" AS "next",
                 "where.4"."left" AS "left",
-                "where.4"."right" AS "right",
-                "where.4"."next" AS "next"
+                "where.4"."right" AS "right"
          FROM   "where.4"
        ),
-       "fork.3"("#️⃣", "⚙️", "left", "right", "next", "flip") AS (
+       "fork.3"("#️⃣", "⚙️", "next", "flip", "left", "right") AS (
          SELECT "emit.3"."#️⃣" AS "#️⃣",
                 "emit.3"."⚙️" AS "⚙️",
-                "emit.3"."left" AS "left",
-                "emit.3"."right" AS "right",
                 "emit.3"."next" AS "next",
-                CAST(("ℚ"."flip") AS boolean) AS "flip"
+                CAST(("ℚ"."flip") AS BOOLEAN) AS "flip",
+                "emit.3"."left" AS "left",
+                "emit.3"."right" AS "right"
          FROM   "emit.3",
                 (VALUES (TRUE), (FALSE)) AS "ℚ"("flip")
        ),
-       "assignment.6"("#️⃣", "⚙️", "🔍", "left", "right", "next") AS (
+       "assignment.6"("#️⃣", "⚙️", "🔍", "next", "left", "right") AS (
          SELECT "fork.3"."#️⃣" AS "#️⃣",
                 "fork.3"."⚙️" AS "⚙️",
-                CAST((("fork.3"."flip")) AS boolean) AS "🔍",
+                CAST((("fork.3"."flip")) AS BOOLEAN) AS "🔍",
+                "fork.3"."next" AS "next",
                 "fork.3"."left" AS "left",
-                "fork.3"."right" AS "right",
-                "fork.3"."next" AS "next"
+                "fork.3"."right" AS "right"
          FROM   "fork.3"
        ),
-       "where.5"("#️⃣", "⚙️", "right", "next") AS (
+       "where.5"("#️⃣", "⚙️", "next", "right") AS (
          SELECT "assignment.6"."#️⃣" AS "#️⃣",
                 "assignment.6"."⚙️" AS "⚙️",
-                "assignment.6"."right" AS "right",
-                "assignment.6"."next" AS "next"
+                "assignment.6"."next" AS "next",
+                "assignment.6"."right" AS "right"
          FROM   "assignment.6"
          WHERE  "assignment.6"."🔍" IS NOT DISTINCT FROM TRUE
        ),
        "assignment.7"("#️⃣", "⚙️", "left", "right") AS (
          SELECT "where.5"."#️⃣" AS "#️⃣",
                 "where.5"."⚙️" AS "⚙️",
-                CAST((("where.5"."next")) AS point) AS "left",
+                CAST((("where.5"."next")) AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
                 "where.5"."right" AS "right"
          FROM   "where.5"
        ),
@@ -230,11 +230,11 @@ WITH RECURSIVE
                 "assignment.7"."right" AS "right"
          FROM   "assignment.7"
        ),
-       "where.6"("#️⃣", "⚙️", "left", "next") AS (
+       "where.6"("#️⃣", "⚙️", "next", "left") AS (
          SELECT "assignment.6"."#️⃣" AS "#️⃣",
                 "assignment.6"."⚙️" AS "⚙️",
-                "assignment.6"."left" AS "left",
-                "assignment.6"."next" AS "next"
+                "assignment.6"."next" AS "next",
+                "assignment.6"."left" AS "left"
          FROM   "assignment.6"
          WHERE  "assignment.6"."🔍" IS DISTINCT FROM TRUE
        ),
@@ -242,7 +242,7 @@ WITH RECURSIVE
          SELECT "where.6"."#️⃣" AS "#️⃣",
                 "where.6"."⚙️" AS "⚙️",
                 "where.6"."left" AS "left",
-                CAST((("where.6"."next")) AS point) AS "right"
+                CAST((("where.6"."next")) AS STRUCT(x DOUBLE, y DOUBLE)) AS "right"
          FROM   "where.6"
        ),
        "jump.2"("#️⃣", "🏷️", "left", "right") AS (
@@ -252,39 +252,39 @@ WITH RECURSIVE
                 "assignment.8"."right" AS "right"
          FROM   "assignment.8"
        )
-     (SELECT CAST(("emit.1"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.1"."📊.1") AS point) AS "📊.1",
-             CAST((NULL) AS point) AS "left",
-             CAST((NULL) AS point) AS "right"
+     (SELECT CAST(("emit.1"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.1"."📊.1") AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "right"
       FROM   "emit.1")
        UNION ALL
-     (SELECT CAST(("emit.2"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.2"."📊.1") AS point) AS "📊.1",
-             CAST((NULL) AS point) AS "left",
-             CAST((NULL) AS point) AS "right"
+     (SELECT CAST(("emit.2"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.2"."📊.1") AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "right"
       FROM   "emit.2")
        UNION ALL
-     (SELECT CAST(("emit.3"."#️⃣") AS int) AS "#️⃣",
-             CAST((NULL) AS text) AS "🏷️",
-             CAST(("emit.3"."📊.1") AS point) AS "📊.1",
-             CAST((NULL) AS point) AS "left",
-             CAST((NULL) AS point) AS "right"
+     (SELECT CAST(("emit.3"."#️⃣") AS INTEGER) AS "#️⃣",
+             CAST((NULL) AS VARCHAR) AS "🏷️",
+             CAST(("emit.3"."📊.1") AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "right"
       FROM   "emit.3")
        UNION ALL
-     (SELECT CAST(("jump.1"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.1"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS point) AS "📊.1",
-             CAST(("jump.1"."left") AS point) AS "left",
-             CAST(("jump.1"."right") AS point) AS "right"
+     (SELECT CAST(("jump.1"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.1"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+             CAST(("jump.1"."left") AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
+             CAST(("jump.1"."right") AS STRUCT(x DOUBLE, y DOUBLE)) AS "right"
       FROM   "jump.1")
        UNION ALL
-     (SELECT CAST(("jump.2"."#️⃣" + 1) AS int) AS "#️⃣",
-             CAST(("jump.2"."🏷️") AS text) AS "🏷️",
-             CAST((NULL) AS point) AS "📊.1",
-             CAST(("jump.2"."left") AS point) AS "left",
-             CAST(("jump.2"."right") AS point) AS "right"
+     (SELECT CAST(("jump.2"."#️⃣" + 1) AS INTEGER) AS "#️⃣",
+             CAST(("jump.2"."🏷️") AS VARCHAR) AS "🏷️",
+             CAST((NULL) AS STRUCT(x DOUBLE, y DOUBLE)) AS "📊.1",
+             CAST(("jump.2"."left") AS STRUCT(x DOUBLE, y DOUBLE)) AS "left",
+             CAST(("jump.2"."right") AS STRUCT(x DOUBLE, y DOUBLE)) AS "right"
       FROM   "jump.2"))
   )
 SELECT "🔄"."📊.1"

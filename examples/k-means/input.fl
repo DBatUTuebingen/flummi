@@ -1,13 +1,4 @@
 {
-    DECLARE centroid : §point§;
-    DECLARE centroids : §real§;
-    DECLARE old_centroids : §real§;
-    DECLARE point : §point§;
-    DECLARE distance : §real§;
-    DECLARE new_centroid : §point§;
-    DECLARE cond : §boolean§;
-    DECLARE cluster : §point[]§;
-
     -- set up intial centroids
     FORK centroid = §SELECT p FROM points AS p USING SAMPLE 10 ROWS§;
     LET  centroids = §sum({centroid}.x + {centroid}.y) OVER ()§;

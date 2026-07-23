@@ -1,0 +1,25 @@
+{
+  FORK node = §FROM nodes§;
+  IF §{node} = 1§
+  THEN LET depth = §0§
+  ELSE LET depth = §NULL§;
+
+  LOOP {
+    FORK node, depth, original = §
+        SELECT {node}, {depth}, true
+            UNION ALL
+        SELECT there, {depth} + 1, false
+        FROM   edges AS e
+        WHERE  here = {node}
+        AND    {depth} IS NOT NULL
+    §;
+
+    GATHER depth     = §min({depth})§,
+           old_depth = §first({depth}) FILTER (WHERE {original})§
+    BY     node;
+
+    IF §bool_and({depth} IS NOT DISTINCT FROM {old_depth}) OVER ()§ THEN BREAK
+  };
+
+  EMIT node, depth
+}

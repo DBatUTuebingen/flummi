@@ -1,11 +1,4 @@
 {
-  DECLARE first  : §int§;
-  DECLARE last   : §int§;
-  DECLARE length : §int§;
-  DECLARE path   : §int[]§;
-  DECLARE flip   : §boolean§;
-  DECLARE edge   : §edge§;
-
   -- run the whole search for each node in the graph
   FORK first = §SELECT id FROM nodes§;
 

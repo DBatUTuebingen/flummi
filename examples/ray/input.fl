@@ -1,21 +1,12 @@
 {
-  -- Misc declarations for common intermediates
-  DECLARE id : §int§;
-  DECLARE length : §real§;
-  DECLARE dist : §real§;
-
   -- Setup render parameters  --------------------------------------------------
-  DECLARE shadows : §bool§;
   LET shadows = §true§;
 
-  DECLARE max_rec_depth : §int§;
   LET max_rec_depth = §10§;
 
-  DECLARE epsilon : §real§;
-  LET epsilon = §0.000001§;
+  LET epsilon = §0.000001::real§;
 
   -- Setup scene  --------------------------------------------------------------
-  DECLARE light_x, light_y, light_z : §real§;
   FORK light_x, light_y, light_z = §
     SELECT center_x,
            center_y,
@@ -25,37 +16,28 @@
   §;
 
   -- Setup camera  -------------------------------------------------------------
-  DECLARE image_width : §int§;
   LET image_width = §3480§;
 
-  DECLARE image_height : §int§;
   LET image_height = §2160§;
 
-  DECLARE image_aspect_ratio : §real§;
-  LET image_aspect_ratio = §{image_width} / {image_height}§;
+  LET image_aspect_ratio = §({image_width} / {image_height})::real§;
 
-  DECLARE viewport_height : §real§;
-  LET viewport_height = §10§;
+  LET viewport_height = §10::real§;
 
-  DECLARE viewport_width : §real§;
   LET viewport_width = §{viewport_height} * {image_aspect_ratio}§;
 
-  DECLARE position_x, position_y, position_z : §real§;
-  LET position_x = §0§,     -- ⎫            ⎛ 0  ⎞
-      position_y = §0§,     -- ⎬ position = ⎢ 0  ⎥
-      position_z = §-4.5§;  -- ⎭            ⎝-4.5⎠
+  LET position_x = §0::real§,     -- ⎫            ⎛ 0  ⎞
+      position_y = §0::real§,     -- ⎬ position = ⎢ 0  ⎥
+      position_z = §-4.5::real§;  -- ⎭            ⎝-4.5⎠
 
-  DECLARE looking_at_x, looking_at_y, looking_at_z : §real§;
-  LET looking_at_x = §0§,  -- ⎫              ⎛0⎞
-      looking_at_y = §0§,  -- ⎬ looking_at = ⎢0⎥
-      looking_at_z = §0§;  -- ⎭              ⎝0⎠
+  LET looking_at_x = §0::real§,  -- ⎫              ⎛0⎞
+      looking_at_y = §0::real§,  -- ⎬ looking_at = ⎢0⎥
+      looking_at_z = §0::real§;  -- ⎭              ⎝0⎠
 
-  DECLARE scene_up_x, scene_up_y, scene_up_z : §real§;
-  LET scene_up_x = §0§,  -- ⎫            ⎛0⎞
-      scene_up_y = §1§,  -- ⎬ scene_up = ⎢1⎥
-      scene_up_z = §0§;  -- ⎭            ⎝0⎠
+  LET scene_up_x = §0::real§,  -- ⎫            ⎛0⎞
+      scene_up_y = §1::real§,  -- ⎬ scene_up = ⎢1⎥
+      scene_up_z = §0::real§;  -- ⎭            ⎝0⎠
 
-  DECLARE camera_forward_x, camera_forward_y, camera_forward_z : §real§;
   LET camera_forward_x = §{position_x} - {looking_at_x}§,  -- ⎫
       camera_forward_y = §{position_y} - {looking_at_y}§,  -- ⎬ camera_forward = position - looking_at
       camera_forward_z = §{position_z} - {looking_at_z}§;  -- ⎭
@@ -65,10 +47,8 @@
       camera_forward_y = §{camera_forward_y} / {length}§,  -- ⎬ camera_forward = camera_forward / length
       camera_forward_z = §{camera_forward_z} / {length}§;  -- ⎭
 
-  DECLARE focal_length : §real§;
   LET focal_length = §{length}§;  -- } focal_length = length (= |camera_forward|)
 
-  DECLARE camera_right_x, camera_right_y, camera_right_z : §real§;
   LET camera_right_x = §{scene_up_y} * {camera_forward_z} - {scene_up_z} * {camera_forward_y}§,  -- ⎫
       camera_right_y = §{scene_up_z} * {camera_forward_x} - {scene_up_x} * {camera_forward_z}§,  -- ⎬ camera_right = scene_up × camera_forward
       camera_right_z = §{scene_up_x} * {camera_forward_y} - {scene_up_y} * {camera_forward_x}§;  -- ⎭
@@ -78,7 +58,6 @@
       camera_right_y = §{camera_right_y} / {length}§,  -- ⎬ camera_right = camera_right / length
       camera_right_z = §{camera_right_z} / {length}§;  -- ⎭
 
-  DECLARE camera_up_x, camera_up_y, camera_up_z : §real§;
   LET camera_up_x = §{camera_forward_y} * {camera_right_z} - {camera_forward_z} * {camera_right_y}§,  -- ⎫
       camera_up_y = §{camera_forward_z} * {camera_right_x} - {camera_forward_x} * {camera_right_z}§,  -- ⎬ camera_up = scene_up × camera_forward
       camera_up_z = §{camera_forward_x} * {camera_right_y} - {camera_forward_y} * {camera_right_x}§;  -- ⎭
@@ -88,33 +67,27 @@
       camera_up_y = §{camera_up_y} / {length}§,  -- ⎬ camera_up = camera_up / length
       camera_up_z = §{camera_up_z} / {length}§;  -- ⎭
 
-  DECLARE viewport_horizontal_x, viewport_horizontal_y, viewport_horizontal_z : §real§;
   LET viewport_horizontal_x = §{viewport_width} * {camera_right_x}§,
       viewport_horizontal_y = §{viewport_width} * {camera_right_y}§,
       viewport_horizontal_z = §{viewport_width} * {camera_right_z}§;
 
-  DECLARE viewport_vertical_x, viewport_vertical_y, viewport_vertical_z : §real§;
   LET viewport_vertical_x = §{viewport_height} * -{camera_up_x}§,
       viewport_vertical_y = §{viewport_height} * -{camera_up_y}§,
       viewport_vertical_z = §{viewport_height} * -{camera_up_z}§;
 
-  DECLARE viewport_root_x, viewport_root_y, viewport_root_z : §real§;
   LET viewport_root_x = §{position_x} - {focal_length} * {camera_forward_x} - {viewport_horizontal_x} / 2 - {viewport_vertical_x} / 2§,
       viewport_root_y = §{position_y} - {focal_length} * {camera_forward_y} - {viewport_horizontal_y} / 2 - {viewport_vertical_y} / 2§,
       viewport_root_z = §{position_z} - {focal_length} * {camera_forward_z} - {viewport_horizontal_z} / 2 - {viewport_vertical_z} / 2§;
 
-  DECLARE viewport_horizontal_offset_x, viewport_horizontal_offset_y, viewport_horizontal_offset_z : §real§;
   LET viewport_horizontal_offset_x = §{viewport_horizontal_x} / {image_width}§,
       viewport_horizontal_offset_y = §{viewport_horizontal_y} / {image_width}§,
       viewport_horizontal_offset_z = §{viewport_horizontal_z} / {image_width}§;
 
-  DECLARE viewport_vertical_offset_x, viewport_vertical_offset_y, viewport_vertical_offset_z : §real§;
   LET viewport_vertical_offset_x = §{viewport_vertical_x} / {image_height}§,
       viewport_vertical_offset_y = §{viewport_vertical_y} / {image_height}§,
       viewport_vertical_offset_z = §{viewport_vertical_z} / {image_height}§;
 
   -- Dispatch screen pixels  ---------------------------------------------------
-  DECLARE screen_x, screen_y : §int§;
   FORK screen_x, screen_y = §
     SELECT x.i::int,
            y.i::int
@@ -123,17 +96,14 @@
   §;
 
   -- Compute ray directions ----------------------------------------------------
-  DECLARE origin_x, origin_y, origin_z : §real§;
   LET origin_x = §{position_x}§,
       origin_y = §{position_y}§,
       origin_z = §{position_z}§;
 
-  DECLARE pixel_center_x, pixel_center_y, pixel_center_z : §real§;
   LET pixel_center_x = §{viewport_root_x} + {screen_x} * {viewport_horizontal_offset_x} + {screen_y} * {viewport_vertical_offset_x}§,
       pixel_center_y = §{viewport_root_y} + {screen_x} * {viewport_horizontal_offset_y} + {screen_y} * {viewport_vertical_offset_y}§,
       pixel_center_z = §{viewport_root_z} + {screen_x} * {viewport_horizontal_offset_z} + {screen_y} * {viewport_vertical_offset_z}§;
 
-  DECLARE direction_x, direction_y, direction_z : §real§;
   LET direction_x = §{pixel_center_x} - {origin_x}§, -- ⎫
       direction_y = §{pixel_center_y} - {origin_y}§, -- ⎬ direction = pixel_center - origin
       direction_z = §{pixel_center_z} - {origin_z}§; -- ⎭
@@ -144,81 +114,61 @@
       direction_z = §{direction_z} / {length}§;
 
   -- Setup ray
-  DECLARE shadow_ray : §bool§;
   LET shadow_ray = §false§;
 
-  DECLARE pixel_r, pixel_g, pixel_b : §real§;
-  LET pixel_r = §0§,  -- ⎫         ⎛0⎞
-      pixel_g = §0§,  -- ⎬ pixel = ⎢0⎥
-      pixel_b = §0§;  -- ⎭(color)  ⎝0⎠
+  LET pixel_r = §0::real§,  -- ⎫         ⎛0⎞
+      pixel_g = §0::real§,  -- ⎬ pixel = ⎢0⎥
+      pixel_b = §0::real§;  -- ⎭(color)  ⎝0⎠
 
   -- Iterate ray cast
-  DECLARE step : §int§;
   LET step = §0§;
 
   LOOP {
-    DECLARE color_r, color_g, color_b : §real§;
-    LET color_r = §0§,  -- ⎫         ⎛0⎞
-        color_g = §0§,  -- ⎬ color = ⎢0⎥
-        color_b = §0§;  -- ⎭(color)  ⎝0⎠
+    LET color_r = §0::real§,  -- ⎫         ⎛0⎞
+        color_g = §0::real§,  -- ⎬ color = ⎢0⎥
+        color_b = §0::real§;  -- ⎭(color)  ⎝0⎠
 
-    DECLARE min_dist : §real§;
     LET min_dist = §'Infinity' :: real§;
 
-    DECLARE material : §material§;
     LET material = §'n'§;
 
-    DECLARE normal_x, normal_y, normal_z : §real§;
-    LET normal_x = §0§,  -- ⎫          ⎛0⎞
-        normal_y = §0§,  -- ⎬ normal = ⎢0⎥
-        normal_z = §0§;  -- ⎭          ⎝0⎠
+    LET normal_x = §0::real§,  -- ⎫          ⎛0⎞
+        normal_y = §0::real§,  -- ⎬ normal = ⎢0⎥
+        normal_z = §0::real§;  -- ⎭          ⎝0⎠
 
     LET id = §SELECT MAX(t.id) FROM triangles AS t§;
     LOOP {
-      DECLARE triangle_material : §material§;
-      DECLARE triangle_r, triangle_g, triangle_b : §float8§;
-      DECLARE triangle_p1_x, triangle_p1_y, triangle_p1_z : §float8§;
-      DECLARE triangle_p2_x, triangle_p2_y, triangle_p2_z : §float8§;
-      DECLARE triangle_p3_x, triangle_p3_y, triangle_p3_z : §float8§;
       FORK id, triangle_material, triangle_r, triangle_g, triangle_b, triangle_p1_x, triangle_p1_y, triangle_p1_z, triangle_p2_x, triangle_p2_y, triangle_p2_z, triangle_p3_x, triangle_p3_y, triangle_p3_z = §
         FROM   triangles AS t
         WHERE  t.id = {id}
       §;
 
-      DECLARE e1_x, e1_y, e1_z : §real§;
       LET e1_x = §{triangle_p2_x} - {triangle_p1_x}§,  -- ⎫
           e1_y = §{triangle_p2_y} - {triangle_p1_y}§,  -- ⎬ e1 = p2 - p1
           e1_z = §{triangle_p2_z} - {triangle_p1_z}§;  -- ⎭
 
-      DECLARE e2_x, e2_y, e2_z : §real§;
       LET e2_x = §{triangle_p3_x} - {triangle_p1_x}§,  -- ⎫
           e2_y = §{triangle_p3_y} - {triangle_p1_y}§,  -- ⎬ e2 = p3 - p1
           e2_z = §{triangle_p3_z} - {triangle_p1_z}§;  -- ⎭
 
-      DECLARE P_x, P_y, P_z : §real§;
       LET P_x = §{direction_y} * {e2_z} - {direction_z} * {e2_y}§,  -- ⎫
           P_y = §{direction_z} * {e2_x} - {direction_x} * {e2_z}§,  -- ⎬ P = direction × e2
           P_z = §{direction_x} * {e2_y} - {direction_y} * {e2_x}§;  -- ⎭
 
-      DECLARE det : §real§;
       LET det = §{e1_x} * {P_x} + {e1_y} * {P_y} + {e1_z} * {P_z}§; -- } det = e1 ⋅ P
 
       IF §abs({det}) > {epsilon}§ THEN {
-        DECLARE T1_x, T1_y, T1_z : §real§;
         LET T1_x = §{origin_x} - {triangle_p1_x}§,  -- ⎫
             T1_y = §{origin_y} - {triangle_p1_y}§,  -- ⎬ T1 = origin - p1
             T1_z = §{origin_z} - {triangle_p1_z}§;  -- ⎭
 
-        DECLARE u : §real§;
         LET u = §({T1_x} * {P_x} + {T1_y} * {P_y} + {T1_z} * {P_z}) / {det}§;  -- } u = (T1 ⋅ P) / det
 
         IF §{u} BETWEEN 0 AND 1§ THEN {
-          DECLARE Q_x, Q_y, Q_z : §real§;
           LET Q_x = §{T1_y} * {e1_z} - {T1_z} * {e1_y}§,  -- ⎫
               Q_y = §{T1_z} * {e1_x} - {T1_x} * {e1_z}§,  -- ⎬ Q = T1 × e1
               Q_z = §{T1_x} * {e1_y} - {T1_y} * {e1_x}§;  -- ⎭
 
-          DECLARE v : §real§;
           LET v = §({direction_x} * {Q_x} + {direction_y} * {Q_y} + {direction_z} * {Q_z}) / {det}§;  -- } v = (direction ⋅ Q) / det
 
           IF §0 <= {v} AND {v} + {u} <= 1§ THEN {
@@ -260,28 +210,20 @@
 
     LET id = §SELECT MAX(s.id) FROM spheres AS s§;
     LOOP {
-      DECLARE sphere_material : §material§;
-      DECLARE sphere_r, sphere_g, sphere_b : §float8§;
-      DECLARE sphere_center_x, sphere_center_y, sphere_center_z : §float8§;
-      DECLARE sphere_radius   : §float8§;
       FORK id, sphere_material, sphere_r, sphere_g, sphere_b, sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius  = §
         FROM   spheres AS s
         WHERE  s.id = {id}
       §;
 
-      DECLARE L_x, L_y, L_z : §real§;
       LET L_x = §{sphere_center_x} - {origin_x}§,  -- ⎫
           L_y = §{sphere_center_y} - {origin_y}§,  -- ⎬ L = center - origin
           L_z = §{sphere_center_z} - {origin_z}§;  -- ⎭
 
-      DECLARE tca : §real§;
       LET tca = §{L_x} * {direction_x} + {L_y} * {direction_y} + {L_z} * {direction_z}§;  -- } tca = L ⋅ direction
 
-      DECLARE d2 : §real§;
       LET d2 = §{L_x} ** 2 + {L_y} ** 2 + {L_z} ** 2 - {tca} ** 2§;  -- } d2 = |L|² - tca²
 
       IF §{d2} <= {sphere_radius} ** 2§ THEN {
-        DECLARE thc : §real§;                                 --          _____________
         LET thc = §sqrt({sphere_radius} ** 2 - {d2})§;  -- } thc = √radius² - d2`
         LET dist = §least({tca} + {thc}, greatest({tca} - {thc}, 0))§;  -- } dist = min(tca + tch, max(tca - thc, 0))
 
@@ -385,7 +327,6 @@
     BREAK
   };
 
-  DECLARE pixel : §text§;
   LET pixel = §
     lpad(({pixel_r} * 255) :: int :: text, 3, ' ') || ' ' ||
     lpad(({pixel_g} * 255) :: int :: text, 3, ' ') || ' ' ||
@@ -394,10 +335,8 @@
 
   SYNC;
 
-  DECLARE pixels : §text§;
   GATHER pixels = §string_agg({pixel}, E'\n' ORDER BY {screen_y}, {screen_x})§;
 
-  DECLARE image : §text§;
   LET image = §E'P3\n' || {image_width} :: text || ' ' || {image_height} :: text || E'\n255\n' || {pixels} || E'\n'§;
   EMIT image;
 

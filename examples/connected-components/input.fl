@@ -1,10 +1,4 @@
 {
-    DECLARE node           : §int§;
-    DECLARE component      : §int§;
-    DECLARE nodes          : §int[]§;
-    DECLARE components     : §int§;
-    DECLARE old_components : §int§;
-
     FORK node = §FROM nodes§;
     LET component = node;
     LET components = §bit_xor({component}) OVER ()§;

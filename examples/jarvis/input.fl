@@ -1,7 +1,4 @@
 {
-    DECLARE p0   : §point§;
-    DECLARE p    : §point§;
-
     LET p0 = §SELECT arg_min(p, p.x) FROM points AS p§;
     LET p  = p0;
 
