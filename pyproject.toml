@@ -14,7 +14,6 @@ GitHub = "https://github.com/DBatUTuebingen/flummi"
 
 [project.optional-dependencies]
 cli = ["typer>=0.19.2"]
-typed = ["duckdb>=1.5.5"]
 
 [project.scripts]
 flummi = "flummi.cli:cli"

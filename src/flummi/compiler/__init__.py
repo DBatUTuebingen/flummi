@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from importlib import import_module
-from typing import Any, cast
+import os
 
 from ..library.sql import SQL
 from ..library.errors import PrettyError
@@ -12,16 +11,9 @@ from .lowering import lower
 from .solving import solve
 from .scheming import scheme
 from .generation import generate
+from .duckdb import Connection, PathValue, find_binary
 
 __all__ = ("compile",)
-
-
-def _duckdb_available() -> bool:
-    try:
-        import_module("duckdb")
-    except ModuleNotFoundError:
-        return False
-    return True
 
 
 def _run_analysis(
@@ -29,12 +21,10 @@ def _run_analysis(
     *,
     typecheck: bool,
     infer: bool,
-    database: Any | None,
+    database: PathValue | None,
+    duckdb_binary: str | None,
 ) -> AnalysisResult:
-    connection = database
-    owns_connection = False
-
-    if connection is None and not (infer or typecheck):
+    if not (infer or typecheck):
         return analyze(
             program,
             infer=False,
@@ -43,28 +33,19 @@ def _run_analysis(
             check_emit_types=True,
         )
 
-    if connection is None:
-        try:
-            duckdb = cast(Any, import_module("duckdb"))
-        except ModuleNotFoundError as error:
-            raise TypecheckingError(
-                "Typechecking requires DuckDB; install flummi[typed]."
-            ) from error
-
-        connection = duckdb.connect()
-        owns_connection = True
-
-    try:
-        return analyze(
-            program,
-            infer=infer,
-            typecheck=typecheck,
-            database=connection,
-            check_emit_types=not (infer or typecheck),
+    if duckdb_binary is None:
+        raise TypecheckingError(
+            "Typechecking requires a DuckDB executable; "
+            "install DuckDB or pass duckdb_binary."
         )
-    finally:
-        if owns_connection:
-            connection.close()
+
+    return analyze(
+        program,
+        infer=infer,
+        typecheck=typecheck,
+        database=Connection(duckdb_binary, database),
+        check_emit_types=False,
+    )
 
 
 def compile(
@@ -73,16 +54,25 @@ def compile(
     *,
     typecheck: bool | None = None,
     infer: bool | None = None,
-    database: Any | None = None,
+    database: PathValue | None = None,
+    duckdb_binary: PathValue | None = None,
 ) -> SQL:
     try:
         if isinstance(program, str):
             source = program
             program = parse(program)
 
-        duckdb_available = database is not None or (
-            (infer is None or typecheck is None) and _duckdb_available()
-        )
+        binary = find_binary(duckdb_binary)
+        if (
+            duckdb_binary is not None
+            and binary is None
+            and not (infer is False and typecheck is False)
+        ):
+            raise TypecheckingError(
+                f"Could not find DuckDB executable {os.fspath(duckdb_binary)!r}."
+            )
+
+        duckdb_available = binary is not None
         infer = duckdb_available if infer is None else infer
         typecheck = duckdb_available if typecheck is None else typecheck
 
@@ -91,6 +81,7 @@ def compile(
             typecheck=typecheck,
             infer=infer,
             database=database,
+            duckdb_binary=binary,
         )
 
         lowered_program = lower(program)

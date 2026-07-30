@@ -3,22 +3,22 @@
 _A to-SQL Compiler Prototype._
 
 _Flummi_ is a research compiler prototype for to-SQL compilation, implementing
-methods we've researched and developed at the [database chair of the
-University of Tübingen](https://db.cs.uni-tuebingen.de/)---see the list of
-related publications [below](#related-publications). Our compilation strategy
-takes imperative procedural programs with embedded SQL expressions and
-transforms them to a single monolithic SQL query.
+methods we've researched and developed at the
+[database chair of the University of Tübingen](https://db.cs.uni-tuebingen.de/)---see
+the list of related publications [below](<README#Related Publications>). Our
+compilation strategy takes imperative procedural programs with embedded SQL
+expressions and transforms them to a single monolithic SQL query.
 
 > [!IMPORTANT]
 > The input language to our compiler only includes the bare minimum necessary
 > and is thus not very developer friendly! Being a research vehicle for our
-> ideas before anything else, we opted to not box ourselves in and define [our
-> own simple, bare-bones language](#the-flummi-language) that includes only the
-> absolute core necessities for imperative programming. Most, if not all other,
-> more "complicated" language constructs/features common to more developer
-> friendly languages can be easily desugared to our language and are thus not
-> of interest to this project---though we of course have ongoing research on
-> that side of the fence as well. 😉
+> ideas before anything else, we opted to not box ourselves in and define
+> [our own simple, bare-bones language](<README#The Flummi Language>) that
+> includes only the absolute core necessities for imperative programming. Most,
+> if not all other, more "complicated" language constructs/features common to
+> more developer friendly languages can be easily desugared to our language and
+> are thus not of interest to this project---though we of course have ongoing
+> research on that side of the fence as well. 😉
 
 ## Usage
 
@@ -38,7 +38,7 @@ As a python library, we expose the function `compile` which is straightforward;
 as the name implies it takes a program, _compiles_ it and spits our the
 compiled query string. The input programs can either be supplied in the form
 of a source string (you can find a description of the syntax
-[down below](#the-flummi-language)) or an AST.
+[down below](<README#The Flummi Language>)) or an AST.
 
 ```python
 from flummi import compile
@@ -56,27 +56,30 @@ query = compile("""
 ```
 
 DuckDB typechecking and inference validate SQL expression types before
-lowering by default. Without a database argument, they use a temporary
-in-memory DuckDB connection when either feature is enabled. If DuckDB is not
-installed, default inference automatically falls back to declaration-only
-compilation; install the `typed` extra to enable it. Pass `typecheck=False` to
-disable automatic type constraints, or pass both `infer=False` and
-`typecheck=False` to skip DuckDB entirely.
-Pass an existing DuckDB connection when user-defined types or attached schemas
-are needed. DuckDB-normalizes declared type aliases before comparison:
+lowering by default. Flummi invokes the `duckdb` executable found on `PATH`,
+or the executable supplied through `duckdb_binary`. Without a database path,
+queries run against a temporary in-memory database. If DuckDB is unavailable,
+default inference automatically falls back to declaration-only compilation.
+Pass `typecheck=False` to disable automatic type constraints, or pass both
+`infer=False` and `typecheck=False` to skip DuckDB entirely.
+Pass a catalog path through `database` when user-defined types or attached
+schemas are needed. DuckDB normalizes declared type aliases before comparison:
 `REAL` and `FLOAT` therefore compare as one type. Expression types must be
 explicitly castable to their declared target types. If DuckDB is unavailable,
 the declaration-only fallback compares type strings verbatim and does not
 normalize aliases.
 
 ```python
-import duckdb
 from flummi import compile
 
-database = duckdb.connect()
-database.execute("CREATE TYPE point AS STRUCT(x INTEGER)")
+database = "catalog.duckdb"
 source = "{ DECLARE value : §INTEGER§; LET value = §1§; EMIT value }"
-query = compile(source, typecheck=True, database=database)
+query = compile(
+    source,
+    typecheck=True,
+    database=database,
+    duckdb_binary="/path/to/duckdb",
+)
 ```
 
 Inference is enabled automatically when DuckDB is available, so declarations
@@ -88,11 +91,12 @@ source = "{ LET value = §1§; EMIT value }"
 query = compile(source)
 ```
 
-Install this feature with `pip install flummi[typed]`.
+Install DuckDB separately and make the `duckdb` executable available on
+`PATH`, or pass its path through `duckdb_binary`.
 
 To map errors back to original source locations during exception handling, we
 track the provenance of every AST/IR node in a common attribute called
-`location` of type `flummi.library.errors.Location | None`. When present, we
+`location` of type `flummi.library.errors.Location | None`. When present, we
 use the provenance information to render more helpful error messages, but we
 do not require it! To make the pretty error messages work when supplying
 `compile` with a custom AST, you need to add a proper code location to each AST
@@ -129,10 +133,12 @@ To use the Flummi compiler as a CLI tool, you will need to install it with the
 extra-dependencies `cli`, i.e., `pip install flummi[cli]`. When using the
 compiler via the CLI, you can pass it a Flummi source file which it will in
 turn compile and dump the compiled SQL query to stdout or an optional file.
-Install `pip install "flummi[cli,typed]"`; inference and typechecking are
-enabled automatically when DuckDB is available. Use `--database
-path/to/database.duckdb` when the program needs that catalog, `--no-infer` for
-declaration-only analysis, or `--no-typecheck` to disable checking.
+Install `pip install flummi[cli]`; inference and typechecking are enabled
+automatically when the `duckdb` executable is available on `PATH`. Use
+`--duckdb-binary path/to/duckdb` to select a specific executable and
+`--database path/to/database.duckdb` when the program needs that catalog.
+Use `--no-infer` for declaration-only analysis, or `--no-typecheck` to disable
+checking.
 
 ```
 -- contents of input.fl
@@ -169,7 +175,7 @@ it isn't really ergonomic to program---but that isn't our goal here! Some of
 the "unergonomic" caveats you will need to contend with are that we only have
 infinite loops with loop controls (`BREAK`/`CONTINUE`), all variables are
 scoped globally, etc.---see the comprehensive listing
-[below](#programming-in-flummi). The following is a complete EBNF-esque grammar
+[below](<README#Flummi Caveats>). The following is a complete EBNF-esque grammar
 of the Flummi language.
 
 ```
