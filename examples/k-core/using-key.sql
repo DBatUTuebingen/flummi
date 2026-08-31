@@ -152,8 +152,27 @@ WITH RECURSIVE k_core(node, deg, active) USING KEY (node) AS (
   SELECT v.node, countif(n.active) AS degree, degree >= $k AS active
   FROM   k_core AS v, edges AS e, recurring.k_core AS n
   WHERE (v.node, n.node) = (e."from", e."to")
-  GROUP BY ALL
+  GROUP BY ALL -- ≡ GROUP BY v.node, v.deg
   HAVING degree <> v.deg
+)
+SELECT node
+FROM k_core
+WHERE active;
+
+
+-- ⚠️ Only DuckDB v2.0 supports USING KEY with UNION semantics
+--     (stop once the degree (# of active neighbours) does not change)
+WITH RECURSIVE k_core(node, deg, active) USING KEY (node) AS (
+  SELECT v.node, count(e."to") AS deg, deg >= $k AS active
+  FROM   nodes AS v LEFT OUTER JOIN edges AS e ON v.node = e."from"
+  GROUP BY v.node
+
+    UNION
+
+  SELECT v.node, countif(n.active) AS degree, degree >= $k AS active
+  FROM   k_core AS v, edges AS e, recurring.k_core AS n
+  WHERE (v.node, n.node) = (e."from", e."to")
+  GROUP BY v.node
 )
 SELECT node
 FROM k_core
