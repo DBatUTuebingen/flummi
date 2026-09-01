@@ -12,4 +12,4 @@ SELECT setseed(0.42);
 
 INSERT INTO points
 SELECT DISTINCT random() * 10_000, random() * 10_000
-FROM   range(100_000);
+FROM   range(10_000);
